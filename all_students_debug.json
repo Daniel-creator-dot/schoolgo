@@ -1,0 +1,104 @@
+{
+  "students": [
+    {
+      "name": "Alice Johnson",
+      "email": "alice@globalexcellenceacademy.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "Bob Smith",
+      "email": "bob@globalexcellenceacademy.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "Alice Johnson",
+      "email": "alice@saintjudehigh.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "Bob Smith",
+      "email": "bob@saintjudehigh.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "Mary Smith",
+      "email": "mary.s@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "Mary Smith",
+      "email": "mary.s@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "oheneba mic",
+      "email": "obmickie@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "oheneba mic",
+      "email": "obmickie@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "jerry",
+      "email": "j@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "jerry",
+      "email": "j@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "eric nkansah",
+      "email": "kwesi@gmailm.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "Bob Smith",
+      "email": "bob@brightfutureinternational.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "Mary Smith",
+      "email": "mary.s@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "Alice Johnson",
+      "email": "alice@brightfutureinternational.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "martin adjei",
+      "email": "martin@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "martin adjei",
+      "email": "martin@gmail.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "kwer",
+      "email": "kwesi@gmailm.com",
+      "password": "$2b$10$vgjiW1zoJSnwA/UMD7V0VuDCOUw9O4Riuo5YOzc8JWvjOmraZHlX."
+    },
+    {
+      "name": "desmond tette",
+      "email": "des@gmail.com",
+      "password": "$2b$10$39Y5R/TTe9oD20hLTO3rEph33vaCy6rVcju6r1LX78L7Z5Uv6E97y"
+    },
+    {
+      "name": "desmond tette",
+      "email": "des@gmail.com",
+      "password": "$2b$10$39Y5R/TTe9oD20hLTO3rEph33vaCy6rVcju6r1LX78L7Z5Uv6E97y"
+    },
+    {
+      "name": "lucas amponsah",
+      "email": "luc@gmail.com",
+      "password": "$2b$10$39Y5R/TTe9oD20hLTO3rEph33vaCy6rVcju6r1LX78L7Z5Uv6E97y"
+    }
+  ]
+}
