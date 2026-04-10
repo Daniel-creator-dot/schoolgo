@@ -256,6 +256,132 @@ export async function init() {
       END $$;
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS students (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        parent_email VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'Present',
+        gpa VARCHAR(10),
+        admission_no VARCHAR(50) UNIQUE,
+        class_id UUID REFERENCES classes(id),
+        parent_name VARCHAR(255),
+        contact VARCHAR(50),
+        entrance_exam_score VARCHAR(50),
+        profile_pic TEXT,
+        previous_school_profile_pic TEXT,
+        secondary_parent_name VARCHAR(255),
+        secondary_parent_email VARCHAR(255),
+        secondary_parent_contact VARCHAR(50),
+        religion VARCHAR(100),
+        org_id UUID REFERENCES organizations(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Ensure missing columns exist in students
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='parent_name') THEN
+          ALTER TABLE students ADD COLUMN parent_name VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='contact') THEN
+          ALTER TABLE students ADD COLUMN contact VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='entrance_exam_score') THEN
+          ALTER TABLE students ADD COLUMN entrance_exam_score VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='profile_pic') THEN
+          ALTER TABLE students ADD COLUMN profile_pic TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='previous_school_profile_pic') THEN
+          ALTER TABLE students ADD COLUMN previous_school_profile_pic TEXT;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='fee_status') THEN
+          ALTER TABLE students ADD COLUMN fee_status VARCHAR(50) DEFAULT 'Paid';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='fee_amount') THEN
+          ALTER TABLE students ADD COLUMN fee_amount NUMERIC(10, 2) DEFAULT 0;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='transport_route_id') THEN
+          -- transport_routes will be created later, so we will bind this foreign key in a late binding block at the end
+          ALTER TABLE students ADD COLUMN transport_route_id UUID; 
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='transport_pickup_location') THEN
+          ALTER TABLE students ADD COLUMN transport_pickup_location VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='hostel_room_id') THEN
+          ALTER TABLE students ADD COLUMN hostel_room_id UUID; 
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='transport_status') THEN
+          ALTER TABLE students ADD COLUMN transport_status VARCHAR(50) DEFAULT 'None';
+          UPDATE students SET transport_status = 'Approved' WHERE transport_route_id IS NOT NULL;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='hostel_status') THEN
+          ALTER TABLE students ADD COLUMN hostel_status VARCHAR(50) DEFAULT 'None';
+          UPDATE students SET hostel_status = 'Approved' WHERE hostel_room_id IS NOT NULL;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='acceptance_id') THEN
+          ALTER TABLE students ADD COLUMN acceptance_id UUID UNIQUE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='math_score') THEN
+          ALTER TABLE students ADD COLUMN math_score VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='english_score') THEN
+          ALTER TABLE students ADD COLUMN english_score VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='science_score') THEN
+          ALTER TABLE students ADD COLUMN science_score VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='interview_score') THEN
+          ALTER TABLE students ADD COLUMN interview_score VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='previous_school') THEN
+          ALTER TABLE students ADD COLUMN previous_school VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='custom_scores') THEN
+          ALTER TABLE students ADD COLUMN custom_scores JSONB DEFAULT '{}';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='date_of_birth') THEN
+          ALTER TABLE students ADD COLUMN date_of_birth DATE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='gender') THEN
+          ALTER TABLE students ADD COLUMN gender VARCHAR(20);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='date_enrolled') THEN
+          ALTER TABLE students ADD COLUMN date_enrolled DATE;
+        END IF;
+        if (not exists (select 1 from information_schema.columns where table_name='students' and column_name='parent_email')) then
+          alter table students add column parent_email varchar(255);
+        end if;
+        if (not exists (select 1 from information_schema.columns where table_name='students' and column_name='parent_password')) then
+          alter table students add column parent_password varchar(255);
+        end if;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='secondary_parent_name') THEN
+          ALTER TABLE students ADD COLUMN secondary_parent_name VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='secondary_parent_email') THEN
+          ALTER TABLE students ADD COLUMN secondary_parent_email VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='secondary_parent_contact') THEN
+          ALTER TABLE students ADD COLUMN secondary_parent_contact VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='religion') THEN
+          ALTER TABLE students ADD COLUMN religion VARCHAR(100);
+        END IF;
+      end $$;
+    `);
+
+    // Set default parent password if not set
+    const hashedParentPW_early = await bcrypt.hash('parent@123', 10);
+    await client.query(`
+      UPDATE students 
+      SET parent_password = $1 
+      WHERE parent_password IS NULL AND parent_email IS NOT NULL
+    `, [hashedParentPW_early]);
+
     // Promotion & Graduation
     await client.query(`
       CREATE TABLE IF NOT EXISTS promotion_records (
@@ -433,130 +559,22 @@ export async function init() {
       END $$;
     `);
 
+    // Late binding for students foreign keys
     await client.query(`
-      CREATE TABLE IF NOT EXISTS students (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255),
-        parent_email VARCHAR(255),
-        status VARCHAR(50) DEFAULT 'Present',
-        gpa VARCHAR(10),
-        admission_no VARCHAR(50) UNIQUE,
-        class_id UUID REFERENCES classes(id),
-        parent_name VARCHAR(255),
-        contact VARCHAR(50),
-        entrance_exam_score VARCHAR(50),
-        profile_pic TEXT,
-        previous_school_profile_pic TEXT,
-        secondary_parent_name VARCHAR(255),
-        secondary_parent_email VARCHAR(255),
-        secondary_parent_contact VARCHAR(50),
-        religion VARCHAR(100),
-        org_id UUID REFERENCES organizations(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
+      DO $$
+      BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='transport_route_id') THEN
+          -- Drop if exists to avoid errors on multiple runs, then add constraint
+          ALTER TABLE students DROP CONSTRAINT IF EXISTS fk_students_transport_route;
+          ALTER TABLE students ADD CONSTRAINT fk_students_transport_route FOREIGN KEY (transport_route_id) REFERENCES transport_routes(id);
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='hostel_room_id') THEN
+          ALTER TABLE students DROP CONSTRAINT IF EXISTS fk_students_hostel_room;
+          ALTER TABLE students ADD CONSTRAINT fk_students_hostel_room FOREIGN KEY (hostel_room_id) REFERENCES hostel_rooms(id);
+        END IF;
+      END $$;
     `);
 
-    // Ensure missing columns exist in students
-    await client.query(`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='parent_name') THEN
-          ALTER TABLE students ADD COLUMN parent_name VARCHAR(255);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='contact') THEN
-          ALTER TABLE students ADD COLUMN contact VARCHAR(50);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='entrance_exam_score') THEN
-          ALTER TABLE students ADD COLUMN entrance_exam_score VARCHAR(50);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='profile_pic') THEN
-          ALTER TABLE students ADD COLUMN profile_pic TEXT;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='previous_school_profile_pic') THEN
-          ALTER TABLE students ADD COLUMN previous_school_profile_pic TEXT;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='fee_status') THEN
-          ALTER TABLE students ADD COLUMN fee_status VARCHAR(50) DEFAULT 'Paid';
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='fee_amount') THEN
-          ALTER TABLE students ADD COLUMN fee_amount NUMERIC(10, 2) DEFAULT 0;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='transport_route_id') THEN
-          ALTER TABLE students ADD COLUMN transport_route_id UUID REFERENCES transport_routes(id);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='transport_pickup_location') THEN
-          ALTER TABLE students ADD COLUMN transport_pickup_location VARCHAR(255);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='hostel_room_id') THEN
-          ALTER TABLE students ADD COLUMN hostel_room_id UUID; -- REFERENCES hostel_rooms(id)
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='transport_status') THEN
-          ALTER TABLE students ADD COLUMN transport_status VARCHAR(50) DEFAULT 'None';
-          UPDATE students SET transport_status = 'Approved' WHERE transport_route_id IS NOT NULL;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='hostel_status') THEN
-          ALTER TABLE students ADD COLUMN hostel_status VARCHAR(50) DEFAULT 'None';
-          UPDATE students SET hostel_status = 'Approved' WHERE hostel_room_id IS NOT NULL;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='acceptance_id') THEN
-          ALTER TABLE students ADD COLUMN acceptance_id UUID UNIQUE;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='math_score') THEN
-          ALTER TABLE students ADD COLUMN math_score VARCHAR(50);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='english_score') THEN
-          ALTER TABLE students ADD COLUMN english_score VARCHAR(50);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='science_score') THEN
-          ALTER TABLE students ADD COLUMN science_score VARCHAR(50);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='interview_score') THEN
-          ALTER TABLE students ADD COLUMN interview_score VARCHAR(50);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='previous_school') THEN
-          ALTER TABLE students ADD COLUMN previous_school VARCHAR(255);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='custom_scores') THEN
-          ALTER TABLE students ADD COLUMN custom_scores JSONB DEFAULT '{}';
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='date_of_birth') THEN
-          ALTER TABLE students ADD COLUMN date_of_birth DATE;
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='gender') THEN
-          ALTER TABLE students ADD COLUMN gender VARCHAR(20);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='date_enrolled') THEN
-          ALTER TABLE students ADD COLUMN date_enrolled DATE;
-        END IF;
-        if (not exists (select 1 from information_schema.columns where table_name='students' and column_name='parent_email')) then
-          alter table students add column parent_email varchar(255);
-        end if;
-        if (not exists (select 1 from information_schema.columns where table_name='students' and column_name='parent_password')) then
-          alter table students add column parent_password varchar(255);
-        end if;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='secondary_parent_name') THEN
-          ALTER TABLE students ADD COLUMN secondary_parent_name VARCHAR(255);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='secondary_parent_email') THEN
-          ALTER TABLE students ADD COLUMN secondary_parent_email VARCHAR(255);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='secondary_parent_contact') THEN
-          ALTER TABLE students ADD COLUMN secondary_parent_contact VARCHAR(50);
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='religion') THEN
-          ALTER TABLE students ADD COLUMN religion VARCHAR(100);
-        END IF;
-      end $$;
-    `);
-
-    // Set default parent password if not set
-    const hashedParentPW = await bcrypt.hash('parent@123', 10);
-    await client.query(`
-      UPDATE students 
-      SET parent_password = $1 
-      WHERE parent_password IS NULL AND parent_email IS NOT NULL
-    `, [hashedParentPW]);
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS timetables (
