@@ -1250,6 +1250,7 @@ export async function init() {
       CREATE TABLE IF NOT EXISTS lesson_notes (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         teacher_id UUID REFERENCES staff(id),
+        class_id UUID REFERENCES classes(id) ON DELETE CASCADE,
         subject VARCHAR(255),
         topic VARCHAR(255),
         content TEXT,
@@ -1260,6 +1261,19 @@ export async function init() {
         org_id UUID REFERENCES organizations(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    // Ensure class_id and marks columns exist in lesson_notes
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'lesson_notes' AND column_name = 'class_id') THEN
+          ALTER TABLE lesson_notes ADD COLUMN class_id UUID REFERENCES classes(id) ON DELETE CASCADE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'lesson_notes' AND column_name = 'marks') THEN
+          ALTER TABLE lesson_notes ADD COLUMN marks NUMERIC(5, 2);
+        END IF;
+      END $$;
     `);
 
     await client.query(`
@@ -1916,6 +1930,22 @@ export async function init() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS report_card_templates (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        layout JSONB DEFAULT '{}',
+        sections JSONB DEFAULT '[]',
+        is_default BOOLEAN DEFAULT false,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Add index for performance
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_report_card_templates_org_id ON report_card_templates(org_id)`);
 
     await client.query('COMMIT');
     console.log('Database initialized with real data!');
