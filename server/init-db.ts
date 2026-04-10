@@ -128,6 +128,18 @@ export async function init() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS staff (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        role VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'Active',
+        org_id UUID REFERENCES organizations(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Ensure new HR-related columns exist on departments
     await client.query(`
       DO $$
@@ -141,24 +153,13 @@ export async function init() {
       END $$;
     `);
 
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS staff (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255),
-        role VARCHAR(255),
-        status VARCHAR(50) DEFAULT 'Active',
-        department_id UUID REFERENCES departments(id),
-        additional_roles TEXT[] DEFAULT '{}',
-        org_id UUID REFERENCES organizations(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Ensure new HR-related columns exist on staff
+    // Staff column extensions (circular reference to staff itself is ok)
     await client.query(`
       DO $$
       BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'staff' AND column_name = 'department_id') THEN
+          ALTER TABLE staff ADD COLUMN department_id UUID REFERENCES departments(id);
+        END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'staff' AND column_name = 'phone') THEN
           ALTER TABLE staff ADD COLUMN phone VARCHAR(50);
         END IF;
@@ -196,6 +197,17 @@ export async function init() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS grading_scales (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        status VARCHAR(50) DEFAULT 'Active',
+        org_id UUID REFERENCES organizations(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS classes (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(255) NOT NULL,
@@ -205,18 +217,7 @@ export async function init() {
         next_class_id UUID REFERENCES classes(id),
         class_teacher_id UUID REFERENCES staff(id),
         org_id UUID REFERENCES organizations(id),
-        grading_scale_id UUID, -- References grading_scales(id)
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS grading_scales (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        status VARCHAR(50) DEFAULT 'Active',
-        org_id UUID REFERENCES organizations(id),
+        grading_scale_id UUID REFERENCES grading_scales(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -372,6 +373,62 @@ export async function init() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='classes' AND column_name='required_credits') THEN
           ALTER TABLE classes ADD COLUMN required_credits INTEGER DEFAULT 0;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS transport_routes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        route_name VARCHAR(255) NOT NULL,
+        vehicle_number VARCHAR(50),
+        driver_name VARCHAR(255),
+        driver_phone VARCHAR(50),
+        price NUMERIC(10, 2) DEFAULT 0,
+        org_id UUID REFERENCES organizations(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Ensure price column exists in transport_routes
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transport_routes' AND column_name='price') THEN
+          ALTER TABLE transport_routes ADD COLUMN price NUMERIC(10, 2) DEFAULT 0;
+        END IF;
+      END $$;
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS hostels (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name VARCHAR(255) NOT NULL,
+        type VARCHAR(50), -- Boys/Girls
+        warden_name VARCHAR(255),
+        org_id UUID REFERENCES organizations(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS hostel_rooms (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        hostel_id UUID REFERENCES hostels(id),
+        room_number VARCHAR(50) NOT NULL,
+        capacity INTEGER,
+        price NUMERIC(10, 2) DEFAULT 0,
+        org_id UUID REFERENCES organizations(id),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Ensure price column exists in hostel_rooms
+    await client.query(`
+      DO $$ 
+      BEGIN 
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='hostel_rooms' AND column_name='price') THEN
+          ALTER TABLE hostel_rooms ADD COLUMN price NUMERIC(10, 2) DEFAULT 0;
         END IF;
       END $$;
     `);
@@ -610,61 +667,7 @@ export async function init() {
       END $$;
     `);
 
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS transport_routes (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        route_name VARCHAR(255) NOT NULL,
-        vehicle_number VARCHAR(50),
-        driver_name VARCHAR(255),
-        driver_phone VARCHAR(50),
-        price NUMERIC(10, 2) DEFAULT 0,
-        org_id UUID REFERENCES organizations(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Ensure price column exists in transport_routes
-    await client.query(`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transport_routes' AND column_name='price') THEN
-          ALTER TABLE transport_routes ADD COLUMN price NUMERIC(10, 2) DEFAULT 0;
-        END IF;
-      END $$;
-    `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS hostels (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(255) NOT NULL,
-        type VARCHAR(50), -- Boys/Girls
-        warden_name VARCHAR(255),
-        org_id UUID REFERENCES organizations(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS hostel_rooms (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        hostel_id UUID REFERENCES hostels(id),
-        room_number VARCHAR(50) NOT NULL,
-        capacity INTEGER,
-        price NUMERIC(10, 2) DEFAULT 0,
-        org_id UUID REFERENCES organizations(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Ensure price column exists in hostel_rooms
-    await client.query(`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='hostel_rooms' AND column_name='price') THEN
-          ALTER TABLE hostel_rooms ADD COLUMN price NUMERIC(10, 2) DEFAULT 0;
-        END IF;
-      END $$;
-    `);
+    // Verification for Students columns was here
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS health_records (
