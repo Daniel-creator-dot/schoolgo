@@ -4,12 +4,23 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'school',
-  password: 'Admin',
-  port: 5432,
-});
+const isProduction = process.env.DATABASE_URL;
+
+const pool = new Pool(
+  isProduction
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      }
+    : {
+        user: 'postgres',
+        host: 'localhost',
+        database: 'school',
+        password: 'Admin',
+        port: 5432,
+      }
+);
 
 export default pool;
