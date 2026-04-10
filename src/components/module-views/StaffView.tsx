@@ -3855,10 +3855,8 @@ export const ELearningModules = {
 
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/elearning/assignments', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const data = await res.json();
+        const res = await api.get('/elearning/assignments');
+        const data = res.data;
         let assignmentsList = Array.isArray(data) ? data : [];
         if (role === 'STAFF' && instructorId) {
           assignmentsList = assignmentsList.filter((a: any) => String(a.created_by) === String(instructorId) || String(a.teacher_id) === String(instructorId));
@@ -3874,10 +3872,8 @@ export const ELearningModules = {
 
     const fetchSubmissions = async (assignmentId: string) => {
       try {
-        const res = await fetch(`http://localhost:5000/api/elearning/submissions?assignment_id=${assignmentId}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const data = await res.json();
+        const res = await api.get(`/elearning/submissions?assignment_id=${assignmentId}`);
+        const data = res.data;
         setSubmissions(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
@@ -3888,15 +3884,8 @@ export const ELearningModules = {
     const handleCreateAssignment = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        const res = await fetch('http://localhost:5000/api/elearning/assignments', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}` 
-          },
-          body: JSON.stringify(formData)
-        });
-        if (res.ok) {
+        const res = await api.post('/elearning/assignments', formData);
+        if (res.status === 200 || res.status === 201) {
           setShowCreateModal(false);
           fetchData();
           (window as any).showToast?.('Assignment created successfully!', 'success');
@@ -3911,18 +3900,11 @@ export const ELearningModules = {
       if (!selectedAssignment) return;
       setIsSubmitting(true);
       try {
-        const res = await fetch(`http://localhost:5000/api/elearning/assignments/${selectedAssignment.id}/submit`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}` 
-          },
-          body: JSON.stringify({
+        const res = await api.post(`/elearning/assignments/${selectedAssignment.id}/submit`, {
             assignment_id: selectedAssignment.id,
             content: submissionContent
-          })
-        });
-        if (res.ok) {
+          });
+        if (res.status === 200 || res.status === 201) {
           setShowSubmitModal(false);
           setSubmissionContent('');
           fetchData();
@@ -3938,11 +3920,8 @@ export const ELearningModules = {
     const handleDeleteAssignment = async (id: string) => {
       if (!confirm('Are you sure you want to delete this assignment?')) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/elearning/assignments/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        if (res.ok) {
+        const res = await api.delete(`/elearning/assignments/${id}`);
+        if (res.status === 200 || res.status === 204) {
           fetchData();
           (window as any).showToast?.('Assignment deleted successfully!', 'success');
         }
@@ -4195,10 +4174,8 @@ export const ELearningModules = {
 
     const fetchData = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/elearning/study-materials', {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const data = await res.json();
+        const res = await api.get('/elearning/study-materials');
+        const data = res.data;
         setMaterials(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
@@ -4212,15 +4189,8 @@ export const ELearningModules = {
     const handleUpload = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-        const res = await fetch('http://localhost:5000/api/elearning/study-materials', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}` 
-          },
-          body: JSON.stringify(formData)
-        });
-        if (res.ok) {
+        const res = await api.post('/elearning/study-materials', formData);
+        if (res.status === 200 || res.status === 201) {
           setShowUploadModal(false);
           fetchData();
           (window as any).showToast?.('Study Material uploaded successfully!', 'success');
@@ -4233,11 +4203,8 @@ export const ELearningModules = {
     const handleDelete = async (id: string) => {
       if (!confirm('Are you sure you want to delete this resource?')) return;
       try {
-        const res = await fetch(`http://localhost:5000/api/elearning/study-materials/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        if (res.ok) {
+        const res = await api.delete(`/elearning/study-materials/${id}`);
+        if (res.status === 200 || res.status === 204) {
           fetchData();
           (window as any).showToast?.('Resource deleted successfully!', 'success');
         }
