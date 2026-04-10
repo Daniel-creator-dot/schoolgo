@@ -1,3 +1,4 @@
+console.log('>>> [BOOTSTRAP] Server process starting...');
 import express from 'express';
 import pool from './db.ts';
 import dotenv from 'dotenv';
@@ -8,6 +9,7 @@ import apiRoutes from './routes/api.ts';
 import { init as initDb } from './init-db.ts';
 
 dotenv.config();
+console.log('>>> [BOOTSTRAP] Environment variables loaded.');
 
 const app = express();
 app.use(express.json({ limit: '20mb' }));
