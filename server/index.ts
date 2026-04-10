@@ -42,21 +42,23 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: 'Something went wrong!', message: err.message });
 });
 
-// Initialize Database before starting server
-initDb()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Deep backend server is running on http://localhost:${PORT}`);
+// Start Server Immediately to prevent Render Timeout
+app.listen(PORT, () => {
+  console.log(`Deep backend server is running on http://localhost:${PORT}`);
+  
+  // Initialize Database in the background
+  initDb()
+    .then(() => {
+      console.log('Database initialization fully completed.');
+    })
+    .catch(err => {
+      console.error('CRITICAL: Failed to initialize database!');
+      console.error('Error Details:', {
+        message: err.message,
+        code: err.code,
+        stack: err.stack,
+        hasDatabaseUrl: !!process.env.DATABASE_URL
+      });
+      // Do not exit the process, just log the error so the server stays up to debug
     });
-  })
-  .catch(err => {
-    console.error('CRITICAL: Failed to initialize database!');
-    console.error('Error Details:', {
-      message: err.message,
-      code: err.code,
-      stack: err.stack,
-      // Identifying if DATABASE_URL was present
-      hasDatabaseUrl: !!process.env.DATABASE_URL
-    });
-    process.exit(1);
-  });
+});
