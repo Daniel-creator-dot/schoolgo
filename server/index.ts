@@ -17,7 +17,9 @@ app.use(express.urlencoded({ limit: '20mb', extended: true }));
 app.use(cors());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Use project-relative path for uploads to ensure it works across environment (dev/dist)
+const uploadsPath = path.join(process.cwd(), 'server', 'uploads');
+app.use('/uploads', express.static(uploadsPath));
 
 const PORT = process.env.PORT || process.env.SERVER_PORT || 5000;
 
