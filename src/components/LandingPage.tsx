@@ -213,9 +213,9 @@ export default function LandingPage({
                 />
               </div>
 
-              <div className="flex justify-center items-center gap-4 md:gap-12 lg:gap-16 relative z-10 w-full max-w-5xl mx-auto">
+              <div className="flex flex-col md:flex-row justify-center items-center gap-10 md:gap-12 lg:gap-16 relative z-10 w-full max-w-5xl mx-auto mt-4 md:mt-0">
                 {/* Hero Header Area (Plain Text, Side-by-Side) */}
-                <div className="flex-1 w-[55%] md:max-w-[500px] space-y-6 md:space-y-8 flex flex-col items-start text-left">
+                <div className="flex-1 w-full md:w-[55%] md:max-w-[500px] space-y-6 md:space-y-8 flex flex-col items-start text-left">
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -271,7 +271,7 @@ export default function LandingPage({
                 </div>
 
                 {/* Grow with OmniSchool Card */}
-                <div className="relative w-[45%] md:w-full flex-1 md:max-w-[420px]">
+                <div className="relative w-full md:w-[45%] flex-1 md:max-w-[420px] mt-8 md:mt-0">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
