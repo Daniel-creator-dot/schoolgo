@@ -6,12 +6,18 @@ dotenv.config();
 
 const isProduction = process.env.DATABASE_URL;
 
+if (isProduction) {
+  console.log('Database: Connecting via DATABASE_URL (Production Mode)');
+} else {
+  console.warn('Database: Falling back to localhost (Production warning: DATABASE_URL not found)');
+}
+
 const pool = new Pool(
   isProduction
     ? {
         connectionString: process.env.DATABASE_URL,
         ssl: {
-          rejectUnauthorized: false,
+          rejectUnauthorized: false, // Required for Supabase/Render
         },
       }
     : {

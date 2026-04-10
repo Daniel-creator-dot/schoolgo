@@ -46,6 +46,13 @@ initDb()
     });
   })
   .catch(err => {
-    console.error('Failed to initialize database:', err);
+    console.error('CRITICAL: Failed to initialize database!');
+    console.error('Error Details:', {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+      // Identifying if DATABASE_URL was present
+      hasDatabaseUrl: !!process.env.DATABASE_URL
+    });
     process.exit(1);
   });
