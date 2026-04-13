@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '../lib/LanguageContext';
 import { Search, Filter, Plus, ChevronLeft, ChevronRight, MoreVertical, Download, Trash2, Edit, Eye } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -84,6 +85,7 @@ export function DataTable<T extends { id: string | number }>({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(initialItemsPerPage);
   const [activeDropdown, setActiveDropdown] = useState<string | number | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number, left: number } | null>(null);
 
   // Close dropdown on click outside
   React.useEffect(() => {
@@ -213,7 +215,7 @@ export function DataTable<T extends { id: string | number }>({
           </div>
         </div>
 
-        <div className={cn("overflow-x-auto custom-scrollbar transition-all duration-200", activeDropdown ? "pb-48" : "")}>
+        <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-0">
             <thead>
               <tr className="bg-zinc-50/50 dark:bg-zinc-800/30">
@@ -253,21 +255,39 @@ export function DataTable<T extends { id: string | number }>({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActiveDropdown(activeDropdown === item.id ? null : item.id);
+                            if (activeDropdown === item.id) {
+                              setActiveDropdown(null);
+                              setDropdownPosition(null);
+                            } else {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setActiveDropdown(item.id);
+                              setDropdownPosition({
+                                top: rect.bottom + window.scrollY,
+                                left: rect.right - 192 // w-48 is 192px
+                              });
+                            }
                           }}
                           className="p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                         >
                           <MoreVertical className="w-5 h-5" />
                         </button>
 
-                        {activeDropdown === item.id && (
-                          <div className="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-xl bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 focus:outline-none">
-                            <div className="p-1.5 space-y-0.5">
+                        {activeDropdown === item.id && dropdownPosition && createPortal(
+                          <div 
+                            className="fixed z-[9999] w-48 origin-top-right rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 focus:outline-none"
+                            style={{ 
+                              top: dropdownPosition.top, 
+                              left: dropdownPosition.left,
+                              marginTop: '8px'
+                            }}
+                          >
+                            <div className="p-1.5 space-y-0.5" onClick={(e) => e.stopPropagation()}>
                               {(onView || (autoModal && autoViewModal && (renderDetails || renderForm))) && (
                                 <button
                                   onClick={() => {
                                     handleView(item);
                                     setActiveDropdown(null);
+                                    setDropdownPosition(null);
                                   }}
                                   className="flex items-center w-full gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-indigo-600 rounded-lg transition-colors"
                                 >
@@ -287,6 +307,7 @@ export function DataTable<T extends { id: string | number }>({
                                   onClick={() => {
                                     handleEdit(item);
                                     setActiveDropdown(null);
+                                    setDropdownPosition(null);
                                   }}
                                   className="flex items-center w-full gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-indigo-600 rounded-lg transition-colors"
                                 >
@@ -309,7 +330,7 @@ export function DataTable<T extends { id: string | number }>({
                               )}
                             </div>
                           </div>
-                        )}
+                          , document.body)}
                       </div>
                     </td>
                   )}
