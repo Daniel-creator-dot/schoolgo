@@ -4488,17 +4488,19 @@ export const AcademicModules = {
                   </p>
                 </div>
 
-                {/* Barcode Section */}
-                <div className="flex flex-col items-center gap-1.5 mb-6">
-                  <div className="h-8 w-44 bg-white border border-zinc-100 flex items-center justify-center p-1">
-                    {/* Simulated barcode */}
-                    <div className="w-full flex px-1 gap-[1.5px] items-end h-full">
-                      {[1, 3, 1, 2, 4, 1, 3, 2, 1, 4, 1, 2, 3, 1, 2, 1, 4, 1, 3, 2].map((w, i) => (
-                        <div key={i} className="bg-zinc-900" style={{ width: `${w * 1.5}px`, height: `${40 + (Math.random() * 60)}%` }}></div>
-                      ))}
-                    </div>
+                {/* Barcode / QR Code Section */}
+                <div className="flex flex-col items-center gap-2 mb-6">
+                  <div className="w-16 h-16 bg-white p-1 border border-zinc-100 shadow-sm rounded-lg overflow-hidden">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.admission_no || student.id)}`}
+                      alt="Student QR Code"
+                      className="w-full h-full object-contain"
+                    />
                   </div>
-                  <p className="text-[7px] font-black text-zinc-900 uppercase tracking-[0.3em] font-mono">{student.admission_no || student.id.slice(0, 12)}</p>
+                  <div className="space-y-0.5">
+                    <p className="text-[7px] font-black text-zinc-900 uppercase tracking-[0.3em] font-mono leading-none">{student.admission_no || student.id.slice(0, 12)}</p>
+                    <p className="text-[5px] font-bold text-zinc-400 uppercase tracking-widest text-center">Scan for Attendance</p>
+                  </div>
                 </div>
 
                 {/* Signature Section */}
