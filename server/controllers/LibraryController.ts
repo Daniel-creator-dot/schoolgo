@@ -130,13 +130,12 @@ export const getBookLoans = async (req: AuthRequest, res: Response) => {
       SELECT 
         bl.*, 
         b.title as book_title, 
-        COALESCE(s.name, st.name, u.name) as borrower_name,
-        COALESCE(s.name, st.name, u.name) as user_name
+        COALESCE(s.name, st.name) as borrower_name,
+        COALESCE(s.name, st.name) as user_name
       FROM book_loans bl 
       JOIN books b ON bl.book_id = b.id 
       LEFT JOIN students s ON bl.student_id = s.id
-      LEFT JOIN staff st ON bl.staff_id = st.id
-      LEFT JOIN users u ON bl.user_id = u.id`;
+      LEFT JOIN staff st ON bl.staff_id = st.id`;
     const params: any[] = [];
 
     if (role === 'STUDENT') {

@@ -37,8 +37,14 @@ export const generateResponse = async (req: AuthRequest, res: Response) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error?.message || 'Failed to generate response from Groq');
+      let errorMsg = 'AI service unavailable';
+      try {
+        const errorData = await response.json();
+        errorMsg = errorData.message || errorMsg;
+      } catch (e) {
+        // Fallback if body is not JSON
+      }
+      throw new Error(errorMsg);
     }
 
     const data = await response.json();

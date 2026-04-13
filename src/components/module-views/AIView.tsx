@@ -60,8 +60,14 @@ export const AIModules = {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'AI service unavailable');
+          let errorMsg = 'AI service unavailable';
+          try {
+            const errorData = await response.json();
+            errorMsg = errorData.message || errorMsg;
+          } catch (e) {
+            // Fallback if body is not JSON or empty
+          }
+          throw new Error(errorMsg);
         }
 
         const data = await response.json();
@@ -262,8 +268,14 @@ export const AIModules = {
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'AI service unavailable');
+          let errorMsg = 'AI service unavailable';
+          try {
+            const errorData = await response.json();
+            errorMsg = errorData.message || errorMsg;
+          } catch (e) {
+            // Fallback
+          }
+          throw new Error(errorMsg);
         }
 
         const data = await response.json();
