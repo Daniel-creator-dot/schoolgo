@@ -4472,6 +4472,16 @@ export const AcademicModules = {
 
                 {/* Accent Footer */}
                 <div className="absolute bottom-0 right-0 left-0 h-1.5 bg-indigo-600"></div>
+                
+                {/* Front Side QR Code */}
+                <div className="absolute top-4 right-4 w-12 h-12 bg-white p-1 border border-zinc-100 shadow-sm rounded-lg overflow-hidden z-10">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.admission_no || student.id)}`}
+                    alt="Student QR Code"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                
                 <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-600/5 rounded-full -translate-y-12 translate-x-12 -z-10"></div>
               </div>
 
