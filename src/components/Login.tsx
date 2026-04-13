@@ -52,7 +52,7 @@ export default function Login({ onLogin, onBack }: LoginProps) {
             <img 
               src="/assets/omni_portal_full_logo.png" 
               alt="OmniPortal" 
-              className="h-10 md:h-12 w-auto object-contain group-hover:scale-105 transition-transform" 
+              className="h-16 md:h-20 w-auto object-contain group-hover:scale-105 transition-transform" 
             />
           </button>
           <h1 className="text-3xl font-black tracking-tight mb-2">

@@ -125,10 +125,11 @@ export default function LandingPage({
       <nav className="absolute top-0 w-full z-50 bg-white/40 dark:bg-zinc-950/40 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
         <div className="max-w-7xl mx-auto px-6 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 md:w-8 md:h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none">
-              <Zap className="w-4 h-4 md:w-5 md:h-5 text-white" />
-            </div>
-            <span className="text-base md:text-lg font-black tracking-tighter uppercase">OmniSchool</span>
+            <img 
+              src="/assets/omni_portal_full_logo.png" 
+              alt="OmniPortal" 
+              className="h-8 md:h-10 w-auto object-contain" 
+            />
           </div>
 
           <div className="flex items-center gap-4 md:gap-6">
@@ -501,8 +502,8 @@ export default function LandingPage({
             >
               {!isReferralSignedUp ? (
                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 shadow-2xl text-center space-y-6">
-                  <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 rounded-3xl flex items-center justify-center mx-auto">
-                    <Zap className="w-10 h-10 text-indigo-600" />
+                  <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-950 rounded-3xl flex items-center justify-center mx-auto overflow-hidden">
+                    <img src="/assets/omni_portal_icon.png" alt="Omni" className="w-full h-full object-contain p-4" />
                   </div>
                   <div className="space-y-4">
                     <h2 className="text-3xl md:text-4xl font-black tracking-tight">{t('refer_rewards_title')}</h2>
