@@ -45,7 +45,7 @@ router.delete('/organizations/:id', checkRole(['SUPER_ADMIN']), OrganizationCont
 // AI PROXY
 router.post('/ai/generate', AIController.generateResponse);
 router.get('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getGeminiKeys);
-router.post('/gemini-keys', checkRole(['SCHOOL_ADMIN']), OrganizationController.saveGeminiKey);
+router.post('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.saveGeminiKey);
 
 // PARTNERS
 router.get('/partner/dashboard', checkRole(['PARTNER']), PartnerController.getDashboard);

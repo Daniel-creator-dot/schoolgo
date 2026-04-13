@@ -22,9 +22,11 @@ export const generateResponse = async (req: AuthRequest, res: Response) => {
   }
 
   if (!apiKey) {
+    const orgId = req.user?.org_id;
     return res.status(503).json({ 
       error: 'AI service not configured', 
-      message: 'No Groq API key found in settings or environment. Please set it in School Admin > Settings.' 
+      message: `No Groq API key found in settings or environment. (Org ID: ${orgId || 'None'})`,
+      instruction: 'Please go to School Admin > Settings and save your Groq API Key.'
     });
   }
 

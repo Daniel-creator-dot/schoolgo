@@ -2093,7 +2093,7 @@ export function Settings({ role }: { role?: UserRole }) {
             });
             // Check if backend AI is configured
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/ai/generate`, {
+            const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
               method: 'POST',
               headers: { 
                 'Content-Type': 'application/json',
@@ -2104,7 +2104,7 @@ export function Settings({ role }: { role?: UserRole }) {
             setIsAiConfigured(res.status !== 503);
 
             // Fetch Groq Key separately
-            const keyRes = await fetch(`${API_BASE_URL}/gemini-keys`, {
+            const keyRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/gemini-keys`, {
               headers: { 
                 'Authorization': `Bearer ${token}` 
               }
@@ -2119,7 +2119,7 @@ export function Settings({ role }: { role?: UserRole }) {
         }
       }
     };
-    if (role === 'SCHOOL_ADMIN') {
+    if (role === 'SCHOOL_ADMIN' || role === 'SUPER_ADMIN') {
       loadOrg();
     }
   }, [role]);
@@ -2144,7 +2144,7 @@ export function Settings({ role }: { role?: UserRole }) {
     }
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/gemini-keys`, {
+      const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/gemini-keys`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ api_key: trimmedKey })
@@ -2153,7 +2153,7 @@ export function Settings({ role }: { role?: UserRole }) {
         setGroqKey(trimmedKey);
         (window as any).showToast?.('Groq API Key saved successfully!', 'success');
         // Refresh AI configuration status
-        const configRes = await fetch(`${API_BASE_URL}/ai/generate`, {
+        const configRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ prompt: 'ping' })
@@ -2194,7 +2194,7 @@ export function Settings({ role }: { role?: UserRole }) {
           <p className="text-sm text-zinc-500">{t('settings_desc')}</p>
         </div>
         <div className="p-8 space-y-8">
-          {role === 'SCHOOL_ADMIN' && (
+          {(role === 'SCHOOL_ADMIN' || role === 'SUPER_ADMIN') && (
             <section className="space-y-4">
               <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">School Branding</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
