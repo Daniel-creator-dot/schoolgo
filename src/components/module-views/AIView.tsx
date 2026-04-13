@@ -62,17 +62,19 @@ export const AIModules = {
         if (!response.ok) {
           let errorMsg = 'AI service unavailable';
           try {
-            const errorData = await response.json();
-            errorMsg = errorData.message || errorMsg;
+            const text = await response.text();
+            const errorData = JSON.parse(text);
+            errorMsg = errorData.message || errorData.error || errorMsg;
           } catch (e) {
-            // Fallback if body is not JSON or empty
+            // Fallback
           }
           throw new Error(errorMsg);
         }
 
-        const data = await response.json();
-        const text = data.text || "[]";
-        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const text = await response.text();
+        const data = JSON.parse(text);
+        const aiText = data.text || "[]";
+        const jsonStr = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
         const insights = JSON.parse(jsonStr);
         setAiInsights(insights);
         (window as any).showToast?.('AI Analysis complete!', 'success');
@@ -85,9 +87,9 @@ export const AIModules = {
     };
 
     const displayInsights = aiInsights.length > 0 ? aiInsights : [
-      { title: 'Predicted Pass Rate', value: '88.4%', trend: 'up', status: 'success', icon_name: 'TrendingUp' },
-      { title: 'At-Risk Students', value: '12', trend: 'down', status: 'warning', icon_name: 'AlertCircle' },
-      { title: 'Teacher Workload', value: 'Optimal', trend: 'stable', status: 'info', icon_name: 'Users' },
+      { title: 'Predicted Pass Rate', value: '--', trend: 'stable', status: 'info', icon_name: 'TrendingUp' },
+      { title: 'Academic Trends', value: 'Pending', trend: 'stable', status: 'info', icon_name: 'AlertCircle' },
+      { title: 'AI Analysis', value: 'Ready', trend: 'stable', status: 'info', icon_name: 'Users' },
     ];
 
     const getIcon = (name: string) => {
@@ -270,15 +272,22 @@ export const AIModules = {
         if (!response.ok) {
           let errorMsg = 'AI service unavailable';
           try {
-            const errorData = await response.json();
-            errorMsg = errorData.message || errorMsg;
+            const text = await response.text();
+            const errorData = JSON.parse(text);
+            errorMsg = errorData.message || errorData.error || errorMsg;
           } catch (e) {
             // Fallback
           }
           throw new Error(errorMsg);
         }
 
-        const data = await response.json();
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          data = { text: "I'm sorry, I couldn't process that request." };
+        }
 
         const aiMessage = {
           role: 'ai',

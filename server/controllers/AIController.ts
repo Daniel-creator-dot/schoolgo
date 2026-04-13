@@ -1,16 +1,30 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.ts';
+import pool from '../db.ts';
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export const generateResponse = async (req: AuthRequest, res: Response) => {
   const { prompt, systemPrompt, model = 'llama-3.3-70b-versatile' } = req.body;
-  const apiKey = process.env.GROQ_API_KEY;
+  let apiKey = process.env.GROQ_API_KEY;
+
+  // Try to find organization-specific key in database
+  try {
+    const orgId = req.user.org_id;
+    if (orgId) {
+      const dbResult = await pool.query('SELECT api_key FROM gemini_api_keys WHERE org_id = $1', [orgId]);
+      if (dbResult.rows.length > 0 && dbResult.rows[0].api_key) {
+        apiKey = dbResult.rows[0].api_key;
+      }
+    }
+  } catch (dbErr) {
+    console.warn('Failed to fetch org-specific AI key, falling back to env:', dbErr);
+  }
 
   if (!apiKey) {
     return res.status(503).json({ 
       error: 'AI service not configured', 
-      message: 'The Groq API key is missing on the server. Please set GROQ_API_KEY in your Render environment.' 
+      message: 'No Groq API key found in settings or environment. Please set it in School Admin > Settings.' 
     });
   }
 
@@ -42,7 +56,9 @@ export const generateResponse = async (req: AuthRequest, res: Response) => {
         const errorData = await response.json();
         errorMsg = errorData.message || errorMsg;
       } catch (e) {
-        // Fallback if body is not JSON
+        // Fallback if body is not JSON or empty
+        const text = await response.text();
+        errorMsg = text || errorMsg;
       }
       throw new Error(errorMsg);
     }

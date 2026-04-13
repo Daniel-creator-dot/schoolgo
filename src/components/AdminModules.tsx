@@ -2076,6 +2076,7 @@ export function Settings({ role }: { role?: UserRole }) {
     logo: '',
     signature: ''
   });
+  const [groqKey, setGroqKey] = useState('');
 
   useEffect(() => {
     const loadOrg = async () => {
@@ -2101,6 +2102,17 @@ export function Settings({ role }: { role?: UserRole }) {
               body: JSON.stringify({ prompt: 'ping' })
             });
             setIsAiConfigured(res.status !== 503);
+
+            // Fetch Groq Key separately
+            const keyRes = await fetch(`${API_BASE_URL}/gemini-keys`, {
+              headers: { 
+                'Authorization': `Bearer ${token}` 
+              }
+            });
+            if (keyRes.ok) {
+              const keys = await keyRes.json();
+              if (keys.length > 0) setGroqKey(keys[0].api_key);
+            }
           } catch (err) {
             console.error('Failed to fetch organization:', err);
           }
@@ -2124,7 +2136,37 @@ export function Settings({ role }: { role?: UserRole }) {
   };
 
 
-
+  const handleSaveGroqKey = async () => {
+    const trimmedKey = groqKey.trim();
+    if (!trimmedKey) {
+      (window as any).showToast?.('Please enter an API key first', 'error');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE_URL}/gemini-keys`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ api_key: trimmedKey })
+      });
+      if (res.ok) {
+        setGroqKey(trimmedKey);
+        (window as any).showToast?.('Groq API Key saved successfully!', 'success');
+        // Refresh AI configuration status
+        const configRes = await fetch(`${API_BASE_URL}/ai/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ prompt: 'ping' })
+        });
+        setIsAiConfigured(configRes.status !== 503);
+      } else {
+        throw new Error('Failed to save key');
+      }
+    } catch (err) {
+      console.error('Failed to save Groq key:', err);
+      (window as any).showToast?.('Failed to save API key', 'error');
+    }
+  };
   const handleSave = async () => {
     if (!organization) return;
     setIsLoading(true);
@@ -2222,7 +2264,39 @@ export function Settings({ role }: { role?: UserRole }) {
                 <Brain className="w-4 h-4" />
                 AI Configuration
               </h3>
-              <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Groq AI API Key</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input 
+                        type="password"
+                        value={groqKey}
+                        onChange={(e) => setGroqKey(e.target.value)}
+                        placeholder="Enter your Groq API Key..."
+                        className="w-full pl-4 pr-12 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-sm dark:text-white"
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">
+                        <Zap className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSaveGroqKey}
+                      className="px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors whitespace-nowrap text-sm flex items-center gap-2"
+                    >
+                      <Check className="w-4 h-4" />
+                      Save Key
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 italic mt-1">
+                    Enter your Groq API Key to enable high-speed AI features. Configuration is saved securely in your organization settings.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-6 mt-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className={cn(
@@ -2232,11 +2306,11 @@ export function Settings({ role }: { role?: UserRole }) {
                       <Bot className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-zinc-900 dark:text-white">Groq AI Status</h4>
+                      <h4 className="font-bold text-zinc-900 dark:text-white">AI Engine Status</h4>
                       <p className="text-xs text-zinc-500">
                         {isAiConfigured 
-                          ? "Global AI proxy is active and ready." 
-                          : "AI service not yet configured in server environment."}
+                          ? "OmniAI is powered by Groq and ready." 
+                          : "AI service not configured. Please save your Groq API key above."}
                       </p>
                     </div>
                   </div>
@@ -2251,10 +2325,6 @@ export function Settings({ role }: { role?: UserRole }) {
                     </div>
                   )}
                 </div>
-                <p className="mt-4 text-[10px] text-zinc-400 italic">
-                  Advanced features like Academic Insights and AI Assistance are powered by Groq. 
-                  Configuration is managed centrally via server environment variables for maximum security.
-                </p>
               </div>
             </section>
 

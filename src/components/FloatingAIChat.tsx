@@ -61,15 +61,17 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
       if (!response.ok) {
         let errorMsg = 'AI service unavailable';
         try {
-          const errorData = await response.json();
-          errorMsg = errorData.message || errorMsg;
+          const text = await response.text();
+          const errorData = JSON.parse(text);
+          errorMsg = errorData.message || errorData.error || errorMsg;
         } catch (e) {
-          // Fallback if body is not JSON
+          // Fallback
         }
         throw new Error(errorMsg);
       }
 
-      const data = await response.json();
+      const text = await response.text();
+      const data = JSON.parse(text);
 
       const aiMessage: Message = {
         role: 'ai',

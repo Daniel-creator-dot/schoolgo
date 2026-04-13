@@ -423,4 +423,31 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+export const getGeminiKeys = async (req: AuthRequest, res: Response) => {
+  try {
+    const orgId = req.user.org_id;
+    const result = await pool.query('SELECT * FROM gemini_api_keys WHERE org_id = $1', [orgId]);
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
+export const saveGeminiKey = async (req: AuthRequest, res: Response) => {
+  const { api_key } = req.body;
+  const orgId = req.user.org_id;
+  try {
+    const result = await pool.query(
+      `INSERT INTO gemini_api_keys (org_id, api_key) 
+       VALUES ($1, $2)
+       ON CONFLICT (org_id) 
+       DO UPDATE SET api_key = EXCLUDED.api_key
+       RETURNING *`,
+      [orgId, api_key]
+    );
+    await recordAuditLog(req.user.id, 'SAVE_GEMINI_KEY', `Saved AI API key for org ID: ${orgId}`, orgId, req.ip || '');
+    res.status(200).json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
