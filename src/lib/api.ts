@@ -64,6 +64,11 @@ export const partnerCreateSchool = async (schoolData: any) => {
   return response.data;
 };
 
+export const approveReferral = async (orgId: string) => {
+  const response = await api.post(`/partner/approve/${orgId}`);
+  return response.data;
+};
+
 export const registerPlatformUser = async (user: any) => {
   const response = await api.post('/auth/register', user);
   return response.data;

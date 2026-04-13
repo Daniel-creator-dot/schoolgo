@@ -88,17 +88,17 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
 };
 
 export const createSchool = async (req: AuthRequest, res: Response) => {
-  const { name, type, email, contact_number, admin_email, admin_password } = req.body;
+  const { name, type, email, contact_number, admin_email, admin_password, plan, demo_requested } = req.body;
   const partnerId = req.user.id;
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    // 1. Create Organization
+    // 1. Create Organization with Pending status
     const orgResult = await client.query(
-      'INSERT INTO organizations (name, type, email, contact_number, referred_by_partner_id, plan) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [name, type, email, contact_number, partnerId, 'Free']
+      'INSERT INTO organizations (name, type, email, contact_number, referred_by_partner_id, plan, status, demo_requested) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [name, type, email, contact_number, partnerId, plan || 'Free', 'Pending', demo_requested || false]
     );
     const newOrg = orgResult.rows[0];
 
@@ -109,14 +109,61 @@ export const createSchool = async (req: AuthRequest, res: Response) => {
       [admin_email, hashedPassword, 'School Admin', 'SCHOOL_ADMIN', newOrg.id]
     );
 
-    // Provide a small dummy earning for creating a school just as a demo feature
-    await client.query(
-      'UPDATE partners SET total_earnings = total_earnings + 50 WHERE id = $1',
-      [partnerId]
-    );
+    // Earnings are only finalized when the school is approved by Super Admin, 
+    // but we can log them as 'Pending' if we had a transactions table.
+    // For now, we'll keep the dashboard simple and only update total_earnings on activation.
 
     await client.query('COMMIT');
     res.status(201).json(newOrg);
+  } catch (err: any) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const approveReferral = async (req: AuthRequest, res: Response) => {
+  const { org_id } = req.params;
+  
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Get Organization details
+    const orgResult = await client.query(
+      'SELECT referred_by_partner_id, status FROM organizations WHERE id = $1',
+      [org_id]
+    );
+    
+    if (orgResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    const org = orgResult.rows[0];
+    if (org.status !== 'Pending') {
+      return res.status(400).json({ error: 'Organization is not in pending status' });
+    }
+
+    // 2. Update status to Active
+    await client.query(
+      'UPDATE organizations SET status = $1 WHERE id = $2',
+      ['Active', org_id]
+    );
+
+    // 3. Update Partner earnings if a partner referred them
+    if (org.referred_by_partner_id) {
+        // Commission: Let's say ₦50,000 flat per activation for this example
+        // In a real app, this would be based on the chosen plan
+        const commission = 50000;
+        await client.query(
+            'UPDATE partners SET total_earnings = total_earnings + $1 WHERE id = $2',
+            [commission, org.referred_by_partner_id]
+        );
+    }
+
+    await client.query('COMMIT');
+    res.json({ message: 'Referral approved and organization activated' });
   } catch (err: any) {
     await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });

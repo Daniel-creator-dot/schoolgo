@@ -24,10 +24,12 @@ import { Modal } from './UI';
 
 export default function LandingPage({ 
   onGetStarted,
-  onLogin 
+  onLogin,
+  onPartnerLogin
 }: { 
   onGetStarted: () => void;
   onLogin: (role: UserRole, user: any) => void;
+  onPartnerLogin?: () => void;
 }) {
   const { language, setLanguage, t } = useLanguage();
   const [showPartnerModal, setShowPartnerModal] = useState(false);
@@ -157,6 +159,12 @@ export default function LandingPage({
                 className={cn("text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors", activeSection === 2 ? "text-indigo-600" : "text-zinc-400 hover:text-zinc-600")}
               >
                 {t('navbar_referrals')}
+              </button>
+              <button
+                onClick={onPartnerLogin}
+                className="text-[10px] md:text-xs font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700 transition-colors"
+              >
+                Partner Login
               </button>
             </div>
             

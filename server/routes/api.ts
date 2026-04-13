@@ -51,6 +51,7 @@ router.delete('/organizations/:id', checkRole(['SUPER_ADMIN']), OrganizationCont
 // PARTNERS
 router.get('/partner/dashboard', checkRole(['PARTNER']), PartnerController.getDashboard);
 router.post('/partner/schools', checkRole(['PARTNER']), PartnerController.createSchool);
+router.post('/partner/approve/:org_id', checkRole(['SUPER_ADMIN']), PartnerController.approveReferral);
 
 router.get('/subscriptions', OrganizationController.getSubscriptions);
 router.post('/subscriptions', checkRole(['SUPER_ADMIN']), OrganizationController.createSubscription);

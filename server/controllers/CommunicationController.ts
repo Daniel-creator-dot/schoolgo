@@ -118,13 +118,13 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
           ELSE 'received'
         END as direction
       FROM messages m
-      WHERE m.org_id = $2 
+      WHERE (m.org_id = $2 OR m.org_id IS NULL OR $4 = 'PARTNER' OR $4 = 'SUPER_ADMIN')
         AND (
           m.sender_id = $1 OR (m.sender_role = 'STAFF' AND m.sender_id = $3)
           OR m.receiver_id = $1 OR (m.receiver_role = 'STAFF' AND m.receiver_id = $3)
         )
       ORDER BY m.created_at DESC
-    `, [user_id, org_id, staff_id]);
+    `, [user_id, org_id, staff_id, req.user.role]);
 
     // Enhance with names
     const enriched = await Promise.all(result.rows.map(async (msg) => {
@@ -138,6 +138,9 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
         if (check.rows.length) name = check.rows[0].name;
       } else if (otherRole === 'STAFF') {
         const check = await pool.query('SELECT name FROM staff WHERE id = $1', [otherId]);
+        if (check.rows.length) name = check.rows[0].name;
+      } else if (otherRole === 'PARTNER') {
+        const check = await pool.query('SELECT name FROM partners WHERE id = $1', [otherId]);
         if (check.rows.length) name = check.rows[0].name;
       } else {
         const check = await pool.query('SELECT name FROM users WHERE id = $1', [otherId]);
@@ -164,7 +167,7 @@ export const sendMessage = async (req: AuthRequest, res: Response) => {
     const result = await pool.query(
       `INSERT INTO messages (org_id, sender_id, sender_role, receiver_id, receiver_role, subject, content) 
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-      [org_id, sender_id, sender_role, receiver_id, receiver_role, subject || 'No Subject', content]
+      [org_id || null, sender_id, sender_role, receiver_id, receiver_role, subject || 'No Subject', content]
     );
 
     res.status(201).json(result.rows[0]);

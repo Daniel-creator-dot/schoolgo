@@ -26,7 +26,7 @@ export {
 };
 
 export const SuperAdminModules = {
-  Organizations: ({ data, onAdd, onEdit, onDelete }: { data?: any[]; onAdd?: () => void, onEdit?: (item: any) => void, onDelete?: (item: any) => void }) => (
+  Organizations: ({ data, onAdd, onEdit, onDelete, onApprove }: { data?: any[]; onAdd?: () => void, onEdit?: (item: any) => void, onDelete?: (item: any) => void, onApprove?: (item: any) => void }) => (
     <DataTable
       title="All Organizations"
       data={data || []}
@@ -35,18 +35,37 @@ export const SuperAdminModules = {
       onDelete={onDelete}
       columns={[
         { header: 'Name', accessor: 'name', className: 'font-bold' },
+        { header: 'Plan', accessor: 'plan' },
+        {
+          header: 'Demo',
+          accessor: (item: any) => item.demo_requested ? (
+            <span className="text-emerald-500 font-bold text-[10px] uppercase flex items-center gap-1">
+              Requested
+            </span>
+          ) : <span className="text-zinc-400">—</span>
+        },
         {
           header: 'Status',
           accessor: (item: any) => (
             <span className={cn(
               "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-              item.status === 'Active' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+              item.status === 'Active' ? "bg-emerald-50 text-emerald-600" : 
+              item.status === 'Pending' ? "bg-amber-50 text-amber-600" :
+              "bg-red-50 text-red-600"
             )}>
               {item.status}
             </span>
           )
         },
       ]}
+      extraActions={(item: any) => item.status === 'Pending' && (
+        <button
+          onClick={() => onApprove?.(item)}
+          className="flex items-center w-full gap-3 px-3 py-2 text-sm font-bold rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+        >
+          Approve Referral
+        </button>
+      )}
     />
   ),
 

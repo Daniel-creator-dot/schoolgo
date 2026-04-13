@@ -66,6 +66,7 @@ import { CalendarView } from "./components/module-views/CalendarView";
 import { GenericModuleView } from "./components/ModuleViews";
 import LandingPage from "./components/LandingPage";
 import Login from "./components/Login";
+import PartnerLogin from "./components/PartnerLogin";
 import { API_BASE_URL } from "./constants";
 import { cn } from "./lib/utils";
 import {
@@ -101,6 +102,7 @@ import {
   fetchOrganization,
   updateOrganization,
   deleteOrganization,
+  approveReferral,
   fetchInvoices,
   createInvoice,
   updateInvoice,
@@ -257,6 +259,7 @@ export default function App() {
   const { t } = useLanguage();
   const [showLanding, setShowLanding] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
+  const [showPartnerLogin, setShowPartnerLogin] = useState(false);
   const [currentRole, setCurrentRole] = useState<UserRole>("SUPER_ADMIN");
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentView, setCurrentView] = useState("Dashboard");
@@ -277,18 +280,14 @@ export default function App() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userStr = localStorage.getItem("user");
-    if (token && userStr) {
-      const user = JSON.parse(userStr);
-      // Ensure roles array exists for the new role switcher
-      const updatedUser = {
-        ...user,
-        roles: user.roles || (user.role ? [user.role] : []),
-      };
-      setCurrentUser(updatedUser);
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (token && user) {
+      setCurrentUser(user);
       setCurrentRole(user.role);
       setShowLanding(false);
       setShowLogin(false);
+      setShowPartnerLogin(false);
+      loadData();
     }
   }, []);
 
@@ -390,7 +389,7 @@ export default function App() {
   };
 
   const loadData = async () => {
-    if (showLogin || showLanding) return;
+    if (showLogin || showLanding || showPartnerLogin) return;
     try {
       const isStaff = currentRole === "STAFF";
       const isHOD = currentRole === "HOD";
@@ -1386,6 +1385,16 @@ export default function App() {
     }
   };
 
+  const handleApproveReferral = async (org: any) => {
+    try {
+      await approveReferral(org.id);
+      showToast("Referral approved and school activated!", "success");
+      loadData();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || "Failed to approve referral", "error");
+    }
+  };
+
   // Conversion Handlers
   const convertInquiryToApplication = async (inquiry: Inquiry) => {
     try {
@@ -1805,6 +1814,7 @@ export default function App() {
           onDelete={(org) =>
             setDeleteConfirm({ isOpen: true, item: org, type: "organization" })
           }
+          onApprove={handleApproveReferral}
         />
       ),
 
@@ -3484,6 +3494,10 @@ export default function App() {
           setShowLogin(true);
         }}
         onLogin={handleLogin}
+        onPartnerLogin={() => {
+          setShowLanding(false);
+          setShowPartnerLogin(true);
+        }}
       />
     );
   if (showLogin)
@@ -3493,6 +3507,24 @@ export default function App() {
         onBack={() => {
           setShowLanding(true);
           setShowLogin(false);
+        }}
+      />
+    );
+
+  if (showPartnerLogin)
+    return (
+      <PartnerLogin
+        onLoginSuccess={(data) => {
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          setCurrentUser(data.user);
+          setCurrentRole(data.user.role);
+          setShowPartnerLogin(false);
+          loadData();
+        }}
+        onBackToLanding={() => {
+          setShowPartnerLogin(false);
+          setShowLanding(true);
         }}
       />
     );
