@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Lock, ArrowRight, ShieldCheck, PieChart, Users, Building2 } from 'lucide-react';
+import { User, Lock, ArrowRight, ShieldCheck, PieChart, Users, Building2, XCircle, Send } from 'lucide-react';
 
 interface PartnerLoginProps {
   onLoginSuccess?: (data: any) => void;
@@ -11,6 +11,20 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
+
+  // Registration form state
+  const [regData, setRegData] = useState({
+      name: '',
+      email: '',
+      password: '',
+      contact_number: '',
+      company_name: '',
+      registration_number: ''
+  });
+  const [regLoading, setRegLoading] = useState(false);
+  const [regError, setRegError] = useState('');
+  const [regSuccess, setRegSuccess] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,19 +38,51 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        onLoginSuccess?.(data);
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        if (response.ok) {
+          onLoginSuccess?.(data);
+        } else {
+          setError(data.message || data.error || 'Invalid credentials');
+        }
       } else {
-        setError(data.message || 'Invalid credentials');
+        const text = await response.text();
+        console.error('Non-JSON response from server:', text.substring(0, 200));
+        setError('Server routing error. Please ensure your backend is restarted.');
       }
-    } catch (err) {
-      setError('Connection error. Please try again.');
+    } catch (err: any) {
+      console.error('Login Fetch Error:', err);
+      setError('Connection error or backend unreachable. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  const handleRegister = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setRegLoading(true);
+      setRegError('');
+      
+      try {
+        const response = await fetch('/api/auth/partner/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(regData)
+        });
+
+        if (response.ok) {
+            setRegSuccess(true);
+        } else {
+            const data = await response.json().catch(() => null);
+            setRegError(data?.error || data?.message || 'Registration failed');
+        }
+      } catch (err: any) {
+          setRegError('Connection failed.');
+      } finally {
+          setRegLoading(false);
+      }
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -84,13 +130,13 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
 
           <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 mt-8">
             <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium italic">
-              "OmniPortal Partner Network has transformed how we engage with schools."
+              "This Partner Network has transformed how we engage with schools."
             </p>
           </div>
         </div>
 
         {/* Right Side: Login Form */}
-        <div className="p-8 lg:p-16 flex flex-col justify-center relative">
+        <div className="p-8 lg:p-16 flex flex-col justify-center relative bg-white dark:bg-zinc-900">
           <button 
             onClick={onBackToLanding}
             className="absolute top-8 right-8 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-indigo-600 transition-colors"
@@ -134,7 +180,7 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-4 mr-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">Password</label>
-                <button type="button" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-500">Forgot?</button>
+                <button type="button" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-500 transition-colors">Forgot?</button>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-indigo-600 transition-colors">
@@ -168,10 +214,128 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
           </form>
 
           <p className="mt-8 text-center text-zinc-500 dark:text-zinc-400 text-xs font-medium">
-            Interested in becoming a partner? <button onClick={onBackToLanding} className="text-indigo-600 font-bold hover:underline">Apply Now</button>
+            Interested in becoming a partner? <button onClick={() => setIsApplyModalOpen(true)} className="text-indigo-600 font-bold hover:underline">Apply Now</button>
           </p>
         </div>
       </div>
+
+      {/* Become a Partner Modal */}
+      {isApplyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setIsApplyModalOpen(false)} />
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-[2rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+                <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50">
+                    <div>
+                        <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Become a Partner</h3>
+                        <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 font-medium">Register your consultancy to start earning immediately.</p>
+                    </div>
+                    <button 
+                        onClick={() => setIsApplyModalOpen(false)}
+                        className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+                    >
+                        <XCircle size={24} />
+                    </button>
+                </div>
+
+                <div className="p-8 overflow-y-auto">
+                    {regSuccess ? (
+                        <div className="text-center py-12 flex flex-col items-center">
+                            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-6">
+                                <ShieldCheck size={32} />
+                            </div>
+                            <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Application Approved</h3>
+                            <p className="text-zinc-500 dark:text-zinc-400 max-w-sm mb-8">
+                                Your partner account has been successfully created. You can now securely sign in using your credentials.
+                            </p>
+                            <button 
+                                onClick={() => { setIsApplyModalOpen(false); setRegSuccess(false); }}
+                                className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-colors"
+                            >
+                                Back to Login
+                            </button>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleRegister} className="space-y-6">
+                            {regError && (
+                                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-2xl text-red-600 dark:text-red-400 text-sm font-medium animate-shake">
+                                    {regError}
+                                </div>
+                            )}
+                            
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Full Name</label>
+                                    <input 
+                                        type="text" required
+                                        value={regData.name} onChange={(e) => setRegData({...regData, name: e.target.value})}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-zinc-900 dark:text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Email Address</label>
+                                    <input 
+                                        type="email" required
+                                        value={regData.email} onChange={(e) => setRegData({...regData, email: e.target.value})}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-zinc-900 dark:text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Password</label>
+                                    <input 
+                                        type="password" required minLength={6}
+                                        value={regData.password} onChange={(e) => setRegData({...regData, password: e.target.value})}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-zinc-900 dark:text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Contact Number</label>
+                                    <input 
+                                        type="tel" required
+                                        value={regData.contact_number} onChange={(e) => setRegData({...regData, contact_number: e.target.value})}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-zinc-900 dark:text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Company / Agency Name</label>
+                                    <input 
+                                        type="text" 
+                                        value={regData.company_name} onChange={(e) => setRegData({...regData, company_name: e.target.value})}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-zinc-900 dark:text-white"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Company Registration #</label>
+                                    <input 
+                                        type="text" 
+                                        value={regData.registration_number} onChange={(e) => setRegData({...regData, registration_number: e.target.value})}
+                                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-zinc-900 dark:text-white"
+                                        placeholder="Optional"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex gap-4">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsApplyModalOpen(false)}
+                                    className="flex-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold py-4 rounded-xl transition-colors text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    disabled={regLoading}
+                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-all flex items-center justify-center gap-2 active:scale-[0.98] text-sm disabled:opacity-70"
+                                >
+                                    {regLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <>Complete Registration <Send size={16} /></>}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
