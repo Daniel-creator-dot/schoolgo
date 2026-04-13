@@ -32,7 +32,8 @@ import {
   Eye,
   Fingerprint,
   TrendingUp,
-  Palette
+  Palette,
+  RotateCw
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { DataTable } from './DataTable';
@@ -854,6 +855,103 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
   });
 
   const [viewingSub, setViewingSub] = useState<any | null>(null);
+  const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
+  const [renewingSub, setRenewingSub] = useState<any>(null);
+
+  const handlePrintSubscriptionReceipt = (sub: any) => {
+    const org = organizations.find(o => o.id === sub.org_id);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `
+      <html>
+        <head>
+          <title>Subscription Receipt - ${sub.org_name}</title>
+          <style>
+            body { font-family: 'Inter', sans-serif; color: #18181b; padding: 40px; line-height: 1.6; }
+            .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 60px; border-bottom: 2px solid #f4f4f5; padding-bottom: 20px; }
+            .logo { font-size: 24px; font-weight: 800; color: #4f46e5; }
+            .receipt-title { font-size: 32px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.025em; color: #18181b; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 60px; }
+            .section-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #a1a1aa; margin-bottom: 8px; }
+            .value { font-size: 16px; font-weight: 600; color: #18181b; }
+            .amount-box { background: #f8fafc; padding: 32px; border-radius: 24px; text-align: right; margin-top: 40px; border: 1px solid #f1f5f9; }
+            .amount-label { font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+            .amount-value { font-size: 36px; font-weight: 900; color: #4f46e5; }
+            .footer { margin-top: 80px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 20px; }
+            @media print { .no-print { display: none; } body { padding: 20px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">OMNISCHOOL</div>
+              <div style="font-size: 12px; color: #71717a; margin-top: 4px;">Smart School Management Ecosystem</div>
+            </div>
+            <div class="receipt-title">RECEIPT</div>
+          </div>
+
+          <div class="grid">
+            <div>
+              <div class="section-title">Billed To</div>
+              <div class="value">${sub.org_name}</div>
+              <div style="font-size: 14px; color: #71717a;">${org?.address || 'N/A'}</div>
+              <div style="font-size: 14px; color: #71717a;">${org?.email || ''}</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="section-title">Receipt Details</div>
+              <div class="value">No: SUB-${sub.id.slice(0, 8).toUpperCase()}</div>
+              <div style="font-size: 14px; color: #71717a;">Date: ${new Date().toLocaleDateString()}</div>
+              <div style="font-size: 14px; color: #71717a;">Status: PAID</div>
+            </div>
+          </div>
+
+          <div style="border: 1px solid #f1f5f9; border-radius: 20px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #f8fafc;">
+                  <th style="padding: 16px; text-align: left; font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase;">Description</th>
+                  <th style="padding: 16px; text-align: right; font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase;">Period</th>
+                  <th style="padding: 16px; text-align: right; font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 24px 16px; border-bottom: 1px solid #f1f5f9;">
+                    <div style="font-weight: 700; color: #1e293b;">Software Subscription Renewal</div>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 4px;">Plan: ${sub.plan}</div>
+                  </td>
+                  <td style="padding: 24px 16px; border-bottom: 1px solid #f1f5f9; text-align: right;">
+                    <div style="font-weight: 600;">Renewal Period</div>
+                    <div style="font-size: 13px; color: #64748b;">Expires: ${new Date(sub.expiry_date).toLocaleDateString()}</div>
+                  </td>
+                  <td style="padding: 24px 16px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 700;">
+                    GH₵ ${parseFloat(sub.amount || 0).toLocaleString()}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="amount-box">
+            <div class="amount-label">Total Amount Paid</div>
+            <div class="amount-value">GH₵ ${parseFloat(sub.amount || 0).toLocaleString()}</div>
+            <div style="font-size: 12px; color: #94a3b8; margin-top: 8px; font-weight: 600;">Payment Method: ${sub.payment_method}</div>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for choosing OmniSchool. This is a computer generated receipt.</p>
+            <p>&copy; ${new Date().getFullYear()} OmniSchool Management Systems. All rights reserved.</p>
+          </div>
+
+          <script>window.onload = () => { window.print(); window.close(); }</script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
 
   const handleEdit = (sub: any) => {
     setEditingSub(sub);
@@ -948,6 +1046,35 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
             )
           },
         ]}
+        extraActions={(sub: any) => (
+          <div className="space-y-0.5">
+            <button
+              onClick={() => {
+                setRenewingSub(sub);
+                setFormData({
+                  org_id: sub.org_id,
+                  plan_name: sub.plan,
+                  status: 'Active',
+                  expiry_date: sub.expiry_date ? new Date(sub.expiry_date).toISOString().split('T')[0] : '',
+                  amount: sub.amount?.toString() || '',
+                  payment_method: sub.payment_method || 'Bank Transfer'
+                });
+                setIsRenewModalOpen(true);
+              }}
+              className="flex items-center w-full gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-emerald-600 rounded-lg transition-colors"
+            >
+              <RotateCw className="w-4 h-4" />
+              Renew Subscription
+            </button>
+            <button
+              onClick={() => handlePrintSubscriptionReceipt(sub)}
+              className="flex items-center w-full gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-indigo-600 rounded-lg transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              Print Receipt
+            </button>
+          </div>
+        )}
       />
 
       <Modal isOpen={!!viewingSub} onClose={() => setViewingSub(null)} title="Subscription Details">
@@ -1106,6 +1233,82 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
         title="Delete Subscription"
         message="Are you sure you want to delete this subscription record? This action will remove the billing entry from the database."
       />
+
+      <Modal isOpen={isRenewModalOpen} onClose={() => setIsRenewModalOpen(false)} title="Renew Subscription">
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          try {
+            await updateSubscription(renewingSub.id, formData);
+            (window as any).showToast?.('Subscription renewed successfully!', 'success');
+            setIsRenewModalOpen(false);
+            onRefresh?.();
+          } catch (err) {
+            console.error('Failed to renew subscription:', err);
+            (window as any).showToast?.('Failed to renew subscription', 'error');
+          }
+        }} className="space-y-4">
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 mb-4">
+            <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider mb-1">Renewing for</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{renewingSub?.org_name}</h3>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Plan</label>
+              <select
+                value={formData.plan_name}
+                onChange={(e) => setFormData({ ...formData, plan_name: e.target.value })}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+              >
+                {plans.map((p: any) => (
+                  <option key={p.id} value={p.name}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">New Amount (GH₵)</label>
+              <input
+                type="number"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">New Expiry Date</label>
+              <input
+                type="date"
+                value={formData.expiry_date}
+                onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Payment Method</label>
+              <select
+                value={formData.payment_method}
+                onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+              >
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Mobile Money">Mobile Money</option>
+                <option value="Cash">Cash</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button type="button" onClick={() => setIsRenewModalOpen(false)} className="px-4 py-2 text-sm font-bold text-zinc-500">Cancel</button>
+            <button type="submit" className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold text-sm">Submit Renewal</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
