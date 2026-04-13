@@ -85,15 +85,15 @@ const PartnerDashboard: React.FC = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0f172a] flex items-center justify-center">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
       <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white flex">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex transition-colors duration-200">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-white/10 bg-[#1e293b]/50 backdrop-blur-xl hidden lg:flex flex-col">
+      <aside className="w-64 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hidden lg:flex flex-col transition-colors">
         <div className="p-6 flex items-center gap-3">
           <img src="/assets/omni_portal_icon.png" alt="Logo" className="w-8 h-8" />
           <span className="font-bold text-xl tracking-tight">Partner Hub</span>
@@ -110,23 +110,23 @@ const PartnerDashboard: React.FC = () => {
               onClick={() => setActiveTab(item.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 activeTab === item.id 
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' 
-                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold' 
+                : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-200'
               }`}
             >
               {item.icon}
-              <span className="font-medium text-sm">{item.label}</span>
+              <span className="text-sm">{item.label}</span>
             </button>
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors font-medium text-sm"
           >
             <LogOut size={20} />
-            <span className="font-medium text-sm">Sign Out</span>
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -134,15 +134,15 @@ const PartnerDashboard: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         {/* Header */}
-        <header className="h-20 border-b border-white/10 bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-30 px-8 flex items-center justify-between">
+        <header className="h-20 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-30 px-8 flex items-center justify-between transition-colors">
           <div>
             <h2 className="text-xl font-bold">Welcome back, {partner?.name}</h2>
-            <p className="text-xs text-gray-500">Your referral code: <span className="text-indigo-400 font-mono">{partner?.referral_code}</span></p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Your referral code: <span className="text-indigo-600 dark:text-indigo-400 font-mono font-bold bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded">{partner?.referral_code}</span></p>
           </div>
           <div className="flex items-center gap-4">
             <button 
                 onClick={() => setIsModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-all"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-sm"
             >
               <Plus size={18} /> Add New School
             </button>
@@ -152,42 +152,42 @@ const PartnerDashboard: React.FC = () => {
         <div className="p-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative overflow-hidden group shadow-sm">
+              <div className="absolute top-0 right-0 p-4 opacity-5 text-zinc-600 dark:text-zinc-400 group-hover:scale-110 transition-transform">
                 <Users size={64} />
               </div>
-              <p className="text-gray-400 text-sm mb-1 uppercase tracking-wider font-semibold">Total Schools</p>
-              <h3 className="text-3xl font-bold">{schools.length}</h3>
-              <div className="mt-4 flex items-center gap-2 text-green-400 text-xs">
+              <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Total Schools</p>
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{schools.length}</h3>
+              <div className="mt-4 flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
                 <TrendingUp size={14} /> <span>+{schools.filter(s => s.status === 'Active').length} Active</span>
               </div>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative overflow-hidden group shadow-sm">
+              <div className="absolute top-0 right-0 p-4 opacity-5 text-zinc-600 dark:text-zinc-400 group-hover:scale-110 transition-transform">
                 <Wallet size={64} />
               </div>
-              <p className="text-gray-400 text-sm mb-1 uppercase tracking-wider font-semibold">Total Earnings</p>
-              <h3 className="text-3xl font-bold">₦{partner?.total_earnings?.toLocaleString()}</h3>
-              <p className="mt-4 text-gray-500 text-xs">Finalized on school activation</p>
+              <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Total Earnings</p>
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">₦{partner?.total_earnings?.toLocaleString()}</h3>
+              <p className="mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Finalized on active provisioning</p>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative overflow-hidden group shadow-sm">
+              <div className="absolute top-0 right-0 p-4 opacity-5 text-zinc-600 dark:text-zinc-400 group-hover:scale-110 transition-transform">
                 <Clock size={64} />
               </div>
-              <p className="text-gray-400 text-sm mb-1 uppercase tracking-wider font-semibold">Pending Leads</p>
-              <h3 className="text-3xl font-bold">{schools.filter(s => s.status === 'Pending').length}</h3>
-              <p className="mt-4 text-gray-500 text-xs">Awaiting super-admin review</p>
+              <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Pending Leads</p>
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{schools.filter(s => s.status === 'Pending').length}</h3>
+              <p className="mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Awaiting super-admin review</p>
             </div>
 
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 dark:to-indigo-900 rounded-2xl p-6 relative overflow-hidden shadow-sm">
                <div className="relative z-10 h-full flex flex-col justify-between">
                  <div>
-                    <h4 className="text-white font-bold text-lg">Pro Benefits</h4>
+                    <h4 className="text-white font-black text-lg">Pro Benefits</h4>
                     <p className="text-indigo-100 text-xs mb-4">You're on the premium partner tier (8% comms)</p>
                  </div>
-                 <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-semibold self-start">
+                 <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-bold self-start transition-colors border border-white/10">
                     View Tier Details
                  </button>
                </div>
@@ -195,19 +195,19 @@ const PartnerDashboard: React.FC = () => {
           </div>
 
           {activeTab === 'referrals' && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden shadow-xl">
-              <div className="p-6 border-b border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h3 className="text-xl font-bold">Referral Pipeline</h3>
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm transition-colors">
+              <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Referral Pipeline</h3>
                 <div className="flex items-center gap-3">
                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
                       <input 
                         type="text" 
                         placeholder="Search schools..." 
-                        className="bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                        className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white"
                       />
                    </div>
-                   <button className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white">
+                   <button className="p-2 border border-zinc-200 dark:border-zinc-700 rounded-xl text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                       <Filter size={18} />
                    </button>
                 </div>
@@ -216,7 +216,7 @@ const PartnerDashboard: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-white/5 text-gray-400 text-xs uppercase tracking-wider font-semibold border-b border-white/10">
+                    <tr className="bg-zinc-50 dark:bg-zinc-950/50 text-zinc-500 dark:text-zinc-400 text-[10px] uppercase tracking-widest font-black border-b border-zinc-200 dark:border-zinc-800">
                       <th className="px-6 py-4">School Name</th>
                       <th className="px-6 py-4">Plan Selected</th>
                       <th className="px-6 py-4">Submission Date</th>
@@ -224,46 +224,46 @@ const PartnerDashboard: React.FC = () => {
                       <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                     {schools.length === 0 ? (
                         <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                <Building2 size={48} className="mx-auto mb-4 opacity-20" />
-                                <p>No referrals yet. Add your first school to get started!</p>
+                            <td colSpan={5} className="px-6 py-16 text-center text-zinc-500 dark:text-zinc-400">
+                                <Building2 size={48} className="mx-auto mb-4 text-zinc-300 dark:text-zinc-700" />
+                                <p className="font-medium">No referrals yet. Add your first school to get started!</p>
                             </td>
                         </tr>
                     ) : (
                         schools.map((school) => (
-                        <tr key={school.id} className="group hover:bg-white/5 transition-colors">
+                        <tr key={school.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                             <td className="px-6 py-4">
                                 <div className="flex flex-col">
-                                    <span className="font-semibold text-white">{school.name}</span>
-                                    <span className="text-xs text-gray-500">{school.type}</span>
+                                    <span className="font-bold text-sm text-zinc-900 dark:text-white">{school.name}</span>
+                                    <span className="text-xs text-zinc-500">{school.type}</span>
                                 </div>
                             </td>
                             <td className="px-6 py-4">
-                                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                                    school.plan === 'Enterprise' ? 'bg-purple-500/10 text-purple-400' :
-                                    school.plan === 'Professional' ? 'bg-indigo-500/10 text-indigo-400' :
-                                    'bg-gray-500/10 text-gray-400'
+                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                                    school.plan === 'Enterprise' ? 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20' :
+                                    school.plan === 'Professional' ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20' :
+                                    'bg-zinc-100 text-zinc-600 dark:bg-zinc-500/10 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-500/20'
                                 }`}>
                                     {school.plan}
                                 </span>
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-400">
+                            <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400 font-medium">
                                 {new Date(school.created_at).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4">
-                                <div className={`flex items-center gap-2 text-xs font-semibold ${
-                                    school.status === 'Active' ? 'text-green-400' :
-                                    school.status === 'Pending' ? 'text-amber-400' : 'text-red-400'
+                                <div className={`flex items-center gap-2 text-xs font-bold ${
+                                    school.status === 'Active' ? 'text-emerald-600 dark:text-emerald-400' :
+                                    school.status === 'Pending' ? 'text-amber-600 dark:text-amber-400' : 'text-red-500 dark:text-red-400'
                                 }`}>
                                     {school.status === 'Active' ? <CheckCircle2 size={14} /> : <Clock size={14} />}
                                     {school.status}
                                 </div>
                             </td>
                             <td className="px-6 py-4 text-right">
-                                <button className="p-2 text-gray-500 hover:text-indigo-400 transition-colors">
+                                <button className="p-2 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors">
                                     <ChevronRight size={18} />
                                 </button>
                             </td>
@@ -277,29 +277,32 @@ const PartnerDashboard: React.FC = () => {
           )}
 
           {activeTab === 'chat' && (
-            <div className="bg-white/5 border border-white/10 rounded-2xl h-[600px] flex flex-col overflow-hidden shadow-xl">
-               <div className="p-6 border-b border-white/10 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold">SA</div>
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl h-[600px] flex flex-col overflow-hidden shadow-sm">
+               <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50 dark:bg-zinc-950/50">
+                  <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white text-sm">SA</div>
                   <div>
-                    <h3 className="font-bold">Super Admin Support</h3>
-                    <p className="text-xs text-green-400 italic">Online - Usually replies within 1 hour</p>
+                    <h3 className="font-bold text-zinc-900 dark:text-white">Super Admin Support</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                       <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">Online - Replies swiftly</p>
+                    </div>
                   </div>
                </div>
                <div className="flex-1 p-6 overflow-y-auto space-y-4">
-                  <div className="bg-white/5 p-4 rounded-2xl max-w-[80%] border border-white/10 text-sm">
+                  <div className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-4 rounded-2xl rounded-tl-sm max-w-[80%] text-sm text-zinc-900 dark:text-zinc-100">
                     Hi {partner?.name}! I'm the Super Admin. How can I assist with your referrals today?
                   </div>
-                  <div className="bg-indigo-600/20 p-4 rounded-2xl max-w-[80%] self-end border border-indigo-500/20 text-sm ml-auto">
+                  <div className="bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-sm max-w-[80%] self-end text-sm ml-auto shadow-sm shadow-indigo-200 dark:shadow-none">
                     Hi! I just submitted a new lead for "Greenspring Schools". Could you take a look?
                   </div>
                </div>
-               <div className="p-4 border-t border-white/10 flex gap-3">
+               <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 flex gap-3 bg-zinc-50 dark:bg-zinc-950/50">
                   <input 
                     type="text" 
                     placeholder="Type your message..." 
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all shadow-sm"
                   />
-                  <button className="bg-indigo-600 hover:bg-indigo-500 p-3 rounded-xl transition-all">
+                  <button className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-all shadow-sm shadow-indigo-200 dark:shadow-none active:scale-95">
                     <Send size={20} />
                   </button>
                </div>
@@ -311,16 +314,16 @@ const PartnerDashboard: React.FC = () => {
       {/* Modal - Add School */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="bg-[#1e293b] border border-white/10 w-full max-w-2xl rounded-[2rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-300">
-            <div className="p-8 border-b border-white/5 flex justify-between items-center">
+          <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-[2rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200">
+            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50">
               <div>
-                <h3 className="text-2xl font-bold">Refer a New Institution</h3>
-                <p className="text-gray-400 text-sm">Fill in the details for your prospective school lead.</p>
+                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Refer a New Institution</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 font-medium">Fill in the details for your prospective school lead.</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 hover:bg-white/5 rounded-lg text-gray-500 hover:text-white transition-colors"
+                className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
                 >
                 <XCircle size={24} />
               </button>
@@ -329,22 +332,22 @@ const PartnerDashboard: React.FC = () => {
             <form onSubmit={handleAddSchool} className="p-8 space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">School Name</label>
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Name</label>
                   <input 
                     type="text" 
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
                     placeholder="e.g. British International School" 
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">School Type</label>
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Type</label>
                   <select 
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    className="w-full bg-[#1e293b] border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none"
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none"
                   >
                     <option>Private K-12</option>
                     <option>Tertiary Institution</option>
@@ -356,11 +359,11 @@ const PartnerDashboard: React.FC = () => {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Proposed Subscription</label>
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Proposed Subscription</label>
                     <select 
                         value={formData.plan}
                         onChange={(e) => setFormData({...formData, plan: e.target.value})}
-                        className="w-full bg-[#1e293b] border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none"
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none"
                     >
                         <option value="Basic">Basic (500/mo)</option>
                         <option value="Professional">Professional (1,500/mo)</option>
@@ -368,41 +371,41 @@ const PartnerDashboard: React.FC = () => {
                     </select>
                 </div>
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">School Admin Email</label>
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Admin Email</label>
                     <input 
                         type="email" 
                         required
                         value={formData.admin_email}
                         onChange={(e) => setFormData({...formData, admin_email: e.target.value})}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" 
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
                         placeholder="admin@school.com" 
                     />
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl group cursor-pointer" onClick={() => setFormData({...formData, demo_requested: !formData.demo_requested})}>
-                 <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-all ${formData.demo_requested ? 'bg-indigo-600 border-indigo-600' : 'border-white/20'}`}>
+              <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-2xl group cursor-pointer transition-colors" onClick={() => setFormData({...formData, demo_requested: !formData.demo_requested})}>
+                 <div className={`w-6 h-6 rounded border flex items-center justify-center transition-all ${formData.demo_requested ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600'}`}>
                     {formData.demo_requested && <CheckCircle2 size={16} />}
                  </div>
                  <div>
-                    <h5 className="font-bold text-sm">Request Demo Account</h5>
-                    <p className="text-xs text-indigo-300/70">Check this to create a temporary login for the school admin to explore.</p>
+                    <h5 className="font-bold text-sm text-indigo-900 dark:text-indigo-100">Request Demo Account</h5>
+                    <p className="text-xs text-indigo-600/70 dark:text-indigo-300/70 font-medium">Check this to create a temporary login for the school admin to explore.</p>
                  </div>
               </div>
 
-              <div className="pt-4 flex gap-4">
+              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex gap-4">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-white/5 hover:bg-white/10 text-white font-semibold py-4 rounded-xl transition-all"
+                  className="flex-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold py-4 rounded-xl transition-all text-sm"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-4 rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-xl shadow-indigo-200 dark:shadow-none transition-all flex items-center justify-center gap-2 active:scale-[0.98] text-sm"
                 >
-                  Submit Referral <Send size={18} />
+                  Submit Referral <Send size={16} />
                 </button>
               </div>
             </form>
