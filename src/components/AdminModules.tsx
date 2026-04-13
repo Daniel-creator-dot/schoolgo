@@ -2070,11 +2070,8 @@ export function Settings({ role }: { role?: UserRole }) {
   const { language, setLanguage, t } = useLanguage();
   const [organization, setOrganization] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAiConfigured, setIsAiConfigured] = useState(false);
   const [branding, setBranding] = useState({
-    logo: '',
-    signature: ''
-  });
-  const [geminiKey, setGeminiKey] = useState('');
 
   useEffect(() => {
     const loadOrg = async () => {
@@ -2089,17 +2086,17 @@ export function Settings({ role }: { role?: UserRole }) {
               logo: org.logo || '',
               signature: org.signature || ''
             });
-            // Fetch Gemini Key separately
+            // Check if backend AI is configured
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/gemini-keys`, {
+            const res = await fetch(`${API_BASE_URL}/ai/generate`, {
+              method: 'POST',
               headers: { 
+                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}` 
-              }
+              },
+              body: JSON.stringify({ prompt: 'ping' })
             });
-            if (res.ok) {
-              const keys = await res.json();
-              if (keys.length > 0) setGeminiKey(keys[0].api_key);
-            }
+            setIsAiConfigured(res.status !== 503);
           } catch (err) {
             console.error('Failed to fetch organization:', err);
           }
@@ -2122,66 +2119,17 @@ export function Settings({ role }: { role?: UserRole }) {
     }
   };
 
-  // Dedicated Gemini key saver — does NOT depend on organization being loaded
-  const handleSaveGeminiKey = async () => {
-    const trimmedKey = geminiKey.trim();
-    if (!trimmedKey) {
-      (window as any).showToast?.('Please enter an API key first', 'error');
-      return;
-    }
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/gemini-keys`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ api_key: trimmedKey })
-      });
-      if (organization?.id) {
-        await updateOrganization(organization.id, { gemini_api_key: trimmedKey });
-      }
-      localStorage.setItem('gemini_api_key', trimmedKey);
-      setGeminiKey(trimmedKey); // Update state with trimmed version
-      (window as any).showToast?.('API Key saved successfully!', 'success');
-    } catch (err) {
-      console.error('Failed to save Gemini key:', err);
-      (window as any).showToast?.('Failed to save API key', 'error');
-    }
-  };
+
 
   const handleSave = async () => {
     if (!organization) return;
     setIsLoading(true);
-    const trimmedGeminiKey = geminiKey.trim();
-    
-    try {
-      // Save org settings AND gemini key into the organizations table (so AI chat can read it)
       await updateOrganization(organization.id, {
         ...organization,
-        ...branding,
-        gemini_api_key: trimmedGeminiKey
+        ...branding
       });
       
-      // Also save to the dedicated gemini_api_keys table for legacy compatibility
-      const token = localStorage.getItem('token');
-      if (trimmedGeminiKey) {
-        await fetch(`${API_BASE_URL}/gemini-keys`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-          },
-          body: JSON.stringify({ api_key: trimmedGeminiKey })
-        });
-      }
-
       (window as any).showToast?.(t('save_changes') + ' successful!', 'success');
-      // Cache key in localStorage so FloatingAIChat can use it immediately
-      if (trimmedGeminiKey) {
-        localStorage.setItem('gemini_api_key', trimmedGeminiKey);
-        setGeminiKey(trimmedGeminiKey); // Sync state
-      } else {
-        localStorage.removeItem('gemini_api_key');
-      }
 
     } catch (err) {
       console.error('Failed to update organization branding:', err);
@@ -2264,44 +2212,46 @@ export function Settings({ role }: { role?: UserRole }) {
             </section>
           )}
 
-          {role === 'SCHOOL_ADMIN' && (
             <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
               <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
                 <Brain className="w-4 h-4" />
                 AI Configuration
               </h3>
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Gemini AI API Key</label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <input 
-                        type="password"
-                        value={geminiKey}
-                        onChange={(e) => setGeminiKey(e.target.value)}
-                        placeholder="Enter your Gemini API Key..."
-                        className="w-full pl-4 pr-12 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-sm dark:text-white"
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">
-                        <Zap className="w-4 h-4" />
-                      </div>
+              <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center",
+                      isAiConfigured ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" : "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
+                    )}>
+                      <Bot className="w-6 h-6" />
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleSaveGeminiKey}
-                      className="px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors whitespace-nowrap text-sm flex items-center gap-2"
-                    >
-                      <Check className="w-4 h-4" />
-                      Save Key
-                    </button>
+                    <div>
+                      <h4 className="font-bold text-zinc-900 dark:text-white">Groq AI Status</h4>
+                      <p className="text-xs text-zinc-500">
+                        {isAiConfigured 
+                          ? "Global AI proxy is active and ready." 
+                          : "AI service not yet configured in server environment."}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-zinc-500 italic mt-1">
-                    This key allows your school to use advanced AI features like performance prediction and automated assistance. Get your key from the <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">Google AI Studio</a>.
-                  </p>
+                  {isAiConfigured ? (
+                    <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                      Active
+                  </div>
+                  ) : (
+                    <div className="text-amber-600 font-bold text-xs uppercase tracking-wider">
+                      Offline
+                    </div>
+                  )}
                 </div>
+                <p className="mt-4 text-[10px] text-zinc-400 italic">
+                  Advanced features like Academic Insights and AI Assistance are powered by Groq. 
+                  Configuration is managed centrally via server environment variables for maximum security.
+                </p>
               </div>
             </section>
-          )}
 
           {role === 'SCHOOL_ADMIN' && (
             <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">

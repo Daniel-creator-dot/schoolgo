@@ -19,6 +19,7 @@ import * as AcademicCalendarController from '../controllers/AcademicCalendarCont
 import * as PartnerController from '../controllers/PartnerController.ts';
 import * as DriveController from '../controllers/DriveController.ts';
 import * as MeetingController from '../controllers/MeetingController.ts';
+import * as AIController from '../controllers/AIController.ts';
 import { verifyToken, checkRole } from '../middleware/auth.ts';
 import pool from '../db.ts';
 import bcrypt from 'bcryptjs';
@@ -40,8 +41,9 @@ router.get('/organizations/:id', OrganizationController.getOrganization);
 router.post('/organizations', checkRole(['SUPER_ADMIN']), OrganizationController.createOrganization);
 router.patch('/organizations/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), OrganizationController.updateOrganization);
 router.delete('/organizations/:id', checkRole(['SUPER_ADMIN']), OrganizationController.deleteOrganization);
-router.get('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getGeminiKeys);
-router.post('/gemini-keys', checkRole(['SCHOOL_ADMIN']), OrganizationController.saveGeminiKey);
+
+// AI PROXY
+router.post('/ai/generate', AIController.generateResponse);
 
 // PARTNERS
 router.get('/partner/dashboard', checkRole(['PARTNER']), PartnerController.getDashboard);

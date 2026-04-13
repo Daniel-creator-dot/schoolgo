@@ -34,17 +34,8 @@ export const AIModules = {
     const [aiInsights, setAiInsights] = React.useState<any[]>([]);
 
     const handleAnalysis = async () => {
-      const apiKey = organization?.gemini_api_key || localStorage.getItem('gemini_api_key');
-      if (!apiKey) {
-        (window as any).showToast?.('Please configure your Gemini API Key in Settings first.', 'warning');
-        return;
-      }
-
       setIsAnalyzing(true);
       try {
-        const { GoogleGenAI } = await import('@google/genai');
-        const ai = new GoogleGenAI({ apiKey });
-        
         const dataSummary = {
           studentCount: students?.length || 0,
           resultsCount: results?.length || 0,
@@ -58,19 +49,30 @@ export const AIModules = {
         Format your response as a JSON array of objects with 'title', 'value', 'trend', 'status', and 'icon_name' (choice of: TrendingUp, Users, AlertCircle).
         Example: [{"title": "Academic Growth", "value": "+12%", "trend": "up", "status": "success", "icon_name": "TrendingUp"}]`;
 
-        const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
-          contents: prompt,
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ prompt, systemPrompt: "You are a data analyst for a school management system. Respond only with valid JSON." })
         });
 
-        const text = response.text || "[]";
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'AI service unavailable');
+        }
+
+        const data = await response.json();
+        const text = data.text || "[]";
         const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const insights = JSON.parse(jsonStr);
         setAiInsights(insights);
         (window as any).showToast?.('AI Analysis complete!', 'success');
-      } catch (err) {
+      } catch (err: any) {
         console.error('AI Analysis Error:', err);
-        (window as any).showToast?.('Failed to run AI analysis.', 'error');
+        (window as any).showToast?.(err.message || 'Failed to run AI analysis.', 'error');
       } finally {
         setIsAnalyzing(false);
       }
@@ -238,68 +240,46 @@ export const AIModules = {
     }, [messages]);
 
     const handleSend = async () => {
-      const apiKey = organization?.gemini_api_key || localStorage.getItem('gemini_api_key');
       const prompt = input.trim();
       if (!prompt || isLoading) return;
-
-      if (!apiKey) {
-        setMessages(prev => [...prev, { 
-          role: 'ai', 
-          content: "Please configure your Gemini API Key in Settings first.", 
-          timestamp: new Date() 
-        }]);
-        return;
-      }
-
-      const trimmedApiKey = apiKey.trim();
 
       setMessages(prev => [...prev, { role: 'user', content: prompt }]);
       setInput('');
       setIsLoading(true);
 
       try {
-        const { GoogleGenAI } = await import("@google/genai");
-        const ai = new GoogleGenAI({ 
-          apiKey: trimmedApiKey,
-          apiVersion: 'v1'
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ 
+            prompt, 
+            systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise." 
+          })
         });
-        
-        // DIAGNOSTIC: List models to see what's available
-        try {
-          const pager = await ai.models.list();
-          const allModels = [];
-          for await (const model of pager) {
-            allModels.push(model.name);
-          }
-          console.log("DIAGNOSTIC - Available Models:", allModels);
-        } catch (listError) {
-          console.error("DIAGNOSTIC - Failed to list models:", listError);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'AI service unavailable');
         }
 
-        const systemInstruction = "Instruction: You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise.\n\nUser: ";
-
-        const response = await ai.models.generateContent({
-          model: "gemini-1.5-flash",
-          contents: systemInstruction + prompt,
-        });
+        const data = await response.json();
 
         const aiMessage = {
           role: 'ai',
-          content: response.text || "I'm sorry, I couldn't process that request.",
+          content: data.text || "I'm sorry, I couldn't process that request.",
           timestamp: new Date()
         };
 
         setMessages(prev => [...prev, aiMessage]);
       } catch (error: any) {
-        console.error("AI Error Details:", {
-          message: error?.message,
-          stack: error?.stack,
-          status: error?.status,
-          error: error
-        });
+        console.error("AI Error:", error);
         setMessages(prev => [...prev, { 
           role: 'ai', 
-          content: `Sorry, I encountered an error (Error: ${error?.message || 'Unknown'}). Please check your API key and try again.`, 
+          content: `Sorry, I encountered an error (Error: ${error?.message || 'Unknown'}). Please try again later.`, 
           timestamp: new Date() 
         }]);
       } finally {

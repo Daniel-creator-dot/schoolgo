@@ -31,17 +31,8 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
   }, [messages, isOpen, isMinimized]);
 
   const handleSend = async () => {
-    // Read key from org prop, or fallback to localStorage cache set by Settings
-    const apiKey = organization?.gemini_api_key || localStorage.getItem('gemini_api_key');
     const prompt = input.trim();
     if (!prompt || isLoading) return;
-
-    if (!apiKey) {
-      (window as any).showToast?.('Please configure your Gemini API Key in Settings first.', 'warning');
-      return;
-    }
-
-    const trimmedApiKey = apiKey.trim();
 
     const userMessage: Message = {
       role: 'user',
@@ -54,47 +45,38 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ 
-        apiKey: trimmedApiKey,
-        apiVersion: 'v1'
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          prompt,
+          systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
+        })
       });
-      
-      // DIAGNOSTIC: List models to see what's available
-      try {
-        const pager = await ai.models.list();
-        const allModels = [];
-        for await (const model of pager) {
-          allModels.push(model.name);
-        }
-        console.log("DIAGNOSTIC - Available Models:", allModels);
-      } catch (listError) {
-        console.error("DIAGNOSTIC - Failed to list models:", listError);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'AI service unavailable');
       }
-      
-      const systemInstruction = "Instruction: You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional.\n\nUser: ";
-      
-      const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: systemInstruction + prompt,
-      });
+
+      const data = await response.json();
 
       const aiMessage: Message = {
         role: 'ai',
-        content: response.text || "I'm sorry, I couldn't process that request.",
+        content: data.text || "I'm sorry, I couldn't process that request.",
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, aiMessage]);
     } catch (error: any) {
-      console.error("AI Error Details:", {
-        message: error?.message,
-        stack: error?.stack,
-        status: error?.status,
-        error: error
-      });
+      console.error("AI Error:", error);
       setMessages(prev => [...prev, {
         role: 'ai',
-        content: `Sorry, I'm having trouble connecting right now (Error: ${error?.message || 'Unknown'}). Please check your API key in settings or try again later.`,
+        content: `Sorry, I'm having trouble connecting right now (Error: ${error?.message || 'Unknown'}). Please try again later.`,
         timestamp: new Date()
       }]);
     } finally {
