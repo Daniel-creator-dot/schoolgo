@@ -1915,6 +1915,7 @@ export async function init() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    console.log('>>> [DB] Table gemini_api_keys verified.');
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS drive_folders (

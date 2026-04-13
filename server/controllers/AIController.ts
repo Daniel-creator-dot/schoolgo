@@ -54,13 +54,12 @@ export const generateResponse = async (req: AuthRequest, res: Response) => {
 
     if (!response.ok) {
       let errorMsg = 'AI service unavailable';
+      const responseText = await response.text();
       try {
-        const errorData = await response.json();
-        errorMsg = errorData.message || errorMsg;
+        const errorData = JSON.parse(responseText);
+        errorMsg = errorData.message || errorData.error || errorMsg;
       } catch (e) {
-        // Fallback if body is not JSON or empty
-        const text = await response.text();
-        errorMsg = text || errorMsg;
+        errorMsg = responseText || errorMsg;
       }
       throw new Error(errorMsg);
     }
