@@ -33,7 +33,8 @@ import {
   Fingerprint,
   TrendingUp,
   Palette,
-  RotateCw
+  RotateCw,
+  Bot
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { DataTable } from './DataTable';
@@ -2072,6 +2073,9 @@ export function Settings({ role }: { role?: UserRole }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isAiConfigured, setIsAiConfigured] = useState(false);
   const [branding, setBranding] = useState({
+    logo: '',
+    signature: ''
+  });
 
   useEffect(() => {
     const loadOrg = async () => {
@@ -2124,6 +2128,7 @@ export function Settings({ role }: { role?: UserRole }) {
   const handleSave = async () => {
     if (!organization) return;
     setIsLoading(true);
+    try {
       await updateOrganization(organization.id, {
         ...organization,
         ...branding
