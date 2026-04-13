@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Bot, X, Send, Minus, Maximize2, MessageSquare, Sparkles, User } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { cn } from '../lib/utils';
+import { safeAiFetch } from '../lib/aiUtils';
 
 interface Message {
   role: 'user' | 'ai';
@@ -46,7 +47,7 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+      const result = await safeAiFetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,24 +59,13 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
         })
       });
 
-      if (!response.ok) {
-        let errorMsg = 'AI service unavailable';
-        try {
-          const text = await response.text();
-          const errorData = JSON.parse(text);
-          errorMsg = errorData.message || errorData.error || errorMsg;
-        } catch (e) {
-          // Fallback
-        }
-        throw new Error(errorMsg);
+      if (!result.success) {
+        throw new Error(result.error);
       }
-
-      const text = await response.text();
-      const data = JSON.parse(text);
 
       const aiMessage: Message = {
         role: 'ai',
-        content: data.text || "I'm sorry, I couldn't process that request.",
+        content: result.data?.text || "I'm sorry, I couldn't process that request.",
         timestamp: new Date()
       };
 
@@ -195,7 +185,7 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
                 </button>
               </div>
               <p className="text-[10px] text-center text-zinc-500 mt-2 flex items-center justify-center gap-1">
-                <Sparkles className="w-3 h-3" /> Powered by Gemini AI
+                <Sparkles className="w-3 h-3" /> Powered by Groq AI
               </p>
             </div>
           </motion.div>

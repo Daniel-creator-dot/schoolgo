@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { DataTable } from '../DataTable';
+import { safeAiFetch, extractJsonFromAiResponse } from '../../lib/aiUtils';
 
 export const AIModules = {
   PerformancePrediction: ({ 
@@ -50,7 +51,7 @@ export const AIModules = {
         Example: [{"title": "Academic Growth", "value": "+12%", "trend": "up", "status": "success", "icon_name": "TrendingUp"}]`;
 
         const token = localStorage.getItem('token');
-        const response = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+        const result = await safeAiFetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -59,23 +60,17 @@ export const AIModules = {
           body: JSON.stringify({ prompt, systemPrompt: "You are a data analyst for a school management system. Respond only with valid JSON." })
         });
 
-        if (!response.ok) {
-          let errorMsg = 'AI service unavailable';
-          try {
-            const text = await response.text();
-            const errorData = JSON.parse(text);
-            errorMsg = errorData.message || errorData.error || errorMsg;
-          } catch (e) {
-            // Fallback
-          }
-          throw new Error(errorMsg);
+        if (!result.success) {
+          throw new Error(result.error);
         }
 
-        const text = await response.text();
-        const data = JSON.parse(text);
-        const aiText = data.text || "[]";
-        const jsonStr = aiText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const insights = JSON.parse(jsonStr);
+        const aiText = result.data?.text || "[]";
+        const insights = extractJsonFromAiResponse(aiText);
+        
+        if (!insights || !Array.isArray(insights)) {
+          throw new Error('AI analysis produced invalid data format. Please try again.');
+        }
+
         setAiInsights(insights);
         (window as any).showToast?.('AI Analysis complete!', 'success');
       } catch (err: any) {
@@ -257,7 +252,7 @@ export const AIModules = {
 
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+        const result = await safeAiFetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -265,33 +260,17 @@ export const AIModules = {
           },
           body: JSON.stringify({ 
             prompt, 
-            systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise." 
+            systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional." 
           })
         });
 
-        if (!response.ok) {
-          let errorMsg = 'AI service unavailable';
-          try {
-            const text = await response.text();
-            const errorData = JSON.parse(text);
-            errorMsg = errorData.message || errorData.error || errorMsg;
-          } catch (e) {
-            // Fallback
-          }
-          throw new Error(errorMsg);
-        }
-
-        const text = await response.text();
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch (e) {
-          data = { text: "I'm sorry, I couldn't process that request." };
+        if (!result.success) {
+          throw new Error(result.error);
         }
 
         const aiMessage = {
           role: 'ai',
-          content: data.text || "I'm sorry, I couldn't process that request.",
+          content: result.data?.text || "I'm sorry, I couldn't process that request.",
           timestamp: new Date()
         };
 
