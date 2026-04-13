@@ -47,12 +47,12 @@ export default function Login({ onLogin, onBack }: LoginProps) {
         <div className="text-center mb-8">
           <button 
             onClick={onBack}
-            className="flex items-center gap-2 mx-auto mb-6 group transition-all"
+            className="flex items-center gap-2 mx-auto mb-6 group transition-all border-none outline-none focus:outline-none focus:ring-0"
           >
             <img 
               src="/assets/omni_portal_full_logo.png" 
               alt="OmniPortal" 
-              className="h-16 md:h-24 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-xl" 
+              className="h-16 md:h-24 w-auto object-contain group-hover:scale-105 transition-transform border-0" 
             />
           </button>
           <h1 className="text-3xl font-black tracking-tight mb-2">

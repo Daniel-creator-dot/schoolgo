@@ -130,7 +130,6 @@ export default function LandingPage({
               alt="Omni" 
               className="w-10 h-10 md:w-12 md:h-12 object-contain group-hover:rotate-12 transition-transform" 
             />
-            <span className="text-xl md:text-2xl font-black tracking-tighter uppercase">OmniPortal</span>
           </div>
 
           <div className="flex items-center gap-4 md:gap-6">
