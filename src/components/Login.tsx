@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Zap, Mail, Lock, ArrowRight, Shield } from 'lucide-react';
 import { UserRole } from '../types';
 import { login } from '../lib/api';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface LoginProps {
   onLogin: (role: UserRole, user: any) => void;
@@ -10,6 +11,7 @@ interface LoginProps {
 }
 
 export default function Login({ onLogin, onBack }: LoginProps) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function Login({ onLogin, onBack }: LoginProps) {
       onLogin(data.user.role, data.user);
     } catch (err: any) {
       console.error('Login failed:', err);
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(err.response?.data?.message || t('login_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -56,9 +58,9 @@ export default function Login({ onLogin, onBack }: LoginProps) {
             />
           </button>
           <h1 className="text-3xl font-black tracking-tight mb-2">
-            Welcome Back
+            {t('login_welcome')}
           </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 text-sm">Enter your credentials to access your portal</p>
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm">{t('login_subtitle')}</p>
         </div>
 
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-8 shadow-2xl relative overflow-hidden">
@@ -69,7 +71,7 @@ export default function Login({ onLogin, onBack }: LoginProps) {
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4 mb-1 block">Email Address</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4 mb-1 block">{t('email_address')}</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
                 <input
@@ -85,8 +87,8 @@ export default function Login({ onLogin, onBack }: LoginProps) {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between ml-4 mr-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">Password</label>
-                <button type="button" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-500">Forgot?</button>
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">{t('password')}</label>
+                <button type="button" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-500">{t('forgot_password')}</button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
@@ -103,7 +105,7 @@ export default function Login({ onLogin, onBack }: LoginProps) {
 
             <div className="flex items-center gap-2 ml-4">
               <input type="checkbox" id="remember" className="rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
-              <label htmlFor="remember" className="text-xs text-zinc-500 font-medium">Remember for 30 days</label>
+              <label htmlFor="remember" className="text-xs text-zinc-500 font-medium">{t('remember_me')}</label>
             </div>
 
             <button
@@ -115,7 +117,7 @@ export default function Login({ onLogin, onBack }: LoginProps) {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Sign In
+                  {t('sign_in_btn')}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -125,10 +127,10 @@ export default function Login({ onLogin, onBack }: LoginProps) {
           <div className="mt-8 pt-8 border-t border-zinc-100 dark:border-zinc-800 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-100 dark:border-emerald-900/30 mb-4">
               <Shield className="w-3 h-3 text-emerald-600" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Secure Authentication</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">{t('secure_auth')}</span>
             </div>
             <p className="text-xs text-zinc-500">
-              Don't have an account? <button onClick={onBack} className="text-indigo-600 font-bold hover:underline">Contact Sales</button>
+              {t('no_account')} <button onClick={onBack} className="text-indigo-600 font-bold hover:underline">{t('contact_sales')}</button>
             </p>
           </div>
         </div>

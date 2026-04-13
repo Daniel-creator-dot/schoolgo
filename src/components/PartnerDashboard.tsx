@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, Users, Building2, Plus, Search, Filter, 
   CheckCircle2, Clock, XCircle, Send, MessageSquare, 
-  Wallet, TrendingUp, HelpCircle, LogOut, ChevronRight
+  Wallet, TrendingUp, HelpCircle, LogOut, ChevronRight, Layers
 } from 'lucide-react';
 import { API_BASE_URL } from '../constants';
 
@@ -21,6 +21,7 @@ const PartnerDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('referrals');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [systemPlans, setSystemPlans] = useState<any[]>([]);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -47,6 +48,13 @@ const PartnerDashboard: React.FC = () => {
       if (response.ok) {
         setPartner(data.partner);
         setSchools(data.schools);
+      }
+
+      const plansRes = await fetch(`${API_BASE_URL}/plans`);
+      const plansData = await plansRes.json();
+      if (plansData && plansData.length > 0) {
+        setSystemPlans(plansData);
+        setFormData(prev => ({ ...prev, plan: prev.plan || plansData[0].name }));
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -364,11 +372,19 @@ const PartnerDashboard: React.FC = () => {
                     <select 
                         value={formData.plan}
                         onChange={(e) => setFormData({...formData, plan: e.target.value})}
-                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none"
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]"
                     >
-                        <option value="Basic">Basic (500/mo)</option>
-                        <option value="Professional">Professional (1,500/mo)</option>
-                        <option value="Enterprise">Enterprise (3,500/mo)</option>
+                        {systemPlans.length > 0 ? (
+                           systemPlans.map(p => (
+                             <option key={p.id} value={p.name}>{p.name} (₦{p.price?.toLocaleString() || 0}/mo)</option>
+                           ))
+                        ) : (
+                           <>
+                             <option value="Basic">Basic (500/mo)</option>
+                             <option value="Professional">Professional (1,500/mo)</option>
+                             <option value="Enterprise">Enterprise (3,500/mo)</option>
+                           </>
+                        )}
                     </select>
                 </div>
                 <div className="space-y-2">
@@ -383,6 +399,32 @@ const PartnerDashboard: React.FC = () => {
                     />
                 </div>
               </div>
+
+              {/* Module Preview */}
+              {formData.plan && systemPlans.length > 0 && (() => {
+                 const selected = systemPlans.find(p => p.name === formData.plan);
+                 if (!selected) return null;
+                 const modules = Array.isArray(selected.modules) ? selected.modules : JSON.parse(selected.modules || '[]');
+                 return (
+                    <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm">
+                       <div className="flex items-center gap-2 mb-3">
+                          <Layers size={16} className="text-zinc-400" />
+                          <h6 className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Modules in {selected.name}</h6>
+                       </div>
+                       {modules.length > 0 ? (
+                         <div className="flex flex-wrap gap-2">
+                            {modules.map((m: string, i: number) => (
+                               <span key={i} className="px-2.5 py-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                                  {m}
+                               </span>
+                            ))}
+                         </div>
+                       ) : (
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">No modules configured for this plan.</p>
+                       )}
+                    </div>
+                 );
+              })()}
 
               <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-2xl group cursor-pointer transition-colors" onClick={() => setFormData({...formData, demo_requested: !formData.demo_requested})}>
                  <div className={`w-6 h-6 rounded border flex items-center justify-center transition-all ${formData.demo_requested ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600'}`}>

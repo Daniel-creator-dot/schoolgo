@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { User, Lock, ArrowRight, ShieldCheck, PieChart, Users, Building2, XCircle, Send } from 'lucide-react';
 import { API_BASE_URL } from '../constants';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface PartnerLoginProps {
   onLoginSuccess?: (data: any) => void;
   onBackToLanding?: () => void;
 }
 
-const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLanding }) => {
+export default function PartnerLogin({ onLoginSuccess, onBackToLanding }: PartnerLoginProps) {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,11 +52,11 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
       } else {
         const text = await response.text();
         console.error('Non-JSON response from server:', text.substring(0, 200));
-        setError('Server routing error. Please ensure your backend is restarted.');
+        setError(t('partner_login_failed'));
       }
     } catch (err: any) {
       console.error('Login Fetch Error:', err);
-      setError('Connection error or backend unreachable. Please try again.');
+      setError(t('partner_login_failed'));
     } finally {
       setLoading(false);
     }
@@ -99,22 +101,22 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
             <div className="flex items-center gap-3 mb-8 cursor-pointer group" onClick={onBackToLanding}>
               <img src="/assets/omni_portal_icon.png" alt="Logo" className="h-10 w-10 group-hover:scale-105 transition-transform" />
               <span className="text-2xl font-black tracking-tight text-zinc-900 dark:text-white">
-                Partner Portal
+                {t('partner_portal')}
               </span>
             </div>
             <h2 className="text-4xl font-black text-zinc-900 dark:text-white mb-6 leading-tight">
-              Grow your network, <br />
-              <span className="text-indigo-600 dark:text-indigo-400">Earn rewards.</span>
+              {t('grow_network')} <br />
+              <span className="text-indigo-600 dark:text-indigo-400">{t('earn_rewards')}</span>
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400 text-lg mb-10 max-w-md">
-              The professional ecosystem for school consultants and partners. Manage your referrals, track status, and view earnings in real-time.
+              {t('partner_description')}
             </p>
 
             <div className="space-y-6">
               {[
-                { icon: <PieChart className="w-5 h-5" />, title: "Real-time Tracking", desc: "Monitor school approvals as they happen." },
-                { icon: <ShieldCheck className="w-5 h-5" />, title: "Secure Payouts", desc: "Automated commission calculations." },
-                { icon: <Building2 className="w-5 h-5" />, title: "Lead Pipeline", desc: "Add schools with pending status for review." }
+                { icon: <PieChart className="w-5 h-5" />, title: t('real_time_tracking'), desc: t('real_time_tracking_desc') },
+                { icon: <ShieldCheck className="w-5 h-5" />, title: t('secure_payouts'), desc: t('secure_payouts_desc') },
+                { icon: <Building2 className="w-5 h-5" />, title: t('lead_pipeline'), desc: t('lead_pipeline_desc') }
               ].map((item, idx) => (
                 <div key={idx} className="flex items-start gap-4">
                   <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800/30 text-indigo-600 dark:text-indigo-400">
@@ -131,7 +133,7 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
 
           <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 mt-8">
             <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium italic">
-              "This Partner Network has transformed how we engage with schools."
+              {t('partner_quote')}
             </p>
           </div>
         </div>
@@ -142,7 +144,7 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
             onClick={onBackToLanding}
             className="absolute top-8 right-8 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-indigo-600 transition-colors"
           >
-            ← Back
+            {t('back')}
           </button>
           
           <div className="lg:hidden flex justify-center mb-8" onClick={onBackToLanding}>
@@ -150,8 +152,8 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
           </div>
           
           <div className="mb-10 text-center lg:text-left">
-            <h3 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">Welcome Back</h3>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm">Enter your partner credentials to continue</p>
+            <h3 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">{t('login_to_partner')}</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm">{t('login_subtitle')}</p>
           </div>
 
           {error && (
@@ -162,7 +164,7 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4 mb-1 block">Email Address</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4 mb-1 block">{t('email_address')}</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-indigo-600 transition-colors">
                   <User size={20} />
@@ -180,8 +182,8 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
 
             <div className="space-y-2">
               <div className="flex justify-between items-center ml-4 mr-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">Password</label>
-                <button type="button" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-500 transition-colors">Forgot?</button>
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">{t('password')}</label>
+                <button type="button" className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-500 transition-colors">{t('forgot_password')}</button>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-indigo-600 transition-colors">
@@ -207,7 +209,7 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  Access Dashboard
+                  {t('sign_in_btn')}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -215,7 +217,7 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
           </form>
 
           <p className="mt-8 text-center text-zinc-500 dark:text-zinc-400 text-xs font-medium">
-            Interested in becoming a partner? <button onClick={() => setIsApplyModalOpen(true)} className="text-indigo-600 font-bold hover:underline">Apply Now</button>
+            {t('no_account')} <button onClick={() => setIsApplyModalOpen(true)} className="text-indigo-600 font-bold hover:underline">{t('become_a_partner')}</button>
           </p>
         </div>
       </div>
@@ -341,4 +343,3 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
   );
 };
 
-export default PartnerLogin;
