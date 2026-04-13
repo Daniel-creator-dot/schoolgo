@@ -124,12 +124,13 @@ export default function LandingPage({
       {/* Navigation */}
       <nav className="absolute top-0 w-full z-50 bg-white/40 dark:bg-zinc-950/40 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
         <div className="max-w-7xl mx-auto px-6 md:px-6 h-14 md:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <img 
-              src="/assets/omni_portal_full_logo.png" 
-              alt="OmniPortal" 
-              className="h-8 md:h-10 w-auto object-contain" 
+              src="/assets/omni_portal_icon.png" 
+              alt="Omni" 
+              className="w-10 h-10 md:w-12 md:h-12 object-contain group-hover:rotate-12 transition-transform" 
             />
+            <span className="text-xl md:text-2xl font-black tracking-tighter uppercase">OmniPortal</span>
           </div>
 
           <div className="flex items-center gap-4 md:gap-6">
