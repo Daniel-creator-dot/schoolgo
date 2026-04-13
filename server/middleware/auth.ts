@@ -22,6 +22,8 @@ export const verifyToken = async (req: AuthRequest, res: Response, next: NextFun
     let userCheck;
     if (decoded.role === 'STUDENT' || decoded.role === 'PARENT') {
       userCheck = await pool.query('SELECT id FROM students WHERE id = $1', [decoded.id]);
+    } else if (decoded.role === 'PARTNER') {
+      userCheck = await pool.query('SELECT id FROM partners WHERE id = $1', [decoded.id]);
     } else {
       userCheck = await pool.query('SELECT id FROM users WHERE id = $1', [decoded.id]);
     }

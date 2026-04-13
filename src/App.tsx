@@ -287,7 +287,7 @@ export default function App() {
       setShowLanding(false);
       setShowLogin(false);
       setShowPartnerLogin(false);
-      loadData();
+      loadData(user.role);
     }
   }, []);
 
@@ -388,17 +388,20 @@ export default function App() {
     }
   };
 
-  const loadData = async () => {
+  const loadData = async (activeRole?: string) => {
+    const roleForFetch = activeRole || currentRole;
     if (showLogin || showLanding || showPartnerLogin) return;
+    if (roleForFetch === 'PARTNER') return; // Partners have their own isolated dashboard fetches
+
     try {
-      const isStaff = currentRole === "STAFF";
-      const isHOD = currentRole === "HOD";
-      const isFinance = currentRole === "FINANCE";
-      const isHR = currentRole === "HR";
+      const isStaff = roleForFetch === "STAFF";
+      const isHOD = roleForFetch === "HOD";
+      const isFinance = roleForFetch === "FINANCE";
+      const isHR = roleForFetch === "HR";
       const isAdmin =
-        currentRole === "SCHOOL_ADMIN" || currentRole === "SUPER_ADMIN";
-      const isStudent = currentRole === "STUDENT";
-      const isParent = currentRole === "PARENT";
+        roleForFetch === "SCHOOL_ADMIN" || roleForFetch === "SUPER_ADMIN";
+      const isStudent = roleForFetch === "STUDENT";
+      const isParent = roleForFetch === "PARENT";
 
       const resultsArr = await Promise.allSettled([
         fetchStudents(),
