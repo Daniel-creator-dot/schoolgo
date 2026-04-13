@@ -4,6 +4,7 @@ import {
   CheckCircle2, Clock, XCircle, Send, MessageSquare, 
   Wallet, TrendingUp, HelpCircle, LogOut, ChevronRight
 } from 'lucide-react';
+import { API_BASE_URL } from '../constants';
 
 interface SchoolLead {
   id: string;
@@ -39,7 +40,7 @@ const PartnerDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/partner/dashboard', {
+      const response = await fetch(`${API_BASE_URL}/partner/dashboard`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await response.json();
@@ -57,7 +58,7 @@ const PartnerDashboard: React.FC = () => {
   const handleAddSchool = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/partner/schools', {
+      const response = await fetch(`${API_BASE_URL}/partner/schools`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, Lock, ArrowRight, ShieldCheck, PieChart, Users, Building2, XCircle, Send } from 'lucide-react';
+import { API_BASE_URL } from '../constants';
 
 interface PartnerLoginProps {
   onLoginSuccess?: (data: any) => void;
@@ -32,7 +33,7 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
     setError('');
 
     try {
-      const response = await fetch('/api/auth/partner/login', {
+      const response = await fetch(`${API_BASE_URL}/auth/partner/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -65,7 +66,7 @@ const PartnerLogin: React.FC<PartnerLoginProps> = ({ onLoginSuccess, onBackToLan
       setRegError('');
       
       try {
-        const response = await fetch('/api/auth/partner/register', {
+        const response = await fetch(`${API_BASE_URL}/auth/partner/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(regData)
