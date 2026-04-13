@@ -1,14 +1,20 @@
 export async function safeAiFetch(url: string, options: RequestInit): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
+    console.log(`>>> [AI FETCH] Calling: ${url}`);
     const response = await fetch(url, options);
     const text = await response.text();
     
+    console.log(`>>> [AI FETCH] Status: ${response.status}, Raw Length: ${text?.length || 0}`);
+    if (text?.length < 100) {
+      console.log(`>>> [AI FETCH] Raw Content: "${text}"`);
+    }
+
     // Check if the body is empty
     if (!text || text.trim() === '') {
       if (!response.ok) {
         return { success: false, error: `AI service returned error status ${response.status} with empty response.` };
       }
-      return { success: false, error: 'AI service returned an empty response.' };
+      return { success: false, error: 'AI service returned an empty response (Status: ' + response.status + ').' };
     }
 
     // Try to parse as JSON
