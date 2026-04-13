@@ -285,6 +285,16 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
   ];
 
   const PAYMENT_COLORS = ['#10b981', '#f59e0b'];
+
+  const daysRemaining = useMemo(() => {
+    if (!organization?.expiry_date) return null;
+    const expiry = new Date(organization.expiry_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffTime = expiry.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }, [organization?.expiry_date]);
+
   return (
     <div className="space-y-8">
       <MessageAlert count={unreadMessagesCount} onNavigate={onNavigate} />
@@ -297,6 +307,29 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
           <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest border-r border-zinc-200 dark:border-zinc-800 pr-3">
             <Calendar className="w-4 h-4 text-indigo-600" />
             {organization?.academic_year || '—'}
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest pl-1">
+            <Zap className={cn(
+              "w-4 h-4",
+              daysRemaining === null ? "text-zinc-400" :
+              daysRemaining < 5 ? "text-red-500" :
+              daysRemaining < 15 ? "text-amber-500" :
+              "text-emerald-500"
+            )} />
+            <div className="flex flex-col leading-none">
+              <span className="text-zinc-900 dark:text-white">{organization?.plan || 'Free'} Plan</span>
+              <span className={cn(
+                "text-[9px] mt-0.5",
+                daysRemaining === null ? "text-zinc-500" :
+                daysRemaining < 5 ? "text-red-500" :
+                daysRemaining < 15 ? "text-amber-500" :
+                "text-zinc-500"
+              )}>
+                {daysRemaining === null ? 'No Expiry Set' : 
+                 daysRemaining < 0 ? 'Expired' : 
+                 `Expires in ${daysRemaining} days`}
+              </span>
+            </div>
           </div>
           <div className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
             {organization?.current_term || 'Term 1'}

@@ -167,11 +167,17 @@ export default function Layout({
         <div className="p-6 flex items-center justify-between">
           {isSidebarOpen ? (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">O</div>
-              <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">OmniPortal</span>
+              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+                {currentRole === 'SUPER_ADMIN' ? 'O' : (organization?.name?.charAt(0) || 'S')}
+              </div>
+              <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white truncate max-w-[160px]">
+                {currentRole === 'SUPER_ADMIN' ? 'OmniPortal' : (organization?.name || 'School Portal')}
+              </span>
             </div>
           ) : (
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold mx-auto">O</div>
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold mx-auto">
+              {currentRole === 'SUPER_ADMIN' ? 'O' : (organization?.name?.charAt(0) || 'S')}
+            </div>
           )}
         </div>
 
@@ -449,8 +455,12 @@ export default function Layout({
             >
               <div className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">O</div>
-                  <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">OmniPortal</span>
+                  <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
+                    {currentRole === 'SUPER_ADMIN' ? 'O' : (organization?.name?.charAt(0) || 'S')}
+                  </div>
+                  <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">
+                    {currentRole === 'SUPER_ADMIN' ? 'OmniPortal' : (organization?.name || 'School Portal')}
+                  </span>
                 </div>
                 <button 
                   id="mobile-menu-close"

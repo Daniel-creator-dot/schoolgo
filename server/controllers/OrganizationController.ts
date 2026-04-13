@@ -8,7 +8,18 @@ import { recordAuditLog } from '../lib/audit.ts';
 export const getOrganization = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT * FROM organizations WHERE id = $1', [id]);
+    const result = await pool.query(`
+      SELECT o.*, s.expiry_date, s.status as subscription_status
+      FROM organizations o
+      LEFT JOIN LATERAL (
+          SELECT expiry_date, status
+          FROM subscriptions
+          WHERE org_id = o.id
+          ORDER BY created_at DESC
+          LIMIT 1
+      ) s ON true
+      WHERE o.id = $1
+    `, [id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Organization not found' });
     res.json(result.rows[0]);
   } catch (err: any) {
@@ -22,9 +33,30 @@ export const getOrganizations = async (req: AuthRequest, res: Response) => {
     const orgId = req.user.org_id;
     let result;
     if (role === 'SUPER_ADMIN') {
-      result = await pool.query('SELECT * FROM organizations');
+      result = await pool.query(`
+        SELECT o.*, s.expiry_date, s.status as subscription_status
+        FROM organizations o
+        LEFT JOIN LATERAL (
+            SELECT expiry_date, status
+            FROM subscriptions
+            WHERE org_id = o.id
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) s ON true
+      `);
     } else {
-      result = await pool.query('SELECT * FROM organizations WHERE id = $1', [orgId]);
+      result = await pool.query(`
+        SELECT o.*, s.expiry_date, s.status as subscription_status
+        FROM organizations o
+        LEFT JOIN LATERAL (
+            SELECT expiry_date, status
+            FROM subscriptions
+            WHERE org_id = o.id
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) s ON true
+        WHERE o.id = $1
+      `, [orgId]);
     }
     res.json(result.rows);
   } catch (err: any) {
@@ -77,7 +109,17 @@ export const updateOrganization = async (req: AuthRequest, res: Response) => {
     
     values.push(id);
     const result = await client.query(
-      `UPDATE organizations SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+      `SELECT o.*, s.expiry_date, s.status as subscription_status
+       FROM (
+         UPDATE organizations SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *
+       ) o
+       LEFT JOIN LATERAL (
+           SELECT expiry_date, status
+           FROM subscriptions
+           WHERE org_id = o.id
+           ORDER BY created_at DESC
+           LIMIT 1
+       ) s ON true`,
       values
     );
 
