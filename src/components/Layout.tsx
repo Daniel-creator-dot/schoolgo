@@ -167,16 +167,42 @@ export default function Layout({
         <div className="p-6 flex items-center justify-between">
           {isSidebarOpen ? (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
-                {currentRole === 'SUPER_ADMIN' ? 'O' : (organization?.name?.charAt(0) || 'S')}
-              </div>
-              <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white truncate max-w-[160px]">
-                {currentRole === 'SUPER_ADMIN' ? 'OmniPortal' : (organization?.name || 'School Portal')}
-              </span>
+              {currentRole === 'SUPER_ADMIN' ? (
+                <img 
+                  src="/assets/omni_portal_full_logo.png" 
+                  alt="OmniPortal" 
+                  className="h-8 w-auto object-contain" 
+                />
+              ) : (
+                <>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden bg-indigo-600">
+                    {organization?.logo ? (
+                      <img src={organization.logo} alt={organization.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white font-bold">{organization?.name?.charAt(0) || 'S'}</span>
+                    )}
+                  </div>
+                  <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white truncate max-w-[160px]">
+                    {organization?.name || 'School Portal'}
+                  </span>
+                </>
+              )}
             </div>
           ) : (
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold mx-auto">
-              {currentRole === 'SUPER_ADMIN' ? 'O' : (organization?.name?.charAt(0) || 'S')}
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto overflow-hidden bg-indigo-600">
+              {currentRole === 'SUPER_ADMIN' ? (
+                <img 
+                  src="/assets/omni_portal_icon.png" 
+                  alt="Omni" 
+                  className="w-full h-full object-contain p-1" 
+                />
+              ) : (
+                organization?.logo ? (
+                  <img src={organization.logo} alt={organization.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-white font-bold">{organization?.name?.charAt(0) || 'S'}</span>
+                )
+              )}
             </div>
           )}
         </div>
@@ -455,10 +481,18 @@ export default function Layout({
             >
               <div className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
-                    {currentRole === 'SUPER_ADMIN' ? 'O' : (organization?.name?.charAt(0) || 'S')}
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden bg-indigo-600">
+                    {currentRole === 'SUPER_ADMIN' ? (
+                      <img src="/assets/omni_portal_icon.png" alt="Omni" className="w-full h-full object-contain p-1" />
+                    ) : (
+                      organization?.logo ? (
+                        <img src={organization.logo} alt={organization.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white font-bold">{organization?.name?.charAt(0) || 'S'}</span>
+                      )
+                    )}
                   </div>
-                  <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">
+                  <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white truncate max-w-[180px]">
                     {currentRole === 'SUPER_ADMIN' ? 'OmniPortal' : (organization?.name || 'School Portal')}
                   </span>
                 </div>
