@@ -213,7 +213,7 @@ export function DataTable<T extends { id: string | number }>({
           </div>
         </div>
 
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className={cn("overflow-x-auto custom-scrollbar transition-all duration-200", activeDropdown ? "pb-48" : "")}>
           <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-0">
             <thead>
               <tr className="bg-zinc-50/50 dark:bg-zinc-800/30">
