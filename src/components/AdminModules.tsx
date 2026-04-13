@@ -2077,6 +2077,7 @@ export function Settings({ role }: { role?: UserRole }) {
     signature: ''
   });
   const [groqKey, setGroqKey] = useState('');
+  const [aiStatus, setAiStatus] = useState<'checking' | 'active' | 'outdated' | 'error'>('checking');
 
   useEffect(() => {
     const loadOrg = async () => {
@@ -2093,6 +2094,19 @@ export function Settings({ role }: { role?: UserRole }) {
             });
             // Check if backend AI is configured
             const token = localStorage.getItem('token');
+            
+            // Diagnostics: Check if AI routes even exist
+            const testRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai-test`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (testRes.status === 404) {
+              setAiStatus('outdated');
+            } else if (testRes.ok) {
+              setAiStatus('active');
+            } else {
+              setAiStatus('error');
+            }
+
             const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
               method: 'POST',
               headers: { 
@@ -2196,7 +2210,25 @@ export function Settings({ role }: { role?: UserRole }) {
         <div className="p-8 space-y-8">
           {(role === 'SCHOOL_ADMIN' || role === 'SUPER_ADMIN') && (
             <section className="space-y-4">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">School Branding</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">AI Configuration</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-zinc-500 uppercase font-medium">Backend Status:</span>
+                  {aiStatus === 'checking' && <div className="text-[10px] text-zinc-400 animate-pulse">Checking...</div>}
+                  {aiStatus === 'active' && <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" /><span className="text-[10px] text-emerald-500 font-bold uppercase">Online</span></div>}
+                  {aiStatus === 'outdated' && <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" /><span className="text-[10px] text-amber-500 font-bold uppercase">Update Required</span></div>}
+                  {aiStatus === 'error' && <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-red-500 rounded-full" /><span className="text-[10px] text-red-500 font-bold uppercase">Error</span></div>}
+                </div>
+              </div>
+              
+              {aiStatus === 'outdated' && (
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-600 leading-relaxed">
+                  <span className="font-bold block mb-1">⚠️ Backend Sync Required</span>
+                  Your frontend is trying to use Groq AI features, but the backend server doesn't have the latest updates yet. 
+                  Please <strong>push your changes</strong> and wait for the Render deployment to finish.
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">School Logo</label>

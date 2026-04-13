@@ -35,17 +35,18 @@ router.post('/auth/partner/register', PartnerController.register);
 // PROTECTED ROUTES
 router.use(verifyToken);
 
+// AI & DIAGNOSTICS
+router.get('/ai-test', (req, res) => res.json({ status: 'OK', message: 'AI Routes are active', time: new Date() }));
+router.post('/ai/generate', AIController.generateResponse);
+router.get('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getGeminiKeys);
+router.post('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.saveGeminiKey);
+
 // ORGANIZATIONS
 router.get('/organizations', OrganizationController.getOrganizations);
 router.get('/organizations/:id', OrganizationController.getOrganization);
 router.post('/organizations', checkRole(['SUPER_ADMIN']), OrganizationController.createOrganization);
 router.patch('/organizations/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), OrganizationController.updateOrganization);
 router.delete('/organizations/:id', checkRole(['SUPER_ADMIN']), OrganizationController.deleteOrganization);
-
-// AI PROXY
-router.post('/ai/generate', AIController.generateResponse);
-router.get('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getGeminiKeys);
-router.post('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.saveGeminiKey);
 
 // PARTNERS
 router.get('/partner/dashboard', checkRole(['PARTNER']), PartnerController.getDashboard);
