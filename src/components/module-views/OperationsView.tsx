@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { DataTable } from '../DataTable';
+import { 
+  Download, 
+  X, 
+  FileSpreadsheet,
+  AlertCircle
+} from 'lucide-react';
 import { UserRole, Ward } from '../../types';
+import { downloadInventoryTemplate, parseInventoryExcel } from '../../lib/excel';
 
 export const OperationsModules = {
   Transport: ({ role, currentStudentId, data, students, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
@@ -1033,72 +1040,179 @@ export const OperationsModules = {
             </div>
           </div>
         )}
+      </div>
+    );
+  },
+  Inventory: ({ data, onSave, onDelete }: { data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
+    const [importing, setImporting] = useState(false);
+    const [previewData, setPreviewData] = useState<any[] | null>(null);
+
+    const handleDownloadTemplate = () => {
+      downloadInventoryTemplate();
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setImporting(true);
+      try {
+        const parsed = await parseInventoryExcel(file);
+        setPreviewData(parsed);
+      } catch (err: any) {
+        (window as any).showToast?.('Failed to parse Inventory Excel.', 'error');
+      } finally {
+        setImporting(false);
+        e.target.value = '';
+      }
+    };
+
+    const confirmImport = async () => {
+      if (!previewData || !onSave) return;
+      
+      try {
+        for (const item of previewData) {
+          await onSave(item);
+        }
+        setPreviewData(null);
+        (window as any).showToast?.(`Successfully imported ${previewData.length} inventory items.`, 'success');
+      } catch (err) {
+        (window as any).showToast?.('Error saving inventory items.', 'error');
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <DataTable 
+          title="Inventory & Assets" 
+          data={data || []}
+          onSave={onSave}
+          onDelete={onDelete}
+          columns={[
+            { header: 'Item Name', accessor: (item: any) => item.item_name, className: 'font-bold' },
+            { header: 'Category', accessor: (item: any) => item.category },
+            { header: 'Quantity', accessor: (item: any) => item.quantity },
+            { header: 'Unit Price', accessor: (item: any) => `₦${Number(item.price || 0).toLocaleString()}` },
+          ]}
+          onAdd={onSave ? () => {} : undefined}
+          actions={(
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handleDownloadTemplate}
+                className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl font-bold hover:bg-zinc-200 transition-colors flex items-center gap-2 text-xs"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Template
+              </button>
+              <label className="px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl font-bold hover:bg-zinc-50 transition-colors flex items-center gap-2 cursor-pointer text-xs">
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                Import Excel
+                <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleFileUpload} />
+              </label>
+            </div>
+          )}
+          renderForm={(item, isViewOnly) => (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase">Item Name</label>
+                <input 
+                  name="item_name" 
+                  defaultValue={item?.item_name} 
+                  required 
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Category</label>
+                  <input 
+                    name="category" 
+                    defaultValue={item?.category} 
+                    disabled={isViewOnly}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Quantity</label>
+                  <input 
+                    type="number"
+                    name="quantity" 
+                    defaultValue={item?.quantity || 0} 
+                    disabled={isViewOnly}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Unit Price</label>
+                  <input 
+                    type="number"
+                    step="0.01"
+                    name="price" 
+                    defaultValue={item?.price || 0} 
+                    disabled={isViewOnly}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        />
+
+        {/* Inventory Import Preview Modal */}
+        {previewData && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-4xl rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">Preview Inventory Import</h2>
+                  <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider mt-1">Review the list of items before updating the inventory</p>
+                </div>
+                <button onClick={() => setPreviewData(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[50vh]">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-100 dark:border-zinc-800">
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Item Name</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Category</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Quantity</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Unit Price</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Total Value</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {previewData.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
+                        <td className="px-4 py-3 font-bold">{row.item_name}</td>
+                        <td className="px-4 py-3">{row.category}</td>
+                        <td className="px-4 py-3 font-bold">{row.quantity}</td>
+                        <td className="px-4 py-3">₦{row.price?.toLocaleString()}</td>
+                        <td className="px-4 py-3 font-black text-indigo-600">₦{(row.quantity * row.price).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 flex gap-3">
+                <button onClick={() => setPreviewData(null)} className="flex-1 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl font-bold text-sm">Cancel</button>
+                <button 
+                  onClick={confirmImport}
+                  className="flex-3 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-200 dark:shadow-none"
+                >
+                  Confirm & Import {previewData.length} Items
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
     );
   },
-  Inventory: ({ data, onSave, onDelete }: { data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => (
-    <DataTable 
-      title="Inventory & Assets" 
-      data={data || []}
-      onSave={onSave}
-      onDelete={onDelete}
-      columns={[
-        { header: 'Item Name', accessor: (item: any) => item.item_name, className: 'font-bold' },
-        { header: 'Category', accessor: (item: any) => item.category },
-        { header: 'Quantity', accessor: (item: any) => item.quantity },
-        { header: 'Unit Price', accessor: (item: any) => `₦${Number(item.price || 0).toLocaleString()}` },
-      ]}
-      onAdd={onSave ? () => {} : undefined}
-      renderForm={(item, isViewOnly) => (
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-500 uppercase">Item Name</label>
-            <input 
-              name="item_name" 
-              defaultValue={item?.item_name} 
-              required 
-              disabled={isViewOnly}
-              className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase">Category</label>
-              <input 
-                name="category" 
-                defaultValue={item?.category} 
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase">Quantity</label>
-              <input 
-                type="number"
-                name="quantity" 
-                defaultValue={item?.quantity || 0} 
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase">Unit Price</label>
-              <input 
-                type="number"
-                step="0.01"
-                name="price" 
-                defaultValue={item?.price || 0} 
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    />
-  ),
   HealthMedical: ({ role, currentStudentId, wards, data, staffList, students, onSave, onDelete }: { role?: UserRole, currentStudentId?: string, wards?: Ward[], data?: any[], staffList?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
     const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
     const filteredData = role === 'PARENT' ? (data || []).filter(d => d.wardId === selectedWardId) : (data || []);

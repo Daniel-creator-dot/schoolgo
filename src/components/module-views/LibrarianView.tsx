@@ -14,16 +14,20 @@ import {
   Edit2,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  FileSpreadsheet
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { UserRole, Book, BorrowRecord, Student } from '../../types';
 import { DataTable } from '../DataTable';
+import { downloadLibraryTemplate, parseLibraryExcel } from '../../lib/excel';
 
 export const LibraryModules = {
   BookManagement: ({ data, onSave, onDelete }: { data: Book[], onSave: (data: any) => void, onDelete: (item: any) => void }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingBook, setEditingBook] = useState<any>(null);
+    const [importing, setImporting] = useState(false);
+    const [previewData, setPreviewData] = useState<any[] | null>(null);
 
     const handleEdit = (book: Book) => {
       setEditingBook(book);
@@ -33,6 +37,40 @@ export const LibraryModules = {
     const handleAdd = () => {
       setEditingBook(null);
       setShowModal(true);
+    };
+
+    const handleDownloadTemplate = () => {
+      downloadLibraryTemplate();
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setImporting(true);
+      try {
+        const parsed = await parseLibraryExcel(file);
+        setPreviewData(parsed);
+      } catch (err: any) {
+        (window as any).showToast?.('Failed to parse Library Excel.', 'error');
+      } finally {
+        setImporting(false);
+        e.target.value = '';
+      }
+    };
+
+    const confirmImport = async () => {
+      if (!previewData || !onSave) return;
+      
+      try {
+        for (const book of previewData) {
+          await onSave(book);
+        }
+        setPreviewData(null);
+        (window as any).showToast?.(`Successfully imported ${previewData.length} books.`, 'success');
+      } catch (err) {
+        (window as any).showToast?.('Error saving imported books.', 'error');
+      }
     };
 
     return (
@@ -53,7 +91,77 @@ export const LibraryModules = {
           onEdit={handleEdit}
           onDelete={onDelete}
           autoModal={false}
+          actions={(
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={handleDownloadTemplate}
+                className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl font-bold hover:bg-zinc-200 transition-colors flex items-center gap-2 text-xs"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Template
+              </button>
+              <label className="px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-xl font-bold hover:bg-zinc-50 transition-colors flex items-center gap-2 cursor-pointer text-xs">
+                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+                Import Books
+                <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleFileUpload} />
+              </label>
+            </div>
+          )}
         />
+
+        {/* Library Import Preview Modal */}
+        {previewData && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-zinc-900 w-full max-w-4xl rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">Preview Library Import</h2>
+                  <p className="text-xs text-zinc-500 font-bold uppercase tracking-wider mt-1">Review the list of books before finalizing the addition to the catalog</p>
+                </div>
+                <button onClick={() => setPreviewData(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 overflow-y-auto max-h-[50vh]">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-100 dark:border-zinc-800">
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Title</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Author</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Category</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">ISBN</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Qty</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Lost Fee</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {previewData.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30">
+                        <td className="px-4 py-3 font-bold">{row.title}</td>
+                        <td className="px-4 py-3">{row.author}</td>
+                        <td className="px-4 py-3 text-xs">{row.category}</td>
+                        <td className="px-4 py-3 font-mono text-[10px]">{row.isbn}</td>
+                        <td className="px-4 py-3">{row.total_copies}</td>
+                        <td className="px-4 py-3 font-bold text-indigo-600">${row.price}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 flex gap-3">
+                <button onClick={() => setPreviewData(null)} className="flex-1 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl font-bold text-sm">Cancel</button>
+                <button 
+                  onClick={confirmImport}
+                  className="flex-3 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-xl shadow-indigo-200 dark:shadow-none"
+                >
+                  Confirm & Import {previewData.length} Books
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
