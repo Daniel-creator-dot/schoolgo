@@ -68,6 +68,8 @@ import { Student, UserRole, Inquiry, Application, Acceptance, ReportCardTemplate
 import { Modal } from '../UI';
 import { API_BASE_URL } from '../../constants';
 import { useLanguage } from '../../lib/LanguageContext';
+import { downloadStudentTemplate, parseStudentExcel } from '../../lib/excel';
+import { Download, FileUp } from 'lucide-react';
 
 const SectionEditor: React.FC<{ section: ReportCardSection, onUpdate: (s: ReportCardSection) => void, onRemove: () => void }> = ({ section, onUpdate, onRemove }) => {
   return (
@@ -1669,9 +1671,11 @@ export const AdmissionsModules = {
       </>
     );
   },
-  Acceptance: ({ data, classes = [], feeStructures = [], onConvert, onSave, onDelete, title = "Admission Acceptance" }: { data: Acceptance[], classes?: any[], feeStructures?: any[], onConvert: (item: Acceptance) => void, onSave?: (data: any) => void, onDelete?: (item: any) => void, title?: string }) => {
+  Acceptance: ({ data, classes = [], feeStructures = [], onConvert, onSave, onDelete, title = "Admission Acceptance", showBulkActions = false }: { data: Acceptance[], classes?: any[], feeStructures?: any[], onConvert: (item: Acceptance) => void, onSave?: (data: any) => void, onDelete?: (item: any) => void, title?: string, showBulkActions?: boolean }) => {
     const { t } = useLanguage();
     const [viewItem, setViewItem] = useState<Acceptance | null>(null);
+    const [importPreviewItems, setImportPreviewItems] = useState<any[]>([]);
+    const [isImporting, setIsImporting] = useState(false);
     const [dynamicScores, setDynamicScores] = useState<Array<{ subject: string, score: string }>>([]);
     const [activeFields, setActiveFields] = useState<Set<string>>(new Set());
     const [selectedGrade, setSelectedGrade] = useState<string>('');
@@ -1737,8 +1741,104 @@ export const AdmissionsModules = {
       return fee ? fee.amount : '0.00';
     };
 
+    const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        setIsImporting(true);
+        const records = await parseStudentExcel(file, classes);
+        setImportPreviewItems(records);
+      } catch (err) {
+        (window as any).showToast?.('Failed to parse Excel file. Please use the provided template.', 'error');
+      } finally {
+        setIsImporting(false);
+        e.target.value = ''; // Reset input
+      }
+    };
+
+    const confirmBulkEnrollment = async () => {
+      if (!onSave) return;
+      
+      const studentsToEnroll = importPreviewItems.filter(s => s.name && s.class_id);
+      if (studentsToEnroll.length === 0) {
+        (window as any).showToast?.('No valid students found to enroll.', 'warning');
+        return;
+      }
+
+      setIsImporting(true);
+      try {
+        let successCount = 0;
+        for (const student of studentsToEnroll) {
+          // Find first matching fee for the class if not specified
+          const classFees = feeStructures.filter(f => f.class_id === student.class_id);
+          const feeIds = classFees.length > 0 ? classFees.map(f => f.id) : [];
+          const totalAmount = classFees.reduce((sum, f) => sum + parseFloat(f.amount), 0).toFixed(2);
+
+          const enrollmentData = {
+            ...student,
+            fee_ids: feeIds,
+            fee_amount: totalAmount,
+            decision: 'Enrolled'
+          };
+          delete enrollmentData.id; // Remove temp ID
+          delete enrollmentData.class_name;
+
+          await onSave(enrollmentData);
+          successCount++;
+        }
+        (window as any).showToast?.(`Successfully enrolled ${successCount} students!`, 'success');
+        setImportPreviewItems([]);
+      } catch (err) {
+        (window as any).showToast?.('Some students failed to enroll. Please refresh and check.', 'error');
+      } finally {
+        setIsImporting(false);
+      }
+    };
+
     return (
       <>
+        {showBulkActions && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600">
+                <FileUp className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-tight">Bulk Enrollment</h3>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Enroll multiple students at once via Excel</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => downloadStudentTemplate(classes)}
+                className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-indigo-600 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-xl transition-all"
+              >
+                <Download className="w-4 h-4" />
+                Download Template
+              </button>
+              
+              <label className="relative cursor-pointer group">
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileImport}
+                  className="hidden"
+                  disabled={isImporting}
+                />
+                <div className={cn(
+                  "flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none transition-all group-hover:bg-indigo-700 active:scale-95",
+                  isImporting && "opacity-50 cursor-not-allowed"
+                )}>
+                  {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  Import from Excel
+                </div>
+              </label>
+            </div>
+          </div>
+        )}
+
         <DataTable<Acceptance>
           title={title}
           data={data}
@@ -2377,6 +2477,78 @@ export const AdmissionsModules = {
             </div>
           )}
         </Modal>
+
+        <Modal
+          isOpen={importPreviewItems.length > 0}
+          onClose={() => setImportPreviewItems([])}
+          title="Review Student Import"
+          maxWidth="max-w-5xl"
+        >
+          <div className="space-y-6">
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-center gap-4">
+              <div className="p-2 rounded-xl bg-white dark:bg-zinc-900 text-amber-600">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-amber-900 dark:text-amber-200 uppercase">Verification Required</p>
+                <p className="text-[10px] font-bold text-amber-700/70 dark:text-amber-400">Please review the detected records below. Rows with missing classes cannot be enrolled.</p>
+              </div>
+            </div>
+
+            <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-zinc-50 dark:bg-zinc-800">
+                  <tr>
+                    <th className="px-4 py-3 font-black uppercase tracking-widest">Student Name</th>
+                    <th className="px-4 py-3 font-black uppercase tracking-widest">Admission No</th>
+                    <th className="px-4 py-3 font-black uppercase tracking-widest">Detected Class</th>
+                    <th className="px-4 py-3 font-black uppercase tracking-widest">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {importPreviewItems.map((item, i) => (
+                    <tr key={i} className="hover:bg-zinc-50/50">
+                      <td className="px-4 py-3 font-bold">{item.name}</td>
+                      <td className="px-4 py-3 text-zinc-500">{item.admission_no}</td>
+                      <td className="px-4 py-3">
+                        {item.class_id ? (
+                          <span className="text-emerald-600 font-bold">{item.class_name}</span>
+                        ) : (
+                          <span className="text-rose-500 font-bold italic">Class not found: "{item.class_name}"</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.class_id ? (
+                          <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg text-[10px] font-black uppercase">Ready</span>
+                        ) : (
+                          <span className="px-2 py-1 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-lg text-[10px] font-black uppercase">Error</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setImportPreviewItems([])}
+                className="flex-1 py-4 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-zinc-50 transition-colors"
+                disabled={isImporting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmBulkEnrollment}
+                className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                disabled={isImporting || !importPreviewItems.some(s => s.class_id)}
+              >
+                {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                Enroll {importPreviewItems.filter(s => s.class_id).length} Students
+              </button>
+            </div>
+          </div>
+        </Modal>
       </>
     );
   },
@@ -2498,6 +2670,7 @@ export const OnboardingView = ({
             onSave={onSave ? (data) => onSave('acceptance', data) : undefined}
             onDelete={onDelete ? (item) => onDelete('acceptance', item) : undefined}
             title="Enrolled Students"
+            showBulkActions={true}
           />
         )}
       </div>
