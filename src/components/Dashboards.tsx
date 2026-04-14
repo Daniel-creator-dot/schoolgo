@@ -135,11 +135,48 @@ function MessageAlert({ count, onNavigate }: { count: number, onNavigate?: (view
   );
 }
 
-export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate }: { stats?: { totalOrganizations: string; activeSubscriptions: string; totalUsers: string; annualRevenue: string }, unreadMessagesCount?: number, onNavigate?: (view: string) => void }) {
+function PendingReferralAlert({ count, onNavigate }: { count: number, onNavigate?: (view: string) => void }) {
+  if (count <= 0) return null;
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      onClick={() => onNavigate?.('Organizations')}
+      className="p-6 bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 border border-amber-500/20 dark:border-amber-500/30 rounded-3xl shadow-lg cursor-pointer group relative overflow-hidden"
+    >
+      <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
+      <div className="relative flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-amber-500/20 rounded-2xl flex items-center justify-center">
+            <School className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100 flex items-center gap-2">
+              {count} Pending Referral{count > 1 ? 's' : ''}
+              <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-ping" />
+            </h3>
+            <p className="text-amber-600 dark:text-amber-400/80 text-sm font-medium">New school applications require your review and approval.</p>
+          </div>
+        </div>
+        <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center transition-transform group-hover:translate-x-1">
+          <ChevronRight className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate, organizations = [] }: { stats?: { totalOrganizations: string; activeSubscriptions: string; totalUsers: string; annualRevenue: string }, unreadMessagesCount?: number, onNavigate?: (view: string) => void, organizations?: any[] }) {
   const { t } = useLanguage();
+  const pendingCount = organizations.filter(o => o.status === 'Pending').length;
+
   return (
     <div className="space-y-8">
-      <MessageAlert count={unreadMessagesCount} onNavigate={onNavigate} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MessageAlert count={unreadMessagesCount} onNavigate={onNavigate} />
+        <PendingReferralAlert count={pendingCount} onNavigate={onNavigate} />
+      </div>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{t('system_overview')}</h1>

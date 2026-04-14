@@ -1671,20 +1671,20 @@ export default function App() {
                 <SuperAdminDashboard
                   unreadMessagesCount={unreadMessagesCount}
                   onNavigate={setCurrentView}
+                  organizations={organizations}
                   stats={{
                     totalOrganizations: organizations.length.toString(),
                     activeSubscriptions: organizations
                       .filter((o) => o.status === "Active")
                       .length.toString(),
-                    totalUsers: "45.2k", // Placeholder until users are deep
-                    annualRevenue: "GH₵ 1,494,000", // Placeholder
+                    totalUsers: "45.2k", 
+                    annualRevenue: "GH₵ 1,494,000",
                   }}
                 />
                 <SuperAdminModules.Organizations
                   data={organizations}
                   onAdd={() => setCurrentView("Create Organization")}
                   onEdit={(org) => {
-                    // In a real app we'd open an edit modal, for now we'll just toast
                     showToast(`Edit for ${org.name} coming soon!`, "info");
                   }}
                   onDelete={(org) =>
@@ -1694,6 +1694,7 @@ export default function App() {
                       type: "organization",
                     })
                   }
+                  onApprove={handleApproveReferral}
                 />
               </div>
             );

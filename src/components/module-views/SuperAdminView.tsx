@@ -59,12 +59,20 @@ export const SuperAdminModules = {
         },
       ]}
       extraActions={(item: any) => item.status === 'Pending' && (
-        <button
-          onClick={() => onApprove?.(item)}
-          className="flex items-center w-full gap-3 px-3 py-2 text-sm font-bold rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
-        >
-          Approve Referral
-        </button>
+        <div className="flex flex-col gap-1">
+          <button
+            onClick={() => onApprove?.(item)}
+            className="flex items-center w-full gap-3 px-3 py-2 text-sm font-bold rounded-lg text-emerald-600 hover:bg-emerald-50 transition-colors"
+          >
+            Approve Referral
+          </button>
+          <button
+            onClick={() => onDelete?.(item)}
+            className="flex items-center w-full gap-3 px-3 py-2 text-sm font-bold rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+          >
+            Reject & Delete
+          </button>
+        </div>
       )}
     />
   ),
