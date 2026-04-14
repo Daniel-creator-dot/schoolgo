@@ -1631,7 +1631,8 @@ export default function App() {
     if (
       currentView === "Settings" ||
       currentView === "System Settings" ||
-      currentView === "School Profile"
+      currentView === "School Profile" ||
+      currentView === "profile"
     )
       return <Settings role={currentRole} />;
     if (currentView === "Notifications") return <AuditLogs />;
