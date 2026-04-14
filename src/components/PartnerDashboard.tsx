@@ -26,17 +26,14 @@ const PartnerDashboard: React.FC = () => {
   // Form State
   const [formData, setFormData] = useState({
     name: '',
-    type: 'Private K-12',
+    type: 'Primary School',
     email: '',
     contact_number: '',
-    admin_email: '',
-    admin_password: '', // Hidden or auto-generated
-    plan: 'Professional',
-    demo_requested: false,
     address: '',
     custom_domain: '',
     logo: '',
     signature: '',
+    plan: 'Professional',
     language: 'en',
     timezone: 'GMT'
   });
@@ -95,9 +92,9 @@ const PartnerDashboard: React.FC = () => {
         setIsModalOpen(false);
         fetchDashboardData();
         setFormData({
-            name: '', type: 'Private K-12', email: '', contact_number: '',
-            admin_email: '', admin_password: '', plan: 'Professional', demo_requested: false,
-            address: '', custom_domain: '', logo: '', signature: '', language: 'en', timezone: 'GMT'
+            name: '', type: 'Primary School', email: '', contact_number: '',
+            address: '', custom_domain: '', logo: '', signature: '', 
+            plan: systemPlans[0]?.name || 'Professional', language: 'en', timezone: 'GMT'
         });
       }
     } catch (err) {
@@ -337,7 +334,6 @@ const PartnerDashboard: React.FC = () => {
           )}
         </div>
       </main>
-
       {/* Modal - Add School */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -345,8 +341,8 @@ const PartnerDashboard: React.FC = () => {
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-4xl rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
             <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50 shrink-0">
               <div>
-                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Refer a New Institution</h3>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 font-medium">Fill in the comprehensive details for your prospective school lead.</p>
+                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Provision New School</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 font-medium">Create a new organization lead. It will be pending until Super Admin approval.</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -356,206 +352,179 @@ const PartnerDashboard: React.FC = () => {
               </button>
             </div>
             
-            <form onSubmit={handleAddSchool} className="p-8 space-y-6 overflow-y-auto">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Name</label>
-                  <input 
-                    type="text" 
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
-                    placeholder="e.g. British International School" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Type</label>
-                  <select 
-                    value={formData.type}
-                    onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none"
-                  >
-                    <option>Private K-12</option>
-                    <option>Tertiary Institution</option>
-                    <option>Technical College</option>
-                    <option>International School</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Admin Email</label>
+            <form onSubmit={handleAddSchool} className="flex-1 overflow-y-auto">
+              <div className="p-8 space-y-8">
+                {/* 1. Basic Info */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Organization Name</label>
                     <input 
-                        type="email" 
-                        required
-                        value={formData.admin_email}
-                        onChange={(e) => setFormData({...formData, admin_email: e.target.value})}
-                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
-                        placeholder="admin@school.com" 
+                      type="text" required
+                      value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
+                      placeholder="e.g. St. Patrick's School" 
                     />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Custom Domain</label>
-                  <div className="flex items-center">
-                    <input
-                      type="text"
-                      value={formData.custom_domain}
-                      onChange={(e) => setFormData({ ...formData, custom_domain: e.target.value })}
-                      placeholder="school-name"
-                      className="flex-1 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-l-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                    />
-                    <span className="px-4 py-3 bg-zinc-100 dark:bg-zinc-700 border border-l-0 border-zinc-200 dark:border-zinc-700 rounded-r-xl text-zinc-500 text-xs font-bold">.omniportal.com</span>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Organization Type</label>
+                    <select 
+                      value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm"
+                    >
+                      <option>Primary School</option>
+                      <option>High School</option>
+                      <option>University</option>
+                      <option>Vocational</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                      <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Admin Email</label>
+                      <input 
+                          type="email" required
+                          value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
+                          placeholder="admin@school.com" 
+                      />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Custom Domain</label>
+                    <div className="flex items-center">
+                      <input
+                        type="text"
+                        value={formData.custom_domain} onChange={(e) => setFormData({ ...formData, custom_domain: e.target.value })}
+                        placeholder="school-name"
+                        className="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-l-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                      />
+                      <span className="px-4 py-2.5 bg-zinc-100 dark:bg-zinc-700 border border-l-0 border-zinc-200 dark:border-zinc-700 rounded-r-xl text-zinc-500 text-sm">.omniportal.com</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Logo</label>
-                  <div className="flex items-center gap-4">
-                    {formData.logo && (
-                      <img src={formData.logo} alt="Logo Preview" className="w-12 h-12 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700" />
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e, 'logo')}
-                      className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
-                    />
+                {/* 2. Branding */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">School Logo</label>
+                    <div className="flex items-center gap-4">
+                      {formData.logo && (
+                        <img src={formData.logo} alt="Logo" className="w-12 h-12 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700" />
+                      )}
+                      <input
+                        type="file" accept="image/*"
+                        onChange={(e) => handleFileUpload(e, 'logo')}
+                        className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Principal's Signature</label>
+                    <div className="flex items-center gap-4">
+                      {formData.signature && (
+                        <img src={formData.signature} alt="Signature" className="w-12 h-12 rounded-lg object-contain border border-zinc-200 dark:border-zinc-700" />
+                      )}
+                      <input
+                        type="file" accept="image/*"
+                        onChange={(e) => handleFileUpload(e, 'signature')}
+                        className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600"
+                      />
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Principal's Signature</label>
-                  <div className="flex items-center gap-4">
-                    {formData.signature && (
-                      <img src={formData.signature} alt="Signature Preview" className="w-12 h-12 rounded-lg object-contain border border-zinc-200 dark:border-zinc-700" />
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(e, 'signature')}
-                      className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Contact Number</label>
+                {/* 3. Location & Support */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Contact Number</label>
                     <input 
-                        type="tel" 
-                        required
-                        value={formData.contact_number}
-                        onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
-                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
+                        type="tel" required
+                        value={formData.contact_number} onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
                         placeholder="+1 (555) 000-0000" 
                     />
-                </div>
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Physical Address</label>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Physical Address</label>
                     <textarea 
-                        rows={2}
-                        value={formData.address}
-                        onChange={(e) => setFormData({...formData, address: e.target.value})}
-                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm resize-none" 
-                        placeholder="Enter full school address" 
-                    ></textarea>
+                        rows={1}
+                        value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm resize-none" 
+                        placeholder="Full address"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Subscription Plan</label>
+                {/* 4. Configuration */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Subscription Plan</label>
                     <select 
-                        value={formData.plan}
-                        onChange={(e) => setFormData({...formData, plan: e.target.value})}
-                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]"
+                      value={formData.plan} onChange={(e) => setFormData({...formData, plan: e.target.value})}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                     >
-                        {systemPlans.map(p => (
-                          <option key={p.id} value={p.name}>{p.name} (₦{parseFloat(p.price || 0).toLocaleString()})</option>
-                        ))}
+                      {systemPlans.map(p => (
+                        <option key={p.id} value={p.name}>{p.name}</option>
+                      ))}
                     </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Default Language</label>
+                    <select 
+                      value={formData.language} onChange={(e) => setFormData({...formData, language: e.target.value})}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    >
+                      <option value="en">English</option>
+                      <option value="fr">French</option>
+                      <option value="pt">Portuguese</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Time Zone</label>
+                    <select 
+                      value={formData.timezone} onChange={(e) => setFormData({...formData, timezone: e.target.value})}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    >
+                      <option value="GMT">GMT (Accra)</option>
+                      <option value="WAT">WAT (Lagos)</option>
+                      <option value="CAT">CAT (Kigali)</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Language</label>
-                  <select
-                    value={formData.language}
-                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none"
-                  >
-                    <option value="en">English</option>
-                    <option value="fr">French</option>
-                    <option value="pt">Portuguese</option>
-                    <option value="sw">Swahili</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Timezone</label>
-                  <select
-                    value={formData.timezone}
-                    onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none"
-                  >
-                    <option value="GMT">GMT (Accra)</option>
-                    <option value="WAT">WAT (Lagos)</option>
-                    <option value="CAT">CAT (Kigali)</option>
-                    <option value="EAT">EAT (Nairobi)</option>
-                  </select>
-                </div>
-              </div>
 
-              {/* Module Preview */}
-              {formData.plan && systemPlans.length > 0 && (() => {
-                 const selected = systemPlans.find(p => p.name === formData.plan);
-                 if (!selected) return null;
-                 const modules = Array.isArray(selected.modules) ? selected.modules : JSON.parse(selected.modules || '[]');
-                 return (
-                    <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm">
-                       <div className="flex items-center gap-2 mb-3">
-                          <Layers size={16} className="text-zinc-400" />
-                          <h6 className="text-[11px] font-black uppercase tracking-widest text-zinc-500">Modules in {selected.name}</h6>
-                       </div>
-                       {modules.length > 0 ? (
-                         <div className="flex flex-wrap gap-2">
-                            {modules.map((m: string, i: number) => (
-                               <span key={i} className="px-2.5 py-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
-                                  {m}
-                               </span>
-                            ))}
-                         </div>
-                       ) : (
-                          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">No modules configured for this plan.</p>
-                       )}
+                {/* Plan Preview Module Area */}
+                {formData.plan && systemPlans.length > 0 && (() => {
+                  const selected = systemPlans.find(p => p.name === formData.plan);
+                  if (!selected) return null;
+                  const modules = Array.isArray(selected.modules) ? selected.modules : JSON.parse(selected.modules || '[]');
+                  return (
+                    <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">Features included in {selected.name}</h4>
+                        <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">GH₵ {parseFloat(selected.price).toLocaleString()}</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {modules.map((m: string, i: number) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <CheckCircle2 size={14} className="text-emerald-500" />
+                            <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">{m}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                 );
-              })()}
-
-              <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-2xl group cursor-pointer transition-colors" onClick={() => setFormData({...formData, demo_requested: !formData.demo_requested})}>
-                 <div className={`w-6 h-6 rounded border flex items-center justify-center transition-all ${formData.demo_requested ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white dark:bg-zinc-800 border-zinc-300 dark:border-zinc-600'}`}>
-                    {formData.demo_requested && <CheckCircle2 size={16} />}
-                 </div>
-                 <div>
-                    <h5 className="font-bold text-sm text-indigo-900 dark:text-indigo-100">Request Demo Account</h5>
-                    <p className="text-xs text-indigo-600/70 dark:text-indigo-300/70 font-medium">Check this to create a temporary login for the school admin to explore.</p>
-                 </div>
+                  );
+                })()}
               </div>
 
-              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex gap-4 shrink-0">
+              <div className="p-8 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 flex justify-end gap-4 shrink-0">
                 <button 
-                  type="button" 
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold py-4 rounded-xl transition-all text-sm"
+                  type="button" onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-xl shadow-indigo-200 dark:shadow-none transition-all flex items-center justify-center gap-2 active:scale-[0.98] text-sm"
+                  className="px-10 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
                 >
-                  Submit Referral <Send size={16} />
+                  Provision New School lead
                 </button>
               </div>
             </form>
