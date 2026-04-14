@@ -32,8 +32,25 @@ const PartnerDashboard: React.FC = () => {
     admin_email: '',
     admin_password: '', // Hidden or auto-generated
     plan: 'Professional',
-    demo_requested: false
+    demo_requested: false,
+    address: '',
+    custom_domain: '',
+    logo: '',
+    signature: '',
+    language: 'en',
+    timezone: 'GMT'
   });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'signature') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, [field]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -79,7 +96,8 @@ const PartnerDashboard: React.FC = () => {
         fetchDashboardData();
         setFormData({
             name: '', type: 'Private K-12', email: '', contact_number: '',
-            admin_email: '', admin_password: '', plan: 'Professional', demo_requested: false
+            admin_email: '', admin_password: '', plan: 'Professional', demo_requested: false,
+            address: '', custom_domain: '', logo: '', signature: '', language: 'en', timezone: 'GMT'
         });
       }
     } catch (err) {
@@ -324,11 +342,11 @@ const PartnerDashboard: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-[2rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200">
-            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-4xl rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50 shrink-0">
               <div>
                 <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Refer a New Institution</h3>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 font-medium">Fill in the details for your prospective school lead.</p>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 font-medium">Fill in the comprehensive details for your prospective school lead.</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
@@ -338,7 +356,7 @@ const PartnerDashboard: React.FC = () => {
               </button>
             </div>
             
-            <form onSubmit={handleAddSchool} className="p-8 space-y-6">
+            <form onSubmit={handleAddSchool} className="p-8 space-y-6 overflow-y-auto">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Name</label>
@@ -368,26 +386,6 @@ const PartnerDashboard: React.FC = () => {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Proposed Subscription</label>
-                    <select 
-                        value={formData.plan}
-                        onChange={(e) => setFormData({...formData, plan: e.target.value})}
-                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]"
-                    >
-                        {systemPlans.length > 0 ? (
-                           systemPlans.map(p => (
-                             <option key={p.id} value={p.name}>{p.name} (₦{p.price?.toLocaleString() || 0}/mo)</option>
-                           ))
-                        ) : (
-                           <>
-                             <option value="Basic">Basic (500/mo)</option>
-                             <option value="Professional">Professional (1,500/mo)</option>
-                             <option value="Enterprise">Enterprise (3,500/mo)</option>
-                           </>
-                        )}
-                    </select>
-                </div>
-                <div className="space-y-2">
                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Admin Email</label>
                     <input 
                         type="email" 
@@ -397,6 +395,115 @@ const PartnerDashboard: React.FC = () => {
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
                         placeholder="admin@school.com" 
                     />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Custom Domain</label>
+                  <div className="flex items-center">
+                    <input
+                      type="text"
+                      value={formData.custom_domain}
+                      onChange={(e) => setFormData({ ...formData, custom_domain: e.target.value })}
+                      placeholder="school-name"
+                      className="flex-1 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-l-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    />
+                    <span className="px-4 py-3 bg-zinc-100 dark:bg-zinc-700 border border-l-0 border-zinc-200 dark:border-zinc-700 rounded-r-xl text-zinc-500 text-xs font-bold">.omniportal.com</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">School Logo</label>
+                  <div className="flex items-center gap-4">
+                    {formData.logo && (
+                      <img src={formData.logo} alt="Logo Preview" className="w-12 h-12 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'logo')}
+                      className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Principal's Signature</label>
+                  <div className="flex items-center gap-4">
+                    {formData.signature && (
+                      <img src={formData.signature} alt="Signature Preview" className="w-12 h-12 rounded-lg object-contain border border-zinc-200 dark:border-zinc-700" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'signature')}
+                      className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Contact Number</label>
+                    <input 
+                        type="tel" 
+                        required
+                        value={formData.contact_number}
+                        onChange={(e) => setFormData({...formData, contact_number: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
+                        placeholder="+1 (555) 000-0000" 
+                    />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Physical Address</label>
+                    <textarea 
+                        rows={2}
+                        value={formData.address}
+                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm resize-none" 
+                        placeholder="Enter full school address" 
+                    ></textarea>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Subscription Plan</label>
+                    <select 
+                        value={formData.plan}
+                        onChange={(e) => setFormData({...formData, plan: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a1a1aa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]"
+                    >
+                        {systemPlans.map(p => (
+                          <option key={p.id} value={p.name}>{p.name} (₦{parseFloat(p.price || 0).toLocaleString()})</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Language</label>
+                  <select
+                    value={formData.language}
+                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none"
+                  >
+                    <option value="en">English</option>
+                    <option value="fr">French</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="sw">Swahili</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Timezone</label>
+                  <select
+                    value={formData.timezone}
+                    onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
+                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm appearance-none"
+                  >
+                    <option value="GMT">GMT (Accra)</option>
+                    <option value="WAT">WAT (Lagos)</option>
+                    <option value="CAT">CAT (Kigali)</option>
+                    <option value="EAT">EAT (Nairobi)</option>
+                  </select>
                 </div>
               </div>
 
@@ -436,7 +543,7 @@ const PartnerDashboard: React.FC = () => {
                  </div>
               </div>
 
-              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex gap-4">
+              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex gap-4 shrink-0">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}

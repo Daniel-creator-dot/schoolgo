@@ -59,7 +59,13 @@ import {
   fetchDocumentTemplates,
   createDocumentTemplate,
   updateDocumentTemplate,
-  deleteDocumentTemplate
+  deleteDocumentTemplate,
+  fetchPartners,
+  createPartnerAdmin,
+  updatePartner,
+  deletePartnerAdmin,
+  approvePartner,
+  resetPartnerPassword
 } from '../lib/api';
 import { API_BASE_URL } from '../constants';
 
@@ -3301,3 +3307,232 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
   );
 }
 
+export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
+  const { t } = useLanguage();
+  const [partners, setPartners] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPartner, setEditingPartner] = useState<any>(null);
+  const [viewingPartner, setViewingPartner] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: '', email: '', password: '', contact_number: '', company_name: '', registration_number: '', status: 'Active'
+  });
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
+  const [resetConfirm, setResetConfirm] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
+
+  const loadPartners = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchPartners();
+      setPartners(data);
+    } catch (err) {
+      console.error('Failed to load partners:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadPartners(); }, []);
+
+  const handleAdd = () => {
+    setEditingPartner(null);
+    setFormData({ name: '', email: '', password: 'partner123', contact_number: '', company_name: '', registration_number: '', status: 'Active' });
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (partner: any) => {
+    setEditingPartner(partner);
+    setFormData({
+      name: partner.name, email: partner.email, password: '', contact_number: partner.contact_number || '',
+      company_name: partner.company_name || '', registration_number: partner.registration_number || '', status: partner.status || 'Active'
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingPartner) {
+        await updatePartner(editingPartner.id, formData);
+        (window as any).showToast?.('Partner updated successfully!', 'success');
+      } else {
+        await createPartnerAdmin(formData);
+        (window as any).showToast?.('Partner created successfully!', 'success');
+      }
+      setIsModalOpen(false);
+      loadPartners();
+    } catch (err: any) {
+      (window as any).showToast?.(err.response?.data?.error || 'Failed to save partner', 'error');
+    }
+  };
+
+  const handleApprove = async (partner: any) => {
+    try {
+      await approvePartner(partner.id);
+      (window as any).showToast?.(`${partner.name} approved!`, 'success');
+      loadPartners();
+    } catch (err) {
+      (window as any).showToast?.('Failed to approve partner', 'error');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.partner) return;
+    try {
+      await deletePartnerAdmin(deleteConfirm.partner.id);
+      (window as any).showToast?.('Partner deleted!', 'success');
+      loadPartners();
+    } catch (err) {
+      (window as any).showToast?.('Failed to delete partner', 'error');
+    }
+  };
+
+  const handleConfirmReset = async () => {
+    if (!resetConfirm.partner) return;
+    try {
+      await resetPartnerPassword(resetConfirm.partner.id);
+      (window as any).showToast?.(`Password for ${resetConfirm.partner.name} reset to partner123`, 'success');
+    } catch (err) {
+      (window as any).showToast?.('Failed to reset password', 'error');
+    }
+  };
+
+  const statusBadge = (status: string) => {
+    const colors: Record<string, string> = {
+      Active: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
+      Pending: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
+      Suspended: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+    };
+    return <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${colors[status] || colors.Pending}`}>{status}</span>;
+  };
+
+  return (
+    <div className="space-y-8">
+      <DataTable
+        title="Partner Management"
+        data={partners}
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={(p: any) => setDeleteConfirm({ isOpen: true, partner: p })}
+        onView={(p: any) => setViewingPartner(p)}
+        columns={[
+          { header: 'Name', accessor: 'name', className: 'font-bold' },
+          { header: 'Company', accessor: 'company_name', className: 'text-zinc-500' },
+          { header: 'Email', accessor: 'email', className: 'text-zinc-500' },
+          { header: 'Status', accessor: (item: any) => statusBadge(item.status || 'Pending') },
+          { header: 'Referral Code', accessor: 'referral_code', className: 'font-mono text-indigo-600' },
+          { header: 'Earnings', accessor: (item: any) => `GH\u20B5 ${parseFloat(item.total_earnings || 0).toLocaleString()}` }
+        ]}
+      />
+
+      {/* View Partner Details */}
+      <Modal isOpen={!!viewingPartner} onClose={() => setViewingPartner(null)} title="Partner Details" maxWidth="max-w-2xl">
+        {viewingPartner && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-indigo-200 dark:shadow-none">
+                {viewingPartner.name.charAt(0)}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-white">{viewingPartner.name}</h3>
+                <p className="text-zinc-500 font-medium">{viewingPartner.email}</p>
+              </div>
+              <div className="ml-auto">{statusBadge(viewingPartner.status || 'Pending')}</div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
+                <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Company</p>
+                <p className="font-bold text-zinc-900 dark:text-white">{viewingPartner.company_name || '—'}</p>
+              </div>
+              <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
+                <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Referral Code</p>
+                <p className="font-bold font-mono text-indigo-600">{viewingPartner.referral_code}</p>
+              </div>
+              <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
+                <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Total Earnings</p>
+                <p className="font-bold text-emerald-600">GH\u20B5 {parseFloat(viewingPartner.total_earnings || 0).toLocaleString()}</p>
+              </div>
+              <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
+                <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Joined</p>
+                <p className="font-medium text-zinc-700 dark:text-zinc-300">{new Date(viewingPartner.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              {viewingPartner.status !== 'Active' && (
+                <button onClick={() => { handleApprove(viewingPartner); setViewingPartner(null); }} className="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm hover:bg-emerald-700 transition-colors">Approve</button>
+              )}
+              <button onClick={() => { setResetConfirm({ isOpen: true, partner: viewingPartner }); setViewingPartner(null); }} className="px-5 py-2.5 bg-amber-500 text-white font-bold rounded-xl text-sm hover:bg-amber-600 transition-colors">Reset Password</button>
+              <button onClick={() => setViewingPartner(null)} className="px-6 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold rounded-xl text-sm">Close</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Add/Edit Partner Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingPartner ? 'Edit Partner' : 'Add New Partner'}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Full Name</label>
+              <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Email</label>
+              <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" />
+            </div>
+          </div>
+          {!editingPartner && (
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Password</label>
+              <input type="text" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" placeholder="Default: partner123" />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Contact Number</label>
+              <input type="tel" value={formData.contact_number} onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Company Name</label>
+              <input type="text" value={formData.company_name} onChange={(e) => setFormData({ ...formData, company_name: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Registration #</label>
+              <input type="text" value={formData.registration_number} onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" placeholder="Optional" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-zinc-500">Status</label>
+              <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm">
+                <option value="Active">Active</option>
+                <option value="Pending">Pending</option>
+                <option value="Suspended">Suspended</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-zinc-500">Cancel</button>
+            <button type="submit" className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm">{editingPartner ? 'Update Partner' : 'Create Partner'}</button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmationModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ ...deleteConfirm, isOpen: false })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Partner"
+        message={`Are you sure you want to delete partner "${deleteConfirm.partner?.name}"? This action cannot be undone.`}
+      />
+
+      <ConfirmationModal
+        isOpen={resetConfirm.isOpen}
+        onClose={() => setResetConfirm({ ...resetConfirm, isOpen: false })}
+        onConfirm={handleConfirmReset}
+        title="Reset Partner Password"
+        message={`Are you sure you want to reset the password for "${resetConfirm.partner?.name}" back to the default (partner123)?`}
+      />
+    </div>
+  );
+}

@@ -34,6 +34,7 @@ import {
   SubscriptionPlans,
   BillingHistory,
   UsersManagement,
+  PartnersManagement,
   DocumentBuilder,
   ReceiptsManagement,
   ModuleManagement,
@@ -3395,6 +3396,10 @@ export default function App() {
       ),
 
       "Audit Logs": <AuditLogs data={auditLogs} />,
+
+      Partners: (
+        <PartnersManagement onRefresh={loadData} />
+      ),
 
       // Student Modules
       "Personal Information": (

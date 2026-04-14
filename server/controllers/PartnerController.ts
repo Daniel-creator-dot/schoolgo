@@ -15,8 +15,8 @@ export const register = async (req: express.Request, res: express.Response) => {
     const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     const result = await pool.query(
-      'INSERT INTO partners (name, email, password, contact_number, company_name, registration_number, referral_code) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, email, referral_code, company_name, registration_number',
-      [name, email, hashedPassword, contact_number, company_name, registration_number, referralCode]
+      'INSERT INTO partners (name, email, password, contact_number, company_name, registration_number, referral_code, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, email, referral_code, company_name, registration_number, status',
+      [name, email, hashedPassword, contact_number, company_name, registration_number, referralCode, 'Pending']
     );
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
@@ -36,6 +36,11 @@ export const login = async (req: express.Request, res: express.Response) => {
 
     if (!partner) {
       return res.status(404).json({ message: 'Partner not found' });
+    }
+
+    // Reject login if partner hasn't been approved yet
+    if (partner.status && partner.status !== 'Active') {
+      return res.status(403).json({ message: 'Your partner account is pending approval. Please contact the administrator.' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, partner.password);
@@ -88,17 +93,18 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
 };
 
 export const createSchool = async (req: AuthRequest, res: Response) => {
-  const { name, type, email, contact_number, admin_email, admin_password, plan, demo_requested } = req.body;
+  const { name, type, email, contact_number, admin_email, admin_password, plan, demo_requested, address, custom_domain, logo, signature, language, timezone } = req.body;
   const partnerId = req.user.id;
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    // 1. Create Organization with Pending status
+    // 1. Create Organization with Pending status and extended fields
     const orgResult = await client.query(
-      'INSERT INTO organizations (name, type, email, contact_number, referred_by_partner_id, plan, status, demo_requested) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [name, type, email, contact_number, partnerId, plan || 'Free', 'Pending', demo_requested || false]
+      `INSERT INTO organizations (name, type, email, contact_number, referred_by_partner_id, plan, status, demo_requested, address, custom_domain, logo, signature, language, timezone) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      [name, type, email, contact_number, partnerId, plan || 'Free', 'Pending', demo_requested || false, address || '', custom_domain || '', logo || '', signature || '', language || 'en', timezone || 'GMT']
     );
     const newOrg = orgResult.rows[0];
 
@@ -108,10 +114,6 @@ export const createSchool = async (req: AuthRequest, res: Response) => {
       'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5)',
       [admin_email, hashedPassword, 'School Admin', 'SCHOOL_ADMIN', newOrg.id]
     );
-
-    // Earnings are only finalized when the school is approved by Super Admin, 
-    // but we can log them as 'Pending' if we had a transactions table.
-    // For now, we'll keep the dashboard simple and only update total_earnings on activation.
 
     await client.query('COMMIT');
     res.status(201).json(newOrg);
@@ -130,7 +132,6 @@ export const approveReferral = async (req: AuthRequest, res: Response) => {
   try {
     await client.query('BEGIN');
 
-    // 1. Get Organization details
     const orgResult = await client.query(
       'SELECT referred_by_partner_id, status FROM organizations WHERE id = $1',
       [org_id]
@@ -145,16 +146,12 @@ export const approveReferral = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Organization is not in pending status' });
     }
 
-    // 2. Update status to Active
     await client.query(
       'UPDATE organizations SET status = $1 WHERE id = $2',
       ['Active', org_id]
     );
 
-    // 3. Update Partner earnings if a partner referred them
     if (org.referred_by_partner_id) {
-        // Commission: Let's say ₦50,000 flat per activation for this example
-        // In a real app, this would be based on the chosen plan
         const commission = 50000;
         await client.query(
             'UPDATE partners SET total_earnings = total_earnings + $1 WHERE id = $2',
@@ -169,5 +166,91 @@ export const approveReferral = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
+  }
+};
+
+// ===== SUPER ADMIN PARTNER MANAGEMENT =====
+
+export const getAllPartners = async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at FROM partners ORDER BY created_at DESC'
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const createPartner = async (req: AuthRequest, res: Response) => {
+  const { name, email, password, contact_number, company_name, registration_number, status } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password || 'partner123', 10);
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const result = await pool.query(
+      'INSERT INTO partners (name, email, password, contact_number, company_name, registration_number, referral_code, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at',
+      [name, email, hashedPassword, contact_number || '', company_name || '', registration_number || '', referralCode, status || 'Active']
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    if (err.constraint === 'partners_email_key') {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const updatePartner = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const { name, email, contact_number, company_name, registration_number, status } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE partners SET name = COALESCE($1, name), email = COALESCE($2, email), contact_number = COALESCE($3, contact_number), company_name = COALESCE($4, company_name), registration_number = COALESCE($5, registration_number), status = COALESCE($6, status) WHERE id = $7 RETURNING id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at',
+      [name, email, contact_number, company_name, registration_number, status, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Partner not found' });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deletePartner = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM partners WHERE id = $1 RETURNING id', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Partner not found' });
+    res.json({ message: 'Partner deleted successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const approvePartner = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      "UPDATE partners SET status = 'Active' WHERE id = $1 RETURNING id, name, email, status",
+      [id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Partner not found' });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const resetPartnerPassword = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const hashedPassword = await bcrypt.hash('partner123', 10);
+    const result = await pool.query(
+      'UPDATE partners SET password = $1 WHERE id = $2 RETURNING id, name, email',
+      [hashedPassword, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Partner not found' });
+    res.json({ message: 'Password reset to default (partner123)', partner: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 };

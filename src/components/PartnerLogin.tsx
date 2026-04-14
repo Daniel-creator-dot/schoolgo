@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Lock, ArrowRight, ShieldCheck, PieChart, Users, Building2, XCircle, Send } from 'lucide-react';
+import { User, Lock, ArrowRight, ShieldCheck, PieChart, Users, Building2, XCircle, Send, Eye, EyeOff } from 'lucide-react';
 import { API_BASE_URL } from '../constants';
 import { useLanguage } from '../lib/LanguageContext';
 
@@ -14,6 +14,7 @@ export default function PartnerLogin({ onLoginSuccess, onBackToLanding }: Partne
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
 
   // Registration form state
@@ -172,6 +173,7 @@ export default function PartnerLogin({ onLoginSuccess, onBackToLanding }: Partne
                 <input
                   type="email"
                   required
+                  autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-12 pr-6 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm text-zinc-900 dark:text-white placeholder-zinc-400"
@@ -190,13 +192,17 @@ export default function PartnerLogin({ onLoginSuccess, onBackToLanding }: Partne
                   <Lock size={20} />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-6 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm text-zinc-900 dark:text-white placeholder-zinc-400"
+                  className="w-full pl-12 pr-12 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm text-zinc-900 dark:text-white placeholder-zinc-400"
                   placeholder="••••••••"
                 />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
 
@@ -278,6 +284,7 @@ export default function PartnerLogin({ onLoginSuccess, onBackToLanding }: Partne
                                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Email Address</label>
                                     <input 
                                         type="email" required
+                                        autoComplete="off"
                                         value={regData.email} onChange={(e) => setRegData({...regData, email: e.target.value})}
                                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-zinc-900 dark:text-white"
                                     />
@@ -286,6 +293,7 @@ export default function PartnerLogin({ onLoginSuccess, onBackToLanding }: Partne
                                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1 block">Password</label>
                                     <input 
                                         type="password" required minLength={6}
+                                        autoComplete="new-password"
                                         value={regData.password} onChange={(e) => setRegData({...regData, password: e.target.value})}
                                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm text-zinc-900 dark:text-white"
                                     />

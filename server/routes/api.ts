@@ -53,6 +53,14 @@ router.get('/partner/dashboard', checkRole(['PARTNER']), PartnerController.getDa
 router.post('/partner/schools', checkRole(['PARTNER']), PartnerController.createSchool);
 router.post('/partner/approve/:org_id', checkRole(['SUPER_ADMIN']), PartnerController.approveReferral);
 
+// SUPER ADMIN - PARTNER MANAGEMENT
+router.get('/partners', checkRole(['SUPER_ADMIN']), PartnerController.getAllPartners);
+router.post('/partners', checkRole(['SUPER_ADMIN']), PartnerController.createPartner);
+router.patch('/partners/:id', checkRole(['SUPER_ADMIN']), PartnerController.updatePartner);
+router.delete('/partners/:id', checkRole(['SUPER_ADMIN']), PartnerController.deletePartner);
+router.post('/partners/:id/approve', checkRole(['SUPER_ADMIN']), PartnerController.approvePartner);
+router.post('/partners/:id/reset-password', checkRole(['SUPER_ADMIN']), PartnerController.resetPartnerPassword);
+
 router.get('/subscriptions', OrganizationController.getSubscriptions);
 router.post('/subscriptions', checkRole(['SUPER_ADMIN']), OrganizationController.createSubscription);
 router.patch('/subscriptions/:id', checkRole(['SUPER_ADMIN']), OrganizationController.updateSubscription);

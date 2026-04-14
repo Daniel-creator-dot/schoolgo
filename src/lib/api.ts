@@ -69,6 +69,37 @@ export const approveReferral = async (orgId: string) => {
   return response.data;
 };
 
+// Super Admin Partner Management
+export const fetchPartners = async () => {
+  const response = await api.get('/partners');
+  return response.data;
+};
+
+export const createPartnerAdmin = async (data: any) => {
+  const response = await api.post('/partners', data);
+  return response.data;
+};
+
+export const updatePartner = async (id: string, data: any) => {
+  const response = await api.patch(`/partners/${id}`, data);
+  return response.data;
+};
+
+export const deletePartnerAdmin = async (id: string) => {
+  const response = await api.delete(`/partners/${id}`);
+  return response.data;
+};
+
+export const approvePartner = async (id: string) => {
+  const response = await api.post(`/partners/${id}/approve`);
+  return response.data;
+};
+
+export const resetPartnerPassword = async (id: string) => {
+  const response = await api.post(`/partners/${id}/reset-password`);
+  return response.data;
+};
+
 export const registerPlatformUser = async (user: any) => {
   const response = await api.post('/auth/register', user);
   return response.data;
