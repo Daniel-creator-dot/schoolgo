@@ -64,6 +64,7 @@ import { LibraryModules } from "./components/module-views/LibrarianView";
 import { SuperAdminModules } from "./components/module-views/SuperAdminView";
 import { StudentModules } from "./components/module-views/StudentView";
 import { CalendarView } from "./components/module-views/CalendarView";
+import { Profile } from "./components/module-views/Profile";
 import { GenericModuleView } from "./components/ModuleViews";
 import LandingPage from "./components/LandingPage";
 import Login from "./components/Login";
@@ -1628,11 +1629,21 @@ export default function App() {
       );
     if (currentView === "Announcements")
       return <Announcements role={currentRole} />;
+    if (currentView === "profile" && currentRole === "SUPER_ADMIN") {
+      return (
+        <Profile
+          currentUser={currentUser}
+          orgCount={organizations.length}
+          partnerCount={partnerList.length}
+          totalUsers={studentList.length + staffList.length}
+        />
+      );
+    }
+
     if (
       currentView === "Settings" ||
       currentView === "System Settings" ||
-      currentView === "School Profile" ||
-      currentView === "profile"
+      currentView === "School Profile"
     )
       return <Settings role={currentRole} />;
     if (currentView === "Notifications") return <AuditLogs />;
