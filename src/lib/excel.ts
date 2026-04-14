@@ -92,6 +92,8 @@ export const parseStudentExcel = async (file: File, classes: any[] = []): Promis
             class_id: matchedClass?.id,
             class_name: className, // For display in preview
             decision: 'Enrolled', // Default for this view
+            status: 'Accepted'
+          };
         });
 
         resolve(records);
@@ -146,7 +148,7 @@ export const downloadFeeTemplate = (
   const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
   
   // Add a helper sheet for valid fee types if it's billing mode
-  const wb = XLSX.book_new();
+  const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, type === 'payment' ? 'Payment Recording' : 'Bulk Billing');
 
   if (type === 'invoice') {
