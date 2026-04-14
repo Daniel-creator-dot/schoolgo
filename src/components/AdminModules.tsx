@@ -596,7 +596,8 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
     period: 'monthly',
     description: '',
     modules: [],
-    is_popular: false
+    is_popular: false,
+    commission_amount: ''
   });
 
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, plan: any | null }>({
@@ -623,7 +624,8 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
       period: 'monthly',
       description: '',
       modules: [],
-      is_popular: false
+      is_popular: false,
+      commission_amount: ''
     });
     setIsModalOpen(true);
   };
@@ -693,9 +695,15 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
       <Modal isOpen={!!viewingPlan} onClose={() => setViewingPlan(null)} title="Plan Details" maxWidth="max-w-2xl">
         {viewingPlan && (
           <div className="space-y-6">
-            <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-              <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-1">{viewingPlan.name}</h3>
-              <p className="text-indigo-600 font-bold">$ {parseFloat(viewingPlan.price).toLocaleString()} / {viewingPlan.period}</p>
+            <div className="grid grid-cols-2 gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              <div>
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-1">{viewingPlan.name}</h3>
+                <p className="text-indigo-600 font-bold">$ {parseFloat(viewingPlan.price).toLocaleString()} / {viewingPlan.period}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider mb-1">Partner Commission</p>
+                <p className="text-lg font-black text-emerald-600">$ {parseFloat(viewingPlan.commission_amount || 0).toLocaleString()}</p>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -736,17 +744,18 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingPlan ? "Edit Plan Template" : "Add Plan Template"}>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-bold uppercase text-zinc-500">Plan Name</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-zinc-500">Plan Name</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                required
-              />
-            </div>
             <div className="space-y-1">
               <label className="text-xs font-bold uppercase text-zinc-500">Price ($)</label>
               <input
@@ -754,6 +763,17 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
                 value={formData.price}
                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                required
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase text-emerald-600">Partner Commission ($)</label>
+              <input
+                type="number"
+                value={formData.commission_amount}
+                onChange={(e) => setFormData({ ...formData, commission_amount: e.target.value })}
+                className="w-full px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-800/50 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="0.00"
                 required
               />
             </div>

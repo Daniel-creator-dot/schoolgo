@@ -270,11 +270,11 @@ export const getPlans = async (req: AuthRequest, res: Response) => {
 };
 
 export const createPlan = async (req: AuthRequest, res: Response) => {
-  const { name, price, period, description, modules, is_popular } = req.body;
+  const { name, price, period, description, modules, is_popular, commission_amount } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO plan_templates (name, price, period, description, modules, is_popular) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [name, price, period, description, JSON.stringify(modules), is_popular]
+      'INSERT INTO plan_templates (name, price, period, description, modules, is_popular, commission_amount) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [name, price, period, description, JSON.stringify(modules), is_popular, commission_amount || 0]
     );
     await recordAuditLog(req.user.id, 'CREATE_PLAN', `Created plan template: ${name}`, req.user.org_id, req.ip || '');
     res.status(201).json(result.rows[0]);
@@ -285,13 +285,13 @@ export const createPlan = async (req: AuthRequest, res: Response) => {
 
 export const updatePlan = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { name, price, period, description, modules, is_popular } = req.body;
+  const { name, price, period, description, modules, is_popular, commission_amount } = req.body;
   try {
     const result = await pool.query(
       `UPDATE plan_templates 
-       SET name = $1, price = $2, period = $3, description = $4, modules = $5, is_popular = $6 
-       WHERE id = $7 RETURNING *`,
-      [name, price, period, description, JSON.stringify(modules), is_popular, id]
+       SET name = $1, price = $2, period = $3, description = $4, modules = $5, is_popular = $6, commission_amount = $7 
+       WHERE id = $8 RETURNING *`,
+      [name, price, period, description, JSON.stringify(modules), is_popular, commission_amount, id]
     );
     await recordAuditLog(req.user.id, 'UPDATE_PLAN', `Updated plan template ID: ${id}`, req.user.org_id, req.ip || '');
     res.json(result.rows[0]);

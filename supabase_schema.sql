@@ -855,6 +855,7 @@ CREATE TABLE IF NOT EXISTS plan_templates (
         description TEXT,
         modules JSONB DEFAULT '[]',
         is_popular BOOLEAN DEFAULT false,
+        commission_amount NUMERIC(12, 2) DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -1270,12 +1271,12 @@ DO $$
         END IF;
       END $$;;
 
-INSERT INTO plan_templates (name, price, period, description, modules, is_popular)
+INSERT INTO plan_templates (name, price, period, description, modules, is_popular, commission_amount)
       VALUES 
-        ('Basic', 500.00, 'monthly', 'Ideal for small schools', '["Academic Management", "Admissions & Onboarding"]', false),
-        ('Professional', 1500.00, 'monthly', 'Perfect for growing institutions', '["Everything in Basic", "Finance & Billing", "Exam & Results", "Library System"]', true),
-        ('Enterprise', 3500.00, 'monthly', 'Full-scale solution for large schools', '["Everything in Professional", "HR & Payroll", "Operations & Logistics", "AI & Advanced Analytics", "Custom Domain"]', false)
-      ON CONFLICT (name) DO NOTHING;
+        ('Basic', 500.00, 'monthly', 'Ideal for small schools', '["Academic Management", "Admissions & Onboarding"]', false, 50.00),
+        ('Professional', 1500.00, 'monthly', 'Perfect for growing institutions', '["Everything in Basic", "Finance & Billing", "Exam & Results", "Library System"]', true, 150.00),
+        ('Enterprise', 3500.00, 'monthly', 'Full-scale solution for large schools', '["Everything in Professional", "HR & Payroll", "Operations & Logistics", "AI & Advanced Analytics", "Custom Domain"]', false, 400.00)
+      ON CONFLICT (name) DO UPDATE SET commission_amount = EXCLUDED.commission_amount;
 
 SELECT id, name FROM organizations;
 
@@ -1286,146 +1287,9 @@ INSERT INTO organizations (name, type, status, plan)
           ('Saint Jude High', 'Secondary School', 'Active', 'Basic')
         RETURNING id, name;
 
-INSERT INTO subscriptions (org_id, plan, status, expiry_date)
-        SELECT $1, $2, 'Active', '2025-01-01'
-        WHERE NOT EXISTS (SELECT 1 FROM subscriptions WHERE org_id = $1);
 
-INSERT INTO users (name, email, password, role, org_id)
-        SELECT 'Admin User', 'admin@' || LOWER(REPLACE($1, ' ', '')) || '.com', $2, 'SCHOOL_ADMIN', $3
-        WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@' || LOWER(REPLACE($1, ' ', '')) || '.com');
+-- Cleaned up broken seed data sections
 
-INSERT INTO users (name, email, password, role, org_id)
-        SELECT 'Staff User', 'staff@' || LOWER(REPLACE($1, ' ', '')) || '.com', $2, 'STAFF', $3
-        WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'staff@' || LOWER(REPLACE($1, ' ', '')) || '.com');
-
-INSERT INTO users (name, email, password, role)
-      SELECT 'Super Admin', 'super@zencoder.ai', $1, 'SUPER_ADMIN'
-      WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'super@zencoder.ai');
-
-SELECT 1 FROM classes WHERE org_id = $1 LIMIT 1;
-
-INSERT INTO classes (name, section, capacity, org_id)
-        VALUES 
-          ('Grade 10', 'A', 30, $1),
-          ('Grade 11', 'B', 25, $1),
-          ('Grade 12', 'C', 20, $1)
-        RETURNING id, name;
-
-INSERT INTO subjects (name, code, org_id)
-        VALUES 
-          ('Mathematics', 'MATH101', $1),
-          ('Physics', 'PHYS101', $1),
-          ('English', 'ENG101', $1)
-        RETURNING id, name;
-
-INSERT INTO departments (name, head, status, org_id)
-        VALUES 
-          ('Science', 'Dr. Smith', 'Active', $1),
-          ('Mathematics', 'Prof. Jones', 'Active', $1),
-          ('Languages', 'Ms. Williams', 'Active', $1)
-        RETURNING id, name;
-
-INSERT INTO staff (name, email, role, status, department_id, org_id)
-        VALUES 
-          ('John Doe', 'john@${org.name.toLowerCase().replace(/ /g, '')}.com', 'Senior Teacher', 'Active', $1, $3),
-          ('Jane Smith', 'jane@${org.name.toLowerCase().replace(/ /g, '')}.com', 'Head of Dept', 'Active', $2, $3)
-        RETURNING id, name;
-
-INSERT INTO students (name, email, status, gpa, admission_no, class_id, parent_name, org_id)
-        VALUES 
-          ('Alice Johnson', 'alice@${org.name.toLowerCase().replace(/ /g, '')}.com', 'Present', '3.8', 'ADM-${org.name.substring(0, 3).toUpperCase()}-001', $1, 'Robert Johnson', $2),
-          ('Bob Smith', 'bob@${org.name.toLowerCase().replace(/ /g, '')}.com', 'Absent', '3.2', 'ADM-${org.name.substring(0, 3).toUpperCase()}-002', $1, 'John Smith', $2)
-        RETURNING id, name;
-
-INSERT INTO student_attendance (student_id, date, status, org_id)
-          VALUES ($1, CURRENT_DATE, 'Present', $2);
-
-INSERT INTO timetables (class_id, subject_id, teacher_id, day_of_week, start_time, end_time, org_id)
-        VALUES 
-          ($1, $2, $3, 'Monday', '08:00', '09:00', $4),
-          ($1, $5, $3, 'Tuesday', '09:00', '10:00', $4);
-
-INSERT INTO fee_structures (name, amount, period, class_id, org_id)
-        VALUES ('Tuition Fee', 5000.00, 'Termly', $1, $2)
-        RETURNING id;
-
-INSERT INTO invoices (student_id, amount, due_date, org_id)
-        VALUES ($1, 5000.00, '2024-04-01', $2)
-        RETURNING id;
-
-INSERT INTO payments (invoice_id, student_id, amount, method, org_id)
-        VALUES ($1, $2, 2500.00, 'Bank Transfer', $3);
-
-INSERT INTO transport_routes (route_name, vehicle_number, driver_name, org_id)
-        VALUES ('Route A', 'BUS-001', 'James Driver', $1);
-
-INSERT INTO hostels (name, type, warden_name, org_id)
-        VALUES ('Main Hostel', 'Boys', 'Mr. Warden', $1)
-        RETURNING id;
-
-INSERT INTO hostel_rooms (hostel_id, room_number, capacity, org_id)
-        VALUES ($1, '101', 4, $2);
-
-INSERT INTO health_records (student_id, condition, treatment, org_id)
-        VALUES ($1, 'Seasonal Allergy', 'Antihistamine', $2);
-
-INSERT INTO inquiries (org_id, name, parent_name, email, contact, status)
-        VALUES 
-          ($1, 'John Jr.', 'John Doe Senior', 'john.jr@gmail.com', '555-0101', 'New'),
-          ($1, 'Mary Smith', 'Jane Smith', 'mary.s@gmail.com', '555-0102', 'Contacted');
-
-INSERT INTO applications (org_id, name, parent_name, grade, entrance_exam_score, status)
-        VALUES ($1, 'Peter Pan', 'Wendy Pan', 'Grade 10', '85/100', 'Under Review');
-
-INSERT INTO acceptances (org_id, name, parent_name, grade, entrance_exam_score, decision, fee_status)
-        VALUES ($1, 'Alice Wonderland', 'Rabbit Hole', 'Grade 11', '92/100', 'Accepted', 'Pending');
-
-INSERT INTO exams (org_id, subject, date, time, room, type)
-        VALUES ($1, 'Mathematics Midterm', CURRENT_DATE + INTERVAL '7 days', '09:00 AM', 'Hall A', 'Written')
-        RETURNING id;
-
-INSERT INTO results (org_id, student_id, exam_id, score, grade, status)
-        VALUES ($1, $2, $3, '88', 'A', 'Published');
-
-INSERT INTO recruitment (org_id, position, applicant_name, email, status)
-        VALUES ($1, 'Math Teacher', 'Isaac Newton', 'newton@gravity.com', 'Interview Scheduled');
-
-INSERT INTO teachers_on_duty (org_id, teacher_id, date, shift)
-        VALUES ($1, $2, CURRENT_DATE, 'Morning');
-
-INSERT INTO lesson_notes (org_id, teacher_id, subject, topic, content, status)
-        VALUES ($1, $2, 'Mathematics', 'Algebra', 'Introduction to variables', 'Published');
-
-INSERT INTO behavior_discipline (org_id, student_id, incident, action_taken, severity)
-        VALUES ($1, $2, 'Late to class', 'Verbal warning', 'Low');
-
-INSERT INTO books (org_id, title, author, isbn, category, total_copies, available_copies)
-        VALUES 
-          ($1, 'Modern Physics', 'R. Feynman', 'ISBN-001', 'Science', 5, 5),
-          ($1, 'Advanced Calculus', 'S. Lang', 'ISBN-002', 'Math', 3, 3);
-
-INSERT INTO inventory (org_id, item_name, quantity, category)
-        VALUES 
-          ($1, 'Whiteboard Markers', 50, 'Stationery'),
-          ($1, 'Laptop L3', 10, 'Electronics');
-
-INSERT INTO uniform_management (org_id, item_name, size, stock, price);
-
-INSERT INTO inventory_sales (org_id, item_name, quantity, total_price, buyer_name);
-
-INSERT INTO scholarships (org_id, student_id, type, amount, status);
-
-INSERT INTO subscriptions (org_id, plan, status, expiry_date, amount, payment_method);
-
-INSERT INTO payroll (user_id, month_year, basic_salary, deductions, allowances, net_salary)
-          VALUES 
-            ((SELECT id FROM users WHERE name = 'Admin User' AND org_id = $1 LIMIT 1), '2024-03', 5000.00, 200.00, 500.00, 5300.00);
-
-INSERT INTO staff_attendance (org_id, user_id, status, clock_in)
-          VALUES ($1, (SELECT id FROM users WHERE name = 'Admin User' AND org_id = $1 LIMIT 1), 'Present', '08:00:00');
-
-INSERT INTO leave_requests (user_id, leave_type, start_date, end_date, reason, status)
-          VALUES ((SELECT id FROM users WHERE name = 'Admin User' AND org_id = $1 LIMIT 1), 'Sick Leave', '2024-03-01', '2024-03-02', 'Fever', 'Approved');
 
 INSERT INTO modules (name, status, category, org_id)
       VALUES 
@@ -1610,5 +1474,3 @@ CREATE TABLE IF NOT EXISTS report_card_templates (
 CREATE INDEX IF NOT EXISTS idx_report_card_templates_org_id ON report_card_templates(org_id)
 
 COMMIT;
-
-ROLLBACK;

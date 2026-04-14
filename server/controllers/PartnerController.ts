@@ -162,7 +162,14 @@ export const approveReferral = async (req: AuthRequest, res: Response) => {
     );
 
     if (org.referred_by_partner_id) {
-        const commission = 50000;
+        // Fetch commission from the plan template
+        const planResult = await client.query(
+            'SELECT commission_amount FROM plan_templates WHERE name = $1',
+            [org.plan]
+        );
+        
+        const commission = planResult.rows[0]?.commission_amount || 0;
+        
         await client.query(
             'UPDATE partners SET total_earnings = total_earnings + $1 WHERE id = $2',
             [commission, org.referred_by_partner_id]
