@@ -687,7 +687,7 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
           { header: 'Plan Name', accessor: 'name', className: 'font-bold' },
           {
             header: 'Price',
-            accessor: (item) => `$ {parseFloat(item.price).toLocaleString()} / ${item.period}`
+            accessor: (item) => `${parseFloat(item.price).toLocaleString()} / ${item.period}`
           }
         ]}
       />

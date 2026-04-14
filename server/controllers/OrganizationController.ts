@@ -291,7 +291,7 @@ export const updatePlan = async (req: AuthRequest, res: Response) => {
       `UPDATE plan_templates 
        SET name = $1, price = $2, period = $3, description = $4, modules = $5, is_popular = $6, commission_amount = $7 
        WHERE id = $8 RETURNING *`,
-      [name, price, period, description, JSON.stringify(modules), is_popular, commission_amount, id]
+      [name, price, period, description, JSON.stringify(modules), is_popular, commission_amount || 0, id]
     );
     await recordAuditLog(req.user.id, 'UPDATE_PLAN', `Updated plan template ID: ${id}`, req.user.org_id, req.ip || '');
     res.json(result.rows[0]);

@@ -54,7 +54,7 @@ export const getAnnouncements = async (req: AuthRequest, res: Response) => {
     query += ` ORDER BY a.created_at DESC`;
 
     const result = await pool.query(query, params);
-    
+
     // Fallback names for staff sent announcements
     const finalRows = await Promise.all(result.rows.map(async (row) => {
       if (!row.sender_name && row.sender_id) {
@@ -146,7 +146,7 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
         const check = await pool.query('SELECT name FROM users WHERE id = $1', [otherId]);
         if (check.rows.length) name = check.rows[0].name;
       }
-      
+
       msg.other_person_name = name;
       return msg;
     }));
@@ -200,7 +200,7 @@ export const getUnreadMessageCount = async (req: AuthRequest, res: Response) => 
 export const markMessageRead = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const user_id = req.user.id; 
+    const user_id = req.user.id;
 
     const result = await pool.query(
       `UPDATE messages SET is_read = TRUE WHERE id = $1 AND receiver_id = $2 RETURNING *`,

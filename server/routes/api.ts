@@ -356,8 +356,8 @@ router.get('/students', async (req: any, res) => {
 });
 
 router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req: any, res) => {
-  const { 
-    name, email, parent_email, password, parent_password, status, gpa, admission_no, class_id, parent_name, contact, entrance_exam_score, 
+  const {
+    name, email, parent_email, password, parent_password, status, gpa, admission_no, class_id, parent_name, contact, entrance_exam_score,
     profile_pic, previous_school_profile_pic, fee_status, fee_amount, acceptance_id,
     math_score, english_score, science_score, interview_score, previous_school, custom_scores, date_of_birth, gender, date_enrolled,
     secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion
@@ -381,7 +381,7 @@ router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req:
     }
 
     // 2. Insert student record directly (allow duplicate emails for siblings)
-    
+
     // Hash password or default to 'zxcv123$$'
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password || 'zxcv123$$', saltRounds);
@@ -395,21 +395,21 @@ router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req:
     const result = await pool.query(
       'INSERT INTO students (name, email, parent_email, password, parent_password, status, gpa, admission_no, class_id, parent_name, contact, entrance_exam_score, profile_pic, previous_school_profile_pic, fee_status, fee_amount, org_id, acceptance_id, math_score, english_score, science_score, interview_score, previous_school, custom_scores, date_of_birth, gender, date_enrolled, secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31) RETURNING *',
       [
-        name, 
-        email, 
+        name,
+        email,
         parent_email || null,
-        hashedPassword, 
+        hashedPassword,
         hashedParentPassword,
-        status || 'Present', 
-        gpa || '0.0', 
-        finalAdmissionNo, 
-        class_id || null, 
-        parent_name, 
-        contact, 
-        entrance_exam_score, 
-        profile_pic, 
-        previous_school_profile_pic, 
-        fee_status || 'Paid', 
+        status || 'Present',
+        gpa || '0.0',
+        finalAdmissionNo,
+        class_id || null,
+        parent_name,
+        contact,
+        entrance_exam_score,
+        profile_pic,
+        previous_school_profile_pic,
+        fee_status || 'Paid',
         fee_amount || 0,
         orgId,
         acceptance_id || null,
@@ -436,8 +436,8 @@ router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req:
 
 router.patch('/students/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req: any, res) => {
   const { id } = req.params;
-  const { 
-    name, email, parent_email, parent_password, status, gpa, admission_no, class_id, parent_name, contact, entrance_exam_score, 
+  const {
+    name, email, parent_email, parent_password, status, gpa, admission_no, class_id, parent_name, contact, entrance_exam_score,
     profile_pic, previous_school_profile_pic, fee_status, fee_amount,
     math_score, english_score, science_score, interview_score, previous_school, custom_scores, date_of_birth, gender, date_enrolled,
     secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion
@@ -453,20 +453,20 @@ router.patch('/students/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async 
     const result = await pool.query(
       'UPDATE students SET name = $1, email = $2, parent_email = $3, status = $4, gpa = $5, admission_no = $6, class_id = $7, parent_name = $8, contact = $9, entrance_exam_score = $10, profile_pic = $11, previous_school_profile_pic = $12, fee_status = $13, fee_amount = $14, math_score = $15, english_score = $16, science_score = $17, interview_score = $18, previous_school = $19, custom_scores = $20, date_of_birth = $21, gender = $22, date_enrolled = $23, parent_password = COALESCE($24, parent_password), secondary_parent_name = $27, secondary_parent_email = $28, secondary_parent_contact = $29, religion = $30 WHERE id = $25 AND org_id = $26 RETURNING *',
       [
-        name, 
-        email, 
+        name,
+        email,
         parent_email,
-        status, 
-        gpa, 
-        admission_no, 
-        class_id || null, 
-        parent_name, 
-        contact, 
-        entrance_exam_score, 
+        status,
+        gpa,
+        admission_no,
+        class_id || null,
+        parent_name,
+        contact,
+        entrance_exam_score,
         profile_pic,
-        previous_school_profile_pic, 
-        fee_status, 
-        fee_amount, 
+        previous_school_profile_pic,
+        fee_status,
+        fee_amount,
         math_score,
         english_score,
         science_score,
