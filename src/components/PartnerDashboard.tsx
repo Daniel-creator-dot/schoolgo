@@ -40,7 +40,9 @@ const PartnerDashboard: React.FC = () => {
     signature: '',
     plan: 'Professional',
     language: 'en',
-    timezone: 'GMT'
+    timezone: 'GMT',
+    admin_email: '',
+    admin_password: ''
   });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'signature') => {
@@ -166,7 +168,8 @@ const PartnerDashboard: React.FC = () => {
         setFormData({
             name: '', type: 'Primary School', email: '', contact_number: '',
             address: '', custom_domain: '', logo: '', signature: '', 
-            plan: systemPlans[0]?.name || 'Professional', language: 'en', timezone: 'GMT'
+            plan: systemPlans[0]?.name || 'Professional', language: 'en', timezone: 'GMT',
+            admin_email: '', admin_password: ''
         });
       }
     } catch (err) {
@@ -504,13 +507,31 @@ const PartnerDashboard: React.FC = () => {
                     </select>
                   </div>
                   <div className="space-y-2">
-                      <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Admin Email</label>
+                      <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Organization Email</label>
                       <input 
                           type="email" required
                           value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
                           className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
-                          placeholder="admin@school.com" 
+                          placeholder="info@school.com" 
                       />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Admin Email (Login)</label>
+                    <input 
+                      type="email" required
+                      value={formData.admin_email} onChange={(e) => setFormData({...formData, admin_email: e.target.value})}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
+                      placeholder="admin@school.com" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Initial Admin Password</label>
+                    <input 
+                      type="password"
+                      value={formData.admin_password} onChange={(e) => setFormData({...formData, admin_password: e.target.value})}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
+                      placeholder="Leave blank for 'admin123'" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Custom Domain</label>

@@ -109,10 +109,17 @@ export const createSchool = async (req: AuthRequest, res: Response) => {
     const newOrg = orgResult.rows[0];
 
     // 2. Create Default Admin User
-    const hashedPassword = await bcrypt.hash(admin_password || 'admin123', 10);
+    const fallbackAdminEmail = admin_email || email;
+    const fallbackPassword = admin_password || 'admin123';
+    
+    if (!fallbackAdminEmail) {
+       throw new Error('An administrator email is required to create a school.');
+    }
+
+    const hashedPassword = await bcrypt.hash(fallbackPassword, 10);
     await client.query(
       'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5)',
-      [admin_email, hashedPassword, 'School Admin', 'SCHOOL_ADMIN', newOrg.id]
+      [fallbackAdminEmail, hashedPassword, 'School Admin', 'SCHOOL_ADMIN', newOrg.id]
     );
 
     await client.query('COMMIT');
