@@ -355,7 +355,7 @@ export const parseLibraryExcel = async (file: File): Promise<any[]> => {
 };
 
 export const downloadInventoryTemplate = () => {
-  const headers = ['Item Name', 'Category', 'Location', 'Status', 'Quantity', 'Unit Price', 'Next Maintenance'];
+  const headers = ['Item Name', 'Category', 'Location', 'Status', 'Quantity', 'Unit Price (GH₵)', 'Next Maintenance'];
   const example = ['Laptops (Dell)', 'ICT Equipment', 'Lab 1', 'Good Condition', '20', '500.00', '2024-12-31'];
   const ws = XLSX.utils.aoa_to_sheet([headers, example]);
   const wb = XLSX.utils.book_new();
@@ -378,7 +378,7 @@ export const parseInventoryExcel = async (file: File): Promise<any[]> => {
           status: row['Status'] || 'Good Condition',
           next_maintenance_date: row['Next Maintenance'],
           quantity: parseInt(row['Quantity']) || 0,
-          price: parseFloat(row['Unit Price']) || 0
+          price: parseFloat(row['Unit Price (GH₵)'] || row['Unit Price']) || 0
         })));
       } catch (err) { reject(err); }
     };

@@ -1093,7 +1093,6 @@ export const OperationsModules = {
           columns={[
             { header: 'Item Name', accessor: (item: any) => item.item_name, className: 'font-bold' },
             { header: 'Category', accessor: (item: any) => item.category },
-            { header: 'Location', accessor: (item: any) => item.location || '—' },
             { header: 'Status', accessor: (item: any) => (
               <span className={cn(
                 "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
@@ -1104,9 +1103,7 @@ export const OperationsModules = {
                 {item.status || 'Good Condition'}
               </span>
             )},
-            { header: 'Next Maintenance', accessor: (item: any) => item.next_maintenance_date ? new Date(item.next_maintenance_date).toLocaleDateString() : '—' },
             { header: 'Quantity', accessor: (item: any) => item.quantity },
-            { header: 'Unit Price', accessor: (item: any) => `₦${Number(item.price || 0).toLocaleString()}` },
           ]}
           onAdd={onSave ? () => {} : undefined}
           actions={(
@@ -1123,6 +1120,66 @@ export const OperationsModules = {
                 Import Excel
                 <input type="file" className="hidden" accept=".xlsx, .xls" onChange={handleFileUpload} />
               </label>
+            </div>
+          )}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Asset Status</p>
+                  <span className={cn(
+                    "px-2 py-1 rounded-full text-xs font-bold uppercase inline-block",
+                    item.status?.toLowerCase().includes('good') ? "bg-emerald-50 text-emerald-600" :
+                    item.status?.toLowerCase().includes('repair') ? "bg-amber-50 text-amber-600" :
+                    "bg-zinc-100 text-zinc-600"
+                  )}>
+                    {item.status || 'Good Condition'}
+                  </span>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Next Maintenance</p>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                    {item.next_maintenance_date ? new Date(item.next_maintenance_date).toLocaleDateString() : 'Not Scheduled'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <div>
+                    <p className="text-xs font-bold text-zinc-500 uppercase">Current Inventory</p>
+                    <p className="text-lg font-black text-zinc-900 dark:text-white">{item.quantity} Units</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-zinc-500 uppercase">Unit Value</p>
+                    <p className="text-lg font-black text-indigo-600">GH₵{Number(item.price || 0).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                  <p className="text-xs font-bold text-indigo-600 uppercase mb-1">Total Asset Valuation</p>
+                  <p className="text-2xl font-black text-indigo-700 dark:text-indigo-400 font-serif">GH₵{(item.quantity * (item.price || 0)).toLocaleString()}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-zinc-500 uppercase">Category</p>
+                    <p className="text-sm text-zinc-900 dark:text-white font-medium">{item.category || 'Uncategorized'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-zinc-500 uppercase">Storage Location</p>
+                    <p className="text-sm text-zinc-900 dark:text-white font-medium">{item.location || 'Not Specified'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {item.created_at && (
+                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[10px] text-zinc-400 uppercase tracking-widest text-center">
+                    Asset Registered On: {new Date(item.created_at).toLocaleString()}
+                  </p>
+                </div>
+              )}
             </div>
           )}
           renderForm={(item, isViewOnly) => (
@@ -1158,7 +1215,7 @@ export const OperationsModules = {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">Unit Price</label>
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Unit Price (GH₵)</label>
                   <input 
                     type="number"
                     step="0.01"
@@ -1241,8 +1298,8 @@ export const OperationsModules = {
                         <td className="px-4 py-3 font-bold">{row.item_name}</td>
                         <td className="px-4 py-3">{row.category}</td>
                         <td className="px-4 py-3 font-bold">{row.quantity}</td>
-                        <td className="px-4 py-3">₦{row.price?.toLocaleString()}</td>
-                        <td className="px-4 py-3 font-black text-indigo-600">₦{(row.quantity * row.price).toLocaleString()}</td>
+                        <td className="px-4 py-3">GH₵{row.price?.toLocaleString()}</td>
+                        <td className="px-4 py-3 font-black text-indigo-600">GH₵{(row.quantity * row.price).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
