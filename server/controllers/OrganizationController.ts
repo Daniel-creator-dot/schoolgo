@@ -109,10 +109,11 @@ export const updateOrganization = async (req: AuthRequest, res: Response) => {
     
     values.push(id);
     const result = await client.query(
-      `SELECT o.*, s.expiry_date, s.status as subscription_status
-       FROM (
+      `WITH updated_org AS (
          UPDATE organizations SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *
-       ) o
+       )
+       SELECT o.*, s.expiry_date, s.status as subscription_status
+       FROM updated_org o
        LEFT JOIN LATERAL (
            SELECT expiry_date, status
            FROM subscriptions
