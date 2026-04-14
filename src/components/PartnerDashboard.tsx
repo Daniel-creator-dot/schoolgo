@@ -195,7 +195,7 @@ const PartnerDashboard: React.FC = () => {
                 <Wallet size={64} />
               </div>
               <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Total Earnings</p>
-              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">₦{partner?.total_earnings?.toLocaleString()}</h3>
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">${partner?.total_earnings?.toLocaleString() || '0.00'}</h3>
               <p className="mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Finalized on active provisioning</p>
             </div>
 
@@ -214,7 +214,10 @@ const PartnerDashboard: React.FC = () => {
                     <h4 className="text-white font-black text-lg">Pro Benefits</h4>
                     <p className="text-indigo-100 text-xs mb-4">You're on the premium partner tier (8% comms)</p>
                  </div>
-                 <button className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-bold self-start transition-colors border border-white/10">
+                 <button 
+                   onClick={() => setActiveTab('plans')}
+                   className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-bold self-start transition-colors border border-white/10"
+                 >
                     View Tier Details
                  </button>
                </div>

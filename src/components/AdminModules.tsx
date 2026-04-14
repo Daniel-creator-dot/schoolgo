@@ -3315,7 +3315,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
   const [editingPartner, setEditingPartner] = useState<any>(null);
   const [viewingPartner, setViewingPartner] = useState<any>(null);
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', contact_number: '', company_name: '', registration_number: '', status: 'Active'
+    name: '', email: '', password: '', contact_number: '', company_name: '', registration_number: '', status: 'Active', language: 'en'
   });
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
   const [resetConfirm, setResetConfirm] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
@@ -3336,7 +3336,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
 
   const handleAdd = () => {
     setEditingPartner(null);
-    setFormData({ name: '', email: '', password: 'partner123', contact_number: '', company_name: '', registration_number: '', status: 'Active' });
+    setFormData({ name: '', email: '', password: 'partner123', contact_number: '', company_name: '', registration_number: '', status: 'Active', language: 'en' });
     setIsModalOpen(true);
   };
 
@@ -3344,7 +3344,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
     setEditingPartner(partner);
     setFormData({
       name: partner.name, email: partner.email, password: '', contact_number: partner.contact_number || '',
-      company_name: partner.company_name || '', registration_number: partner.registration_number || '', status: partner.status || 'Active'
+      company_name: partner.company_name || '', registration_number: partner.registration_number || '', status: partner.status || 'Active', language: partner.language || 'en'
     });
     setIsModalOpen(true);
   };
@@ -3423,7 +3423,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
           { header: 'Email', accessor: 'email', className: 'text-zinc-500' },
           { header: 'Status', accessor: (item: any) => statusBadge(item.status || 'Pending') },
           { header: 'Referral Code', accessor: 'referral_code', className: 'font-mono text-indigo-600' },
-          { header: 'Earnings', accessor: (item: any) => `GH\u20B5 ${parseFloat(item.total_earnings || 0).toLocaleString()}` }
+          { header: 'Earnings', accessor: (item: any) => `$ ${parseFloat(item.total_earnings || 0).toLocaleString()}` }
         ]}
       />
 
@@ -3452,7 +3452,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
               </div>
               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Total Earnings</p>
-                <p className="font-bold text-emerald-600">GH\u20B5 {parseFloat(viewingPartner.total_earnings || 0).toLocaleString()}</p>
+                <p className="font-bold text-emerald-600">$ {parseFloat(viewingPartner.total_earnings || 0).toLocaleString()}</p>
               </div>
               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Joined</p>
@@ -3505,11 +3505,13 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
               <input type="text" value={formData.registration_number} onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" placeholder="Optional" />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-zinc-500">Status</label>
-              <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm">
-                <option value="Active">Active</option>
-                <option value="Pending">Pending</option>
-                <option value="Suspended">Suspended</option>
+              <label className="text-xs font-bold uppercase text-zinc-500">Language</label>
+              <select value={formData.language} onChange={(e) => setFormData({ ...formData, language: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm">
+                <option value="en">English</option>
+                <option value="fr">French</option>
+                <option value="pt">Portuguese</option>
+                <option value="sw">Swahili</option>
+                <option value="ar">Arabic</option>
               </select>
             </div>
           </div>

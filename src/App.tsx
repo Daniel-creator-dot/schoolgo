@@ -257,7 +257,7 @@ import { useLanguage } from "./lib/LanguageContext";
 import { MODULE_LINK_MAP } from "./constants";
 
 export default function App() {
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
   const [showLanding, setShowLanding] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [showPartnerLogin, setShowPartnerLogin] = useState(false);
@@ -3528,6 +3528,7 @@ export default function App() {
           localStorage.setItem("user", JSON.stringify(data.user));
           setCurrentUser(data.user);
           setCurrentRole(data.user.role);
+          if (data.user.language) setLanguage(data.user.language as any);
           setShowPartnerLogin(false);
           loadData();
         }}
