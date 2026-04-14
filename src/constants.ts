@@ -170,11 +170,11 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   {
     title: 'Communication',
     icon: MessageSquare,
-    roles: ['SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'],
+    roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'],
     children: [
-      { title: 'Announcements', href: 'Announcements', roles: ['SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: Bell },
-      { title: 'Messages', href: 'Messages', roles: ['SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: MessageSquare },
-      { title: 'Notifications', href: 'Notifications', roles: ['SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: Bell },
+      { title: 'Announcements', href: 'Announcements', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: Bell },
+      { title: 'Messages', href: 'Messages', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: MessageSquare },
+      { title: 'Notifications', href: 'Notifications', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: Bell },
     ]
   },
 

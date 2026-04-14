@@ -60,6 +60,12 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'referred_by_partner_id') THEN
           ALTER TABLE organizations ADD COLUMN referred_by_partner_id UUID REFERENCES partners(id);
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'plan_templates' AND column_name = 'commission_amount') THEN
+          ALTER TABLE plan_templates ADD COLUMN commission_amount NUMERIC(12, 2) DEFAULT 0;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'partners' AND column_name = 'language') THEN
+          ALTER TABLE partners ADD COLUMN language VARCHAR(50) DEFAULT 'en';
+        END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'signature') THEN
           ALTER TABLE organizations ADD COLUMN signature TEXT;
         END IF;
@@ -96,7 +102,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'demo_requested') THEN
           ALTER TABLE organizations ADD COLUMN demo_requested BOOLEAN DEFAULT FALSE;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -135,7 +141,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'departments' AND column_name = 'description') THEN
           ALTER TABLE departments ADD COLUMN description TEXT;
         END IF;
-      END $$;;
+      END $$;
 
 DO $$
       BEGIN
@@ -175,7 +181,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'staff' AND column_name = 'date_of_birth') THEN
           ALTER TABLE staff ADD COLUMN date_of_birth DATE;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS grading_scales (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -226,7 +232,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='classes' AND column_name='promotion_threshold') THEN
           ALTER TABLE classes ADD COLUMN promotion_threshold NUMERIC(5,2) DEFAULT 50;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS students (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -339,11 +345,10 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='religion') THEN
           ALTER TABLE students ADD COLUMN religion VARCHAR(100);
         END IF;
-      end $$;;
+      end $$;
 
-UPDATE students 
-      SET parent_password = $1 
-      WHERE parent_password IS NULL AND parent_email IS NOT NULL;
+-- Removed broken UPDATE with $1 placeholder
+
 
 CREATE TABLE IF NOT EXISTS promotion_records (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -362,7 +367,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'promotion_records' AND column_name = 'reason') THEN
           ALTER TABLE promotion_records ADD COLUMN reason TEXT;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS subjects (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -389,7 +394,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subjects' AND column_name='credits') THEN
           ALTER TABLE subjects ADD COLUMN credits INTEGER DEFAULT 1;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS subject_assignments (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -412,7 +417,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='subject_assignments' AND column_name='created_at') THEN
           ALTER TABLE subject_assignments ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
         END IF;
-      END $$;;
+      END $$;
 
 INSERT INTO subject_assignments (subject_id, class_id, teacher_id, org_id)
       SELECT id, class_id, teacher_id, org_id 
@@ -443,7 +448,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='classes' AND column_name='required_credits') THEN
           ALTER TABLE classes ADD COLUMN required_credits INTEGER DEFAULT 0;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS transport_routes (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -461,7 +466,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='transport_routes' AND column_name='price') THEN
           ALTER TABLE transport_routes ADD COLUMN price NUMERIC(10, 2) DEFAULT 0;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS hostels (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -487,7 +492,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='hostel_rooms' AND column_name='price') THEN
           ALTER TABLE hostel_rooms ADD COLUMN price NUMERIC(10, 2) DEFAULT 0;
         END IF;
-      END $$;;
+      END $$;
 
 DO $$
       BEGIN
@@ -500,7 +505,7 @@ DO $$
           ALTER TABLE students DROP CONSTRAINT IF EXISTS fk_students_hostel_room;
           ALTER TABLE students ADD CONSTRAINT fk_students_hostel_room FOREIGN KEY (hostel_room_id) REFERENCES hostel_rooms(id);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS timetables (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -524,7 +529,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='timetables' AND column_name='type') THEN
           ALTER TABLE timetables ADD COLUMN type VARCHAR(50) DEFAULT 'Lesson';
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS student_attendance (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -567,7 +572,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='invoices' AND column_name='academic_year') THEN
           ALTER TABLE invoices ADD COLUMN academic_year VARCHAR(50);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS payments (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -590,7 +595,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='payments' AND column_name='academic_year') THEN
           ALTER TABLE payments ADD COLUMN academic_year VARCHAR(50);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS health_records (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -647,7 +652,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inquiries' AND column_name='religion') THEN
           ALTER TABLE inquiries ADD COLUMN religion VARCHAR(100);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS applications (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -723,7 +728,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='applications' AND column_name='religion') THEN
           ALTER TABLE applications ADD COLUMN religion VARCHAR(100);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS acceptances (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -801,7 +806,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='acceptances' AND column_name='religion') THEN
           ALTER TABLE acceptances ADD COLUMN religion VARCHAR(100);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS expenses (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -834,7 +839,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='exams' AND column_name='subject_id') THEN
           ALTER TABLE exams ADD COLUMN subject_id UUID REFERENCES subjects(id);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS results (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -929,7 +934,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'cbt_exams' AND column_name = 'class_ids') THEN
           ALTER TABLE cbt_exams ADD COLUMN class_ids JSONB DEFAULT '[]';
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS cbt_questions (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -970,11 +975,11 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='audit_logs' AND column_name='details') THEN
           ALTER TABLE audit_logs ADD COLUMN details TEXT;
         END IF;
-      END $$;;
+      END $$;
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_org_id ON audit_logs(org_id)
+CREATE INDEX IF NOT EXISTS idx_audit_logs_org_id ON audit_logs(org_id);
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id)
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 
 CREATE TABLE IF NOT EXISTS payroll (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1008,7 +1013,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='leave_requests' AND column_name='relief_staff_id') THEN
           ALTER TABLE leave_requests ADD COLUMN relief_staff_id UUID REFERENCES staff(id);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS staff_attendance (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1055,7 +1060,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'recruitment' AND column_name = 'department_id') THEN
           ALTER TABLE recruitment ADD COLUMN department_id UUID REFERENCES departments(id);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS exit_management (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1124,7 +1129,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'lesson_notes' AND column_name = 'marks') THEN
           ALTER TABLE lesson_notes ADD COLUMN marks NUMERIC(5, 2);
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS behavior_discipline (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1226,7 +1231,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='books' AND column_name='price') THEN
           ALTER TABLE books ADD COLUMN price NUMERIC(10, 2) DEFAULT 0;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS book_loans (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1252,7 +1257,7 @@ DO $$
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='book_loans' AND column_name='user_id') THEN
           ALTER TABLE book_loans ALTER COLUMN user_id DROP NOT NULL;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS inventory (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1269,7 +1274,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inventory' AND column_name='price') THEN
           ALTER TABLE inventory ADD COLUMN price NUMERIC(10, 2) DEFAULT 0;
         END IF;
-      END $$;;
+      END $$;
 
 INSERT INTO plan_templates (name, price, period, description, modules, is_popular, commission_amount)
       VALUES 
@@ -1278,55 +1283,8 @@ INSERT INTO plan_templates (name, price, period, description, modules, is_popula
         ('Enterprise', 3500.00, 'monthly', 'Full-scale solution for large schools', '["Everything in Professional", "HR & Payroll", "Operations & Logistics", "AI & Advanced Analytics", "Custom Domain"]', false, 400.00)
       ON CONFLICT (name) DO UPDATE SET commission_amount = EXCLUDED.commission_amount;
 
-SELECT id, name FROM organizations;
+-- Redundant table definitions and broken seeds removed
 
-INSERT INTO organizations (name, type, status, plan)
-        VALUES 
-          ('Global Excellence Academy', 'Private K-12', 'Active', 'Enterprise'),
-          ('Bright Future International', 'International School', 'Active', 'Professional'),
-          ('Saint Jude High', 'Secondary School', 'Active', 'Basic')
-        RETURNING id, name;
-
-
--- Cleaned up broken seed data sections
-
-
-INSERT INTO modules (name, status, category, org_id)
-      VALUES 
-        ('Academic Management', 'Enabled', 'Core', NULL),
-        ('Admissions & Onboarding', 'Enabled', 'Core', NULL),
-        ('Finance & Billing', 'Enabled', 'Core', NULL),
-        ('HR & Payroll', 'Enabled', 'Core', NULL),
-        ('Exam & Results', 'Enabled', 'Core', NULL),
-        ('Operations & Logistics', 'Enabled', 'Add-on', NULL),
-        ('Library System', 'Enabled', 'Add-on', NULL),
-        ('Cloud Storage (Drive)', 'Enabled', 'Add-on', NULL),
-        ('AI & Advanced Analytics', 'Enabled', 'Premium', NULL),
-        ('E-Learning & CBT', 'Enabled', 'Premium', NULL);
-
-CREATE TABLE IF NOT EXISTS uniform_management (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        item_name VARCHAR(255) NOT NULL,
-        size VARCHAR(50),
-        stock INTEGER DEFAULT 0,
-        price NUMERIC(10, 2) DEFAULT 0,
-        student_id UUID REFERENCES students(id),
-        add_to_fees BOOLEAN DEFAULT false,
-        org_id UUID REFERENCES organizations(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-CREATE TABLE IF NOT EXISTS inventory_sales (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        item_name VARCHAR(255) NOT NULL,
-        quantity INTEGER DEFAULT 1,
-        total_price NUMERIC(10, 2) DEFAULT 0,
-        buyer_name VARCHAR(255),
-        student_id UUID REFERENCES students(id),
-        add_to_fees BOOLEAN DEFAULT false,
-        org_id UUID REFERENCES organizations(id),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
 
 CREATE TABLE IF NOT EXISTS expenses (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1352,7 +1310,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='uniform_management' AND column_name='add_to_fees') THEN
           ALTER TABLE uniform_management ADD COLUMN add_to_fees BOOLEAN DEFAULT false;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS remark_templates (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1394,7 +1352,7 @@ DO $$
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='announcements' AND column_name='scheduled_for') THEN
           ALTER TABLE announcements ADD COLUMN scheduled_for TIMESTAMP;
         END IF;
-      END $$;;
+      END $$;
 
 CREATE TABLE IF NOT EXISTS meetings (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1424,11 +1382,8 @@ CREATE TABLE IF NOT EXISTS messages (
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-CREATE TABLE IF NOT EXISTS gemini_api_keys (
-        org_id UUID PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
-        api_key VARCHAR(255) NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+-- gemini_api_keys already defined at top
+
 
 CREATE TABLE IF NOT EXISTS drive_folders (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1471,6 +1426,6 @@ CREATE TABLE IF NOT EXISTS report_card_templates (
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-CREATE INDEX IF NOT EXISTS idx_report_card_templates_org_id ON report_card_templates(org_id)
+CREATE INDEX IF NOT EXISTS idx_report_card_templates_org_id ON report_card_templates(org_id);
 
 COMMIT;
