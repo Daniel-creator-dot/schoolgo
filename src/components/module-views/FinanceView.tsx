@@ -19,9 +19,15 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Target,
-  Users
+  Users,
+  Download,
+  FileUp,
+  Loader2,
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
+import { downloadFeeTemplate, parseFeeExcel } from '../../lib/excel';
 import { 
   BarChart, 
   Bar, 
@@ -347,6 +353,9 @@ export const FinanceModules = {
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [isDesignerOpen, setIsDesignerOpen] = useState(false);
     const [paymentModalData, setPaymentModalData] = useState<any>(null);
+    const [bulkMode, setBulkMode] = useState<'payment' | 'invoice'>('payment');
+    const [importPreviewItems, setImportPreviewItems] = useState<any[]>([]);
+    const [isImporting, setIsImporting] = useState(false);
 
     const handlePrintInvoice = (invoice: any) => {
       const template = (documentTemplates || [])
@@ -762,8 +771,128 @@ export const FinanceModules = {
       );
     }
 
+    const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        setIsImporting(true);
+        const records = await parseFeeExcel(file, bulkMode, students, feeStructures);
+        setImportPreviewItems(records);
+      } catch (err) {
+        (window as any).showToast?.('Failed to parse Excel file.', 'error');
+      } finally {
+        setIsImporting(false);
+        if (e.target) e.target.value = '';
+      }
+    };
+
+    const confirmBulkOperation = async () => {
+      const validRecords = importPreviewItems.filter(r => r.isValid);
+      if (validRecords.length === 0) return;
+
+      setIsImporting(true);
+      try {
+        let successCount = 0;
+        for (const record of validRecords) {
+          if (bulkMode === 'payment') {
+            if (onRecordPayment) {
+              await onRecordPayment({
+                student_id: record.student_id,
+                amount: record.amount,
+                method: record.method,
+                date: record.date,
+                transaction_id: record.transaction_id,
+                description: record.description,
+                academic_year: organization?.academic_year,
+                term: organization?.current_term
+              });
+              successCount++;
+            }
+          } else {
+            if (onSave) {
+              await onSave({
+                student_id: record.student_id,
+                fee_structure_id: record.fee_structure_id,
+                amount: record.amount,
+                due_date: record.due_date,
+                academic_year: record.academic_year || organization?.academic_year,
+                term: record.term || organization?.current_term,
+                target_type: 'students'
+              });
+              successCount++;
+            }
+          }
+        }
+        (window as any).showToast?.(`Successfully processed ${successCount} records!`, 'success');
+        setImportPreviewItems([]);
+        onRefreshTemplates?.(); // Refresh data
+      } catch (err) {
+        (window as any).showToast?.('Some records failed to process.', 'error');
+      } finally {
+        setIsImporting(false);
+      }
+    };
+
     return (
       <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm animate-in fade-in slide-in-from-top-4">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-indigo-200 dark:shadow-none">
+              <FileUp className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Bulk Operations</h3>
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Smarter fee management via Excel</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setBulkMode('payment')}
+                className={cn(
+                  "px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  bulkMode === 'payment' ? "bg-white dark:bg-zinc-700 text-indigo-600 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                )}
+              >
+                Record Payments
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkMode('invoice')}
+                className={cn(
+                  "px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                  bulkMode === 'invoice' ? "bg-white dark:bg-zinc-700 text-indigo-600 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                )}
+              >
+                Bulk Billing
+              </button>
+            </div>
+
+            <div className="h-10 w-px bg-zinc-200 dark:bg-zinc-800 hidden md:block" />
+
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => downloadFeeTemplate(bulkMode, students, feeStructures)}
+                className="flex items-center gap-2 group text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-indigo-600 transition-colors"
+                title="Download current student list as template"
+              >
+                <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                Template
+              </button>
+              
+              <label className="relative cursor-pointer">
+                <input type="file" accept=".xlsx,.xls" onChange={handleFileImport} className="hidden" />
+                <div className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-zinc-200 dark:shadow-none">
+                  Upload & Preview
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <DataTable
           title={t('student_fees_overview')}
           data={data || []}
@@ -864,6 +993,88 @@ export const FinanceModules = {
               <button type="submit" className="px-6 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-lg shadow-emerald-200 dark:shadow-none">Record Payment</button>
             </div>
           </form>
+        </Modal>
+
+        <Modal
+          isOpen={importPreviewItems.length > 0}
+          onClose={() => setImportPreviewItems([])}
+          title={bulkMode === 'payment' ? "Review Payment Upload" : "Review Bulk Billing"}
+          maxWidth="max-w-5xl"
+        >
+          <div className="space-y-6">
+            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-2xl flex items-center gap-4">
+              <div className="p-2 rounded-xl bg-white dark:bg-zinc-900 text-indigo-600">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-widest">Verify Records</p>
+                <p className="text-[10px] font-bold text-indigo-700/70 dark:text-indigo-400">Total {importPreviewItems.length} records detected. Rows with errors will be skipped.</p>
+              </div>
+            </div>
+
+            <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-zinc-50 dark:bg-zinc-800">
+                  <tr>
+                    <th className="px-4 py-3 font-black uppercase tracking-widest">Student</th>
+                    <th className="px-4 py-3 font-black uppercase tracking-widest">{bulkMode === 'payment' ? 'Amount' : 'Fee Type'}</th>
+                    <th className="px-4 py-3 font-black uppercase tracking-widest">Identification</th>
+                    <th className="px-4 py-3 font-black uppercase tracking-widest">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {importPreviewItems.map((item, i) => (
+                    <tr key={i} className="hover:bg-zinc-50/50">
+                      <td className="px-4 py-3 font-bold">{item.student_name}</td>
+                      <td className="px-4 py-3">
+                        {bulkMode === 'payment' ? (
+                          <span className="text-emerald-600 font-bold">GH₵ {item.amount}</span>
+                        ) : (
+                          <span className="font-bold">{item.fee_name}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.student_id ? (
+                          <span className="text-zinc-600 dark:text-zinc-400">ID: {item.admission_no}</span>
+                        ) : (
+                          <span className="text-rose-500 font-bold flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" /> Unknown Admission No
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {item.isValid ? (
+                          <span className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-widest">Ready</span>
+                        ) : (
+                          <span className="px-2 py-1 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-widest">Invalid</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setImportPreviewItems([])}
+                className="flex-1 py-4 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-zinc-50 transition-colors"
+                disabled={isImporting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmBulkOperation}
+                className="flex-[2] bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 group"
+                disabled={isImporting || !importPreviewItems.some(s => s.isValid)}
+              >
+                {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />}
+                Confirm & Process {importPreviewItems.filter(s => s.isValid).length} Records
+              </button>
+            </div>
+          </div>
         </Modal>
       </div>
     );
