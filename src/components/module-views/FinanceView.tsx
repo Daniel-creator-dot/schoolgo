@@ -52,7 +52,7 @@ import { DocumentBuilder } from '../AdminModules';
 
 export const FinanceModules = {
   FeeStructure: ({ classes, students, data, onSave, onDelete, role, organization }: { classes: any[], students: Student[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, role?: string, organization?: any }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const [targetType, setTargetType] = useState<'none' | 'class' | 'students'>('none');
 
     const renderFeeStructureForm = (item?: any, isViewOnly?: boolean) => (
@@ -70,7 +70,7 @@ export const FinanceModules = {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('amount_label')} (GH₵)</label>
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('amount_label')} ({currency})</label>
             <input
               type="number"
               name="amount"
@@ -222,7 +222,7 @@ export const FinanceModules = {
           { header: 'Name', accessor: 'name', className: 'font-bold' },
           { 
             header: 'Amount', 
-            accessor: (item) => `GH₵ ${parseFloat(item.amount).toLocaleString()}` 
+            accessor: (item) => `${currency} ${parseFloat(item.amount).toLocaleString()}` 
           },
           { header: 'Period', accessor: 'period' },
           { 
@@ -251,7 +251,7 @@ export const FinanceModules = {
     );
   },
   ClassFees: ({ classes, feeStructures, onGenerate, organization }: { classes: any[], feeStructures: any[], onGenerate: (data: any) => void, organization?: any }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
     const [selectedFeeIds, setSelectedFeeIds] = useState<string[]>([]);
     const [academicYear, setAcademicYear] = useState(organization?.academic_year || "");
@@ -261,7 +261,7 @@ export const FinanceModules = {
     const feeOptions = feeStructures.map(f => ({
       value: f.id,
       label: f.name,
-      sublabel: `GH₵ ${f.amount}`
+      sublabel: `${currency} ${f.amount}`
     }));
 
     const classOptions = classes.map(c => ({
@@ -349,7 +349,7 @@ export const FinanceModules = {
     );
   },
   FeeManagement: ({ students, feeStructures, data, invoices, payments, scholarships, onSave, onDelete, onRecordPayment, organization, documentTemplates, onRefreshTemplates }: { students: Student[], feeStructures: any[], data?: any[], invoices?: any[], payments?: any[], scholarships?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void, organization?: any, documentTemplates?: any[], onRefreshTemplates?: () => Promise<void> }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [isDesignerOpen, setIsDesignerOpen] = useState(false);
     const [paymentModalData, setPaymentModalData] = useState<any>(null);
@@ -384,8 +384,8 @@ export const FinanceModules = {
             '{{class_name}}': selectedStudent?.class_name || 'N/A',
             '{{date}}': new Date().toLocaleDateString(),
             '{{due_date}}': invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A',
-            '{{total_amount}}': `GH₵${invoice.amount}`,
-            '{{outstanding_amount}}': `GH₵${selectedStudent?.outstanding_amount || 0}`,
+            '{{total_amount}}': `${currency}${invoice.amount}`,
+            '{{outstanding_amount}}': `${currency}${selectedStudent?.outstanding_amount || 0}`,
             '{{school_name}}': organization?.name || 'The School',
             '{{school_address}}': organization?.address || 'School Address',
             '{{school_logo}}': organization?.logo ? `<img src="${organization.logo}" style="max-height: 80px; display: block; margin: 0 auto;" alt="Logo" />` : '',
@@ -500,13 +500,13 @@ export const FinanceModules = {
                         <td>
                           <strong style="color: #1e293b;">${invoice.description || 'General School Fee'}</strong>
                         </td>
-                        <td style="text-align: right; font-weight: 600;">GH₵ ${parseFloat(invoice.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: 600;">${currency} ${parseFloat(invoice.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                       </tr>
                     </tbody>
                   </table>
                   <div class="amount-row">
                     <div class="label">${isPaid ? 'Amount Paid' : 'Total Due'}</div>
-                    <div class="value">GH₵ ${parseFloat(invoice.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    <div class="value">${currency} ${parseFloat(invoice.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                   </div>
                   <div class="footer">
                     <div class="thank-you">${isPaid ? 'Thank you for your payment!' : 'Please pay by the due date. Thank you!'}</div>
@@ -553,7 +553,7 @@ export const FinanceModules = {
               className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Choose Fee...</option>
-              {feeStructures.map(f => <option key={f.id} value={f.id}>{f.name} (GH₵ {f.amount})</option>)}
+              {feeStructures.map(f => <option key={f.id} value={f.id}>{f.name} ({currency} {f.amount})</option>)}
             </select>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -619,7 +619,7 @@ export const FinanceModules = {
                   "text-3xl font-black mt-1",
                   parseFloat(selectedStudent.outstanding_amount) > 0 ? "text-rose-600" : "text-emerald-600"
                 )}>
-                  GH₵ {parseFloat(selectedStudent.outstanding_amount).toLocaleString()}
+                  {currency} {parseFloat(selectedStudent.outstanding_amount).toLocaleString()}
                 </h3>
               </div>
             </div>
@@ -633,7 +633,7 @@ export const FinanceModules = {
                   {studentInvoices.length > 0 ? studentInvoices.map((inv: any) => (
                     <div key={inv.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl flex justify-between items-center border border-zinc-100 dark:border-zinc-800">
                       <div>
-                        <p className="text-sm font-bold text-zinc-900 dark:text-white">GH₵ {parseFloat(inv.amount).toLocaleString()}</p>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">{currency} {parseFloat(inv.amount).toLocaleString()}</p>
                         <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">{inv.description || "General Fee"} • Due: {new Date(inv.due_date).toLocaleDateString()}</p>
                       </div>
                       <div className="flex gap-2">
@@ -673,7 +673,7 @@ export const FinanceModules = {
                   {studentPayments.length > 0 ? studentPayments.map((p: any) => (
                     <div key={p.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl flex justify-between items-center border border-zinc-100 dark:border-zinc-800">
                       <div>
-                        <p className="text-sm font-bold text-emerald-600">+ GH₵ {parseFloat(p.amount).toLocaleString()}</p>
+                        <p className="text-sm font-bold text-emerald-600">+ {currency} {parseFloat(p.amount).toLocaleString()}</p>
                         <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">{p.method} • {p.description || "Payment"} • {new Date(p.date).toLocaleDateString()}</p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -695,7 +695,7 @@ export const FinanceModules = {
                         <p className="text-sm font-bold text-amber-600">Active Scholarships</p>
                         <p className="text-[10px] text-amber-500 uppercase font-bold tracking-wider">Total Credit Applied</p>
                       </div>
-                      <span className="text-sm font-bold text-amber-600">- GH₵ {parseFloat(selectedStudent.total_scholarships).toLocaleString()}</span>
+                      <span className="text-sm font-bold text-amber-600">- {currency} {parseFloat(selectedStudent.total_scholarships).toLocaleString()}</span>
                     </div>
                   ) : <p className="text-sm text-zinc-400 py-4">No active scholarships</p>}
                 </div>
@@ -727,10 +727,10 @@ export const FinanceModules = {
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-2">
                   <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('paying_for')}</p>
                   <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">{paymentModalData?.description || t('school_fee')}</p>
-                  <p className="text-xs text-zinc-500 mt-0.5">{t('invoice_amount')}: GH₵ {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">{t('invoice_amount')}: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('amount_paying')} (GH₵)</label>
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('amount_paying')} ({currency})</label>
                   <input type="number" name="amount" defaultValue={paymentModalData?.amount} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" required />
                 </div>
                 <div className="space-y-1.5">
@@ -901,9 +901,9 @@ export const FinanceModules = {
           columns={[
             { header: 'Student', accessor: 'name', className: 'font-bold' },
             { header: 'Class', accessor: 'class_name' },
-            { header: 'Total Invoiced', accessor: (item: any) => `GH₵ ${parseFloat(item.total_invoiced || 0).toLocaleString()}` },
-            { header: 'Total Paid', accessor: (item: any) => `GH₵ ${parseFloat(item.total_paid || 0).toLocaleString()}` },
-            { header: 'Scholarships', accessor: (item: any) => `GH₵ ${parseFloat(item.total_scholarships || 0).toLocaleString()}` },
+            { header: 'Total Invoiced', accessor: (item: any) => `${currency} ${parseFloat(item.total_invoiced || 0).toLocaleString()}` },
+            { header: 'Total Paid', accessor: (item: any) => `${currency} ${parseFloat(item.total_paid || 0).toLocaleString()}` },
+            { header: 'Scholarships', accessor: (item: any) => `${currency} ${parseFloat(item.total_scholarships || 0).toLocaleString()}` },
             { 
               header: 'Outstanding', 
               accessor: (item: any) => (
@@ -911,7 +911,7 @@ export const FinanceModules = {
                   "font-bold",
                   parseFloat(item.outstanding_amount) > 0 ? "text-rose-600" : "text-emerald-600"
                 )}>
-                  GH₵ {parseFloat(item.outstanding_amount || 0).toLocaleString()}
+                  {currency} {parseFloat(item.outstanding_amount || 0).toLocaleString()}
                 </span>
               ) 
             },
@@ -955,10 +955,10 @@ export const FinanceModules = {
             <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-2">
               <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Paying For</p>
               <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">{paymentModalData?.description || 'School Fee'}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Invoice Amount: GH₵ {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
+              <p className="text-xs text-zinc-500 mt-0.5">Invoice Amount: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount Paying (GH₵)</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount Paying ({currency})</label>
               <input type="number" name="amount" defaultValue={paymentModalData?.amount} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" required />
             </div>
             <div className="space-y-1.5">
@@ -1028,7 +1028,7 @@ export const FinanceModules = {
                       <td className="px-4 py-3 font-bold">{item.student_name}</td>
                       <td className="px-4 py-3">
                         {bulkMode === 'payment' ? (
-                          <span className="text-emerald-600 font-bold">GH₵ {item.amount}</span>
+                          <span className="text-emerald-600 font-bold">{currency} {item.amount}</span>
                         ) : (
                           <span className="font-bold">{item.fee_name}</span>
                         )}
@@ -1080,7 +1080,7 @@ export const FinanceModules = {
     );
   },
   DailyCollections: ({ students, data, onSave, onDelete, organization, documentTemplates, onRefreshTemplates }: { students: Student[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, organization?: any, documentTemplates?: any[], onRefreshTemplates?: () => Promise<void> }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const [isDesignerOpen, setIsDesignerOpen] = useState(false);
     const renderCollectionForm = (item?: any) => {
       const studentOptions = students.map(s => ({
@@ -1229,13 +1229,13 @@ export const FinanceModules = {
                         <td>
                           <strong style="color: #1e293b;">${receipt.description || 'School Fees Payment'}</strong>
                         </td>
-                        <td style="text-align: right; font-weight: 600; color: #334155;">GH₵ ${parseFloat(receipt.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: 600; color: #334155;">${currency} ${parseFloat(receipt.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
                       </tr>
                     </tbody>
                   </table>
                   <div class="amount-row">
                     <div class="label">Total Paid</div>
-                    <div class="value">GH₵ ${parseFloat(receipt.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    <div class="value">${currency} ${parseFloat(receipt.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
                   </div>
                   <div class="footer">
                     <div class="thank-you">Thank you for your payment!</div>
@@ -1266,7 +1266,7 @@ export const FinanceModules = {
           columns={[
             { header: 'Student', accessor: 'student_name', className: 'font-bold' },
             { header: 'Class', accessor: 'class_name' },
-            { header: 'Amount', accessor: 'amount' },
+            { header: `Amount (${currency})`, accessor: 'amount' },
             { header: 'Date', accessor: (item: any) => new Date(item.date).toLocaleDateString() },
             { header: 'Method', accessor: 'method' },
             {
@@ -1297,7 +1297,7 @@ export const FinanceModules = {
     );
   },
   Inventory: ({ students, data, onSave, onDelete }: { students: Student[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const [viewItem, setViewItem] = useState<any | null>(null);
 
     const renderUniformForm = (item?: any, isViewOnly?: boolean) => {
@@ -1345,7 +1345,7 @@ export const FinanceModules = {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Unit Price (GH₵)</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Unit Price ({currency})</label>
               <input
                 type="number"
                 name="price"
@@ -1372,7 +1372,7 @@ export const FinanceModules = {
             { header: 'Item', accessor: 'item_name', className: 'font-bold' },
             { header: 'Category/Size', accessor: 'size' },
             { header: 'Stock', accessor: 'stock' },
-            { header: 'Price', accessor: (item: any) => `GH₵ ${item.price}` },
+            { header: 'Price', accessor: (item: any) => `${currency} ${item.price}` },
           ]}
           onAdd={onSave ? () => {} : undefined}
           renderForm={renderUniformForm}
@@ -1381,7 +1381,7 @@ export const FinanceModules = {
     );
   },
   InventorySales: ({ students, inventoryItems, data, onSave, onDelete, organization }: { students: Student[], inventoryItems: any[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, organization?: any }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const renderSaleForm = (item?: any, isViewOnly?: boolean) => {
       const studentOptions = students.map(s => ({
         value: s.id,
@@ -1392,7 +1392,7 @@ export const FinanceModules = {
       const inventoryOptions = (inventoryItems || []).map(inv => ({
         value: inv.id,
         label: inv.item_name,
-        sublabel: `Stock: ${inv.stock} | Price: GH₵ ${inv.price}`
+        sublabel: `Stock: ${inv.stock} | Price: ${currency} ${inv.price}`
       }));
 
       const handleItemSelect = (val: string | string[]) => {
@@ -1552,7 +1552,7 @@ export const FinanceModules = {
             { header: 'Date', accessor: (item: any) => new Date(item.created_at).toLocaleDateString() },
             { header: 'Item', accessor: 'item_name', className: 'font-bold' },
             { header: 'Qty', accessor: 'quantity' },
-            { header: 'Total', accessor: (item: any) => `GH₵ ${item.total_price}` },
+            { header: 'Total', accessor: (item: any) => `${currency} ${item.total_price}` },
             { header: 'Buyer', accessor: (item: any) => item.student_name || item.buyer_name || 'Walk-in' },
             {
               header: 'Pay Later',
@@ -1568,7 +1568,7 @@ export const FinanceModules = {
     );
   },
   InvoicesPayments: ({ role, students, wards, data, feeStructures, organization, onSave, onDelete }: { role?: UserRole, students?: Student[], wards?: any[], data?: any[], feeStructures?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
     const filteredData = role === 'PARENT' ? (data || []).filter(d => d.wardId === selectedWardId) : (data || []);
 
@@ -1739,7 +1739,7 @@ export const FinanceModules = {
 
                 <div class="amount-card">
                   <span class="amount-label">Total Amount Paid</span>
-                  <span class="amount-value">GH₵ ${item.amount}</span>
+                  <span class="amount-value">${currency} ${item.amount}</span>
                 </div>
 
                 <div class="footer">
@@ -1872,7 +1872,7 @@ export const FinanceModules = {
               {/* Total Section */}
               <div className="bg-zinc-50 dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                 <span className="text-sm font-black text-zinc-500 uppercase tracking-wider">Total Amount</span>
-                <span className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">GH₵ {item.amount}</span>
+                <span className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{currency} {item.amount}</span>
               </div>
 
               {/* Footer / Actions */}
@@ -1938,7 +1938,7 @@ export const FinanceModules = {
                   <optgroup label="Pending Invoices / Inventory Debts">
                     {studentPendingDebts.map(d => (
                       <option key={d.id} value={`debt_${d.id}`}>
-                        {d.invoice_description || 'Unnamed Debt'} — GH₵ {d.amount}
+                        {d.invoice_description || 'Unnamed Debt'} — {currency} {d.amount}
                       </option>
                     ))}
                   </optgroup>
@@ -1946,7 +1946,7 @@ export const FinanceModules = {
                 <optgroup label="Standard Fees Structures">
                   {(feeStructures || []).map(f => (
                     <option key={f.id} value={f.id}>
-                      {f.name} — GH₵ {f.amount}
+                      {f.name} — {currency} {f.amount}
                     </option>
                   ))}
                 </optgroup>
@@ -1993,7 +1993,7 @@ export const FinanceModules = {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount (GH₵)</label>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount ({currency})</label>
                 <input
                   type="number"
                   name="amount"
@@ -2083,7 +2083,7 @@ export const FinanceModules = {
           columns={[
             { header: 'Client/Student', accessor: 'student_name', className: 'font-bold' },
             { header: 'Item / Description', accessor: 'invoice_description' },
-            { header: 'Amount (GH₵)', accessor: 'amount' },
+            { header: `Amount (${currency})`, accessor: 'amount' },
             {
               header: 'Status',
               accessor: (item: any) => (
@@ -2115,7 +2115,7 @@ export const FinanceModules = {
     );
   },
   Scholarships: ({ students, scholarshipTypes, data, onSave, onDelete, onSaveType, onDeleteType }: { students: Student[], scholarshipTypes: any[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onSaveType?: (data: any) => void, onDeleteType?: (item: any) => void }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const renderScholarshipTypeForm = (item?: any) => (
       <div className="space-y-4">
         <div className="space-y-1.5">
@@ -2171,11 +2171,11 @@ export const FinanceModules = {
             }}
           >
             <option value="">Select Type...</option>
-            {scholarshipTypes.map(t => <option key={t.id} value={t.id}>{t.name} (GH₵ {t.amount})</option>)}
+            {scholarshipTypes.map(t => <option key={t.id} value={t.id}>{t.name} ({currency} {t.amount})</option>)}
           </select>
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount (GH₵)</label>
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount ({currency})</label>
           <input
             type="number"
             name="amount"
@@ -2209,7 +2209,7 @@ export const FinanceModules = {
           onEdit={() => {}}
           columns={[
             { header: 'Type Name', accessor: 'name', className: 'font-bold' },
-            { header: 'Default Amount', accessor: (item: any) => `GH₵ ${item.amount}`, className: 'text-indigo-600 font-bold' },
+            { header: 'Default Amount', accessor: (item: any) => `${currency} ${item.amount}`, className: 'text-indigo-600 font-bold' },
           ]}
           onAdd={onSaveType ? () => {} : undefined}
           renderForm={renderScholarshipTypeForm}
@@ -2224,7 +2224,7 @@ export const FinanceModules = {
           columns={[
             { header: 'Student', accessor: 'student_name', className: 'font-bold' },
             { header: 'Scholarship Type', accessor: (item: any) => item.type_name || item.type },
-            { header: 'Amount', accessor: (item: any) => `GH₵ ${item.amount}`, className: 'text-indigo-600 font-bold' },
+            { header: 'Amount', accessor: (item: any) => `${currency} ${item.amount}`, className: 'text-indigo-600 font-bold' },
             {
               header: 'Status',
               accessor: (item: any) => (
@@ -2245,7 +2245,7 @@ export const FinanceModules = {
     );
   },
   ExpensesBudget: ({ data, budgets, organization, onSave, onDelete, onSaveBudget }: { data?: any[], budgets?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void, onSaveBudget?: (data: any) => void }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const categories = ['Salary', 'Utilities', 'Maintenance', 'Supplies', 'Marketing', 'Other'];
     const totalSpent = (data || []).reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
     const totalBudget = (budgets || []).reduce((sum, b) => sum + parseFloat(b.amount || 0), 0);
@@ -2346,7 +2346,7 @@ export const FinanceModules = {
 
                 <div class="amount-box">
                   <p style="font-size: 10px; font-weight: 900; margin-bottom: 8px; text-transform: uppercase; color: #6b7280;">Amount Authorized</p>
-                  <h2>GH₵ ${parseFloat(item.amount).toLocaleString()}</h2>
+                  <h2>${currency} ${parseFloat(item.amount).toLocaleString()}</h2>
                 </div>
 
                 <div style="font-size: 12px; font-style: italic; color: #4b5563; margin-bottom: 40px;">
@@ -2380,7 +2380,7 @@ export const FinanceModules = {
               </div>
               <p className="text-[10px] font-black uppercase tracking-widest">{t('total_budget')}</p>
             </div>
-            <h3 className="text-2xl font-black">GH₵ {totalBudget.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black">{currency} {totalBudget.toLocaleString()}</h3>
             <p className="text-[10px] font-bold mt-2 opacity-60">Allocated Funds</p>
           </div>
 
@@ -2391,7 +2391,7 @@ export const FinanceModules = {
               </div>
               <p className="text-[10px] font-black uppercase tracking-widest">{t('spent_to_date')}</p>
             </div>
-            <h3 className="text-2xl font-black">GH₵ {totalSpent.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black">{currency} {totalSpent.toLocaleString()}</h3>
             <div className="mt-2 h-1 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full bg-white transition-all duration-1000" style={{ width: `${Math.min(100, (totalSpent/totalBudget)*100)}%` }} />
             </div>
@@ -2404,7 +2404,7 @@ export const FinanceModules = {
               </div>
               <p className="text-[10px] font-black uppercase tracking-widest">{t('remaining')}</p>
             </div>
-            <h3 className="text-2xl font-black">GH₵ {Math.max(0, totalBudget - totalSpent).toLocaleString()}</h3>
+            <h3 className="text-2xl font-black">{currency} {Math.max(0, totalBudget - totalSpent).toLocaleString()}</h3>
             <p className="text-[10px] font-bold mt-2 opacity-60">Available Balance</p>
           </div>
 
@@ -2437,7 +2437,7 @@ export const FinanceModules = {
                   header: 'Amount', 
                   accessor: (item: any) => (
                     <div className="flex flex-col items-end">
-                      <span className="font-bold text-rose-600">GH₵ {parseFloat(item.amount).toLocaleString()}</span>
+                      <span className="font-bold text-rose-600">{currency} {parseFloat(item.amount).toLocaleString()}</span>
                       {item.isAuto && (
                         <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-1 rounded-sm mt-0.5">System Generated</span>
                       )}
@@ -2486,7 +2486,7 @@ export const FinanceModules = {
 
                       <div className="bg-zinc-900 dark:bg-white p-6 rounded-2xl flex justify-between items-center text-white dark:text-zinc-900">
                         <span className="text-sm font-black uppercase tracking-wider opacity-60">Total Amount Payable</span>
-                        <span className="text-3xl font-black tracking-tight">GH₵ {parseFloat(item.amount).toLocaleString()}</span>
+                        <span className="text-3xl font-black tracking-tight">{currency} {parseFloat(item.amount).toLocaleString()}</span>
                       </div>
 
                       <div className="flex justify-between items-center pt-4 border-t border-zinc-100 dark:border-zinc-800">
@@ -2518,7 +2518,7 @@ export const FinanceModules = {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('amount_label')} (GH₵)</label>
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('amount_label')} ({currency})</label>
                       <input
                         type="number"
                         name="amount"
@@ -2577,7 +2577,7 @@ export const FinanceModules = {
                         <div className="space-y-1">
                           <p className="text-sm font-black uppercase tracking-wider text-zinc-400">{cat}</p>
                           <p className="text-xs font-bold">
-                            GH₵ {spent.toLocaleString()} <span className="opacity-40">/ {budget.toLocaleString()}</span>
+                            {currency} {spent.toLocaleString()} <span className="opacity-40">/ {budget.toLocaleString()}</span>
                           </p>
                         </div>
                         <div className="text-right">
@@ -2629,7 +2629,7 @@ export const FinanceModules = {
                 >
                   <label className="flex-1 text-sm font-bold text-zinc-700 dark:text-zinc-300">{cat}</label>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-zinc-400">GH₵</span>
+                    <span className="text-xs font-bold text-zinc-400">{currency}</span>
                     <input 
                       type="number" 
                       name="amount" 
@@ -2652,7 +2652,7 @@ export const FinanceModules = {
     );
   },
   FinancialReports: ({ invoices, payments, expenses, budgets }: { invoices?: any[], payments?: any[], expenses?: any[], budgets?: any[] }) => {
-    const { t } = useLanguage();
+    const { t, currency } = useLanguage();
     const totalPayments = (payments || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
     const totalInvoiced = (invoices || []).reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     const totalExpenses = (expenses || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
@@ -2786,12 +2786,12 @@ export const FinanceModules = {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl">
             <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">{t('total_revenue')}</p>
-            <h3 className="text-2xl font-black text-emerald-600">GH₵ {totalPayments.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-emerald-600">{currency} {totalPayments.toLocaleString()}</h3>
             <p className="text-[10px] text-zinc-400 mt-2 font-bold uppercase tracking-widest">From {payments?.length || 0} Transactions</p>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl">
             <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">{t('total_expenses')}</p>
-            <h3 className="text-2xl font-black text-rose-600">GH₵ {totalExpenses.toLocaleString()}</h3>
+            <h3 className="text-2xl font-black text-rose-600">{currency} {totalExpenses.toLocaleString()}</h3>
             <p className="text-[10px] text-zinc-400 mt-2 font-bold uppercase tracking-widest">{expenses?.length || 0} Records Found</p>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl">
@@ -2800,7 +2800,7 @@ export const FinanceModules = {
               "text-2xl font-black",
               netPosition >= 0 ? "text-indigo-600" : "text-rose-600"
             )}>
-              GH₵ {netPosition.toLocaleString()}
+              {currency} {netPosition.toLocaleString()}
             </h3>
             <p className="text-[10px] text-zinc-400 mt-2 font-bold uppercase tracking-widest">{netPosition >= 0 ? 'Surplus' : 'Deficit'} Balance</p>
           </div>

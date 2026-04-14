@@ -168,7 +168,7 @@ function PendingReferralAlert({ count, onNavigate }: { count: number, onNavigate
 }
 
 export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate, organizations = [] }: { stats?: { totalOrganizations: string; activeSubscriptions: string; totalUsers: string; annualRevenue: string }, unreadMessagesCount?: number, onNavigate?: (view: string) => void, organizations?: any[] }) {
-  const { t } = useLanguage();
+  const { currency, t } = useLanguage();
   const pendingCount = organizations.filter(o => o.status === 'Pending').length;
 
   return (
@@ -197,7 +197,7 @@ export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate
         <StatCard title={t('total_organizations')} value={stats?.totalOrganizations || "1,284"} change="+12.5%" trend="up" icon={Building2} color="bg-indigo-600" />
         <StatCard title={t('active_subscriptions')} value={stats?.activeSubscriptions || "842"} change="+3.2%" trend="up" icon={CreditCard} color="bg-emerald-600" />
         <StatCard title={t('total_users')} value={stats?.totalUsers || "45.2k"} change="-1.4%" trend="down" icon={Users} color="bg-amber-600" />
-        <StatCard title={t('annual_revenue')} value={stats?.annualRevenue || "$ 1,494,000"} change="+18.7%" trend="up" icon={TrendingUp} color="bg-rose-600" />
+        <StatCard title={t('annual_revenue')} value={stats?.annualRevenue || `${currency} 1,494,000`} change="+18.7%" trend="up" icon={TrendingUp} color="bg-rose-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -254,7 +254,7 @@ export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate
 }
 
 export function SchoolAdminDashboard({ stats, invoices = [], payments = [], students = [], classes = [], organization, attendanceHistory = [], activities = [], unreadMessagesCount = 0, onNavigate }: { stats?: { totalStudents: string; totalStaff: string; attendanceRate: string; feesCollected: string }, invoices?: any[], payments?: any[], students?: any[], classes?: any[], organization?: any, attendanceHistory?: any[], activities?: any[], unreadMessagesCount?: number, onNavigate?: (view: string) => void }) {
-  const { t } = useLanguage();
+  const { currency, t } = useLanguage();
   const [showOwingModal, setShowOwingModal] = useState(false);
   const [modalType, setModalType] = useState<'paid' | 'owing'>('owing');
 
@@ -378,7 +378,7 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
         <StatCard title={t('total_students')} value={stats?.totalStudents || "0"} change="Active" trend="up" icon={GraduationCap} color="bg-blue-600" />
         <StatCard title={t('total_staff')} value={stats?.totalStaff || "0"} change="Verified" trend="up" icon={Briefcase} color="bg-purple-600" />
         <StatCard title={t('attendance_rate')} value={stats?.attendanceRate || "0%"} change="Live" trend="up" icon={ClipboardCheck} color="bg-teal-600" />
-        <StatCard title={t('fees_collected')} value={stats?.feesCollected || "$ 0"} change="Target" trend="up" icon={Wallet} color="bg-emerald-600" />
+        <StatCard title={t('fees_collected')} value={stats?.feesCollected || `${currency} 0`} change="Target" trend="up" icon={Wallet} color="bg-emerald-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -596,8 +596,8 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
                   return (
                     <div className="space-y-1">
                       <div className="flex items-center justify-between text-[10px] font-bold uppercase">
-                        <span className="text-emerald-600">Paid: $ {(sStats.paid || 0).toLocaleString()}</span>
-                        {balance > 0 && <span className="text-rose-600 text-right">Balance: $ {balance.toLocaleString()}</span>}
+                        <span className="text-emerald-600">Paid: {currency} {(sStats.paid || 0).toLocaleString()}</span>
+                        {balance > 0 && <span className="text-rose-600 text-right">Balance: {currency} {balance.toLocaleString()}</span>}
                       </div>
                       <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
                         <div 
@@ -989,7 +989,7 @@ export function ParentDashboard({
   unreadMessagesCount?: number,
   onNavigate?: (view: string) => void
 }) {
-  const { t } = useLanguage();
+  const { currency, t } = useLanguage();
   const selectedWard = wards.find(w => w.id === selectedWardId) || wards[0];
 
   if (!selectedWard) return null;
@@ -1039,7 +1039,7 @@ export function ParentDashboard({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title={t('attendance')} value={selectedWard.attendance} change="+1%" trend="up" icon={ClipboardCheck} color="bg-emerald-600" />
         <StatCard title={t('avg_grade')} value={selectedWard.avgGrade} change="0" trend="up" icon={TrendingUp} color="bg-indigo-600" />
-        <StatCard title={t('fees_paid')} value={selectedWard.feesPaid} change="0" trend="up" icon={Wallet} color="bg-blue-600" />
+        <StatCard title={t('fees_paid')} value={`${currency} ${selectedWard.feesPaid}`} change="0" trend="up" icon={Wallet} color="bg-blue-600" />
         <StatCard title={t('notices')} value="3" change="+1" trend="up" icon={Bell} color="bg-amber-600" />
       </div>
 
@@ -1062,7 +1062,7 @@ export function ParentDashboard({
 }
 
 export function FinanceDashboard() {
-  const { t } = useLanguage();
+  const { currency, t } = useLanguage();
   return (
     <div className="space-y-8">
       <div>
@@ -1071,9 +1071,9 @@ export function FinanceDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title={t('total_revenue')} value="$ 425,000" change="+8.2%" trend="up" icon={Wallet} color="bg-emerald-600" />
-        <StatCard title={t('pending_fees')} value="$ 12,400" change="-2.1%" trend="up" icon={CreditCard} color="bg-amber-600" />
-        <StatCard title={t('annual_expenses')} value="$ 84,000" change="+4.5%" trend="down" icon={TrendingUp} color="bg-rose-600" />
+        <StatCard title={t('total_revenue')} value={`${currency} 425,000`} change="+8.2%" trend="up" icon={Wallet} color="bg-emerald-600" />
+        <StatCard title={t('pending_fees')} value={`${currency} 12,400`} change="-2.1%" trend="up" icon={CreditCard} color="bg-amber-600" />
+        <StatCard title={t('annual_expenses')} value={`${currency} 84,000`} change="+4.5%" trend="down" icon={TrendingUp} color="bg-rose-600" />
         <StatCard title={t('scholarships')} value="45" change="+5" trend="up" icon={GraduationCap} color="bg-indigo-600" />
       </div>
 
@@ -1096,10 +1096,10 @@ export function FinanceDashboard() {
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">Recent Transactions</h3>
           <div className="space-y-4">
             {[
-              { desc: 'Term 2 Tuition - Grade 10', amount: '+$ 1,200', date: 'Today', type: 'income' },
-              { desc: 'Electricity Bill - Feb', amount: '-$ 850', date: 'Yesterday', type: 'expense' },
-              { desc: 'Stationery Supplies', amount: '-$ 320', date: '2 days ago', type: 'expense' },
-              { desc: 'Late Fee Payment', amount: '+$ 50', date: '2 days ago', type: 'income' },
+              { desc: 'Term 2 Tuition - Grade 10', amount: `+${currency} 1,200`, date: 'Today', type: 'income' },
+              { desc: 'Electricity Bill - Feb', amount: `-${currency} 850`, date: 'Yesterday', type: 'expense' },
+              { desc: 'Stationery Supplies', amount: `-${currency} 320`, date: '2 days ago', type: 'expense' },
+              { desc: 'Late Fee Payment', amount: `+${currency} 50`, date: '2 days ago', type: 'income' },
             ].map((tx, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
                 <div>
@@ -1400,7 +1400,7 @@ export function StudentDashboard({
   organization?: any,
   unreadMessagesCount?: number
 }) {
-  const { t } = useLanguage();
+  const { currency, t } = useLanguage();
   
   const student = students.find(s => s.email === user?.email);
   const studentAttendance = attendance.filter(a => a.student_id === student?.id);
@@ -1496,7 +1496,7 @@ export function StudentDashboard({
         {[
           { label: t('attendance'), value: `${attendanceRate}%`, icon: ClipboardCheck, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-900/20', trend: attendanceRate >= 90 ? 'Excellent' : 'Good' },
           { label: t('current_gpa'), value: student?.gpa || '0.0', icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20', trend: 'Academic' },
-          { label: t('outstanding_fees'), value: `$ {outstandingFees.toLocaleString()}`, icon: Wallet, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', trend: outstandingFees > 0 ? 'Pending' : 'Cleared' },
+          { label: t('outstanding_fees'), value: `${currency} ${outstandingFees.toLocaleString()}`, icon: Wallet, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', trend: outstandingFees > 0 ? 'Pending' : 'Cleared' },
           { label: t('upcoming_exams'), value: '0', icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', trend: 'View Schedule' },
         ].map((stat, i) => (
           <div key={i} className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
@@ -1763,7 +1763,7 @@ export function StudentDashboard({
 }
 
 export function OldPartnerDashboard() {
-  const { t } = useLanguage();
+  const { currency, t } = useLanguage();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -1829,7 +1829,7 @@ export function OldPartnerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Total Earnings" value={`$ ${data?.partner?.total_earnings || 0}`} change="+0%" trend="up" icon={Wallet} color="bg-emerald-600" />
+        <StatCard title="Total Earnings" value={`${currency} ${data?.partner?.total_earnings || 0}`} change="+0%" trend="up" icon={Wallet} color="bg-emerald-600" />
         <StatCard title="Referred Schools" value={data?.schools?.length || "0"} change="+1" trend="up" icon={School} color="bg-indigo-600" />
         <div className="p-6 bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-900/10 dark:to-violet-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-[2.5rem] shadow-sm flex flex-col justify-center">
           <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100 uppercase tracking-widest mb-2">Referral Code</p>

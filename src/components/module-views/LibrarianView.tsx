@@ -24,6 +24,7 @@ import { downloadLibraryTemplate, parseLibraryExcel } from '../../lib/excel';
 
 export const LibraryModules = {
   BookManagement: ({ data, onSave, onDelete }: { data: Book[], onSave: (data: any) => void, onDelete: (item: any) => void }) => {
+    const { currency } = useLanguage();
     const [showModal, setShowModal] = useState(false);
     const [editingBook, setEditingBook] = useState<any>(null);
     const [importing, setImporting] = useState(false);
@@ -83,7 +84,7 @@ export const LibraryModules = {
             { header: 'Author', accessor: (item: Book) => item.author },
             { header: 'Category', accessor: (item: Book) => item.category },
             { header: 'ISBN', accessor: (item: Book) => item.isbn || 'N/A', className: 'font-mono text-[10px]' },
-            { header: 'Price', accessor: (item: Book) => `$${item.price || 0}` },
+            { header: 'Price', accessor: (item: Book) => `${currency}${item.price || 0}` },
             { header: 'Total Copies', accessor: (item: Book) => item.total_copies },
             { header: 'Available', accessor: (item: Book) => item.available_copies, className: 'font-bold text-emerald-600' },
           ]}
@@ -143,7 +144,7 @@ export const LibraryModules = {
                         <td className="px-4 py-3 text-xs">{row.category}</td>
                         <td className="px-4 py-3 font-mono text-[10px]">{row.isbn}</td>
                         <td className="px-4 py-3">{row.total_copies}</td>
-                        <td className="px-4 py-3 font-bold text-indigo-600">${row.price}</td>
+                        <td className="px-4 py-3 font-bold text-indigo-600">{currency}{row.price}</td>
                       </tr>
                     ))}
                   </tbody>

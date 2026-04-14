@@ -5,6 +5,8 @@ type Language = 'en' | 'fr' | 'pt' | 'sw' | 'ar';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
+  currency: string;
+  setCurrency: (currency: string) => void;
   t: (key: string) => string;
 }
 
@@ -2979,6 +2981,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
+  const [currency, setCurrency] = useState<string>('GH₵');
 
   const t = (key: string) => {
     const translation = translations[language][key];
@@ -2992,7 +2995,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, currency, setCurrency, t }}>
       <div dir={language === 'ar' ? 'rtl' : 'ltr'}>
         {children}
       </div>

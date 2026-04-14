@@ -5,6 +5,7 @@ import {
   Wallet, TrendingUp, HelpCircle, LogOut, ChevronRight, Layers
 } from 'lucide-react';
 import { API_BASE_URL } from '../constants';
+import { useLanguage } from '../lib/LanguageContext';
 
 interface SchoolLead {
   id: string;
@@ -21,7 +22,8 @@ interface SchoolLead {
   created_at: string;
 }
 
-const PartnerDashboard: React.FC = () => {
+export default function PartnerDashboard() {
+  const { language, setLanguage, currency, t } = useLanguage();
   const [partner, setPartner] = useState<any>(null);
   const [schools, setSchools] = useState<SchoolLead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -275,7 +277,7 @@ const PartnerDashboard: React.FC = () => {
                 <Wallet size={64} />
               </div>
               <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Total Earnings</p>
-              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">${partner?.total_earnings?.toLocaleString() || '0.00'}</h3>
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{currency} {partner?.total_earnings?.toLocaleString() || '0.00'}</h3>
               <p className="mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Finalized on active provisioning</p>
             </div>
 
@@ -405,7 +407,7 @@ const PartnerDashboard: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Total Commission</p>
-                      <h4 className="text-2xl font-black text-zinc-900 dark:text-white">${partner?.total_earnings?.toLocaleString() || '0.00'}</h4>
+                      <h4 className="text-2xl font-black text-zinc-900 dark:text-white">{currency} {partner?.total_earnings?.toLocaleString() || '0.00'}</h4>
                    </div>
                    <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Payout Rate</p>
@@ -413,7 +415,7 @@ const PartnerDashboard: React.FC = () => {
                    </div>
                    <div className="p-6 rounded-2xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200 dark:shadow-none">
                       <p className="text-[10px] font-black uppercase text-white/60 tracking-widest mb-1">Next Payout</p>
-                      <h4 className="text-2xl font-black text-white">$0.00</h4>
+                      <h4 className="text-2xl font-black text-white">{currency} 0.00</h4>
                    </div>
                 </div>
               </div>
@@ -445,7 +447,7 @@ const PartnerDashboard: React.FC = () => {
                     return (
                       <div key={plan.id} className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative flex flex-col hover:border-indigo-500/50 transition-colors">
                         <h4 className="text-2xl font-black mb-2">{plan.name}</h4>
-                        <p className="text-xl font-bold text-indigo-600 mb-6">$ {parseFloat(plan.price).toLocaleString()}</p>
+                        <p className="text-xl font-bold text-indigo-600 mb-6">{currency} {parseFloat(plan.price).toLocaleString()}</p>
                         <ul className="space-y-3 flex-1 mb-6">
                           {modules.map((m: string, i: number) => (
                             <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">
@@ -703,7 +705,7 @@ const PartnerDashboard: React.FC = () => {
                     <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">Features included in {selected.name}</h4>
-                        <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">$ {parseFloat(selected.price).toLocaleString()}</span>
+                        <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">{currency} {parseFloat(selected.price).toLocaleString()}</span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {modules.map((m: string, i: number) => (
@@ -817,4 +819,3 @@ const PartnerDashboard: React.FC = () => {
   );
 };
 
-export default PartnerDashboard;

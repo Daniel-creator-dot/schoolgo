@@ -448,10 +448,10 @@ export function DataTable<T extends { id: string | number }>({
                         });
                       };
 
-                      const entries = Array.from(formData.entries());
+                      const entries = Array.from((formData as any).entries());
                       const processedKeys = new Set<string>();
                       
-                      for (const [key, value] of entries) {
+                      for (const [key, value] of entries as any[]) {
                         if (processedKeys.has(key)) continue;
                         
                         const element = form.elements.namedItem(key) as any;

@@ -259,7 +259,7 @@ import { useLanguage } from "./lib/LanguageContext";
 import { MODULE_LINK_MAP } from "./constants";
 
 export default function App() {
-  const { t, setLanguage } = useLanguage();
+  const { t, language, currency, setLanguage, setCurrency } = useLanguage();
   const [showLanding, setShowLanding] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [showPartnerLogin, setShowPartnerLogin] = useState(false);
@@ -583,7 +583,12 @@ export default function App() {
         currentOrgInfo.status === "fulfilled" &&
         currentOrgInfo.value
       ) {
-        // Find existing org in list and update it or use it as context
+        if (currentOrgInfo.value.currency) {
+          setCurrency(currentOrgInfo.value.currency);
+        }
+        if (currentOrgInfo.value.language) {
+          setLanguage(currentOrgInfo.value.language);
+        }
       }
 
       if (hStats && hStats.status === "fulfilled") {
@@ -1699,7 +1704,7 @@ export default function App() {
                       .filter((o) => o.status === "Active")
                       .length.toString(),
                     totalUsers: "45.2k", 
-                    annualRevenue: "GH₵ 1,494,000",
+                    annualRevenue: `${currency} 1,494,000`,
                   }}
                 />
                 <SuperAdminModules.Organizations
@@ -1741,7 +1746,7 @@ export default function App() {
                       .length.toString(),
                     totalStaff: staffList.length.toString(),
                     attendanceRate,
-                    feesCollected: `GH₵ ${totalFees.toLocaleString()}`,
+                    feesCollected: `${currency} ${totalFees.toLocaleString()}`,
                   }}
                   unreadMessagesCount={unreadMessagesCount}
                   invoices={invoices}

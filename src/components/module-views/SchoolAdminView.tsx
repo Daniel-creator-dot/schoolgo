@@ -1897,7 +1897,7 @@ export const AdmissionsModules = {
                       <div className="relative z-10 space-y-4">
                         <div className="flex justify-between items-center text-xs">
                           <span className="font-bold text-zinc-400 uppercase tracking-widest">Total Admission Fees</span>
-                          <span className="text-3xl font-black text-white">GH₵ {item.fee_amount || (item as any)?.feeAmount || '0.00'}</span>
+                          <span className="text-3xl font-black text-white">{currency} {item.fee_amount || (item as any)?.feeAmount || '0.00'}</span>
                         </div>
                         <div className="pt-4 border-t border-zinc-800 flex justify-between items-center">
                            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Enrollment Status</span>
@@ -2221,7 +2221,7 @@ export const AdmissionsModules = {
                             />
                             <span className="text-xs font-black text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{fee.name}</span>
                           </div>
-                          <span className="text-xs font-black text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white">GH₵ {parseFloat(fee.amount).toFixed(2)}</span>
+                          <span className="text-xs font-black text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white">{currency} {parseFloat(fee.amount).toFixed(2)}</span>
                         </label>
                       ))}
                     </div>
@@ -2303,7 +2303,7 @@ export const AdmissionsModules = {
                 return cls ? `${cls.name} ${cls.section || ''}`.trim() : 'Not Assigned';
               } 
             },
-            { header: 'Admission Total', accessor: (item) => `GH₵ ${item.fee_amount || (item as any)?.feeAmount || '0.00'}` },
+            { header: 'Admission Total', accessor: (item) => `${currency} ${item.fee_amount || (item as any)?.feeAmount || '0.00'}` },
           ]}
           extraActions={(item) => (
             item.decision !== 'Enrolled' && (
@@ -2388,7 +2388,7 @@ export const AdmissionsModules = {
                       <div className="relative z-10 space-y-4">
                         <div className="flex justify-between items-center text-xs">
                           <span className="font-bold text-zinc-400 uppercase tracking-widest">Enrollment Fee Total</span>
-                          <span className="text-3xl font-black text-white">GH₵ {viewItem.fee_amount || (viewItem as any).feeAmount || '0.00'}</span>
+                          <span className="text-3xl font-black text-white">{currency} {viewItem.fee_amount || (viewItem as any).feeAmount || '0.00'}</span>
                         </div>
                       </div>
                     </div>

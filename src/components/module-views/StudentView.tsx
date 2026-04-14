@@ -16,10 +16,11 @@ import {
 import { cn } from '../../lib/utils';
 import { DataTable } from '../DataTable';
 import { Modal } from '../UI';
+import { useLanguage } from '../../lib/LanguageContext';
 
 export const StudentModules = {
-  // ... existing modules ...
   UniformRequests: ({ uniforms, data, studentId, onSave }: { uniforms: any[], data: any[], studentId?: string | null, onSave: (data: any) => void }) => {
+    const { currency, t } = useLanguage();
     const renderRequestForm = (item?: any) => (
       <div className="space-y-4">
         <input type="hidden" name="student_id" value={studentId || ""} />
@@ -41,7 +42,7 @@ export const StudentModules = {
           >
             <option value="">Choose Uniform...</option>
             {uniforms.map(u => (
-              <option key={u.id} value={u.id}>{u.item_name} (Size: {u.size}) - GH₵ {u.price}</option>
+              <option key={u.id} value={u.id}>{u.item_name} (Size: {u.size}) - {currency} {u.price}</option>
             ))}
           </select>
           <input type="hidden" name="item_name" />
@@ -66,7 +67,7 @@ export const StudentModules = {
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Total Price (GH₵)</label>
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('total_price')} ({currency})</label>
             <input 
               type="number" 
               name="total_price" 
@@ -100,7 +101,7 @@ export const StudentModules = {
         columns={[
           { header: 'Item', accessor: 'item_name', className: 'font-bold' },
           { header: 'Qty', accessor: 'quantity' },
-          { header: 'Total', accessor: (item: any) => `GH₵ ${item.total_price}`, className: 'font-bold text-indigo-600' },
+          { header: 'Total', accessor: (item: any) => `${currency} ${item.total_price}`, className: 'font-bold text-indigo-600' },
           { header: 'Date', accessor: (item: any) => new Date(item.created_at).toLocaleDateString() },
           { 
             header: 'Status', 

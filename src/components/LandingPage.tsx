@@ -22,16 +22,14 @@ import { registerPartner, loginPartner } from '../lib/api';
 import { UserRole } from '../types';
 import { Modal } from './UI';
 
-export default function LandingPage({ 
-  onGetStarted,
-  onLogin,
-  onPartnerLogin
-}: { 
+interface LandingPageProps {
   onGetStarted: () => void;
   onLogin: (role: UserRole, user: any) => void;
   onPartnerLogin?: () => void;
-}) {
-  const { language, setLanguage, t } = useLanguage();
+}
+
+export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: LandingPageProps) {
+  const { language, setLanguage, currency, t } = useLanguage();
   const [showPartnerModal, setShowPartnerModal] = useState(false);
   const [isPartnerSubmitted, setIsPartnerSubmitted] = useState(false);
   const [activeSection, setActiveSection] = useState(0); // 0: Home, 1: Solutions, 2: Pricing
@@ -289,7 +287,7 @@ export default function LandingPage({
                       <div className="grid grid-cols-2 gap-3 md:gap-4">
                         <div className="p-3 md:p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl md:rounded-2xl border border-zinc-100 dark:border-zinc-700">
                           <p className="text-[8px] md:text-[9px] text-zinc-400 font-bold uppercase tracking-widest mb-1">{t('total_rewards')}</p>
-                          <p className="text-lg md:text-xl font-black">GH₵ 24.5k</p>
+                          <p className="text-lg md:text-xl font-black">{currency} 24.5k</p>
                         </div>
                         <div className="p-3 md:p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl md:rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
                           <p className="text-[8px] md:text-[9px] text-indigo-600 font-bold uppercase tracking-widest mb-1">{t('active_schools')}</p>

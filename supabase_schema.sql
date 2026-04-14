@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS organizations (
         signature TEXT,
         language VARCHAR(50) DEFAULT 'en',
         timezone VARCHAR(100) DEFAULT 'GMT',
+        currency VARCHAR(10) DEFAULT 'GH₵',
         email VARCHAR(255),
         contact_number VARCHAR(50),
         address TEXT,

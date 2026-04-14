@@ -9,6 +9,7 @@ import {
   Globe,
   Briefcase,
   DollarSign,
+  Coins,
   Calendar,
   Clock,
   UserCheck,
@@ -864,7 +865,7 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
 }
 
 export function SubscriptionPlans({ data, onRefresh, organizations = [], plans = [] }: { data?: any[], onRefresh?: () => void, organizations?: any[], plans?: any[] }) {
-  const { t } = useLanguage();
+  const { t, currency } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSub, setEditingSub] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -1060,7 +1061,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
         columns={[
           { header: 'Organization', accessor: 'org_name', className: 'font-bold' },
           { header: 'Plan', accessor: 'plan' },
-          { header: 'Amount', accessor: (item: any) => `GH₵ ${parseFloat(item.amount || 0).toLocaleString()}`, className: 'font-bold' },
+          { header: 'Amount', accessor: (item: any) => `${currency} ${parseFloat(item.amount || 0).toLocaleString()}`, className: 'font-bold' },
           {
             header: 'Status',
             accessor: (item: any) => (
@@ -1341,13 +1342,13 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
 }
 
 export function BillingHistory({ data }: { data?: any[] }) {
-  const { t } = useLanguage();
+  const { t, currency } = useLanguage();
   
   const transactions = (data || []).map(sub => ({
     id: `TX-${sub.id.split('-')[0].toUpperCase()}`,
     org: sub.org_name,
     date: new Date(sub.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: '2-digit' }),
-    amount: `GH₵ ${parseFloat(sub.amount).toLocaleString()}`,
+    amount: `${currency} ${parseFloat(sub.amount).toLocaleString()}`,
     status: sub.status === 'Active' ? 'Paid' : sub.status,
     method: sub.payment_method || 'Bank Transfer'
   }));
@@ -1888,7 +1889,7 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
 }
 
 export function ReceiptsManagement({ data }: { data?: any[] }) {
-  const { t } = useLanguage();
+  const { t, currency } = useLanguage();
 
   const handlePrint = (receipt: any) => {
     const logoUrl = receipt.logo_url || 'https://via.placeholder.com/150?text=School+Logo';
@@ -2038,14 +2039,14 @@ export function ReceiptsManagement({ data }: { data?: any[] }) {
                       <span style="font-size: 12px; color: #666;">Full implementation of selected modules</span>
                     </td>
                     <td>${receipt.plan}</td>
-                    <td class="amount-col">GH₵ ${parseFloat(receipt.amount).toLocaleString()}</td>
+                    <td class="amount-col">${currency} ${parseFloat(receipt.amount).toLocaleString()}</td>
                   </tr>
                 </tbody>
               </table>
 
               <div class="total-section">
                 <div class="total-label">Total Amount Paid</div>
-                <div class="total-amount">GH₵ ${parseFloat(receipt.amount).toLocaleString()}</div>
+                <div class="total-amount">${currency} ${parseFloat(receipt.amount).toLocaleString()}</div>
               </div>
 
               <div class="seal">
@@ -2079,7 +2080,7 @@ export function ReceiptsManagement({ data }: { data?: any[] }) {
         { header: 'Organization', accessor: 'org_name', className: 'font-bold' },
         { header: 'Plan', accessor: 'plan' },
         { header: 'Date', accessor: (item) => new Date(item.created_at).toLocaleDateString() },
-        { header: 'Amount', accessor: (item) => `GH₵ ${parseFloat(item.amount).toLocaleString()}`, className: 'font-bold' },
+        { header: 'Amount', accessor: (item) => `${currency} ${parseFloat(item.amount).toLocaleString()}`, className: 'font-bold' },
       ]}
       extraActions={(item) => (
         <button
@@ -2095,7 +2096,7 @@ export function ReceiptsManagement({ data }: { data?: any[] }) {
 }
 
 export function Settings({ role }: { role?: UserRole }) {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, currency, setCurrency, t } = useLanguage();
   const [organization, setOrganization] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isAiConfigured, setIsAiConfigured] = useState(false);
@@ -2214,7 +2215,9 @@ export function Settings({ role }: { role?: UserRole }) {
     try {
       await updateOrganization(organization.id, {
         ...organization,
-        ...branding
+        ...branding,
+        currency,
+        language
       });
       
       (window as any).showToast?.(t('save_changes') + ' successful!', 'success');
@@ -2493,6 +2496,25 @@ export function Settings({ role }: { role?: UserRole }) {
                   </select>
                   <p className="text-[10px] text-zinc-500 italic">{t('system_language_desc')}</p>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-zinc-400" />
+                    System Currency
+                  </label>
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value as any)}
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="GH₵">Ghana Cedis (GH₵)</option>
+                    <option value="₦">Nigerian Naira (₦)</option>
+                    <option value="$">US Dollar ($)</option>
+                    <option value="€">Euro (€)</option>
+                    <option value="£">British Pound (£)</option>
+                    <option value="CFA">CFA Franc (CFA)</option>
+                  </select>
+                  <p className="text-[10px] text-zinc-500 italic">This symbol will be used for all financial displays in the system.</p>
+                </div>
               </div>
             </section>
           )}
@@ -2616,6 +2638,7 @@ export function Settings({ role }: { role?: UserRole }) {
 }
 
 export function DocumentBuilder({ data = [], onRefresh, organization, lockedType, hideTypeSelect }: { data?: any[], onRefresh?: () => void, organization?: any, lockedType?: string, hideTypeSelect?: boolean }) {
+  const { currency, t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<'content' | 'design' | 'layers'>('content');
@@ -2880,14 +2903,14 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
         '{{admission_no}}': 'ADM-2023-001',
         '{{class_name}}': 'Grade 5A',
         '{{date}}': new Date().toLocaleDateString(),
-        '{{amount}}': 'GH₵ 1,200.00',
+        '{{amount}}': `${currency} 1,200.00`,
         '{{fee_type}}': 'Tuition Fees',
         '{{transaction_id}}': 'TXN12345678',
       },
       'OfferLetter': {
         '{{staff_name}}': 'Jane Smith',
         '{{position}}': 'Senior Teacher',
-        '{{salary}}': 'GH₵ 3,500.00',
+        '{{salary}}': `${currency} 3,500.00`,
         '{{join_date}}': new Date().toLocaleDateString(),
         '{{department}}': 'Science Department',
       },

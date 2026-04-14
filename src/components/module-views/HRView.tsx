@@ -71,7 +71,7 @@ export const HRModules = {
     onSaveStaff?: (data: any) => void;
     onSaveDepartment?: (data: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
 
     // Build hierarchy dynamically
     const buildHierarchy = () => {
@@ -677,7 +677,7 @@ export const HRModules = {
     onSave?: (data: any) => void;
     onDelete?: (item: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const isApprover =
       role === "SCHOOL_ADMIN" || role === "HOD" || role === "HR";
     const [markingNote, setMarkingNote] = useState<any>(null);
@@ -1242,7 +1242,7 @@ export const HRModules = {
     staff?: any[];
     onSave?: (data: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const [editingStaff, setEditingStaff] = useState<any | null>(null);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [selectedAdditionalRoles, setSelectedAdditionalRoles] = useState<
@@ -1491,7 +1491,7 @@ export const HRModules = {
     onSave?: (data: any) => void;
     onDelete?: (item: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const [showSalary, setShowSalary] = useState(false);
     const isStaff = role === "STAFF";
 
@@ -1618,9 +1618,9 @@ export const HRModules = {
                           <span className="font-bold text-emerald-600">
                             {!isStaff || showSalary
                               ? item.salary
-                                ? `GH₵${Number(item.salary).toLocaleString()}`
+                                ? `${currency}${Number(item.salary).toLocaleString()}`
                                 : t('not_set')
-                              : "GH₵xxxxxx"}
+                              : `${currency}xxxxxx`}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
@@ -1630,9 +1630,9 @@ export const HRModules = {
                           <span className="font-bold text-indigo-600">
                             {!isStaff || showSalary
                               ? item.allowances
-                                ? `GH₵${Number(item.allowances).toLocaleString()}`
-                                : "GH₵0"
-                              : "GH₵xxxxxx"}
+                                ? `${currency}${Number(item.allowances).toLocaleString()}`
+                                : `${currency}0`
+                              : `${currency}xxxxxx`}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-xs">
@@ -1642,9 +1642,9 @@ export const HRModules = {
                           <span className="font-bold text-red-600">
                             {!isStaff || showSalary
                               ? item.deductions
-                                ? `GH₵${Number(item.deductions).toLocaleString()}`
-                                : "GH₵0"
-                              : "GH₵xxxxxx"}
+                                ? `${currency}${Number(item.deductions).toLocaleString()}`
+                                : `${currency}0`
+                              : `${currency}xxxxxx`}
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-xs border-t border-zinc-50 dark:border-zinc-800 pt-2 mt-2">
@@ -1907,7 +1907,7 @@ export const HRModules = {
               )}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('monthly_salary')} (GH₵)
+                  {t('monthly_salary')} ({currency})
                 </label>
                 <input
                   type="number"
@@ -1920,7 +1920,7 @@ export const HRModules = {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('allowances')} (GH₵)
+                  {t('allowances')} ({currency})
                 </label>
                 <input
                   type="number"
@@ -1933,7 +1933,7 @@ export const HRModules = {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('deductions')} (GH₵)
+                  {t('deductions')} ({currency})
                 </label>
                 <input
                   type="number"
@@ -2015,7 +2015,7 @@ export const HRModules = {
             accessor: (item: any) =>
               item.salary ? (
                 <span className="font-bold text-emerald-600">
-                  GH₵{Number(item.salary).toLocaleString()}
+                  {currency}{Number(item.salary).toLocaleString()}
                 </span>
               ) : (
                 <span className="text-zinc-300">—</span>
@@ -2072,7 +2072,7 @@ export const HRModules = {
     onSave?: (data: any) => void;
     onDelete?: (item: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     return (
       <DataTable
       title={`Staff Attendance`}
@@ -2131,7 +2131,7 @@ export const HRModules = {
     documentTemplates?: any[];
     onRefreshTemplates?: () => Promise<void>;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const [hiringApplicant, setHiringApplicant] = useState<any | null>(null);
     const [qualifyingApplicant, setQualifyingApplicant] = useState<any | null>(
       null,
@@ -2587,7 +2587,7 @@ export const HRModules = {
                           viewingOfferLetter?.name || "Candidate Name",
                         "{{position}}": viewingOfferLetter?.position || "Staff",
                         "{{salary}}": viewingOfferLetter?.salary
-                          ? `GH₵${viewingOfferLetter.salary}`
+                          ? `${currency}${viewingOfferLetter.salary}`
                           : "N/A",
                         "{{join_date}}": new Date().toLocaleDateString(),
                         "{{department}}":
@@ -2725,7 +2725,7 @@ export const HRModules = {
     onResetBalances?: () => void;
     onUpdateOrganization?: (data: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const [activeTab, setActiveTab] = useState<"requests" | "settings">(
       "requests",
     );
@@ -3283,7 +3283,7 @@ export const HRModules = {
     onDelete?: (item: any) => void;
     onRunPayroll?: (monthYear: string) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const [selectedMonth, setSelectedMonth] = useState<string>("");
     const [showSalary, setShowSalary] = useState(false);
 
@@ -3364,25 +3364,25 @@ export const HRModules = {
                     <div class="section-title">${t('earnings')}</div>
                     <div class="info-item">
                       <span class="info-label">${t('basic_salary')}:</span>
-                      <span class="info-value">GH₵${Number(item.salary || 0).toLocaleString()}</span>
+                      <span class="info-value">${currency}${Number(item.salary || 0).toLocaleString()}</span>
                     </div>
                     <div class="info-item">
                       <span class="info-label">${t('allowances')}:</span>
-                      <span class="info-value">GH₵${Number(item.allowance || 0).toLocaleString()}</span>
+                      <span class="info-value">${currency}${Number(item.allowance || 0).toLocaleString()}</span>
                     </div>
                   </div>
                   <div>
                     <div class="section-title">${t('deductions')}</div>
                     <div class="info-item">
                       <span class="info-label">${t('total_deductions') || t('deductions')}:</span>
-                      <span class="info-value">GH₵${Number(item.deductions || 0).toLocaleString()}</span>
+                      <span class="info-value">${currency}${Number(item.deductions || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
                 <div class="total-row">
                   <span class="total-label">${t('net_salary_payout')}:</span>
-                  <span class="total-value">GH₵${Number(item.net || 0).toLocaleString()}</span>
+                  <span class="total-value">${currency}${Number(item.net || 0).toLocaleString()}</span>
                 </div>
 
                 <div class="footer">
@@ -3467,29 +3467,29 @@ export const HRModules = {
                 header: "Basic Salary",
                 accessor: (item: any) =>
                   showSalary
-                    ? `GH₵${Number(item.salary).toLocaleString()}`
-                    : "GH₵xxxxxx",
+                    ? `${currency}${Number(item.salary).toLocaleString()}`
+                    : `${currency}xxxxxx`,
               },
               {
                 header: "Allowance",
                 accessor: (item: any) =>
                   showSalary
-                    ? `GH₵${Number(item.allowance).toLocaleString()}`
-                    : "GH₵xxxxxx",
+                    ? `${currency}${Number(item.allowance).toLocaleString()}`
+                    : `${currency}xxxxxx`,
               },
               {
                 header: "Deductions",
                 accessor: (item: any) =>
                   showSalary
-                    ? `GH₵${Number(item.deductions).toLocaleString()}`
-                    : "GH₵xxxxxx",
+                    ? `${currency}${Number(item.deductions).toLocaleString()}`
+                    : `${currency}xxxxxx`,
               },
               {
                 header: "Net Salary",
                 accessor: (item: any) =>
                   showSalary
-                    ? `GH₵${Number(item.net).toLocaleString()}`
-                    : "GH₵xxxxxx",
+                    ? `${currency}${Number(item.net).toLocaleString()}`
+                    : `${currency}xxxxxx`,
                 className: "font-bold text-indigo-600",
               },
               {
@@ -3555,7 +3555,7 @@ export const HRModules = {
                 header: "Total Net Payout",
                 accessor: (item: any) => (
                   <span className="font-bold text-emerald-600">
-                    GH₵{item.totalNet.toLocaleString()}
+                    {currency}{item.totalNet.toLocaleString()}
                   </span>
                 ),
               },
@@ -3624,7 +3624,7 @@ export const HRModules = {
               header: "Basic Salary",
               accessor: (item: any) =>
                 item.salary ? (
-                  `GH₵${Number(item.salary).toLocaleString()}`
+                  `${currency}${Number(item.salary).toLocaleString()}`
                 ) : (
                   <span className="text-zinc-300">—</span>
                 ),
@@ -3633,7 +3633,7 @@ export const HRModules = {
               header: "Allowance",
               accessor: (item: any) =>
                 item.allowance ? (
-                  `GH₵${Number(item.allowance).toLocaleString()}`
+                  `${currency}${Number(item.allowance).toLocaleString()}`
                 ) : (
                   <span className="text-zinc-300">—</span>
                 ),
@@ -3642,7 +3642,7 @@ export const HRModules = {
               header: "Deductions",
               accessor: (item: any) =>
                 item.deductions ? (
-                  `GH₵${Number(item.deductions).toLocaleString()}`
+                  `${currency}${Number(item.deductions).toLocaleString()}`
                 ) : (
                   <span className="text-zinc-300">—</span>
                 ),
@@ -3650,7 +3650,7 @@ export const HRModules = {
             {
               header: "Net Salary",
               accessor: (item: any) =>
-                item.net ? `GH₵${Number(item.net).toLocaleString()}` : "GH₵0",
+                item.net ? `${currency}${Number(item.net).toLocaleString()}` : `${currency}0`,
               className: "font-bold text-indigo-600",
             },
             {
@@ -3735,7 +3735,7 @@ export const HRModules = {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-500 uppercase">
-                    Basic Salary (GH₵)
+                    Basic Salary ({currency})
                   </label>
                   <input
                     type="number"
@@ -3747,7 +3747,7 @@ export const HRModules = {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-500 uppercase">
-                    Allowance (GH₵)
+                    Allowance ({currency})
                   </label>
                   <input
                     type="number"
@@ -3761,7 +3761,7 @@ export const HRModules = {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-500 uppercase">
-                    Deductions (GH₵)
+                    Deductions ({currency})
                   </label>
                   <input
                     type="number"
@@ -3773,14 +3773,14 @@ export const HRModules = {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-500 uppercase">
-                    Net Salary (GH₵)
+                    Net Salary ({currency})
                   </label>
                   <input
                     type="text"
                     defaultValue={
                       item?.net
-                        ? `GH₵${Number(item.net).toLocaleString()}`
-                        : "GH₵0"
+                        ? `${currency}${Number(item.net).toLocaleString()}`
+                        : `${currency}0`
                     }
                     disabled
                     className="w-full px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/30 rounded-xl text-sm font-bold text-indigo-600 opacity-70"
@@ -3806,7 +3806,7 @@ export const HRModules = {
     onSave?: (data: any) => void;
     onDelete?: (item: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const [isAddingReview, setIsAddingReview] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<any>(null);
 
@@ -4120,7 +4120,7 @@ export const HRModules = {
     onSave?: (data: any) => void;
     onDelete?: (item: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const isStaff = role === "STAFF";
     const canManage = role === "SCHOOL_ADMIN" || role === "HR";
     const [view, setView] = useState<"table" | "week" | "month">("table");
@@ -4459,7 +4459,7 @@ export const HRModules = {
     documentTemplates?: any[];
     onRefreshTemplates?: () => Promise<void>;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const [viewingLetter, setViewingLetter] = useState<any | null>(null);
     const [editableLetter, setEditableLetter] = useState("");
     const [isDesignerOpen, setIsDesignerOpen] = useState(false);
@@ -4787,7 +4787,7 @@ export const HRModules = {
     students?: Student[];
     onSave?: (data: any) => void;
   }) => {
-    const { t } = useLanguage();
+    const { currency, t } = useLanguage();
     const [viewingStudent, setViewingStudent] = React.useState<Student | null>(null);
 
     return (
