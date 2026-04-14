@@ -19,7 +19,7 @@ const PartnerDashboard: React.FC = () => {
   const [partner, setPartner] = useState<any>(null);
   const [schools, setSchools] = useState<SchoolLead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('referrals');
+  const [activeTab, setActiveTab] = useState('organizations');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [systemPlans, setSystemPlans] = useState<any[]>([]);
   
@@ -125,7 +125,8 @@ const PartnerDashboard: React.FC = () => {
 
         <nav className="flex-1 px-4 py-6 space-y-2">
           {[
-            { id: 'referrals', label: 'My Referrals', icon: <Users size={20} /> },
+            { id: 'organizations', label: 'My Organizations', icon: <Building2 size={20} /> },
+            { id: 'plans', label: 'System Plans', icon: <Layers size={20} /> },
             { id: 'earnings', label: 'Earnings', icon: <Wallet size={20} /> },
             { id: 'chat', label: 'Support Chat', icon: <MessageSquare size={20} /> },
           ].map((item) => (
@@ -161,7 +162,7 @@ const PartnerDashboard: React.FC = () => {
         <header className="h-20 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-30 px-8 flex items-center justify-between transition-colors">
           <div>
             <h2 className="text-xl font-bold">Welcome back, {partner?.name}</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Your referral code: <span className="text-indigo-600 dark:text-indigo-400 font-mono font-bold bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded">{partner?.referral_code}</span></p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Your Partner ID: <span className="text-indigo-600 dark:text-indigo-400 font-mono font-bold bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded">{partner?.referral_code}</span></p>
           </div>
           <div className="flex items-center gap-4">
             <button 
@@ -202,7 +203,7 @@ const PartnerDashboard: React.FC = () => {
               </div>
               <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Pending Leads</p>
               <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{schools.filter(s => s.status === 'Pending').length}</h3>
-              <p className="mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Awaiting super-admin review</p>
+              <p className="text-mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Awaiting super-admin review</p>
             </div>
 
             <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 dark:to-indigo-900 rounded-2xl p-6 relative overflow-hidden shadow-sm">
@@ -218,10 +219,10 @@ const PartnerDashboard: React.FC = () => {
             </div>
           </div>
 
-          {activeTab === 'referrals' && (
+          {activeTab === 'organizations' && (
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm transition-colors">
               <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Referral Pipeline</h3>
+                <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Organization Pipeline</h3>
                 <div className="flex items-center gap-3">
                    <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
@@ -253,7 +254,7 @@ const PartnerDashboard: React.FC = () => {
                         <tr>
                             <td colSpan={5} className="px-6 py-16 text-center text-zinc-500 dark:text-zinc-400">
                                 <Building2 size={48} className="mx-auto mb-4 text-zinc-300 dark:text-zinc-700" />
-                                <p className="font-medium">No referrals yet. Add your first organization to get started!</p>
+                                <p className="font-medium">No organizations yet. Add your first organization to get started!</p>
                             </td>
                         </tr>
                     ) : (
@@ -300,6 +301,31 @@ const PartnerDashboard: React.FC = () => {
             </div>
           )}
 
+          {activeTab === 'plans' && (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 mb-6 shadow-sm">
+              <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">System Plans Overview</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {systemPlans.map(plan => {
+                  const modules = Array.isArray(plan.modules) ? plan.modules : JSON.parse(plan.modules || '[]');
+                  return (
+                    <div key={plan.id} className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative flex flex-col">
+                      <h4 className="text-2xl font-black mb-2">{plan.name}</h4>
+                      <p className="text-xl font-bold text-indigo-600 mb-6">GH₵ {parseFloat(plan.price).toLocaleString()}</p>
+                      <ul className="space-y-3 flex-1 mb-6">
+                        {modules.map((m: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                            <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                            <span>{m}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'chat' && (
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl h-[600px] flex flex-col overflow-hidden shadow-sm">
                <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50 dark:bg-zinc-950/50">
@@ -314,10 +340,10 @@ const PartnerDashboard: React.FC = () => {
                </div>
                <div className="flex-1 p-6 overflow-y-auto space-y-4">
                   <div className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-4 rounded-2xl rounded-tl-sm max-w-[80%] text-sm text-zinc-900 dark:text-zinc-100">
-                    Hi {partner?.name}! I'm the Super Admin. How can I assist with your referrals today?
+                    Hi {partner?.name}! I'm the Super Admin. How can I assist with your organizations today?
                   </div>
                   <div className="bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-sm max-w-[80%] self-end text-sm ml-auto shadow-sm shadow-indigo-200 dark:shadow-none">
-                    Hi! I just submitted a new lead for "Greenspring Schools". Could you take a look?
+                    Hi! I just submitted a new lead for "Greenspring Organizations". Could you take a look?
                   </div>
                </div>
                <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 flex gap-3 bg-zinc-50 dark:bg-zinc-950/50">

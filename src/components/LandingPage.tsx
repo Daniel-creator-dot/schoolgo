@@ -34,8 +34,7 @@ export default function LandingPage({
   const { language, setLanguage, t } = useLanguage();
   const [showPartnerModal, setShowPartnerModal] = useState(false);
   const [isPartnerSubmitted, setIsPartnerSubmitted] = useState(false);
-  const [activeSection, setActiveSection] = useState(0); // 0: Home, 1: Solutions, 2: Referrals, 3: Pricing
-  const [isReferralSignedUp, setIsReferralSignedUp] = useState(false);
+  const [activeSection, setActiveSection] = useState(0); // 0: Home, 1: Solutions, 2: Pricing
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [isDemoSubmitted, setIsDemoSubmitted] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
@@ -149,16 +148,10 @@ export default function LandingPage({
                 {t('navbar_solutions')}
               </button>
               <button
-                onClick={() => setActiveSection(3)}
-                className={cn("text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors", activeSection === 3 ? "text-indigo-600" : "text-zinc-400 hover:text-zinc-600")}
-              >
-                {t('navbar_pricing')}
-              </button>
-              <button
                 onClick={() => setActiveSection(2)}
                 className={cn("text-[10px] md:text-xs font-black uppercase tracking-widest transition-colors", activeSection === 2 ? "text-indigo-600" : "text-zinc-400 hover:text-zinc-600")}
               >
-                {t('navbar_referrals')}
+                {t('navbar_pricing')}
               </button>
               <button
                 onClick={onPartnerLogin}
@@ -251,12 +244,6 @@ export default function LandingPage({
                     >
                       {t('get_started')}
                       <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </button>
-                    <button
-                      onClick={() => setActiveSection(2)}
-                      className="hidden md:flex px-6 py-3 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-xl font-bold text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all"
-                    >
-                      {t('refer_earn')}
                     </button>
                   </div>
 
@@ -433,7 +420,7 @@ export default function LandingPage({
                 ))}
               </div>
             </motion.div>
-          ) : activeSection === 3 ? (
+          ) : activeSection === 2 ? (
             <motion.div
               key="pricing"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -499,105 +486,7 @@ export default function LandingPage({
                 ))}
               </div>
             </motion.div>
-          ) : (
-            <motion.div
-              key="referrals"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "circOut" }}
-              className="max-w-4xl mx-auto px-6 md:px-6 py-20 md:py-32"
-            >
-              {!isReferralSignedUp ? (
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 shadow-2xl text-center space-y-6">
-                  <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-950 rounded-3xl flex items-center justify-center mx-auto overflow-hidden">
-                    <img src="/assets/omni_portal_icon.png" alt="Omni" className="w-full h-full object-contain p-4" />
-                  </div>
-                  <div className="space-y-4">
-                    <h2 className="text-3xl md:text-4xl font-black tracking-tight">{t('refer_rewards_title')}</h2>
-                    <p className="text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto">
-                      {t('refer_rewards_desc')}
-                    </p>
-                  </div>
-
-                  <form className="max-w-md mx-auto space-y-4" onSubmit={(e) => { e.preventDefault(); setIsReferralSignedUp(true); }}>
-                    <div className="space-y-2 text-left">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4 mb-1 block">{t('your_email_address')}</label>
-                      <input
-                        type="email"
-                        required
-                        className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                        placeholder="you@example.com"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none"
-                    >
-                      {t('join_program')}
-                    </button>
-                  </form>
-                </div>
-              ) : (
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 shadow-2xl space-y-8">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center">
-                        <Zap className="w-6 h-6 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-black">{t('referral_dashboard')}</h3>
-                        <p className="text-xs text-zinc-500">{t('welcome_back_link')}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setIsReferralSignedUp(false)}
-                      className="text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                    >
-                      {t('logout')}
-                    </button>
-                  </div>
-
-                  <div className="p-6 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-3xl space-y-4">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{t('your_referral_link')}</p>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        readOnly
-                        value="https://omnischool.app/ref/DAN-9021"
-                        className="flex-1 bg-white dark:bg-zinc-900 px-4 py-3 rounded-xl text-sm font-mono border border-zinc-100 dark:border-zinc-800 outline-none"
-                      />
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText("https://omnischool.app/ref/DAN-9021");
-                          // alert('Link copied to clipboard!');
-                          (window as any).showToast?.('Link copied to clipboard!', 'success');
-                        }}
-                        className="px-4 py-3 bg-indigo-600 text-white rounded-xl text-xs font-bold"
-                      >
-                        {t('copy')}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-3xl border border-emerald-100 dark:border-emerald-900/30">
-                      <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-2">{t('earnings')}</p>
-                      <p className="text-2xl font-black">GH₵ 0.00</p>
-                    </div>
-                    <div className="p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-3xl border border-indigo-100 dark:border-indigo-900/30">
-                      <p className="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-2">{t('clicks')}</p>
-                      <p className="text-2xl font-black">0</p>
-                    </div>
-                    <div className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-3xl border border-amber-100 dark:border-amber-900/30">
-                      <p className="text-[10px] text-amber-600 font-black uppercase tracking-widest mb-2">{t('signups')}</p>
-                      <p className="text-2xl font-black">0</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
       </main>
 
