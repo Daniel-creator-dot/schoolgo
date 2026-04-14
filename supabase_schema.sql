@@ -1265,6 +1265,9 @@ CREATE TABLE IF NOT EXISTS inventory (
         quantity INTEGER DEFAULT 0,
         price NUMERIC(10, 2) DEFAULT 0,
         category VARCHAR(100),
+        location VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'Good Condition',
+        next_maintenance_date DATE,
         org_id UUID REFERENCES organizations(id),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );

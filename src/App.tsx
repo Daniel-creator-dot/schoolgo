@@ -3045,7 +3045,7 @@ export default function App() {
         />
       ),
 
-      Assets: (
+      "Assets & Equipment": (
         <OperationsModules.Inventory
           data={inventory}
           onSave={(data) => handleEntitySave("inventory", data)}

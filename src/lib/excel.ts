@@ -355,8 +355,8 @@ export const parseLibraryExcel = async (file: File): Promise<any[]> => {
 };
 
 export const downloadInventoryTemplate = () => {
-  const headers = ['Item Name', 'Category', 'Quantity', 'Unit Price'];
-  const example = ['Note Books (Large)', 'Stationery', '500', '2.50'];
+  const headers = ['Item Name', 'Category', 'Location', 'Status', 'Quantity', 'Unit Price', 'Next Maintenance'];
+  const example = ['Laptops (Dell)', 'ICT Equipment', 'Lab 1', 'Good Condition', '20', '500.00', '2024-12-31'];
   const ws = XLSX.utils.aoa_to_sheet([headers, example]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Inventory');
@@ -374,6 +374,9 @@ export const parseInventoryExcel = async (file: File): Promise<any[]> => {
         resolve(jsonData.map((row: any) => ({
           item_name: row['Item Name'],
           category: row['Category'],
+          location: row['Location'],
+          status: row['Status'] || 'Good Condition',
+          next_maintenance_date: row['Next Maintenance'],
           quantity: parseInt(row['Quantity']) || 0,
           price: parseFloat(row['Unit Price']) || 0
         })));

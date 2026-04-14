@@ -1093,6 +1093,18 @@ export const OperationsModules = {
           columns={[
             { header: 'Item Name', accessor: (item: any) => item.item_name, className: 'font-bold' },
             { header: 'Category', accessor: (item: any) => item.category },
+            { header: 'Location', accessor: (item: any) => item.location || '—' },
+            { header: 'Status', accessor: (item: any) => (
+              <span className={cn(
+                "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                item.status?.toLowerCase().includes('good') ? "bg-emerald-50 text-emerald-600" :
+                item.status?.toLowerCase().includes('repair') ? "bg-amber-50 text-amber-600" :
+                "bg-zinc-100 text-zinc-600"
+              )}>
+                {item.status || 'Good Condition'}
+              </span>
+            )},
+            { header: 'Next Maintenance', accessor: (item: any) => item.next_maintenance_date ? new Date(item.next_maintenance_date).toLocaleDateString() : '—' },
             { header: 'Quantity', accessor: (item: any) => item.quantity },
             { header: 'Unit Price', accessor: (item: any) => `₦${Number(item.price || 0).toLocaleString()}` },
           ]}
@@ -1156,6 +1168,43 @@ export const OperationsModules = {
                     className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Location</label>
+                  <input 
+                    name="location" 
+                    defaultValue={item?.location} 
+                    disabled={isViewOnly}
+                    placeholder="e.g. Lab 1, Library"
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Status</label>
+                  <select 
+                    name="status" 
+                    defaultValue={item?.status || 'Good Condition'} 
+                    disabled={isViewOnly}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                  >
+                    <option value="Good Condition">Good Condition</option>
+                    <option value="Needs Repair">Needs Repair</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
+                    <option value="Replacement Needed">Replacement Needed</option>
+                    <option value="Lost/Stolen">Lost/Stolen</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-1.5 pt-2">
+                <label className="text-xs font-bold text-zinc-500 uppercase italic">Next Maintenance Date</label>
+                <input 
+                  type="date"
+                  name="next_maintenance_date" 
+                  defaultValue={item?.next_maintenance_date} 
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                />
               </div>
             </div>
           )}
