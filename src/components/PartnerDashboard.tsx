@@ -64,7 +64,9 @@ const PartnerDashboard: React.FC = () => {
         setSchools(data.schools);
       }
 
-      const plansRes = await fetch(`${API_BASE_URL}/plans`);
+      const plansRes = await fetch(`${API_BASE_URL}/plans`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
       const plansData = await plansRes.json();
       if (plansData && plansData.length > 0) {
         setSystemPlans(plansData);
@@ -310,7 +312,7 @@ const PartnerDashboard: React.FC = () => {
                   return (
                     <div key={plan.id} className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative flex flex-col">
                       <h4 className="text-2xl font-black mb-2">{plan.name}</h4>
-                      <p className="text-xl font-bold text-indigo-600 mb-6">GH₵ {parseFloat(plan.price).toLocaleString()}</p>
+                      <p className="text-xl font-bold text-indigo-600 mb-6">$ {parseFloat(plan.price).toLocaleString()}</p>
                       <ul className="space-y-3 flex-1 mb-6">
                         {modules.map((m: string, i: number) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">
@@ -524,7 +526,7 @@ const PartnerDashboard: React.FC = () => {
                     <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider">Features included in {selected.name}</h4>
-                        <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">GH₵ {parseFloat(selected.price).toLocaleString()}</span>
+                        <span className="text-lg font-black text-indigo-600 dark:text-indigo-400">$ {parseFloat(selected.price).toLocaleString()}</span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {modules.map((m: string, i: number) => (
