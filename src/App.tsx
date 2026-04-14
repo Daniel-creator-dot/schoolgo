@@ -245,6 +245,7 @@ import {
   createInventoryItem,
   updateInventoryItem,
   deleteInventoryItem,
+  fetchPartners,
   syncELearningMarks,
   fetchCalendarEvents,
   createCalendarEvent,
@@ -298,6 +299,7 @@ export default function App() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [acceptance, setAcceptance] = useState<Acceptance[]>([]);
   const [staffList, setStaffList] = useState<any[]>([]);
+  const [partnerList, setPartnerList] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [classList, setClassList] = useState<any[]>([]);
   const [subjectList, setSubjectList] = useState<any[]>([]);
@@ -419,6 +421,8 @@ export default function App() {
         fetchOrganizations(),
         fetchInvoices(),
         fetchExpenses(),
+        fetchPartners(),
+        fetchPlatformUsers(),
         fetchExams(),
         fetchResults(),
         isAdmin || isHR ? fetchRecruitment() : Promise.resolve([]),
@@ -478,6 +482,8 @@ export default function App() {
         orgs,
         invs,
         exps,
+        partners,
+        pusers,
         exm,
         res,
         rec,
@@ -491,7 +497,7 @@ export default function App() {
         isales,
         subs,
         rpts,
-        pusers,
+        pusers_admin,
         logs,
         mods,
         plans,
@@ -529,6 +535,8 @@ export default function App() {
       if (orgs.status === "fulfilled") setOrganizations(orgs.value);
       if (invs.status === "fulfilled") setInvoices(invs.value);
       if (exps.status === "fulfilled") setExpenses(exps.value);
+      if (partners.status === "fulfilled") setPartnerList(partners.value);
+      if (pusers.status === "fulfilled") setPlatformUsers(pusers.value);
       if (exm.status === "fulfilled") setExams(exm.value);
       if (res.status === "fulfilled") setResults(res.value);
       if (rec.status === "fulfilled") setRecruitment(rec.value);
@@ -543,7 +551,7 @@ export default function App() {
       if (isales.status === "fulfilled") setInventorySales(isales.value);
       if (subs.status === "fulfilled") setSubscriptions(subs.value);
       if (rpts.status === "fulfilled") setReceipts(rpts.value);
-      if (pusers.status === "fulfilled") setPlatformUsers(pusers.value);
+      if (pusers_admin.status === "fulfilled") setPlatformUsers(pusers_admin.value);
       if (logs.status === "fulfilled") setAuditLogs(logs.value);
       if (mods.status === "fulfilled") setSystemModules(mods.value);
       if (plans.status === "fulfilled") setPlanTemplates(plans.value);
@@ -1612,6 +1620,7 @@ export default function App() {
         <Messages
           students={studentList}
           staff={staffList}
+          partners={partnerList}
           subjects={subjectList}
           classes={classList}
           onRefreshUnreadCount={fetchUnreadCount}

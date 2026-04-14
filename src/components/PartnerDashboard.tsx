@@ -23,6 +23,11 @@ const PartnerDashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [systemPlans, setSystemPlans] = useState<any[]>([]);
   
+  // Chat State
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [superAdminId, setSuperAdminId] = useState<string | null>(null);
+  
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -76,6 +81,71 @@ const PartnerDashboard: React.FC = () => {
       console.error('Fetch error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/messages`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data);
+        
+        // Try to identify Super Admin from messages or fetch
+        const saMsg = data.find((m: any) => m.sender_role === 'SUPER_ADMIN' || m.receiver_role === 'SUPER_ADMIN');
+        if (saMsg) {
+           setSuperAdminId(saMsg.sender_role === 'SUPER_ADMIN' ? saMsg.sender_id : saMsg.receiver_id);
+        } else {
+           // Fallback: Fetch platform users to find a Super Admin
+           const usersRes = await fetch(`${API_BASE_URL}/users`, {
+             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+           });
+           if (usersRes.ok) {
+              const users = await usersRes.json();
+              const sa = users.find((u: any) => u.role === 'SUPER_ADMIN');
+              if (sa) setSuperAdminId(sa.id);
+           }
+        }
+      }
+    } catch (err) {
+      console.error('Message fetch error:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      fetchMessages();
+      const interval = setInterval(fetchMessages, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !superAdminId) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          receiver_id: superAdminId,
+          receiver_role: 'SUPER_ADMIN',
+          subject: 'Support Request',
+          content: newMessage
+        })
+      });
+      if (res.ok) {
+        setNewMessage('');
+        fetchMessages();
+      }
+    } catch (err) {
+      console.error('Send error:', err);
     }
   };
 
@@ -333,34 +403,59 @@ const PartnerDashboard: React.FC = () => {
 
           {activeTab === 'chat' && (
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl h-[600px] flex flex-col overflow-hidden shadow-sm">
-               <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50 dark:bg-zinc-950/50">
-                  <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white text-sm">SA</div>
-                  <div>
-                    <h3 className="font-bold text-zinc-900 dark:text-white">Super Admin Support</h3>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                       <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">Online - Replies swiftly</p>
+               <div className="p-6 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white text-sm">SA</div>
+                    <div>
+                      <h3 className="font-bold text-zinc-900 dark:text-white">Super Admin Support</h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                         <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">Live Support</p>
+                      </div>
                     </div>
                   </div>
+                  {!superAdminId && <p className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded">Connecting...</p>}
                </div>
-               <div className="flex-1 p-6 overflow-y-auto space-y-4">
-                  <div className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-4 rounded-2xl rounded-tl-sm max-w-[80%] text-sm text-zinc-900 dark:text-zinc-100">
-                    Hi {partner?.name}! I'm the Super Admin. How can I assist with your organizations today?
-                  </div>
-                  <div className="bg-indigo-600 text-white p-4 rounded-2xl rounded-tr-sm max-w-[80%] self-end text-sm ml-auto shadow-sm shadow-indigo-200 dark:shadow-none">
-                    Hi! I just submitted a new lead for "Greenspring Organizations". Could you take a look?
-                  </div>
+               <div className="flex-1 p-6 overflow-y-auto space-y-4 flex flex-col">
+                  {messages.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 space-y-2">
+                       <MessageSquare size={48} className="opacity-20" />
+                       <p className="text-sm font-medium">Start a conversation with Super Admin support</p>
+                    </div>
+                  ) : (
+                    messages.sort((a,b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()).map((m: any, i: number) => {
+                      const isMe = m.direction === 'sent';
+                      return (
+                        <div key={m.id || i} className={`p-4 rounded-2xl max-w-[80%] text-sm ${
+                          isMe 
+                            ? 'bg-indigo-600 text-white self-end rounded-tr-sm shadow-sm shadow-indigo-200 dark:shadow-none' 
+                            : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 self-start rounded-tl-sm'
+                        }`}>
+                          <p>{m.content}</p>
+                          <p className={`text-[10px] mt-2 opacity-50 ${isMe ? 'text-indigo-100' : 'text-zinc-500'}`}>
+                            {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      )
+                    })
+                  )}
                </div>
-               <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 flex gap-3 bg-zinc-50 dark:bg-zinc-950/50">
+               <form onSubmit={handleSendMessage} className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 flex gap-2">
                   <input 
-                    type="text" 
-                    placeholder="Type your message..." 
-                    className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white transition-all shadow-sm"
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   />
-                  <button className="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-all shadow-sm shadow-indigo-200 dark:shadow-none active:scale-95">
-                    <Send size={20} />
+                  <button 
+                    type="submit"
+                    disabled={!newMessage.trim() || !superAdminId}
+                    className="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Send size={18} />
                   </button>
-               </div>
+               </form>
             </div>
           )}
         </div>

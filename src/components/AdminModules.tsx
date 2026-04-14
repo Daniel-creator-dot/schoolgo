@@ -550,7 +550,7 @@ export function ChoosePlan() {
             <div className="mb-8">
               <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold">GH₵ {parseFloat(plan.price).toLocaleString()}</span>
+                <span className="text-4xl font-bold">$ {parseFloat(plan.price).toLocaleString()}</span>
                 <span className="text-sm opacity-60">/{plan.period}</span>
               </div>
               <p className="text-sm mt-4 opacity-70">{plan.description}</p>
@@ -685,7 +685,7 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
           { header: 'Plan Name', accessor: 'name', className: 'font-bold' },
           {
             header: 'Price',
-            accessor: (item) => `GH₵ ${parseFloat(item.price).toLocaleString()} / ${item.period}`
+            accessor: (item) => `$ {parseFloat(item.price).toLocaleString()} / ${item.period}`
           }
         ]}
       />
@@ -695,7 +695,7 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
           <div className="space-y-6">
             <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
               <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-1">{viewingPlan.name}</h3>
-              <p className="text-indigo-600 font-bold">GH₵ {parseFloat(viewingPlan.price).toLocaleString()} / {viewingPlan.period}</p>
+              <p className="text-indigo-600 font-bold">$ {parseFloat(viewingPlan.price).toLocaleString()} / {viewingPlan.period}</p>
             </div>
 
             <div className="space-y-2">
@@ -748,7 +748,7 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-zinc-500">Price (GH₵)</label>
+              <label className="text-xs font-bold uppercase text-zinc-500">Price ($)</label>
               <input
                 type="number"
                 value={formData.price}
@@ -933,7 +933,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
                     <div style="font-size: 13px; color: #64748b;">Expires: ${new Date(sub.expiry_date).toLocaleDateString()}</div>
                   </td>
                   <td style="padding: 24px 16px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 700;">
-                    GH₵ ${parseFloat(sub.amount || 0).toLocaleString()}
+                    $ ${parseFloat(sub.amount || 0).toLocaleString()}
                   </td>
                 </tr>
               </tbody>
@@ -942,7 +942,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
 
           <div class="amount-box">
             <div class="amount-label">Total Amount Paid</div>
-            <div class="amount-value">GH₵ ${parseFloat(sub.amount || 0).toLocaleString()}</div>
+            <div class="amount-value">$ ${parseFloat(sub.amount || 0).toLocaleString()}</div>
             <div style="font-size: 12px; color: #94a3b8; margin-top: 8px; font-weight: 600;">Payment Method: ${sub.payment_method}</div>
           </div>
 
@@ -1109,7 +1109,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Amount</p>
-                <p className="font-bold text-zinc-900 dark:text-white">GH₵ {parseFloat(viewingSub.amount).toLocaleString()}</p>
+                <p className="font-bold text-zinc-900 dark:text-white">$ {parseFloat(viewingSub.amount).toLocaleString()}</p>
               </div>
               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Payment Method</p>
@@ -1170,7 +1170,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
             >
               <option value="">Choose a plan</option>
               {plans.map((plan: any) => (
-                <option key={plan.id} value={plan.name}>{plan.name} - GH₵ {parseFloat(plan.price).toLocaleString()}</option>
+                <option key={plan.id} value={plan.name}>{plan.name} - $ {parseFloat(plan.price).toLocaleString()}</option>
               ))}
             </select>
           </div>
@@ -1202,7 +1202,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-zinc-500">Amount (GH₵)</label>
+              <label className="text-xs font-bold uppercase text-zinc-500">Amount ($)</label>
               <input
                 type="number"
                 value={formData.amount}
@@ -1273,7 +1273,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-zinc-500">New Amount (GH₵)</label>
+              <label className="text-xs font-bold uppercase text-zinc-500">New Amount ($)</label>
               <input
                 type="number"
                 value={formData.amount}
@@ -1449,7 +1449,7 @@ export function AuditLogs({ data }: { data?: any[] }) {
   );
 }
 
-export function Messages({ students = [], staff = [], subjects = [], classes = [], onRefreshUnreadCount }: { students?: any[], staff?: any[], subjects?: any[], classes?: any[], onRefreshUnreadCount?: () => void }) {
+export function Messages({ students = [], staff = [], partners = [], subjects = [], classes = [], onRefreshUnreadCount }: { students?: any[], staff?: any[], partners?: any[], subjects?: any[], classes?: any[], onRefreshUnreadCount?: () => void }) {
   const { t } = useLanguage();
   const [messages, setMessages] = useState<any[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -1529,6 +1529,7 @@ export function Messages({ students = [], staff = [], subjects = [], classes = [
     if (userRole === 'SCHOOL_ADMIN' || userRole === 'SUPER_ADMIN') {
       staff.forEach(s => addContact(s.id, s.name, s.role, 'STAFF', s.email));
       students.forEach(s => addContact(s.id, s.name, 'STUDENT', 'STUDENT', s.email));
+      partners.forEach(p => addContact(p.id, p.name, 'PARTNER', 'PARTNER', p.email));
       students.forEach(s => {
         if (s.parent_email) addContact(s.id, s.parent_name || 'Parent of ' + s.name, 'PARENT', 'PARENT', s.parent_email);
       });
