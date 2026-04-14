@@ -1762,7 +1762,7 @@ export function StudentDashboard({
   );
 }
 
-export function PartnerDashboard() {
+export function OldPartnerDashboard() {
   const { t } = useLanguage();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

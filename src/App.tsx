@@ -24,8 +24,8 @@ import {
   LibrarianDashboard,
   NonStaffDashboard,
   HRDashboard,
-  PartnerDashboard,
 } from "./components/Dashboards";
+import PartnerDashboard from "./components/PartnerDashboard";
 import { DataTable } from "./components/DataTable";
 import {
   CreateOrganization,
