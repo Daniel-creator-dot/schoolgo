@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { UserRole, Ward } from '../../types';
 import { downloadInventoryTemplate, parseInventoryExcel } from '../../lib/excel';
+import { useLanguage } from '../../lib/LanguageContext';
 
 export const OperationsModules = {
   Transport: ({ role, currentStudentId, data, students, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
@@ -1046,6 +1047,7 @@ export const OperationsModules = {
     );
   },
   Inventory: ({ data, onSave, onDelete }: { data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
+    const { currency } = useLanguage();
     const [importing, setImporting] = useState(false);
     const [previewData, setPreviewData] = useState<any[] | null>(null);
 

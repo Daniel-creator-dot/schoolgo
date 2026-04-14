@@ -1672,6 +1672,7 @@ export const AdmissionsModules = {
     );
   },
   Acceptance: ({ data, classes = [], feeStructures = [], onConvert, onSave, onDelete, title = "Admission Acceptance", showBulkActions = false }: { data: Acceptance[], classes?: any[], feeStructures?: any[], onConvert: (item: Acceptance) => void, onSave?: (data: any) => void, onDelete?: (item: any) => void, title?: string, showBulkActions?: boolean }) => {
+    const { currency } = useLanguage();
     const { t } = useLanguage();
     const [viewItem, setViewItem] = useState<Acceptance | null>(null);
     const [importPreviewItems, setImportPreviewItems] = useState<any[]>([]);
