@@ -3413,6 +3413,8 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
         data={partners}
         onAdd={handleAdd}
         onEdit={handleEdit}
+        autoModal={false}
+        autoViewModal={false}
         onDelete={(p: any) => setDeleteConfirm({ isOpen: true, partner: p })}
         onView={(p: any) => setViewingPartner(p)}
         columns={[
