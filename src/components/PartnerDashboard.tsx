@@ -12,6 +12,12 @@ interface SchoolLead {
   type: string;
   status: string;
   plan: string;
+  email?: string;
+  contact_number?: string;
+  address?: string;
+  custom_domain?: string;
+  language?: string;
+  timezone?: string;
   created_at: string;
 }
 
@@ -21,6 +27,7 @@ const PartnerDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('organizations');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState<SchoolLead | null>(null);
   const [systemPlans, setSystemPlans] = useState<any[]>([]);
   
   // Chat State
@@ -366,7 +373,10 @@ const PartnerDashboard: React.FC = () => {
                                 </div>
                             </td>
                             <td className="px-6 py-4 text-right">
-                                <button className="p-2 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors">
+                                <button 
+                                    onClick={() => setSelectedSchool(school)}
+                                    className="p-2 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors"
+                                >
                                     <ChevronRight size={18} />
                                 </button>
                             </td>
@@ -379,28 +389,76 @@ const PartnerDashboard: React.FC = () => {
             </div>
           )}
 
+          {activeTab === 'earnings' && (
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 shadow-sm">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                    <Wallet size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">Financial Overview</h3>
+                    <p className="text-zinc-500 text-sm font-medium">Your platform earnings and commission history</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                   <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                      <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Total Commission</p>
+                      <h4 className="text-2xl font-black text-zinc-900 dark:text-white">${partner?.total_earnings?.toLocaleString() || '0.00'}</h4>
+                   </div>
+                   <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
+                      <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Payout Rate</p>
+                      <h4 className="text-2xl font-black text-indigo-600">8.00%</h4>
+                   </div>
+                   <div className="p-6 rounded-2xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200 dark:shadow-none">
+                      <p className="text-[10px] font-black uppercase text-white/60 tracking-widest mb-1">Next Payout</p>
+                      <h4 className="text-2xl font-black text-white">$0.00</h4>
+                   </div>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-zinc-200 dark:border-zinc-800">
+                  <h3 className="text-lg font-black text-zinc-900 dark:text-white">Recent Transactions</h3>
+                </div>
+                <div className="p-12 text-center text-zinc-500">
+                  <TrendingUp size={48} className="mx-auto mb-4 opacity-20" />
+                  <p className="font-medium">No transactions found for this period.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'plans' && (
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 mb-6 shadow-sm">
               <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">System Plans Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {systemPlans.map(plan => {
-                  const modules = Array.isArray(plan.modules) ? plan.modules : JSON.parse(plan.modules || '[]');
-                  return (
-                    <div key={plan.id} className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative flex flex-col">
-                      <h4 className="text-2xl font-black mb-2">{plan.name}</h4>
-                      <p className="text-xl font-bold text-indigo-600 mb-6">$ {parseFloat(plan.price).toLocaleString()}</p>
-                      <ul className="space-y-3 flex-1 mb-6">
-                        {modules.map((m: string, i: number) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                            <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
-                            <span>{m}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
+              {systemPlans.length === 0 ? (
+                <div className="p-12 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                   <Layers size={48} className="mx-auto mb-4 text-zinc-300" />
+                   <p className="text-zinc-500">Fetching available system plans...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {systemPlans.map(plan => {
+                    const modules = Array.isArray(plan.modules) ? plan.modules : JSON.parse(plan.modules || '[]');
+                    return (
+                      <div key={plan.id} className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative flex flex-col hover:border-indigo-500/50 transition-colors">
+                        <h4 className="text-2xl font-black mb-2">{plan.name}</h4>
+                        <p className="text-xl font-bold text-indigo-600 mb-6">$ {parseFloat(plan.price).toLocaleString()}</p>
+                        <ul className="space-y-3 flex-1 mb-6">
+                          {modules.map((m: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                              <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                              <span>{m}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -675,6 +733,83 @@ const PartnerDashboard: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal - School Details */}
+      {selectedSchool && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setSelectedSchool(null)} />
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200">
+            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 dark:shadow-none">
+                  {selectedSchool.name.charAt(0)}
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{selectedSchool.name}</h3>
+                  <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest mt-1 ${
+                      selectedSchool.status === 'Active' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                      'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'
+                  }`}>
+                      <span className={`w-1 h-1 rounded-full ${selectedSchool.status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      {selectedSchool.status}
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedSchool(null)}
+                className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6">
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1 bg-zinc-50/50 dark:bg-zinc-800/30">
+                    <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Plan</p>
+                    <p className="font-bold text-zinc-900 dark:text-white">{selectedSchool.plan}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1 bg-zinc-50/50 dark:bg-zinc-800/30">
+                    <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Type</p>
+                    <p className="font-bold text-zinc-900 dark:text-white">{selectedSchool.type}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
+                    <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Contact Email</p>
+                    <p className="font-bold text-zinc-900 dark:text-white">{selectedSchool.email || '—'}</p>
+                  </div>
+                  <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
+                    <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Contact Number</p>
+                    <p className="font-bold text-zinc-900 dark:text-white">{selectedSchool.contact_number || '—'}</p>
+                  </div>
+               </div>
+
+               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Physical Address</p>
+                  <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{selectedSchool.address || 'No address provided'}</p>
+               </div>
+
+               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Access Details</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-sm font-bold text-indigo-600">{selectedSchool.custom_domain ? `${selectedSchool.custom_domain}.omniportal.com` : 'No custom domain'}</p>
+                    <div className="flex gap-2">
+                      <span className="text-[10px] font-black bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md uppercase">{selectedSchool.language || 'en'}</span>
+                      <span className="text-[10px] font-black bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md uppercase">{selectedSchool.timezone || 'GMT'}</span>
+                    </div>
+                  </div>
+               </div>
+            </div>
+
+            <div className="p-8 bg-zinc-50 dark:bg-zinc-950/50 border-t border-zinc-100 dark:border-zinc-800 flex justify-end">
+               <button 
+                 onClick={() => setSelectedSchool(null)}
+                 className="px-8 py-3 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-black text-sm hover:opacity-90 transition-opacity"
+               >
+                 Close Details
+               </button>
+            </div>
           </div>
         </div>
       )}

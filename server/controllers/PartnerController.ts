@@ -81,7 +81,10 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Partner not found' });
     }
 
-    const schoolsResult = await pool.query('SELECT id, name, type, status, plan, created_at FROM organizations WHERE referred_by_partner_id = $1', [partnerId]);
+    const schoolsResult = await pool.query(
+        'SELECT id, name, type, status, plan, email, contact_number, address, custom_domain, language, timezone, created_at FROM organizations WHERE referred_by_partner_id = $1', 
+        [partnerId]
+    );
 
     res.json({
       partner: partnerResult.rows[0],
