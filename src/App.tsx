@@ -3540,6 +3540,10 @@ export default function App() {
 
   const organization = organizations.find((o) => o.id === currentUser?.org_id);
 
+  if (currentRole === 'PARTNER') {
+    return <PartnerDashboard />;
+  }
+
   return (
     <Layout
       currentRole={currentRole}
