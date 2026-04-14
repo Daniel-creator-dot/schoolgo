@@ -1040,6 +1040,8 @@ export const OperationsModules = {
             </div>
           </div>
         )}
+          </div>
+        )}
       </div>
     );
   },
