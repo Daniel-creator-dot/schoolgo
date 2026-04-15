@@ -127,10 +127,18 @@ export const HRModules = {
       });
       placedStaffIds.add(principal.id);
 
+      // Track staff who are assigned as HODs so they form department nodes instead of independent nodes
+      const hodIds = new Set(
+          departments
+              .map(d => d.hod_id)
+              .filter(id => id && id !== principal?.id && !placedStaffIds.has(id))
+      );
+
       // 5. Independent Staff (Level 1 - reports to first Admin)
       const independentStaff = staff.filter(
         (s) =>
           !placedStaffIds.has(s.id) &&
+          !hodIds.has(s.id) && // Exclude HODs so they render with their department
           (!s.reports_to || s.reports_to === "")
       );
 
@@ -152,7 +160,7 @@ export const HRModules = {
       });
 
       // If no admin exists, we start with Principal at Level 0
-      if (admins.length === 0) {
+      if (admins.length === 0 && principal) {
         const principalNode = nodes.find(n => n.id === principal.id);
         if (principalNode) principalNode.level = 0;
       }
@@ -160,15 +168,18 @@ export const HRModules = {
       // Level 1 (continued): Vice Principals and direct reports to Principal
       const level1Staff = staff.filter(
         (s) =>
-          s.id !== principal.id &&
+          s.id !== principal?.id &&
           !placedStaffIds.has(s.id) &&
-          (s.reports_to === principal.id ||
+          !hodIds.has(s.id) && // Exclude HODs so they render with their department
+          (s.reports_to === principal?.id ||
             s.role?.toLowerCase().includes("vice principal")),
       );
 
       level1Staff.forEach((s) => {
-        const principalNode = nodes.find((n) => n.id === principal.id);
-        if (principalNode) principalNode.subordinates.push(s.id);
+        if (principal) {
+          const principalNode = nodes.find((n) => n.id === principal.id);
+          if (principalNode) principalNode.subordinates.push(s.id);
+        }
         nodes.push({
           id: s.id,
           name: s.name,
@@ -189,8 +200,8 @@ export const HRModules = {
         const hod = staff.find((s) => s.id === dept.hod_id);
 
         // Find who the HOD reports to, or default to Principal
-        const parentId = hod?.reports_to || principal.id;
-        const parentNode = nodes.find((n) => n.id === parentId) || nodes.find(n => n.id === principal.id);
+        const parentId = hod?.reports_to || principal?.id || admins[0]?.id;
+        const parentNode = nodes.find((n) => n.id === parentId) || (principal && nodes.find(n => n.id === principal.id)) || (admins.length > 0 && nodes.find(n => n.id === admins[0].id));
         
         if (parentNode) {
           parentNode.subordinates.push(deptId);
