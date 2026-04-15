@@ -864,6 +864,166 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
   );
 }
 
+export function SchoolBilling({ 
+  currentSubscription, 
+  plans = [], 
+  organization 
+}: { 
+  currentSubscription: any; 
+  plans: any[]; 
+  organization: any;
+}) {
+  const { t } = useLanguage();
+
+  return (
+    <div className="space-y-12 pb-12">
+      {/* Hero Section / Current Status */}
+      <div className="bg-zinc-900 rounded-[2.5rem] p-8 sm:p-12 text-white relative overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+          <div className="space-y-4">
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight leading-tight">
+              Manage Your <br />Subscription
+            </h2>
+            <p className="text-zinc-400 max-w-md">
+              View your current plan details and available upgrades for {organization?.name}.
+            </p>
+          </div>
+
+          <div className="bg-zinc-800/50 backdrop-blur-xl border border-zinc-700/50 p-8 rounded-3xl w-full md:w-auto min-w-[300px] shadow-2xl">
+            <p className="text-[10px] font-bold uppercase text-indigo-400 tracking-[0.2em] mb-4">Current Active Plan</p>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                <Shield className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black tracking-tight">{currentSubscription?.plan || 'Free Tier'}</h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-bold text-emerald-500 uppercase tracking-widest">{currentSubscription?.status || 'Active'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-6 border-t border-zinc-700/50">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-zinc-500 font-medium">Renewal Date</span>
+                <span className="font-bold text-zinc-200">
+                  {currentSubscription?.expiry_date 
+                    ? new Date(currentSubscription.expiry_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                    : 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-zinc-500 font-medium">Billed Amount</span>
+                <span className="font-bold text-zinc-200">$ {parseFloat(currentSubscription?.amount || 0).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Decorative elements */}
+        <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-indigo-600/20 rounded-full blur-[100px]" />
+        <div className="absolute bottom-[-20%] left-[-5%] w-96 h-96 bg-emerald-600/10 rounded-full blur-[120px]" />
+      </div>
+
+      {/* Plans Section */}
+      <div className="space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-4">
+          <h3 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Available Plans</h3>
+          <p className="text-zinc-500 italic">Explore our feature-rich plans designed to scale with your institution's growing needs.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {plans.map((plan) => {
+            const isCurrent = plan.name === currentSubscription?.plan;
+            return (
+              <div key={plan.id} className={cn(
+                "relative p-8 rounded-[2rem] border transition-all duration-500 flex flex-col group",
+                plan.is_popular 
+                  ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 scale-105 shadow-xl shadow-indigo-100 dark:shadow-none" 
+                  : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm"
+              )}>
+                {plan.is_popular && (
+                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-[0.2em] shadow-lg shadow-indigo-200 dark:shadow-none">
+                    Recommended
+                  </span>
+                )}
+                
+                <div className="mb-8">
+                  <div className="flex justify-between items-start mb-4">
+                    <h4 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{plan.name}</h4>
+                    {isCurrent && (
+                      <span className="px-3 py-1 bg-emerald-500 text-white text-[8px] font-black rounded-lg uppercase tracking-widest">
+                        Your Plan
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-baseline gap-1 mb-4">
+                    <span className="text-4xl font-black text-zinc-900 dark:text-white">$ {parseFloat(plan.price).toLocaleString()}</span>
+                    <span className="text-zinc-500 font-bold text-sm">/{plan.period === 'monthly' ? 'mo' : plan.period === 'yearly' ? 'yr' : 'fixed'}</span>
+                  </div>
+                  <p className="text-sm text-zinc-500 line-clamp-2 leading-relaxed h-10">{plan.description}</p>
+                </div>
+
+                <div className="space-y-4 flex-1 mb-8">
+                  <p className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.2em]">Key Features</p>
+                  {(Array.isArray(plan.modules) ? plan.modules : JSON.parse(plan.modules || '[]')).slice(0, 6).map((mod: string) => (
+                    <div key={mod} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3" />
+                      </div>
+                      <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{mod}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  disabled={isCurrent}
+                  className={cn(
+                    "w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all",
+                    isCurrent
+                      ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
+                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-[1.02]"
+                  )}
+                >
+                  {isCurrent ? "Current Plan" : "Upgrade Now"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Support Section */}
+      <div className="bg-indigo-600 rounded-[2rem] p-8 sm:p-12 text-white text-center space-y-8 shadow-2xl shadow-indigo-200 dark:shadow-none relative overflow-hidden">
+        <div className="relative z-10 space-y-4 max-w-2xl mx-auto">
+          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-md">
+            <Mail className="w-8 h-8" />
+          </div>
+          <h3 className="text-3xl font-black tracking-tight uppercase">Ready to Renew or Upgrade?</h3>
+          <p className="text-indigo-100 font-medium">
+            Subscription management is handled by our platform administrators. Please contact your Super Admin to finalize any changes to your subscription plan.
+          </p>
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a 
+              href="mailto:support@omniportal.com" 
+              className="w-full sm:w-auto px-8 py-4 bg-white text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-50 transition-colors"
+            >
+              Contact Support
+            </a>
+            <div className="text-indigo-200 text-xs font-bold uppercase tracking-widest">
+              or reach out via internal messaging
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative circle */}
+        <div className="absolute top-[-50%] left-[-20%] w-[500px] h-[500px] bg-white/5 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
 export function SubscriptionPlans({ data, onRefresh, organizations = [], plans = [] }: { data?: any[], onRefresh?: () => void, organizations?: any[], plans?: any[] }) {
   const { t, currency } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -32,6 +32,7 @@ import {
   ChoosePlan,
   PlansManagement,
   SubscriptionPlans,
+  SchoolBilling,
   BillingHistory,
   UsersManagement,
   PartnersManagement,
@@ -102,8 +103,17 @@ import {
   deleteStudentAttendance,
   fetchOrganizations,
   fetchOrganization,
+  createOrganization,
   updateOrganization,
   deleteOrganization,
+  fetchPlans,
+  createPlan,
+  updatePlan,
+  deletePlan,
+  fetchSubscriptions,
+  createSubscription,
+  updateSubscription,
+  deleteSubscription,
   approveReferral,
   fetchInvoices,
   createInvoice,
@@ -161,7 +171,6 @@ import {
   createInventorySale,
   updateInventorySale,
   deleteInventorySale,
-  fetchSubscriptions,
   fetchDocumentTemplates,
   createDocumentTemplate,
   updateDocumentTemplate,
@@ -176,7 +185,6 @@ import {
   fetchModules,
   updateModule,
   deleteModule,
-  fetchPlans,
   fetchPayroll,
   createPayroll,
   updatePayroll,
@@ -599,26 +607,48 @@ export default function App() {
     }
   };
 
-  // Resolve allowed modules based on subscription
-  const getAllowedModules = () => {
-    if (currentRole === "SUPER_ADMIN") return null; // Bypass for Super Admin
+  // Derive subscription information
+  const subscriptionInfo = useMemo(() => {
+    if (currentRole === "SUPER_ADMIN" || !currentUser?.org_id) return null;
 
-    if (!currentUser?.org_id) return [];
-
-    // 1. Try to find an active subscription with a plan name
-    let activeSub = subscriptions
-      .filter(
-        (s) =>
-          s.org_id === currentUser.org_id && s.status === "Active" && s.plan,
-      )
+    const activeSub = subscriptions
+      .filter((s) => s.org_id === currentUser.org_id && s.plan)
       .sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       )[0];
 
-    let planName = activeSub?.plan;
+    if (!activeSub) return { status: 'None', daysRemaining: null, isExpired: true };
 
-    // 2. Fallback to organization's plan if no active sub with plan found
+    const expiryDate = activeSub.expiry_date ? new Date(activeSub.expiry_date) : null;
+    const now = new Date();
+    let daysRemaining = null;
+    let isExpired = activeSub.status !== "Active";
+
+    if (expiryDate) {
+      const diffTime = expiryDate.getTime() - now.getTime();
+      daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (daysRemaining <= 0) isExpired = true;
+    }
+
+    return {
+      status: isExpired ? 'Expired' : activeSub.status,
+      daysRemaining,
+      isExpired,
+      plan: activeSub.plan
+    };
+  }, [subscriptions, currentUser?.org_id, currentRole]);
+
+  // Resolve allowed modules based on subscription
+  const getAllowedModules = () => {
+    if (currentRole === "SUPER_ADMIN") return null; // Bypass for Super Admin
+
+    if (!currentUser?.org_id || !subscriptionInfo) return [];
+
+    // 1. Try to use active subscription if not expired
+    let planName = (!subscriptionInfo.isExpired) ? subscriptionInfo.plan : null;
+
+    // 2. Fallback to organization's plan if no active sub or expired (maybe they have a grace period plan)
     if (!planName) {
       const org = organizations.find((o) => o.id === currentUser.org_id);
       planName = org?.plan;
@@ -3389,14 +3419,25 @@ export default function App() {
         />
       ),
 
-      Subscriptions: (
-        <SubscriptionPlans
-          data={subscriptions}
-          organizations={organizations}
-          plans={planTemplates}
-          onRefresh={loadData}
-        />
-      ),
+      Subscriptions:
+        currentRole === "SUPER_ADMIN" ? (
+          <SubscriptionPlans
+            data={subscriptions}
+            organizations={organizations}
+            plans={planTemplates}
+            onRefresh={loadData}
+          />
+        ) : (
+          <SchoolBilling
+            currentSubscription={subscriptions.find(
+              (s) => s.org_id === currentUser?.org_id && s.status === "Active",
+            ) || subscriptions.find(
+              (s) => s.org_id === currentUser?.org_id,
+            )}
+            plans={planTemplates}
+            organization={organizations.find((o) => o.id === currentUser?.org_id)}
+          />
+        ),
 
       Users: (
         <UsersManagement
@@ -3531,7 +3572,6 @@ export default function App() {
           <StaffHRModules.StaffProfile
             data={staffData.profile}
             onSave={(data) => handleEntitySave("staff", data)}
-            currentUser={currentUser}
           />
         ) : (
           <div className="p-8 text-center text-zinc-500">
@@ -3615,6 +3655,7 @@ export default function App() {
       wards={wards}
       selectedWardId={selectedWardId}
       onWardSelect={setSelectedWardId}
+      subscriptionInfo={subscriptionInfo}
     >
       <div className="max-w-[1600px] mx-auto">{renderContent()}</div>
       {toast && (

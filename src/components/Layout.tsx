@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, X, Search, Bell, User, ChevronDown, LogOut, 
   Settings, Sun, Moon, Globe, ChevronRight, ShieldCheck,
-  GraduationCap, Users, FileText, Shirt
+  GraduationCap, Users, FileText, Shirt, AlertTriangle, CreditCard
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { NAVIGATION_CONFIG, MODULE_LINK_MAP, UserRole, NavItem } from '../constants';
@@ -24,6 +24,12 @@ interface LayoutProps {
   wards?: Ward[];
   selectedWardId?: string | null;
   onWardSelect?: (id: string) => void;
+  subscriptionInfo?: {
+    status: string;
+    daysRemaining: number | null;
+    isExpired: boolean;
+    plan: string;
+  } | null;
 }
 
 interface NavLinkProps {
@@ -116,7 +122,8 @@ export default function Layout({
   organization,
   wards = [],
   selectedWardId,
-  onWardSelect
+  onWardSelect,
+  subscriptionInfo
 }: LayoutProps) {
   const { t } = useLanguage();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -456,7 +463,77 @@ export default function Layout({
               <ChevronRight className="w-3 h-3 shrink-0" />
               <span className="text-indigo-600 truncate max-w-[120px] sm:max-w-none">{t(getTranslationKey(currentView))}</span>
             </div>
-            {children}
+
+            {/* Subscription Warning/Expired Banner */}
+            {subscriptionInfo && (subscriptionInfo.isExpired || (subscriptionInfo.daysRemaining !== null && subscriptionInfo.daysRemaining <= 7)) && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={cn(
+                  "mb-6 p-4 rounded-2xl flex flex-col sm:flex-row items-center gap-4 border shadow-sm",
+                  subscriptionInfo.isExpired 
+                    ? "bg-red-50 border-red-100 text-red-700 dark:bg-red-900/10 dark:border-red-900/30 dark:text-red-400"
+                    : "bg-amber-50 border-amber-100 text-amber-700 dark:bg-amber-900/10 dark:border-amber-900/30 dark:text-amber-400"
+                )}
+              >
+                <div className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                  subscriptionInfo.isExpired ? "bg-red-100 dark:bg-red-900/30" : "bg-amber-100 dark:bg-amber-900/30"
+                )}>
+                  {subscriptionInfo.isExpired ? <AlertTriangle className="w-6 h-6" /> : <CreditCard className="w-6 h-6" />}
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <p className="font-bold text-sm uppercase tracking-tight">
+                    {subscriptionInfo.isExpired ? "Subscription Expired" : "Subscription Expiring Soon"}
+                  </p>
+                  <p className="text-xs opacity-80">
+                    {subscriptionInfo.isExpired 
+                      ? "Your access to most features is currently restricted. Please renew to continue using the system."
+                      : `Your subscription for the ${subscriptionInfo.plan} plan will end in ${subscriptionInfo.daysRemaining} days.`}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => onNavigate('Subscriptions')}
+                  className={cn(
+                    "px-6 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
+                    subscriptionInfo.isExpired
+                      ? "bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-200 dark:shadow-none"
+                      : "bg-amber-600 text-white hover:bg-amber-700 shadow-lg shadow-amber-200 dark:shadow-none"
+                  )}
+                >
+                  Renew Subscription
+                </button>
+              </motion.div>
+            )}
+
+            {/* Content Restriction Logic */}
+            {subscriptionInfo?.isExpired && !['Dashboard', 'Subscriptions', 'profile', 'Change Password'].includes(currentView) ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
+                <div className="w-24 h-24 rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-6 text-zinc-400">
+                  <ShieldCheck className="w-12 h-12" />
+                </div>
+                <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-2">Feature Restricted</h2>
+                <p className="text-zinc-500 max-w-md mx-auto mb-8">
+                  The <strong>{currentView}</strong> module is currently unavailable due to an expired subscription. Please renew your plan to restore full access to all school management features.
+                </p>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => onNavigate('Dashboard')}
+                    className="px-6 py-3 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl font-bold text-xs uppercase tracking-widest transition-transform hover:scale-105"
+                  >
+                    Back to Dashboard
+                  </button>
+                  <button 
+                    onClick={() => onNavigate('Subscriptions')}
+                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-transform hover:scale-105 shadow-lg shadow-indigo-200 dark:shadow-none"
+                  >
+                    Go to Billing
+                  </button>
+                </div>
+              </div>
+            ) : (
+              children
+            )}
           </div>
         </main>
       </div>
