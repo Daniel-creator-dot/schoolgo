@@ -452,3 +452,86 @@ export const saveGeminiKey = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const verifyPaystackPayment = async (req: AuthRequest, res: Response) => {
+  const { reference, planId } = req.body;
+  const orgId = req.user.org_id;
+  const userId = req.user.id;
+
+  if (!reference) {
+    return res.status(400).json({ error: 'No transaction reference provided' });
+  }
+
+  const client = await pool.connect();
+  try {
+    // 1. Verify with Paystack API
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+      headers: {
+        Authorization: `Bearer ${paystackSecret}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!data.status || data.data.status !== 'success') {
+      return res.status(400).json({ error: 'Paystack verification failed', details: data.message });
+    }
+
+    const paymentData = data.data;
+    const paidAmount = paymentData.amount / 100; // Paystack sends in pesewas/subunits
+
+    // 2. Begin Database Transaction
+    await client.query('BEGIN');
+
+    // Get plan details 
+    const planResult = await client.query('SELECT * FROM plan_templates WHERE id = $1', [planId]);
+    if (planResult.rows.length === 0) {
+      throw new Error('Plan template not found');
+    }
+    const plan = planResult.rows[0];
+
+    // Calculate new expiry date
+    const now = new Date();
+    let expiry = new Date();
+    if (plan.period === 'monthly') {
+      expiry.setMonth(now.getMonth() + 1);
+    } else if (plan.period === 'yearly') {
+      expiry.setFullYear(now.getFullYear() + 1);
+    } else {
+      expiry.setMonth(now.getMonth() + 1); // Default to 1 month
+    }
+
+    // 3. Create/Update subscription
+    const subResult = await client.query(
+      `INSERT INTO subscriptions (org_id, plan, status, expiry_date, amount, payment_method)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [orgId, plan.name, 'Active', expiry.toISOString(), paidAmount, 'Paystack']
+    );
+
+    // 4. Update organization's current plan
+    await client.query(
+      'UPDATE organizations SET plan = $1 WHERE id = $2',
+      [plan.name, orgId]
+    );
+
+    await client.query('COMMIT');
+
+    await recordAuditLog(userId, 'PAYSTACK_RENEWAL', `Paystack subscription renewal successful. Ref: ${reference}`, orgId, req.ip || '');
+
+    res.json({
+      success: true,
+      message: 'Subscription renewed successfully!',
+      subscription: subResult.rows[0]
+    });
+
+  } catch (err: any) {
+    await client.query('ROLLBACK');
+    console.error('[Paystack Verification Error]:', err);
+    res.status(500).json({ error: 'Failed to verify payment and update subscription', details: err.message });
+  } finally {
+    client.release();
+  }
+};
+

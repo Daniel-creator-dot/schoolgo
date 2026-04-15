@@ -615,17 +615,6 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
         </div>
       </Modal>
       
-      <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
-        <HRModules.Organogram
-          staff={staffList}
-          departments={departments}
-          organization={organization}
-          scopedDeptId={null}
-          strictDepartmentView={false}
-          isReadOnly={false}
-          onUpdateOrganization={onUpdateOrganization}
-        />
-      </div>
     </div>
   );
 }

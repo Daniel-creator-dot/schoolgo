@@ -65,6 +65,7 @@ router.get('/subscriptions', OrganizationController.getSubscriptions);
 router.post('/subscriptions', checkRole(['SUPER_ADMIN']), OrganizationController.createSubscription);
 router.patch('/subscriptions/:id', checkRole(['SUPER_ADMIN']), OrganizationController.updateSubscription);
 router.delete('/subscriptions/:id', checkRole(['SUPER_ADMIN']), OrganizationController.deleteSubscription);
+router.post('/subscriptions/verify-paystack', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.verifyPaystackPayment);
 router.get('/plans', OrganizationController.getPlans);
 router.post('/plans', checkRole(['SUPER_ADMIN']), OrganizationController.createPlan);
 router.patch('/plans/:id', checkRole(['SUPER_ADMIN']), OrganizationController.updatePlan);

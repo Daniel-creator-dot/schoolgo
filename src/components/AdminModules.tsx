@@ -874,6 +874,118 @@ export function SchoolBilling({
   organization: any;
 }) {
   const { t } = useLanguage();
+  useEffect(() => {
+    console.log('>>> [Paystack] Script status:', typeof (window as any).PaystackPop !== 'undefined' ? 'LOADED' : 'NOT LOADED');
+    (window as any).debugPaystack = () => {
+      if (plans.length > 0) {
+        handlePaystackPayment(plans[0]);
+      } else {
+        alert('No plans loaded to test with.');
+      }
+    };
+  }, [plans]);
+
+  const handlePaystackPayment = (plan: any) => {
+    console.log('>>> [Paystack] Beginning payment process for plan:', plan.name);
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      console.error('>>> [Paystack] No user found in localStorage');
+      (window as any).showToast?.('Authentication required to pay.', 'error');
+      return;
+    }
+    const user = JSON.parse(userStr);
+    const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+
+    if (!publicKey) {
+      console.error('>>> [Paystack] Public Key missing (VITE_PAYSTACK_PUBLIC_KEY)');
+      (window as any).showToast?.('Payment configuration error: Public key missing.', 'error');
+      return;
+    }
+
+    if (!(window as any).PaystackPop) {
+      console.error('>>> [Paystack] PaystackPop library not loaded');
+      (window as any).showToast?.('Payment library not loaded. Please refresh the page.', 'error');
+      return;
+    }
+
+    if (!organization || !organization.id) {
+      console.error('>>> [Paystack] Organization data missing');
+      (window as any).showToast?.('Institution data not loaded. Please wait a moment and try again.', 'error');
+      return;
+    }
+
+    try {
+      console.log('>>> [Paystack] Initializing PaystackPop for:', user.email);
+      console.log('>>> [Paystack] Public Key:', publicKey);
+      
+      if (typeof (window as any).PaystackPop === 'undefined') {
+        throw new Error('Paystack library (PaystackPop) is not defined. Please check your internet connection or disable ad-blockers.');
+      }
+
+      const handler = (window as any).PaystackPop.setup({
+        key: publicKey,
+        email: user.email,
+        amount: Math.round(parseFloat(plan.price) * 100), // Amount in pesewas
+        currency: 'GHS',
+        ref: `SUB-${Math.floor(Math.random() * 1000000000 + 1)}`, 
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Plan Name",
+              variable_name: "plan_name",
+              value: plan.name
+            },
+            {
+              display_name: "Organization ID",
+              variable_name: "org_id",
+              value: organization.id
+            }
+          ]
+        },
+        callback: function(response: any) {
+          (async () => {
+            console.log('>>> [Paystack] Payment success callback received:', response);
+            (window as any).showToast?.('Payment successful! Finalizing renewal...', 'success');
+            
+            try {
+              const token = localStorage.getItem('token');
+              const verifyRes = await fetch(`${API_BASE_URL}/subscriptions/verify-paystack`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  reference: response.reference,
+                  planId: plan.id
+                })
+              });
+
+              if (verifyRes.ok) {
+                (window as any).showToast?.('Subscription renewed successfully!', 'success');
+                setTimeout(() => window.location.reload(), 1500);
+              } else {
+                const errData = await verifyRes.json();
+                throw new Error(errData.error || 'Verification failed');
+              }
+            } catch (err: any) {
+              console.error('>>> [Paystack] Verification failed:', err);
+              (window as any).showToast?.(`Verification Error: ${err.message}`, 'error');
+            }
+          })();
+        },
+        onClose: function() {
+          console.log('>>> [Paystack] User closed checkout modal');
+          (window as any).showToast?.('Payment cancelled.', 'info');
+        }
+      });
+
+      handler.openIframe();
+    } catch (err: any) {
+      console.error('>>> [Paystack] Fatal error opening modal:', err);
+      (window as any).showToast?.(`Error: ${err.message}`, 'error');
+    }
+  };
 
   return (
     <div className="space-y-12 pb-12">
@@ -972,9 +1084,7 @@ export function SchoolBilling({
                 </div>
 
                 <button
-                  onClick={() => {
-                    document.getElementById('contact-support-footer')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
+                  onClick={() => handlePaystackPayment(plan)}
                   className={cn(
                     "w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all hover:scale-[1.02]",
                     isCurrent
@@ -982,7 +1092,7 @@ export function SchoolBilling({
                       : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none"
                   )}
                 >
-                  {isCurrent ? "Renew Current Plan" : "Call Admin to Pay"}
+                  {isCurrent ? "Renew Current Plan" : "Pay with Paystack"}
                 </button>
               </div>
             );
