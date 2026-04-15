@@ -1885,15 +1885,7 @@ export const HRModules = {
               <List className="w-4 h-4" />
             </button>
           </div>
-          {onSave && !isStaff && (
-            <button
-              onClick={() => (onSave as any)({})}
-              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5"
-            >
-              <Plus className="w-4 h-4" />
-              {t("add_new_staff")}
-            </button>
-          )}
+
         </div>
       </div>
     );
@@ -2150,7 +2142,6 @@ export const HRModules = {
           onSave={onSave}
           onEdit={onSave}
           onDelete={onDelete}
-          onAdd={onSave ? () => {} : undefined}
           initialViewItem={isStaff && data.length === 1 ? data[0] : undefined}
           renderForm={(item, isViewOnly, onEdit) => {
             if (isViewOnly && item) {
