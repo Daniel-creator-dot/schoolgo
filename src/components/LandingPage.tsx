@@ -39,7 +39,7 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
   const [demoLoading, setDemoLoading] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [policyType, setPolicyType] = useState<'privacy' | 'terms'>('privacy');
-  
+
   // Partner Lead Form State
   const [partnerLeadData, setPartnerLeadData] = useState({
     email: '',
@@ -126,10 +126,10 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
       <nav className="absolute top-0 w-full z-50 bg-white/40 dark:bg-zinc-950/40 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
         <div className="max-w-7xl mx-auto px-6 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img 
-              src="/assets/omni_portal_icon.png" 
-              alt="Omni" 
-              className="w-10 h-10 md:w-12 md:h-12 object-contain group-hover:rotate-12 transition-transform" 
+            <img
+              src="/assets/omni_portal_icon.png"
+              alt="Omni"
+              className="w-10 h-10 md:w-12 md:h-12 object-contain group-hover:rotate-12 transition-transform"
             />
           </div>
 
@@ -160,7 +160,7 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
                 Partner Login
               </button>
             </div>
-            
+
             <div className="relative group flex items-center">
               <button className="flex items-center gap-1 text-zinc-500 hover:text-indigo-600 transition-colors">
                 <Globe className="w-4 h-4 md:w-5 md:h-5" />
@@ -201,146 +201,146 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
             >
               {/* Hero Centered Section */}
               <div className="max-w-7xl mx-auto px-6 md:px-6 min-h-[calc(100vh-theme(spacing.20))] flex flex-col justify-center py-10 relative overflow-hidden">
-              {/* Decorative Background Glows */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <motion.div 
-                  animate={{ y: [0, -40, 0], opacity: [0.1, 0.2, 0.1] }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] rounded-full" 
-                />
-                <motion.div 
-                  animate={{ y: [0, 40, 0], opacity: [0.05, 0.15, 0.05] }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-purple-500/10 blur-[150px] rounded-full" 
-                />
-              </div>
-
-              <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12 lg:gap-16 relative z-10 w-full max-w-5xl mx-auto mt-4 md:mt-0">
-                {/* Hero Header Area (Plain Text, Side-by-Side) */}
-                <div className="flex-1 w-full md:w-[55%] md:max-w-[500px] space-y-4 md:space-y-8 flex flex-col items-start text-left">
+                {/* Decorative Background Glows */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-900/30"
-                  >
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-                    </span>
-                    <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">{t('next_gen_platform')}</span>
-                  </motion.div>
-
-                  <h1 className="text-xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[0.95] md:leading-[0.9]" dangerouslySetInnerHTML={{ __html: t('hero_title').replace('School', '<span class="text-indigo-600">School</span>').replace('école', '<span class="text-indigo-600">école</span>').replace('escola', '<span class="text-indigo-600">escola</span>').replace('Shule', '<span class="text-indigo-600">Shule</span>').replace('مدرستك', '<span class="text-indigo-600">مدرستك</span>') }} />
-
-                  <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed hidden sm:block">
-                    {t('hero_subtitle')}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2 md:gap-4 pt-2 w-full">
-                    <button
-                      onClick={onGetStarted}
-                      className="flex-1 sm:flex-none px-5 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-xl font-bold text-[11px] sm:text-sm hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
-                    >
-                      {t('get_started')}
-                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </button>
-                  </div>
-
-                  <div className="hidden sm:flex items-center gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 w-full sm:w-auto">
-                    <div className="flex -space-x-2 md:-space-x-3">
-                      {[1, 2, 3].map(i => (
-                        <img
-                          key={i}
-                          src={`https://picsum.photos/seed/user${i}/100/100`}
-                          className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white dark:border-zinc-950 object-cover"
-                          referrerPolicy="no-referrer"
-                          alt="User"
-                        />
-                      ))}
-                    </div>
-                    <div className="text-[10px] md:text-xs">
-                      <p className="font-black leading-tight">{t('join_schools')}</p>
-                      <p className="text-zinc-400">{t('trusted_globally')}</p>
-                    </div>
-                  </div>
+                    animate={{ y: [0, -40, 0], opacity: [0.1, 0.2, 0.1] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute top-1/4 -left-20 w-[500px] h-[500px] bg-indigo-500/10 blur-[120px] rounded-full"
+                  />
+                  <motion.div
+                    animate={{ y: [0, 40, 0], opacity: [0.05, 0.15, 0.05] }}
+                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                    className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-purple-500/10 blur-[150px] rounded-full"
+                  />
                 </div>
 
-                {/* Grow with OmniSchool Card */}
-                <div className="relative w-full md:w-[45%] flex-1 md:max-w-[420px] mt-4 md:mt-0">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="p-5 md:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[3rem] shadow-2xl relative overflow-hidden group"
-                  >
-                    <div className="absolute top-0 right-0 p-4 md:p-6">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl md:rounded-2xl flex items-center justify-center">
-                        <Users className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
-                      </div>
-                    </div>
+                <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12 lg:gap-16 relative z-10 w-full max-w-5xl mx-auto mt-4 md:mt-0">
+                  {/* Hero Header Area (Plain Text, Side-by-Side) */}
+                  <div className="flex-1 w-full md:w-[55%] md:max-w-[500px] space-y-4 md:space-y-8 flex flex-col items-start text-left">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-900/30"
+                    >
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                      </span>
+                      <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">{t('next_gen_platform')}</span>
+                    </motion.div>
 
-                    <div className="space-y-4 md:space-y-6">
-                      <div>
-                        <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1 md:mb-2">{t('partner_program')}</p>
-                        <h3 className="text-2xl md:text-3xl font-black leading-tight">{t('grow_with_omnischool')}</h3>
-                        <p className="text-xs md:text-sm text-zinc-500 mt-1 md:mt-2">{t('partner_description')}</p>
-                      </div>
+                    <h1 className="text-xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[0.95] md:leading-[0.9]" dangerouslySetInnerHTML={{ __html: t('hero_title').replace('School', '<span class="text-indigo-600">School</span>').replace('école', '<span class="text-indigo-600">école</span>').replace('escola', '<span class="text-indigo-600">escola</span>').replace('Shule', '<span class="text-indigo-600">Shule</span>').replace('مدرستك', '<span class="text-indigo-600">مدرستك</span>') }} />
 
-                      <div className="grid grid-cols-2 gap-3 md:gap-4">
-                        <div className="p-3 md:p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl md:rounded-2xl border border-zinc-100 dark:border-zinc-700">
-                          <p className="text-[8px] md:text-[9px] text-zinc-400 font-bold uppercase tracking-widest mb-1">{t('total_rewards')}</p>
-                          <p className="text-lg md:text-xl font-black">{currency} 24.5k</p>
-                        </div>
-                        <div className="p-3 md:p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl md:rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
-                          <p className="text-[8px] md:text-[9px] text-indigo-600 font-bold uppercase tracking-widest mb-1">{t('active_schools')}</p>
-                          <p className="text-lg md:text-xl font-black">12</p>
-                        </div>
-                      </div>
+                    <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed hidden sm:block">
+                      {t('hero_subtitle')}
+                    </p>
 
+                    <div className="flex flex-wrap gap-2 md:gap-4 pt-2 w-full">
                       <button
-                        onClick={() => {
-                          setIsPartnerSubmitted(false);
-                          setShowPartnerModal(true);
-                        }}
-                        className="w-full py-3 md:py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        onClick={onGetStarted}
+                        className="flex-1 sm:flex-none px-5 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-xl font-bold text-[11px] sm:text-sm hover:bg-indigo-700 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
                       >
-                        {t('become_a_partner')}
+                        {t('get_started')}
+                        <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </button>
                     </div>
 
-                    {/* Decorative Parallax Circles */}
-                    <motion.div
-                      animate={{ y: [0, 10, 0], x: [0, 5, 0] }}
-                      transition={{ duration: 4, repeat: Infinity }}
-                      className="absolute -bottom-10 -right-10 w-24 md:w-32 h-24 md:h-32 bg-indigo-500/10 rounded-full blur-2xl"
-                    />
-                  </motion.div>
+                    <div className="hidden sm:flex items-center gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800/50 w-full sm:w-auto">
+                      <div className="flex -space-x-2 md:-space-x-3">
+                        {[1, 2, 3].map(i => (
+                          <img
+                            key={i}
+                            src={`https://picsum.photos/seed/user${i}/100/100`}
+                            className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-white dark:border-zinc-950 object-cover"
+                            referrerPolicy="no-referrer"
+                            alt="User"
+                          />
+                        ))}
+                      </div>
+                      <div className="text-[10px] md:text-xs">
+                        <p className="font-black leading-tight">{t('join_schools')}</p>
+                        <p className="text-zinc-400">{t('trusted_globally')}</p>
+                      </div>
+                    </div>
+                  </div>
 
-                  {/* Floating Stats */}
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                    className="hidden sm:flex absolute -top-4 -left-4 md:-top-6 md:-left-6 p-3 md:p-4 bg-white dark:bg-zinc-900 rounded-xl md:rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 items-center gap-2 md:gap-3"
-                  >
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="w-4 h-4 md:w-4 md:h-4 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-[7px] md:text-[8px] text-zinc-400 font-bold uppercase tracking-widest">Attendance</p>
-                      <p className="text-xs md:text-sm font-black">98.4%</p>
-                    </div>
-                  </motion.div>
+                  {/* Grow with OmniSchool Card */}
+                  <div className="relative w-full md:w-[45%] flex-1 md:max-w-[420px] mt-4 md:mt-0">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="p-5 md:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[3rem] shadow-2xl relative overflow-hidden group"
+                    >
+                      <div className="absolute top-0 right-0 p-4 md:p-6">
+                        <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl md:rounded-2xl flex items-center justify-center">
+                          <Users className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 md:space-y-6">
+                        <div>
+                          <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1 md:mb-2">{t('partner_program')}</p>
+                          <h3 className="text-2xl md:text-3xl font-black leading-tight">{t('grow_with_omnischool')}</h3>
+                          <p className="text-xs md:text-sm text-zinc-500 mt-1 md:mt-2">{t('partner_description')}</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 md:gap-4">
+                          <div className="p-3 md:p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl md:rounded-2xl border border-zinc-100 dark:border-zinc-700">
+                            <p className="text-[8px] md:text-[9px] text-zinc-400 font-bold uppercase tracking-widest mb-1">{t('total_rewards')}</p>
+                            <p className="text-lg md:text-xl font-black">{currency} 24.5k</p>
+                          </div>
+                          <div className="p-3 md:p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl md:rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
+                            <p className="text-[8px] md:text-[9px] text-indigo-600 font-bold uppercase tracking-widest mb-1">{t('active_schools')}</p>
+                            <p className="text-lg md:text-xl font-black">12</p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setIsPartnerSubmitted(false);
+                            setShowPartnerModal(true);
+                          }}
+                          className="w-full py-3 md:py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                          {t('become_a_partner')}
+                        </button>
+                      </div>
+
+                      {/* Decorative Parallax Circles */}
+                      <motion.div
+                        animate={{ y: [0, 10, 0], x: [0, 5, 0] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="absolute -bottom-10 -right-10 w-24 md:w-32 h-24 md:h-32 bg-indigo-500/10 rounded-full blur-2xl"
+                      />
+                    </motion.div>
+
+                    {/* Floating Stats */}
+                    <motion.div
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                      className="hidden sm:flex absolute -top-4 -left-4 md:-top-6 md:-left-6 p-3 md:p-4 bg-white dark:bg-zinc-900 rounded-xl md:rounded-2xl shadow-xl border border-zinc-100 dark:border-zinc-800 items-center gap-2 md:gap-3"
+                    >
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 md:w-4 md:h-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-[7px] md:text-[8px] text-zinc-400 font-bold uppercase tracking-widest">Attendance</p>
+                        <p className="text-xs md:text-sm font-black">98.4%</p>
+                      </div>
+                    </motion.div>
+                  </div>
                 </div>
-              </div>
 
               </div>
 
               {/* Partners Section (Infinite Marquee) */}
               <div className="py-8 md:py-16 border-t border-zinc-100 dark:border-zinc-800/50 text-center overflow-hidden relative z-10 bg-zinc-50/50 dark:bg-zinc-900/50">
                 <p className="text-xs md:text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 mb-8 md:mb-12 opacity-80">{t('strategic_partners')}</p>
-                
+
                 <div className="relative flex overflow-hidden group py-4">
-                  <motion.div 
+                  <motion.div
                     animate={{ x: [0, -1000] }}
                     transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
                     className="flex items-center gap-12 md:gap-32 whitespace-nowrap min-w-full"
@@ -438,44 +438,44 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
                 {[
-                  { 
-                    name: t('starter_plan'), 
+                  {
+                    name: t('starter_plan'),
                     features: [
-                      t('students_limit').replace('{count}', '200'), 
-                      t('basic_attendance'), 
-                      t('gradebook'), 
+                      t('students_limit').replace('{count}', '200'),
+                      t('basic_attendance'),
+                      t('gradebook'),
                       t('parent_portal_feature'),
                       'Simple Fee Tracking',
                       'Automated Email Alerts',
                       'Secure Cloud Backups'
-                    ] 
+                    ]
                   },
-                  { 
-                    name: t('professional_plan'), 
+                  {
+                    name: t('professional_plan'),
                     popular: true,
                     features: [
-                      t('students_limit').replace('{count}', '1000'), 
-                      t('finance_mgmt'), 
-                      t('hr_payroll'), 
+                      t('students_limit').replace('{count}', '1000'),
+                      t('finance_mgmt'),
+                      t('hr_payroll'),
                       t('mobile_app_access'),
                       'Advanced Academic Analytics',
                       'Transport & Hostel Management',
-                      'Automated Fee Collection (Paystack)',
+                      'Fee Collection',
                       'Teacher Lesson Planning'
-                    ] 
+                    ]
                   },
-                  { 
-                    name: t('enterprise_plan'), 
+                  {
+                    name: t('enterprise_plan'),
                     features: [
-                      t('unlimited_students'), 
-                      t('multi_campus_support'), 
-                      t('custom_ai_insights'), 
+                      t('unlimited_students'),
+                      t('multi_campus_support'),
+                      t('custom_ai_insights'),
                       t('priority_support'),
                       'Custom Report Card Engine',
                       'API Access & Integrations',
                       'Dedicated Account Manager',
                       'White-label Custom Branding'
-                    ] 
+                    ]
                   }
                 ].map((plan, i) => (
                   <motion.div
@@ -532,13 +532,13 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
           <div className="max-w-7xl mx-auto px-6 md:px-6 flex items-center justify-between text-[8px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
             <p>{t('all_rights_reserved')}</p>
             <div className="flex gap-4 md:gap-6">
-              <button 
+              <button
                 onClick={(e) => { e.preventDefault(); setPolicyType('privacy'); setShowPolicyModal(true); }}
                 className="hover:text-indigo-600 transition-colors"
               >
                 {t('privacy')}
               </button>
-              <button 
+              <button
                 onClick={(e) => { e.preventDefault(); setPolicyType('terms'); setShowPolicyModal(true); }}
                 className="hover:text-indigo-600 transition-colors"
               >
@@ -596,7 +596,7 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
                         </p>
                       </div>
 
-                      <form 
+                      <form
                         className="space-y-3 md:space-y-4 text-left"
                         onSubmit={async (e) => {
                           e.preventDefault();
@@ -614,52 +614,52 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
                       >
                         <div>
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-3 md:ml-4 mb-1 block">{t('company_name')}</label>
-                          <input 
+                          <input
                             required
-                            type="text" 
+                            type="text"
                             value={partnerLeadData.company_name}
-                            onChange={e => setPartnerLeadData({...partnerLeadData, company_name: e.target.value})}
-                            className="w-full px-5 md:px-6 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
-                            placeholder="e.g. Acme Solutions" 
+                            onChange={e => setPartnerLeadData({ ...partnerLeadData, company_name: e.target.value })}
+                            className="w-full px-5 md:px-6 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                            placeholder="e.g. Acme Solutions"
                           />
                         </div>
                         <div>
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-3 md:ml-4 mb-1 block">{t('business_email')}</label>
-                          <input 
+                          <input
                             required
-                            type="email" 
+                            type="email"
                             value={partnerLeadData.email}
-                            onChange={e => setPartnerLeadData({...partnerLeadData, email: e.target.value})}
-                            className="w-full px-5 md:px-6 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
-                            placeholder="partners@acme.com" 
+                            onChange={e => setPartnerLeadData({ ...partnerLeadData, email: e.target.value })}
+                            className="w-full px-5 md:px-6 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                            placeholder="partners@acme.com"
                           />
                         </div>
                         <div>
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-3 md:ml-4 mb-1 block">{t('country')}</label>
-                          <input 
+                          <input
                             required
-                            type="text" 
+                            type="text"
                             value={partnerLeadData.country}
-                            onChange={e => setPartnerLeadData({...partnerLeadData, country: e.target.value})}
-                            className="w-full px-5 md:px-6 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all" 
-                            placeholder="e.g. Ghana" 
+                            onChange={e => setPartnerLeadData({ ...partnerLeadData, country: e.target.value })}
+                            className="w-full px-5 md:px-6 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                            placeholder="e.g. Ghana"
                           />
                         </div>
 
                         <div className="flex items-start gap-3 px-1 py-2">
-                          <input 
+                          <input
                             required
-                            type="checkbox" 
+                            type="checkbox"
                             id="terms"
                             checked={partnerLeadData.acceptedTerms}
-                            onChange={e => setPartnerLeadData({...partnerLeadData, acceptedTerms: e.target.checked})}
+                            onChange={e => setPartnerLeadData({ ...partnerLeadData, acceptedTerms: e.target.checked })}
                             className="mt-1 w-4 h-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500"
                           />
-                          <label 
-                            htmlFor="terms" 
+                          <label
+                            htmlFor="terms"
                             onClick={handlePolicyClick}
-                            className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium cursor-pointer" 
-                            dangerouslySetInnerHTML={{ __html: t('agree_terms').replace('{terms}', `<a href="#" class="policy-link text-emerald-600 font-bold hover:underline">${t('partner_terms')}</a>`).replace('{privacy}', `<a href="#" class="policy-link text-emerald-600 font-bold hover:underline">${t('privacy')}</a>`) }} 
+                            className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium cursor-pointer"
+                            dangerouslySetInnerHTML={{ __html: t('agree_terms').replace('{terms}', `<a href="#" class="policy-link text-emerald-600 font-bold hover:underline">${t('partner_terms')}</a>`).replace('{privacy}', `<a href="#" class="policy-link text-emerald-600 font-bold hover:underline">${t('privacy')}</a>`) }}
                           />
 
                         </div>
@@ -746,7 +746,7 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
                         {t('request_demo_desc')}
                       </p>
 
-                      <form 
+                      <form
                         className="space-y-3 md:space-y-4 text-left"
                         onSubmit={async (e) => {
                           e.preventDefault();
@@ -765,22 +765,22 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
                       >
                         <div>
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-3 md:ml-4 mb-1 md:mb-2 block">{t('school_name')}</label>
-                          <input 
+                          <input
                             required
-                            type="text" 
-                            className="w-full px-5 md:px-6 py-3 md:py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
-                            placeholder="St. Andrews Academy" 
+                            type="text"
+                            className="w-full px-5 md:px-6 py-3 md:py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            placeholder="St. Andrews Academy"
                             value={demoData.school_name}
                             onChange={(e) => setDemoData({ ...demoData, school_name: e.target.value })}
                           />
                         </div>
                         <div>
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-3 md:ml-4 mb-1 md:mb-2 block">{t('contact_email')}</label>
-                          <input 
+                          <input
                             required
-                            type="email" 
-                            className="w-full px-5 md:px-6 py-3 md:py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
-                            placeholder="admin@school.com" 
+                            type="email"
+                            className="w-full px-5 md:px-6 py-3 md:py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            placeholder="admin@school.com"
                             value={demoData.contact_email}
                             onChange={(e) => setDemoData({ ...demoData, contact_email: e.target.value })}
                           />
@@ -836,7 +836,7 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
           </p>
         </div>
       </Modal>
-      
+
       {/* Footer */}
       {activeSection !== 0 && (
         <footer className="border-t border-zinc-100 dark:border-zinc-800/50 bg-white dark:bg-zinc-950 mt-auto relative z-10">
@@ -846,7 +846,7 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">O</div>
                 <span className="font-bold text-xl tracking-tight text-zinc-900 dark:text-white">OmniSchool</span>
               </div>
-              
+
               <div className="flex flex-wrap justify-center gap-8 text-xs font-bold uppercase tracking-widest text-zinc-400">
                 <button onClick={() => { setPolicyType('privacy'); setShowPolicyModal(true); }} className="hover:text-indigo-600 transition-colors">{t('privacy_policy_title')}</button>
                 <button onClick={() => { setPolicyType('terms'); setShowPolicyModal(true); }} className="hover:text-indigo-600 transition-colors">{t('partner_terms_title')}</button>
