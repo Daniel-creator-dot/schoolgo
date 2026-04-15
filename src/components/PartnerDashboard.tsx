@@ -241,24 +241,24 @@ export default function PartnerDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">
         {/* Header */}
-        <header className="h-20 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-30 px-8 flex items-center justify-between transition-colors">
-          <div>
-            <h2 className="text-xl font-bold">Welcome back, {partner?.name}</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Your Partner ID: <span className="text-indigo-600 dark:text-indigo-400 font-mono font-bold bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded">{partner?.referral_code}</span></p>
+        <header className="h-20 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-30 px-4 md:px-8 flex items-center justify-between transition-colors">
+          <div className="flex-1 min-w-0 pr-4">
+            <h2 className="text-lg md:text-xl font-bold truncate">Welcome back, {partner?.name}</h2>
+            <p className="text-[10px] md:text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">Your Partner ID: <span className="text-indigo-600 dark:text-indigo-400 font-mono font-bold bg-indigo-50 dark:bg-indigo-500/10 px-1.5 md:px-2 py-0.5 rounded">{partner?.referral_code}</span></p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 shrink-0">
             <button 
                 onClick={() => setIsModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-sm"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-all shadow-sm"
             >
-              <Plus size={18} /> Add Organization
+              <Plus size={18} /> <span className="hidden sm:inline">Add Organization</span>
             </button>
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative overflow-hidden group shadow-sm">
@@ -523,26 +523,49 @@ export default function PartnerDashboard() {
           )}
         </div>
       </main>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 lg:hidden bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex justify-around p-2 z-40 pb-safe">
+        {[
+            { id: 'organizations', label: 'Organizations', icon: <Building2 size={24} /> },
+            { id: 'plans', label: 'Plans', icon: <Layers size={24} /> },
+            { id: 'earnings', label: 'Earnings', icon: <Wallet size={24} /> },
+            { id: 'chat', label: 'Support', icon: <MessageSquare size={24} /> },
+        ].map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex flex-col items-center gap-1 p-2 flex-1 rounded-xl transition-all ${
+                activeTab === item.id 
+                ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
+                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+              }`}
+            >
+              {item.icon}
+              <span className="text-[10px] sm:text-xs">{item.label}</span>
+            </button>
+        ))}
+      </nav>
       {/* Modal - Add School */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-4xl rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
-            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50 shrink-0">
-              <div>
-                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Provision New Organization</h3>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 font-medium">Create a new organization lead. It will be pending until Super Admin approval.</p>
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-4xl rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+            <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50 shrink-0">
+              <div className="pr-4">
+                <h3 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Provision New Organization</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-xs md:text-sm mt-1 font-medium">Create a new organization lead. It will be pending until Super Admin approval.</p>
               </div>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+                className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors shrink-0"
                 >
                 <XCircle size={24} />
               </button>
             </div>
             
             <form onSubmit={handleAddSchool} className="flex-1 overflow-y-auto">
-              <div className="p-8 space-y-8">
+              <div className="p-6 md:p-8 space-y-8">
                 {/* 1. Basic Info */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
@@ -720,16 +743,16 @@ export default function PartnerDashboard() {
                 })()}
               </div>
 
-              <div className="p-8 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 flex justify-end gap-4 shrink-0">
+              <div className="p-6 md:p-8 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-4 shrink-0">
                 <button 
                   type="button" onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+                  className="w-full sm:w-auto px-6 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-center"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="px-10 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
+                  className="w-full sm:w-auto px-10 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200 dark:shadow-none text-center"
                 >
                   Provision New Organization lead
                 </button>
@@ -742,14 +765,14 @@ export default function PartnerDashboard() {
       {selectedSchool && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setSelectedSchool(null)} />
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200">
-            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 dark:shadow-none">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+            <div className="p-6 md:p-8 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-950/50 shrink-0">
+              <div className="flex items-center gap-3 md:gap-4 pr-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-lg shadow-indigo-200 dark:shadow-none shrink-0">
                   {selectedSchool.name.charAt(0)}
                 </div>
-                <div>
-                  <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{selectedSchool.name}</h3>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tight truncate">{selectedSchool.name}</h3>
                   <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest mt-1 ${
                       selectedSchool.status === 'Active' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' :
                       'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400'
@@ -761,14 +784,14 @@ export default function PartnerDashboard() {
               </div>
               <button 
                 onClick={() => setSelectedSchool(null)}
-                className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+                className="p-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-full text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors shrink-0"
               >
                 <XCircle size={24} />
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
-               <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 md:p-8 space-y-6 overflow-y-auto">
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1 bg-zinc-50/50 dark:bg-zinc-800/30">
                     <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Plan</p>
                     <p className="font-bold text-zinc-900 dark:text-white">{selectedSchool.plan}</p>
