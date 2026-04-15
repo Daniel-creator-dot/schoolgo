@@ -5,7 +5,7 @@ import {
   Layers, GraduationCap, BookOpen, Clock, Building2, User, Layout as LayoutIcon,
   Printer, ChevronLeft, ArrowLeft, MoreVertical, Edit2, ChevronDown, Award, Eye,
   CheckCircle2, AlertCircle, XCircle, Fingerprint, Camera, Loader2, ArrowRightCircle,
-  FileSpreadsheet
+  FileSpreadsheet, ShieldCheck, Mail, Phone, Briefcase, UserCheck
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { DataTable } from '../DataTable';
@@ -22,6 +22,27 @@ import {
   downloadAttendanceTemplate,
   parseAttendanceExcel
 } from '../../lib/excel';
+
+/**
+ * Robustly formats a date string or Date object into YYYY-MM-DD for <input type="date">
+ * Prevents UTC timezone shifts that cause "dd/mm/yyyy" placeholder issues.
+ */
+const formatDateForInput = (dateValue: any) => {
+  if (!dateValue) return "";
+  try {
+    const d = new Date(dateValue);
+    if (isNaN(d.getTime())) return "";
+    
+    // Extract local components to avoid UTC shift
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    return "";
+  }
+};
 
 export const StorageModules = {
   MyDrive: () => {
@@ -2237,6 +2258,8 @@ export const StaffAcademicModules = {
 export const StaffHRModules = {
   StaffProfile: ({ data, onSave }: { data: any[], onSave?: (data: any) => Promise<void> | void }) => {
     const [viewItem, setViewItem] = useState<any | null>(null);
+    const [activeTab, setActiveTab] = useState('overview');
+    const [isEditing, setIsEditing] = useState(false);
     
     useEffect(() => {
       if (data.length > 0 && !viewItem) {
@@ -2244,94 +2267,345 @@ export const StaffHRModules = {
       }
     }, [data, viewItem]);
 
+    const renderProfileTabs = (item: any) => {
+      const tabs = [
+        { id: 'overview', label: 'Overview', icon: <User className="w-4 h-4" /> },
+        { id: 'job', label: 'Job Details', icon: <Briefcase className="w-4 h-4" /> },
+        { id: 'system', label: 'System', icon: <ShieldCheck className="w-4 h-4" /> },
+      ];
+
+      return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-2xl w-fit">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
+                  activeTab === tab.id 
+                    ? "bg-white dark:bg-zinc-900 shadow-sm text-indigo-600" 
+                    : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                )}
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-[400px]">
+            {activeTab === 'overview' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
+                <div className="space-y-6">
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-left">
+                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-4 flex items-center gap-2">
+                       <Fingerprint className="w-3 h-3" /> Identity Details
+                    </p>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase">Full Name</p>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white capitalize">{item.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase">Staff ID</p>
+                        <p className="text-sm font-mono font-bold text-indigo-600">{item.staff_id}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase">Date of Birth</p>
+                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                          {item.date_of_birth ? new Date(item.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase">Gender</p>
+                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item.gender || '—'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-left">
+                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-4 flex items-center gap-2">
+                       <Mail className="w-3 h-3" /> Contact Information
+                    </p>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-400">
+                          <Mail className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-zinc-500 uppercase">Email Address</p>
+                          <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center text-zinc-400">
+                          <Phone className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-zinc-500 uppercase">Phone Number</p>
+                          <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.phone || '—'}</p>
+                        </div>
+                      </div>
+                      <div className="pt-2">
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">Residential Address</p>
+                        <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 leading-relaxed italic">
+                          {item.address || 'Address not provided in system.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'job' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-300">
+                <div className="space-y-6">
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-left">
+                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-4 flex items-center gap-2">
+                       <Briefcase className="w-3 h-3" /> Employment Details
+                    </p>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase text-xs">Primary Designation</p>
+                        <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] font-black uppercase tracking-widest">
+                          {item.role || 'STAFF'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase">Department</p>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.department_name || 'Not assigned to a department'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase">Employment Status</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className={cn("w-2 h-2 rounded-full", item.status === 'Active' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500')} />
+                          <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item.status || 'Active'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm text-left">
+                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-4">Organizational Hierarchy</p>
+                    <div className="relative pl-6 space-y-6 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:bg-zinc-100 dark:before:bg-zinc-800">
+                      <div className="relative before:absolute before:-left-[1.35rem] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-indigo-600 before:border-4 before:border-white dark:before:border-zinc-900">
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter">Direct Manager / HOD</p>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.reports_to_name || 'Directing to School Admin'}</p>
+                      </div>
+                      <div className="relative before:absolute before:-left-[1.35rem] before:top-2 before:w-2 before:h-2 before:rounded-full before:bg-zinc-400 before:border-4 before:border-white dark:before:border-zinc-900">
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter">Reporting Lines</p>
+                        <p className="text-xs font-semibold text-zinc-500 italic">No subordinates assigned to this profile.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+
+            {activeTab === 'system' && (
+              <div className="animate-in fade-in zoom-in-95 duration-300 text-left">
+                <div className="p-6 bg-zinc-50 dark:bg-zinc-800/30 rounded-[2rem] border border-zinc-100 dark:border-zinc-800">
+                   <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 rounded-[1.25rem] bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
+                         <ShieldCheck className="w-6 h-6" />
+                      </div>
+                      <div>
+                         <h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">System Permissions</h4>
+                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Current access level configuration</p>
+                      </div>
+                   </div>
+
+                   <div className="space-y-6">
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-indigo-600 tracking-[0.2em] mb-3">Primary Role Authorization</p>
+                        <div className="flex items-center gap-2 p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm w-fit min-w-[200px]">
+                           <div className="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
+                              <UserCheck className="w-4 h-4" />
+                           </div>
+                           <span className="text-sm font-bold text-zinc-900 dark:text-white">{item.role || 'STAFF'}</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.2em] mb-3">Additional Authorized Modules</p>
+                        <div className="flex flex-wrap gap-2">
+                           {item.additional_roles && item.additional_roles.length > 0 ? (
+                             item.additional_roles.map((r: string) => (
+                               <span key={r} className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-zinc-200 dark:border-zinc-700">
+                                 {r}
+                               </span>
+                             ))
+                           ) : (
+                             <p className="text-xs font-semibold text-zinc-500 italic">No additional system roles assigned.</p>
+                           )}
+                        </div>
+                      </div>
+                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    const renderStaffForm = (item: any) => (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 text-left">
+        <div className="flex items-center gap-4 p-6 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-2xl font-black">
+            {item?.name?.charAt(0) || 'U'}
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{item?.name || 'Staff Member'}</h3>
+            <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">{item?.role} • {item?.staff_id}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-1">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-1">Full Name</label>
+            <input 
+              name="name" 
+              defaultValue={item?.name} 
+              readOnly
+              className="w-full px-4 py-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-bold outline-none cursor-not-allowed text-zinc-500 dark:text-zinc-500 shadow-inner"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-1">Email Address</label>
+            <input 
+              name="email" 
+              defaultValue={item?.email} 
+              required
+              className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-1">Phone Number</label>
+            <input 
+              name="phone" 
+              defaultValue={item?.phone} 
+              className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-1">Date of Birth</label>
+            <input 
+              type="date"
+              name="date_of_birth" 
+              defaultValue={formatDateForInput(item?.date_of_birth)} 
+              className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
+            />
+          </div>
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest ml-1">Residential Address</label>
+            <textarea 
+              name="address" 
+              defaultValue={item?.address}
+              className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm min-h-[100px]"
+            />
+          </div>
+        </div>
+
+        <div className="p-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-2xl flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-indigo-600 mt-0.5" />
+          <p className="text-xs text-indigo-700 dark:text-indigo-400 font-medium leading-relaxed">
+            Staff data integrity is vital. Changes to core personal information like phone numbers or mailing addresses will be finalized immediately, while others may require admin verification.
+          </p>
+        </div>
+      </div>
+    );
+
     return (
       <div className="space-y-6">
         <DataTable
           title="My Personal Profile"
           data={data}
-          onView={setViewItem}
-          onEdit={setViewItem}
-          onSave={onSave}
-          initialEditItem={data[0]}
+          onView={(item) => {
+            setViewItem(item);
+            setIsEditing(false);
+          }}
+          onEdit={(item) => {
+            setViewItem(item);
+            setIsEditing(true);
+          }}
+          onSave={async (values) => {
+             if (onSave) await onSave(values);
+             setIsEditing(false);
+          }}
+          initialViewItem={data[0]}
+          renderForm={(item, isViewOnly, onEditRequest) => {
+            if (isEditing && item) {
+              return renderStaffForm(item);
+            }
+            return (
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm text-left">
+                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-zinc-100 dark:border-zinc-800">
+                      <div className="flex items-center gap-6">
+                         <div className="relative group">
+                            <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-xl shadow-indigo-200 dark:shadow-none transition-transform group-hover:scale-105 duration-500">
+                               {item?.name?.charAt(0) || 'U'}
+                            </div>
+                            <div className="absolute -bottom-2 -right-2 p-2 bg-emerald-500 text-white rounded-xl border-4 border-white dark:border-zinc-900 shadow-lg">
+                               <ShieldCheck className="w-4 h-4" />
+                            </div>
+                         </div>
+                         <div>
+                            <h2 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight -mb-1">{item?.name}</h2>
+                            <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">{item?.role} • {item?.staff_id}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                               <span className={cn(
+                                 "px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest",
+                                 item?.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+                               )}>
+                                 {item?.status || 'Active'}
+                               </span>
+                            </div>
+                         </div>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setIsEditing(true);
+                          if (onEditRequest && item) onEditRequest(item);
+                        }}
+                        className="px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
+                      >
+                         <Edit2 className="w-4 h-4" />
+                         Edit Profile
+                      </button>
+                   </div>
+
+                   {renderProfileTabs(item)}
+                </div>
+              </div>
+            );
+          }}
           columns={[
             { header: 'Staff Name', accessor: 'name', className: 'font-bold text-zinc-900 dark:text-white' },
             { header: 'Staff ID', accessor: 'staff_id', className: 'font-mono text-xs text-indigo-600' },
             { header: 'Role/Position', accessor: 'role' },
             { header: 'Email', accessor: 'email' },
-            { header: 'Status', accessor: 'status' }
+            {
+              header: 'Status',
+              accessor: (item: any) => (
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                  item.status === 'Active' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                )}>
+                  {item.status || 'Active'}
+                </span>
+              )
+            }
           ]}
-          renderForm={(item, isViewOnly) => (
-            <div className="space-y-6">
-               <div className="flex items-center gap-4 p-6 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
-                  <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-2xl font-black">
-                    {item?.name?.charAt(0) || 'U'}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{item?.name || 'Staff Member'}</h3>
-                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">{item?.role} • {item?.staff_id}</p>
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Full Name</label>
-                    <input 
-                      name="name" 
-                      defaultValue={item?.name} 
-                      readOnly
-                      className="w-full px-4 py-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-bold outline-none cursor-not-allowed text-zinc-500 dark:text-zinc-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Email Address</label>
-                    <input 
-                      name="email" 
-                      defaultValue={item?.email} 
-                      readOnly={isViewOnly}
-                      className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Phone Number</label>
-                    <input 
-                      name="phone" 
-                      defaultValue={item?.phone} 
-                      readOnly={isViewOnly}
-                      className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Date of Birth</label>
-                    <input 
-                      type="date"
-                      name="date_of_birth" 
-                      defaultValue={item?.date_of_birth} 
-                      readOnly={isViewOnly}
-                      className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-700">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Assigned Role</p>
-                    <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item?.role || 'No Role Assigned'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Employment Status</p>
-                    <p className="text-sm font-bold text-emerald-600">{item?.status || 'Active'}</p>
-                  </div>
-               </div>
-
-               {!isViewOnly && (
-                 <div className="p-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-xl">
-                   <p className="text-xs text-indigo-700 dark:text-indigo-400 font-medium">
-                     Changes to your basic profile information will be sent for administrative review or updated immediately based on school policy.
-                   </p>
-                 </div>
-               )}
-            </div>
-          )}
         />
       </div>
     );

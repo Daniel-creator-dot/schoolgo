@@ -61,6 +61,7 @@ export const HRModules = {
     isReadOnly = false,
     onSaveStaff,
     onSaveDepartment,
+    onUpdateOrganization,
   }: {
     staff?: any[];
     departments?: any[];
@@ -70,245 +71,104 @@ export const HRModules = {
     isReadOnly?: boolean;
     onSaveStaff?: (data: any) => void;
     onSaveDepartment?: (data: any) => void;
+    onUpdateOrganization?: (data: any) => void;
   }) => {
     const { currency, t } = useLanguage();
+    const [editingStaff, setEditingStaff] = useState<any>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'graph'>('graph');
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [rootTitle, setRootTitle] = useState(organization?.organogram_head_title || 'School Admin');
 
-    // Build hierarchy dynamically
-    const buildHierarchy = () => {
-      if (staff.length === 0) return [];
+    const filteredDepartments = scopedDeptId
+      ? departments.filter(d => String(d.id) === String(scopedDeptId))
+      : departments;
 
-      // Track which staff IDs have already been placed in the hierarchy
-      const placedStaffIds = new Set<string>();
-      const nodes: any[] = [];
+    // Staff lookup for "reports to" names
+    const staffMap = new Map(staff.map(s => [s.id, s]));
 
-      // 1. Find Principal
-      const principal =
-        staff.find(
-          (s) =>
-            s.role?.toLowerCase().includes("principal") &&
-            !s.role?.toLowerCase().includes("vice"),
-        ) || staff[0];
-
-      // 2. Find Admins (Level 0 / Root)
-      const admins = staff.filter(
-        (s) =>
-          s.role?.toLowerCase().includes("admin") &&
-          !s.role?.toLowerCase().includes("assistant") &&
-          !placedStaffIds.has(s.id),
-      );
-
-      // Add Admins at Level 0
-      admins.forEach((admin) => {
-        nodes.push({
-          id: admin.id,
-          name: admin.name,
-          role: admin.role,
-          level: 0,
-          subordinates: [],
-        });
-        placedStaffIds.add(admin.id);
-
-        // Link Principal to the first Admin (Principal reports to Admin)
-        if (principal) {
-          const adminNode = nodes.find(n => n.id === admin.id);
-          if (adminNode && !adminNode.subordinates.includes(principal.id)) {
-            adminNode.subordinates.push(principal.id);
-          }
-        }
-      });
-
-      // 4. Principal Node (Level 1)
-      nodes.push({
-        id: principal.id,
-        name: principal.name,
-        role: principal.role,
-        level: 1,
-        subordinates: [],
-      });
-      placedStaffIds.add(principal.id);
-
-      // Track staff who are assigned as HODs so they form department nodes instead of independent nodes
-      const hodIds = new Set(
-          departments
-              .map(d => d.hod_id)
-              .filter(id => id && id !== principal?.id && !placedStaffIds.has(id))
-      );
-
-      // 5. Independent Staff (Level 1 - reports to first Admin)
-      const independentStaff = staff.filter(
-        (s) =>
-          !placedStaffIds.has(s.id) &&
-          !hodIds.has(s.id) && // Exclude HODs so they render with their department
-          (!s.reports_to || s.reports_to === "")
-      );
-
-      const firstAdminId = admins[0]?.id;
-      independentStaff.forEach((s) => {
-        if (firstAdminId) {
-          const adminNode = nodes.find(n => n.id === firstAdminId);
-          if (adminNode) adminNode.subordinates.push(s.id);
-        }
-        
-        nodes.push({
-          id: s.id,
-          name: s.name,
-          role: s.role,
-          level: 1,
-          subordinates: [],
-        });
-        placedStaffIds.add(s.id);
-      });
-
-      // If no admin exists, we start with Principal at Level 0
-      if (admins.length === 0 && principal) {
-        const principalNode = nodes.find(n => n.id === principal.id);
-        if (principalNode) principalNode.level = 0;
+    // Build a reverse map: staffId -> department they are HOD of
+    const hodToDeptMap = new Map<string, string>();
+    departments.forEach((dept) => {
+      if (dept.hod_id) {
+        hodToDeptMap.set(dept.hod_id, dept.id);
       }
+    });
 
-      // Level 1 (continued): Vice Principals and direct reports to Principal
-      const level1Staff = staff.filter(
-        (s) =>
-          s.id !== principal?.id &&
-          !placedStaffIds.has(s.id) &&
-          !hodIds.has(s.id) && // Exclude HODs so they render with their department
-          (s.reports_to === principal?.id ||
-            s.role?.toLowerCase().includes("vice principal")),
-      );
+    // Group staff by department (checking both department_id AND hod assignment)
+    const staffByDept = new Map<string, any[]>();
+    const unassignedStaff: any[] = [];
 
-      level1Staff.forEach((s) => {
-        if (principal) {
-          const principalNode = nodes.find((n) => n.id === principal.id);
-          if (principalNode) principalNode.subordinates.push(s.id);
-        }
-        nodes.push({
-          id: s.id,
-          name: s.name,
-          role: s.role,
-          level: 1,
-          subordinates: [],
-        });
-        placedStaffIds.add(s.id);
-      });
+    staff.forEach((s) => {
+      // Determine which department this person belongs to:
+      // 1. Their own department_id field
+      // 2. Or, if they're the HOD of a department (hod_id points to them)
+      const deptId = s.department_id || hodToDeptMap.get(s.id);
 
-      // Level 2: Departments
-      const filteredDepartments = scopedDeptId 
-        ? departments.filter(d => String(d.id) === String(scopedDeptId))
-        : departments;
-
-      filteredDepartments.forEach((dept) => {
-        const deptId = `dept-${dept.id}`;
-        const hod = staff.find((s) => s.id === dept.hod_id);
-
-        // Find who the HOD reports to, or default to Principal
-        const parentId = hod?.reports_to || principal?.id || admins[0]?.id;
-        const parentNode = nodes.find((n) => n.id === parentId) || (principal && nodes.find(n => n.id === principal.id)) || (admins.length > 0 && nodes.find(n => n.id === admins[0].id));
-        
-        if (parentNode) {
-          parentNode.subordinates.push(deptId);
-        }
-
-        // Mark the HOD as placed so they don't appear again under the department
-        if (hod) placedStaffIds.add(hod.id);
-
-        nodes.push({
-          id: deptId,
-          name: dept.name,
-          role: hod ? `HOD: ${hod.name}` : "No HOD assigned",
-          isDepartment: true,
-          deptData: dept,
-          level: 2,
-          subordinates: [],
-        });
-
-        // Level 3: Staff in this department (skip already-placed staff)
-        const deptStaff = staff.filter(
-          (s) => s.department_id === dept.id && !placedStaffIds.has(s.id),
-        );
-        deptStaff.forEach((s) => {
-          const deptNode = nodes.find((n) => n.id === deptId);
-          if (deptNode) {
-            deptNode.subordinates.push(s.id);
-            nodes.push({
-              id: s.id,
-              name: s.name,
-              role: s.role,
-              level: 3,
-              subordinates: [],
-            });
-            placedStaffIds.add(s.id);
-          }
-        });
-      });
-
-      // If scoped to a department, we only want nodes relevant to that department
-      if (scopedDeptId) {
-        const deptNodeId = `dept-${scopedDeptId}`;
-        const deptNode = nodes.find(n => n.id === deptNodeId);
-        if (deptNode) {
-          // Find the lineage to the root
-          const relevantNodeIds = new Set<string>();
-          relevantNodeIds.add(deptNodeId);
-          
-          // Add all descendants of the dept node
-          const addDescendants = (nId: string) => {
-            const n = nodes.find(x => x.id === nId);
-            if (n) {
-              relevantNodeIds.add(nId);
-              n.subordinates.forEach(addDescendants);
-            }
-          };
-          addDescendants(deptNodeId);
-
-          // Add ancestors only if NOT strictDepartmentView
-          if (!strictDepartmentView) {
-            let current: any = deptNode;
-            while (current) {
-              const parent = nodes.find(p => p.subordinates.includes(current.id));
-              if (parent) {
-                relevantNodeIds.add(parent.id);
-                current = parent;
-              } else {
-                current = null;
-              }
-            }
-          }
-
-          // Return only relevant nodes but clear extra subordinates of ancestors
-          return nodes.filter(n => relevantNodeIds.has(n.id)).map(n => {
-            if (!n.id.startsWith("dept-") && n.level < 2) {
-               return { ...n, subordinates: n.subordinates.filter((sId: string) => relevantNodeIds.has(sId)) };
-            }
-            return n;
-          });
-        }
+      if (deptId) {
+        const existing = staffByDept.get(deptId) || [];
+        existing.push(s);
+        staffByDept.set(deptId, existing);
+      } else {
+        unassignedStaff.push(s);
       }
+    });
 
-      return nodes;
+    const handleSaveReportsTo = (staffMember: any, formData: any) => {
+      onSaveStaff?.({
+        ...staffMember,
+        reports_to: formData.reports_to || null,
+        department_id: formData.department_id || staffMember.department_id,
+      });
+      setEditingStaff(null);
     };
 
-    const hierarchy = buildHierarchy();
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [editingNode, setEditingNode] = useState<any>(null);
+    const StaffRow = ({ member, isHod = false }: { member: any; isHod?: boolean }) => {
+      const reportsTo = member.reports_to ? staffMap.get(member.reports_to) : null;
 
-    const minLevel = Math.min(...hierarchy.map(h => h.level));
-    const rootNodes = hierarchy.filter((h) => h.level === minLevel);
+      return (
+        <div className={cn(
+          "flex items-center gap-4 p-4 rounded-2xl border transition-all group",
+          isHod
+            ? "bg-indigo-50/80 dark:bg-indigo-900/15 border-indigo-100 dark:border-indigo-900/30"
+            : "bg-zinc-50/80 dark:bg-zinc-800/30 border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700"
+        )}>
+          <div className={cn(
+            "w-11 h-11 rounded-xl flex items-center justify-center text-sm font-black shrink-0 shadow-sm",
+            isHod
+              ? "bg-indigo-600 text-white shadow-indigo-200 dark:shadow-none"
+              : "bg-white dark:bg-zinc-900 text-zinc-500 border border-zinc-200 dark:border-zinc-700"
+          )}>
+            {member.name?.charAt(0) || '?'}
+          </div>
 
-    const handleSaveNode = async (formData: any) => {
-      if (editingNode.isDepartment) {
-        onSaveDepartment?.({
-          ...editingNode.deptData,
-          name: formData.name,
-          hod_id: formData.hod_id,
-        });
-      } else {
-        const originalStaff = staff.find((s) => s.id === editingNode.id);
-        onSaveStaff?.({
-          ...originalStaff,
-          reports_to: formData.reports_to,
-          department_id: formData.department_id,
-        });
-      }
-      setEditingNode(null);
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">{member.name}</p>
+              {isHod && (
+                <span className="px-2 py-0.5 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[9px] font-black uppercase tracking-widest shrink-0">
+                  HOD
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium mt-0.5">{member.role || 'Staff'}</p>
+            {reportsTo && (
+              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 flex items-center gap-1.5">
+                <ChevronRight className="w-3 h-3" />
+                <span>Reports to <span className="font-bold text-zinc-600 dark:text-zinc-300">{reportsTo.name}</span></span>
+              </p>
+            )}
+          </div>
+
+          {!isReadOnly && (
+            <button
+              onClick={() => setEditingStaff(member)}
+              className="opacity-0 group-hover:opacity-100 p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all shadow-sm"
+            >
+              <Edit className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      );
     };
 
     return (
@@ -318,318 +178,384 @@ export const HRModules = {
             <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
               {scopedDeptId ? t('department_organogram') : t('school_organogram')}
             </h1>
-            <p className="text-zinc-500">
-              {scopedDeptId 
-                ? "Departmental reporting structure and staff hierarchy."
-                : "Visual hierarchy of school administration and staff structure."}
+            <p className="text-zinc-500 mt-1">
+              Staff organized by department. Edit any staff member to set who they report to.
             </p>
           </div>
-          {!isReadOnly && (
-            <button
-              onClick={() => setIsEditMode(!isEditMode)}
-              className={cn(
-                "flex items-center gap-2 px-6 py-2.5 rounded-2xl font-bold text-sm transition-all shadow-lg",
-                isEditMode
-                  ? "bg-amber-100 text-amber-700 border border-amber-200"
-                  : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/20",
-              )}
-            >
-              {isEditMode ? (
-                <>
-                  <X className="w-4 h-4" />
-                  {t('exit_edit_mode')}
-                </>
-              ) : (
-                <>
-                  <Edit className="w-4 h-4" />
-                  {t('configure_organogram')}
-                </>
-              )}
-            </button>
-          )}
+          <div className="flex items-center gap-3 text-sm">
+            {/* View Toggle */}
+            <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1">
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                  viewMode === 'list'
+                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                )}
+              >
+                <List className="w-3.5 h-3.5" />
+                List
+              </button>
+              <button
+                onClick={() => setViewMode('graph')}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                  viewMode === 'graph'
+                    ? "bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                )}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                Graph
+              </button>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+              <Users className="w-4 h-4 text-zinc-500" />
+              <span className="font-bold text-zinc-700 dark:text-zinc-300">{staff.length}</span>
+              <span className="text-zinc-500">Staff</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
+              <Layers className="w-4 h-4 text-indigo-500" />
+              <span className="font-bold text-indigo-700 dark:text-indigo-300">{departments.length}</span>
+              <span className="text-indigo-500">Depts</span>
+            </div>
+          </div>
         </div>
 
-        <div className="p-4 sm:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl sm:rounded-[2rem] overflow-x-auto relative custom-scrollbar">
-          {hierarchy.length > 0 ? (
-            <div className="min-w-max flex flex-col items-center gap-12 py-4 px-2">
-              {/* Root Level (-1 or 0) */}
-              <div className="flex justify-center gap-12">
-                {rootNodes.map((rootNode) => (
-                  <div key={rootNode.id} className={cn(
-                    "group relative p-6 rounded-2xl shadow-xl w-64 text-center",
-                    rootNode?.level === -1 
-                      ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" 
-                      : "bg-indigo-600 text-white"
-                  )}>
-                    {isEditMode && !isReadOnly && (
-                      <button
-                        onClick={() => setEditingNode(rootNode)}
-                        className="absolute -top-3 -right-3 w-8 h-8 bg-white text-indigo-600 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform border border-indigo-100"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                    )}
-                    <p className={cn(
-                      "text-[10px] font-black uppercase tracking-widest opacity-80 mb-1",
-                      rootNode?.level === -1 ? "text-indigo-400" : ""
-                    )}>
-                      {rootNode?.role || t('principal')}
-                    </p>
-                    <p className="font-bold text-lg">{rootNode?.name}</p>
-                  </div>
-                ))}
-              </div>
+        {viewMode === 'graph' ? (() => {
+          /* ====== GRAPHICAL TREE VIEW — One big hierarchy ====== */
+          // Find the top-level admin (CEO/Principal/School Admin)
+          const schoolAdmin = staff.find(s => {
+            const role = s.role?.toUpperCase() || '';
+            const name = s.name?.toUpperCase() || '';
+            return role === 'SCHOOL_ADMIN' || 
+                   role === 'SUPER_ADMIN' ||
+                   role === 'CEO' ||
+                   role === 'PRINCIPAL' ||
+                   role === 'DIRECTOR' ||
+                   role.includes('ADMIN') ||
+                   role.includes('HEAD');
+          });
 
-              {/* Level 1 & 2 & 3 Rendering */}
-              {rootNodes.some(rn => rn.subordinates?.length > 0) && (
-                <>
-                  <div className="w-px h-12 bg-zinc-200 dark:bg-zinc-800 relative">
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-px bg-zinc-200 dark:bg-zinc-800" />
-                  </div>
+          const handleSaveTitle = () => {
+            onUpdateOrganization?.({
+              ...organization,
+              organogram_head_title: rootTitle
+            });
+            setIsEditingTitle(false);
+          };
 
-                  <div className="flex justify-center gap-12">
-                    {rootNodes.flatMap(rn => rn.subordinates || []).map((nodeId: string) => {
-                      const node = hierarchy.find((h) => h.id === nodeId);
-                      if (!node) return null;
-                      return (
+          return (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-10 overflow-x-auto custom-scrollbar">
+              <div className="min-w-max flex flex-col items-center">
+                {/* School Admin / Root Node - HIDDEN IN SCOPED VIEW */}
+                {!scopedDeptId && (
+                  <>
+                    {schoolAdmin ? (
+                      <div className="group relative flex flex-col items-center">
                         <div
-                          key={node.id}
-                          className="flex flex-col items-center gap-12"
+                          className="p-5 rounded-2xl shadow-xl w-60 text-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 cursor-pointer hover:shadow-2xl transition-shadow relative"
+                          onClick={() => !isReadOnly && setEditingStaff(schoolAdmin)}
                         >
-                          <div
-                            className={cn(
-                              "group relative p-5 rounded-2xl shadow-lg w-64 text-center border",
-                              node.isDepartment
-                                ? "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
-                                : "bg-white dark:bg-zinc-800 border-indigo-100 dark:border-indigo-900/30",
-                            )}
-                          >
-                                    {isEditMode && !isReadOnly && (
-                              <button
-                                onClick={() => setEditingNode(node)}
-                                className="absolute -top-3 -right-3 w-8 h-8 bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform border border-indigo-100 dark:border-indigo-900/30"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                            )}
-                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-px h-12 bg-zinc-200 dark:bg-zinc-800" />
-                            <p
-                              className={cn(
-                                "text-[9px] font-black uppercase tracking-widest mb-1",
-                                node.isDepartment
-                                  ? "text-amber-600"
-                                  : "text-indigo-600 dark:text-indigo-400",
+                          {isEditingTitle ? (
+                            <div className="flex items-center gap-1 mb-1" onClick={(e) => e.stopPropagation()}>
+                              <input
+                                autoFocus
+                                value={rootTitle}
+                                onChange={(e) => setRootTitle(e.target.value)}
+                                onBlur={handleSaveTitle}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
+                                className="w-full bg-white/10 dark:bg-zinc-100 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded outline-none"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                              <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{rootTitle}</p>
+                              {!isReadOnly && (
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setIsEditingTitle(true); }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 dark:hover:bg-zinc-100 rounded"
+                                >
+                                  <Edit className="w-2.5 h-2.5" />
+                                </button>
                               )}
+                            </div>
+                          )}
+                          <p className="font-bold text-lg">{schoolAdmin.name}</p>
+                          <p className="text-[10px] opacity-60 mt-0.5">{schoolAdmin.role}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-5 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 w-60 text-center">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-1">{rootTitle}</p>
+                        <p className="font-bold text-zinc-500">Not Found</p>
+                      </div>
+                    )}
+
+                    {/* Vertical line down from School Admin */}
+                    {filteredDepartments.length > 0 && (
+                      <>
+                        <div className="w-px h-10 bg-zinc-300 dark:bg-zinc-700" />
+                        {/* Horizontal line spanning all departments */}
+                        <div className={cn(
+                          "h-px bg-zinc-300 dark:bg-zinc-700",
+                          filteredDepartments.length === 1 ? "w-0" : filteredDepartments.length <= 3 ? "w-[400px]" : "w-[700px]"
+                        )} />
+                      </>
+                    )}
+                  </>
+                )}
+
+                {/* Department + Staff Branches */}
+                <div className="flex justify-center gap-10 mt-0">
+                  {filteredDepartments.map((dept) => {
+                    const hod = dept.hod_id ? staffMap.get(dept.hod_id) : null;
+                    const deptStaff = (staffByDept.get(dept.id) || []).filter(s => s.id !== dept.hod_id);
+
+                    return (
+                      <div key={dept.id} className="flex flex-col items-center">
+                        {/* Vertical connector to department */}
+                        <div className="w-px h-8 bg-zinc-300 dark:bg-zinc-700" />
+
+                        {/* Department Node */}
+                        <div className="p-4 rounded-2xl shadow-lg w-52 text-center bg-indigo-600 text-white">
+                          <p className="text-[8px] font-black uppercase tracking-widest opacity-60 mb-0.5">Department</p>
+                          <p className="font-bold text-sm">{dept.name}</p>
+                        </div>
+
+                        {/* HOD Node */}
+                        {hod && (
+                          <>
+                            <div className="w-px h-6 bg-zinc-300 dark:bg-zinc-700" />
+                            <div
+                              className="p-3.5 rounded-xl w-48 text-center bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 cursor-pointer hover:shadow-md transition-all"
+                              onClick={() => !isReadOnly && setEditingStaff(hod)}
                             >
-                              {node.role}
-                            </p>
-                            <p className="font-bold text-zinc-900 dark:text-white">
-                              {node.name}
-                            </p>
-                          </div>
+                              <span className="inline-block px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-black uppercase tracking-widest mb-1.5">HOD</span>
+                              <p className="font-bold text-xs text-zinc-900 dark:text-white">{hod.name}</p>
+                              <p className="text-[9px] text-zinc-400 mt-0.5">{hod.role}</p>
+                            </div>
+                          </>
+                        )}
 
-                          {node.subordinates.length > 0 && (
-                            <>
-                              <div className="w-px h-12 bg-zinc-200 dark:bg-zinc-800 relative">
-                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-48 h-px bg-zinc-200 dark:bg-zinc-800" />
-                              </div>
-                              <div className="flex gap-8">
-                                {node.subordinates.map((subId: string) => {
-                                  const sub = hierarchy.find(
-                                    (h) => h.id === subId,
-                                  );
-                                  if (!sub) return null;
-                                  return (
+                        {!hod && (
+                          <>
+                            <div className="w-px h-6 bg-zinc-300 dark:bg-zinc-700" />
+                            <div className="p-3 rounded-xl w-48 text-center border-2 border-dashed border-amber-300 dark:border-amber-700">
+                              <p className="text-[8px] font-black uppercase tracking-widest text-amber-500">No HOD</p>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Staff under this department */}
+                        {deptStaff.length > 0 && (
+                          <>
+                            <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700" />
+                            <div className={cn(
+                              "h-px bg-zinc-200 dark:bg-zinc-700",
+                              deptStaff.length === 1 ? "w-0" : deptStaff.length <= 2 ? "w-32" : "w-56"
+                            )} />
+                            <div className="flex justify-center gap-4 mt-0">
+                              {deptStaff.map((s) => {
+                                const reportsTo = s.reports_to ? staffMap.get(s.reports_to) : null;
+                                return (
+                                  <div key={s.id} className="flex flex-col items-center">
+                                    <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-700" />
                                     <div
-                                      key={sub.id}
-                                      className="flex flex-col items-center gap-8"
+                                      className="p-3 rounded-xl w-36 text-center bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all"
+                                      onClick={() => !isReadOnly && setEditingStaff(s)}
                                     >
-                                      <div
-                                        className={cn(
-                                          "group relative p-4 rounded-xl w-48 text-center border",
-                                          sub.isDepartment
-                                            ? "bg-amber-50 border-amber-100 dark:bg-amber-900/10 dark:border-amber-900/30"
-                                            : "bg-zinc-50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-700",
-                                        )}
-                                      >
-                                        {isEditMode && (
-                                          <button
-                                            onClick={() => setEditingNode(sub)}
-                                            className="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-full shadow-md flex items-center justify-center hover:scale-110 transition-transform border border-zinc-100 dark:border-zinc-700"
-                                          >
-                                            <Edit className="w-3 h-3" />
-                                          </button>
-                                        )}
-                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-px h-8 bg-zinc-200 dark:bg-zinc-800" />
-                                        <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400 mb-1">
-                                          {sub.role}
-                                        </p>
-                                        <p className="font-bold text-xs text-zinc-900 dark:text-white">
-                                          {sub.name}
-                                        </p>
+                                      <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-[10px] font-black text-zinc-500 mx-auto mb-1.5">
+                                        {s.name?.charAt(0) || '?'}
                                       </div>
-
-                                      {sub.subordinates.length > 0 && (
-                                        <>
-                                          <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-800 relative">
-                                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-px bg-zinc-200 dark:bg-zinc-800" />
-                                          </div>
-                                          <div className="flex gap-4">
-                                            {sub.subordinates.map(
-                                              (leafId: string) => {
-                                                const leaf = hierarchy.find(
-                                                  (h) => h.id === leafId,
-                                                );
-                                                if (!leaf) return null;
-                                                return (
-                                                  <div
-                                                    key={leaf.id}
-                                                    className="group relative p-3 bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800 rounded-lg w-32 text-center"
-                                                  >
-                                                    {isEditMode && (
-                                                      <button
-                                                        onClick={() =>
-                                                          setEditingNode(leaf)
-                                                        }
-                                                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-white dark:bg-zinc-800 text-zinc-400 rounded-full shadow-sm flex items-center justify-center hover:scale-110 transition-transform border border-zinc-200 dark:border-zinc-700"
-                                                      >
-                                                        <Edit className="w-2.5 h-2.5" />
-                                                      </button>
-                                                    )}
-                                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-px h-8 bg-zinc-200 dark:bg-zinc-800" />
-                                                    <p className="text-[7px] font-bold uppercase text-zinc-400">
-                                                      {leaf.role}
-                                                    </p>
-                                                    <p className="text-[10px] font-bold text-zinc-700 dark:text-zinc-300">
-                                                      {leaf.name}
-                                                    </p>
-                                                  </div>
-                                                );
-                                              },
-                                            )}
-                                          </div>
-                                        </>
+                                      <p className="font-bold text-[11px] text-zinc-900 dark:text-white truncate">{s.name}</p>
+                                      <p className="text-[8px] text-zinc-400 mt-0.5">{s.role || 'Staff'}</p>
+                                      {reportsTo && (
+                                        <p className="text-[7px] text-indigo-500 dark:text-indigo-400 mt-1 font-bold">
+                                          → {reportsTo.name}
+                                        </p>
                                       )}
                                     </div>
-                                  );
-                                })}
-                              </div>
-                            </>
-                          )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Unassigned Staff at the bottom */}
+                {unassignedStaff.length > 0 && !scopedDeptId && (
+                  <div className="mt-12 pt-8 border-t border-dashed border-zinc-200 dark:border-zinc-700 w-full">
+                    <p className="text-center text-[10px] font-black text-amber-500 uppercase tracking-widest mb-4">Unassigned Staff</p>
+                    <div className="flex justify-center gap-4 flex-wrap">
+                      {unassignedStaff.map((s) => (
+                        <div
+                          key={s.id}
+                          className="p-3 rounded-xl w-36 text-center bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 cursor-pointer hover:shadow-md transition-all"
+                          onClick={() => !isReadOnly && setEditingStaff(s)}
+                        >
+                          <p className="font-bold text-[11px] text-zinc-900 dark:text-white truncate">{s.name}</p>
+                          <p className="text-[8px] text-zinc-400 mt-0.5">{s.role || 'Staff'}</p>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </>
-              )}
+                )}
+              </div>
             </div>
-          ) : (
-            <div className="p-12 text-center text-zinc-500">
-              No staff members found to build the organogram.
-            </div>
-          )}
+          );
+        })() : (
+          /* ====== LIST VIEW (Department Cards) ====== */
+          <>
+
+        {/* Department Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filteredDepartments.map((dept) => {
+            const hod = dept.hod_id ? staffMap.get(dept.hod_id) : null;
+            const deptStaff = (staffByDept.get(dept.id) || []).filter(s => s.id !== dept.hod_id);
+
+            return (
+              <div
+                key={dept.id}
+                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+              >
+                {/* Department Header */}
+                <div className="p-5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/30">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-200 dark:shadow-none">
+                        {dept.name?.charAt(0) || 'D'}
+                      </div>
+                      <div>
+                        <h3 className="font-black text-zinc-900 dark:text-white tracking-tight">{dept.name}</h3>
+                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
+                          {(deptStaff.length + (hod ? 1 : 0))} members
+                        </p>
+                      </div>
+                    </div>
+                    {!hod && (
+                      <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest border border-amber-100 dark:border-amber-800/30">
+                        No HOD
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Staff List */}
+                <div className="p-4 space-y-2.5">
+                  {hod && <StaffRow member={hod} isHod={true} />}
+                  
+                  {deptStaff.length > 0 ? (
+                    deptStaff.map((s) => (
+                      <div key={s.id}><StaffRow member={s} /></div>
+                    ))
+                  ) : !hod ? (
+                    <div className="py-8 text-center">
+                      <Users className="w-7 h-7 text-zinc-200 dark:text-zinc-700 mx-auto mb-2" />
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">No Staff Assigned</p>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
+        {/* Unassigned Staff */}
+        {unassignedStaff.length > 0 && !scopedDeptId && (
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
+            <div className="p-5 border-b border-zinc-100 dark:border-zinc-800 bg-amber-50/50 dark:bg-amber-950/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-amber-200 dark:shadow-none">
+                  ?
+                </div>
+                <div>
+                  <h3 className="font-black text-zinc-900 dark:text-white tracking-tight">Unassigned Staff</h3>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
+                    {unassignedStaff.length} members without a department
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 space-y-2.5">
+              {unassignedStaff.map((s) => (
+                <div key={s.id}><StaffRow member={s} /></div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {staff.length === 0 && (
+          <div className="p-16 text-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl">
+            <Users className="w-12 h-12 text-zinc-200 dark:text-zinc-700 mx-auto mb-3" />
+            <p className="font-bold text-zinc-400">No staff members found.</p>
+            <p className="text-sm text-zinc-400 mt-1">Add staff in Staff Management to see the organogram.</p>
+          </div>
+        )}
+          </>
+        )}
+
+        {/* Edit Reports To Modal */}
         <Modal
-          isOpen={!!editingNode}
-          onClose={() => setEditingNode(null)}
-          title={
-            editingNode?.isDepartment
-              ? t('edit_record_title').replace('{title}', editingNode.name)
-              : t('edit_record_title').replace('{title}', editingNode?.name)
-          }
+          isOpen={!!editingStaff}
+          onClose={() => setEditingStaff(null)}
+          title={`Edit Reporting — ${editingStaff?.name}`}
         >
           <form
-            className="space-y-4 p-4"
+            className="space-y-5 p-4"
             onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              handleSaveNode(Object.fromEntries(formData));
+              handleSaveReportsTo(editingStaff, Object.fromEntries(formData));
             }}
           >
-            {editingNode?.isDepartment ? (
-              <>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">
-                    {t('department_name')}
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    defaultValue={editingNode.name}
-                    required
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">
-                    {t('hod_label')}
-                  </label>
-                  <select
-                    name="hod_id"
-                    defaultValue={editingNode.deptData?.hod_id || ""}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    <option value="">{t('select_hod_placeholder')}</option>
-                    {staff.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.role})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">
-                    {t('reports_to')}
-                  </label>
-                  <select
-                    name="reports_to"
-                    defaultValue={
-                      staff.find((s) => s.id === editingNode?.id)?.reports_to ||
-                      ""
-                    }
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">{t('no_manager_root')}</option>
-                    {staff
-                      .filter((s) => s.id !== editingNode?.id)
-                      .map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name} ({s.role})
-                        </option>
-                      ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">
-                    {t('department')}
-                  </label>
-                  <select
-                    name="department_id"
-                    defaultValue={
-                      staff.find((s) => s.id === editingNode?.id)
-                        ?.department_id || ""
-                    }
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">{t('no_department')}</option>
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                {t('reports_to')}
+              </label>
+              <select
+                name="reports_to"
+                defaultValue={editingStaff?.reports_to || ""}
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">No one (Top-level)</option>
+                {staff
+                  .filter((s) => s.id !== editingStaff?.id)
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.role})
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+                {t('department')}
+              </label>
+              <select
+                name="department_id"
+                defaultValue={editingStaff?.department_id || ""}
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">{t('no_department')}</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
               <button
                 type="button"
-                onClick={() => setEditingNode(null)}
+                onClick={() => setEditingStaff(null)}
                 className="px-6 py-2 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
               >
                 {t('cancel')}
@@ -643,27 +569,6 @@ export const HRModules = {
             </div>
           </form>
         </Modal>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl">
-            <h3 className="font-bold text-indigo-900 dark:text-indigo-400 mb-2">
-              Automated Hierarchy
-            </h3>
-            <p className="text-sm text-indigo-700 dark:text-indigo-300/70">
-              The hierarchy is automatically generated based on "Reports To"
-              assignments and Department associations in Staff Management.
-            </p>
-          </div>
-          <div className="p-6 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-3xl">
-            <h3 className="font-bold text-amber-900 dark:text-amber-400 mb-2">
-              Departmental Structure
-            </h3>
-            <p className="text-sm text-amber-700 dark:text-amber-300/70">
-              Departments are displayed as functional nodes, grouping all staff
-              members assigned to them under the respective Head of Department.
-            </p>
-          </div>
-        </div>
       </div>
     );
   },
@@ -1504,519 +1409,755 @@ export const HRModules = {
   }) => {
     const { currency, t } = useLanguage();
     const [showSalary, setShowSalary] = useState(false);
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+    const [activeFilter, setActiveFilter] = useState<string>("all");
+    const [activeTab, setActiveTab] = useState<string>("overview");
+    const [editingStaff, setEditingStaff] = useState<any>(null);
+    const [isEditingInModal, setIsEditingInModal] = useState(false);
     const isStaff = role === "STAFF";
 
-    return (
-      <DataTable
-        title={isStaff ? "My Profile" : "Staff Management"}
-        data={data}
-        onSave={onSave}
-        onEdit={onSave}
-        onDelete={onDelete}
-        onAdd={onSave ? () => {} : undefined}
-        initialViewItem={isStaff && data.length === 1 ? data[0] : undefined}
-        renderForm={(item, isViewOnly) => {
-          if (isViewOnly && item) {
-            return (
-              <div className="space-y-8 p-2">
-                <div className="flex items-center justify-between pb-6 border-b border-zinc-100 dark:border-zinc-800">
-                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-100 dark:border-indigo-800">
-                      <User className="w-10 h-10 text-indigo-600" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">
-                        {item.name}
-                      </h3>
-                      <div className="flex items-center gap-3">
-                        <span className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-wider">
-                          {item.role}
-                        </span>
-                        <span
-                          className={cn(
-                            "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider",
-                            item.status === "Active"
-                              ? "bg-emerald-50 text-emerald-600"
-                              : "bg-red-50 text-red-600",
-                          )}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  {isStaff && (
-                    <button
-                      onClick={() => setShowSalary(!showSalary)}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl text-[10px] font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 transition-all shadow-sm"
-                    >
-                      {showSalary ? (
-                        <EyeOff className="w-3.5 h-3.5" />
-                      ) : (
-                        <Eye className="w-3.5 h-3.5" />
-                      )}
-                      {showSalary
-                        ? t('hide_sensitive_info')
-                        : t('view_sensitive_info')}
-                    </button>
+    const formatDateForInput = (dateStr: any) => {
+      if (!dateStr) return "";
+      try {
+        // If it's already YYYY-MM-DD, just return it
+        if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+          return dateStr.split("T")[0];
+        }
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return "";
+        // Manually build YYYY-MM-DD from local components to avoid UTC shifts
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch {
+        return "";
+      }
+    };
+
+    const renderStaffProfile = (item: any, forceOnEdit?: (item: any) => void) => {
+      if (!item) return null;
+
+      const tabs = [
+        { id: "overview", label: t("overview"), icon: User },
+        { id: "job", label: t("job_details"), icon: Briefcase },
+        { id: "payroll", label: t("finance"), icon: Wallet },
+        { id: "system", label: t("system"), icon: Settings },
+      ];
+
+      return (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="flex items-center justify-between p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm">
+            <div className="flex items-center gap-6">
+              <div className="relative group">
+                <div className="w-24 h-24 rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-inner font-black text-3xl">
+                  {item.profile_image ? (
+                    <img
+                      src={item.profile_image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    item.name ? item.name.charAt(0) : "U"
                   )}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 border-b border-zinc-100 dark:border-zinc-800 pb-1">
-                        {t('contact_information')}
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            Email Address
-                          </span>
-                          <span className="font-bold text-zinc-900 dark:text-white">
-                            {item.email}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            Phone Number
-                          </span>
-                          <span className="font-bold text-zinc-900 dark:text-white">
-                            {item.phone || "N/A"}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            Date of Birth
-                          </span>
-                          <span className="font-bold text-zinc-900 dark:text-white">
-                            {item.date_of_birth
-                              ? new Date(item.date_of_birth).toLocaleDateString(
-                                  undefined,
-                                  { dateStyle: "medium" },
-                                )
-                              : "Not Set"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 border-b border-zinc-100 dark:border-zinc-800 pb-1">
-                        {t('organizational_role')}
-                      </h4>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            {t('department')}
-                          </span>
-                          <span className="font-bold text-zinc-900 dark:text-white">
-                            {item.department_name || t('no_department')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            {t('reports_to')}
-                          </span>
-                          <span className="font-bold text-zinc-900 dark:text-white">
-                            {item.reports_to_name || t('no_manager')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            {t('monthly_salary')}
-                          </span>
-                          <span className="font-bold text-emerald-600">
-                            {!isStaff || showSalary
-                              ? item.salary
-                                ? `${currency}${Number(item.salary).toLocaleString()}`
-                                : t('not_set')
-                              : `${currency}xxxxxx`}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            {t('allowances')}
-                          </span>
-                          <span className="font-bold text-indigo-600">
-                            {!isStaff || showSalary
-                              ? item.allowances
-                                ? `${currency}${Number(item.allowances).toLocaleString()}`
-                                : `${currency}0`
-                              : `${currency}xxxxxx`}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            {t('deductions')}
-                          </span>
-                          <span className="font-bold text-red-600">
-                            {!isStaff || showSalary
-                              ? item.deductions
-                                ? `${currency}${Number(item.deductions).toLocaleString()}`
-                                : `${currency}0`
-                              : `${currency}xxxxxx`}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs border-t border-zinc-50 dark:border-zinc-800 pt-2 mt-2">
-                          <span className="font-bold text-zinc-500">
-                            {t('annual_leave_limit')}
-                          </span>
-                          <span className="font-bold text-zinc-900 dark:text-white">
-                            {item.annual_leave_limit || 20} {t('days')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            {t('current_leave_balance')}
-                          </span>
-                          <span className="font-bold text-amber-600">
-                            {item.leave_balance ??
-                              (item.annual_leave_limit || 20)}{" "}
-                            {t(item.leave_limit_unit?.toLowerCase() || 'days')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-xs">
-                          <span className="font-bold text-zinc-500">
-                            {t('carried_over')}
-                          </span>
-                          <span className="font-bold text-indigo-600">
-                            {item.carried_over_balance || 0}{" "}
-                            {t(item.leave_limit_unit?.toLowerCase() || 'days')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-3 border-b border-zinc-100 dark:border-zinc-800 pb-1">
-                        System Access
-                      </h4>
-                      <div className="space-y-3">
-                        <div>
-                          <span className="text-zinc-500 text-xs font-bold block mb-2 uppercase opacity-60">
-                            Additional Authorized Roles
-                          </span>
-                          <div className="flex flex-wrap gap-2">
-                            {item.additional_roles &&
-                            item.additional_roles.length > 0 ? (
-                              item.additional_roles.map((r: string) => (
-                                <span
-                                  key={r}
-                                  className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700"
-                                >
-                                  {r}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-[10px] text-zinc-400 italic">
-                                None assigned
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                      <p className="text-[10px] text-zinc-400 font-bold uppercase mb-1">
-                        Date Joined
-                      </p>
-                      <p className="text-xs font-bold text-zinc-900 dark:text-white">
-                        {new Date(item.created_at).toLocaleDateString(
-                          undefined,
-                          { dateStyle: "long" },
-                        )}
-                      </p>
-                    </div>
-                  </div>
+                {item.status === "Active" && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900 shadow-sm" />
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-3xl font-black text-zinc-900 dark:text-white flex items-center gap-3">
+                  {item.name}
+                  {item.status === "Active" && (
+                    <ShieldCheck className="w-6 h-6 text-indigo-600" />
+                  )}
+                </h3>
+                <div className="flex items-center gap-4">
+                  <span className="flex items-center gap-1.5 text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800/50">
+                    <Briefcase className="w-3.5 h-3.5" />
+                    {item.role}
+                  </span>
+                  <span
+                    className={cn(
+                      "px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border",
+                      item.status === "Active"
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                        : "bg-red-50 text-red-600 border-red-100",
+                    )}
+                  >
+                    {item.status}
+                  </span>
                 </div>
               </div>
-            );
-          }
-          // Form rendering logic continues...
+            </div>
+            {forceOnEdit && (
+              <button
+                onClick={() => forceOnEdit(item)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
+              >
+                <Edit className="w-3.5 h-3.5" />
+                Edit Profile
+              </button>
+            )}
+            {isStaff && (
+              <button
+                onClick={() => setShowSalary(!showSalary)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-zinc-900/10 dark:shadow-white/10 ml-2"
+              >
+                {showSalary ? (
+                  <EyeOff className="w-3.5 h-3.5" />
+                ) : (
+                  <Eye className="w-3.5 h-3.5" />
+                )}
+                {showSalary ? "Lock View" : "Unlock Sensitive Data"}
+              </button>
+            )}
+          </div>
 
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('full_name')}
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  defaultValue={item?.name}
-                  disabled={isViewOnly}
-                  required
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('email_address')}
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  defaultValue={item?.email}
-                  disabled={isViewOnly}
-                  required
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                />
-              </div>
+          <div className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-2xl w-fit">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                  activeTab === tab.id
+                    ? "bg-white dark:bg-zinc-900 text-indigo-600 shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
+                )}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('phone_number')}
-                </label>
-                <input
-                  type="text"
-                  name="phone"
-                  defaultValue={item?.phone}
-                  disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  name="date_of_birth"
-                  defaultValue={
-                    item?.date_of_birth
-                      ? new Date(item.date_of_birth).toISOString().split("T")[0]
-                      : ""
-                  }
-                  disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('designation')}
-                </label>
-                <select
-                  name="role"
-                  defaultValue={item?.role || "STAFF"}
-                  disabled={isViewOnly}
-                  required
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
-                  <option value="STAFF">STAFF</option>
-                  <option value="HOD">HOD</option>
-                  <option value="FINANCE">FINANCE</option>
-                  <option value="LIBRARIAN">LIBRARIAN</option>
-                  <option value="NON_STAFF">NON_STAFF</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('additional_roles')} ({t('select_multiple_hint')})
-                </label>
-                <select
-                  name="additional_roles"
-                  multiple
-                  defaultValue={item?.additional_roles || []}
-                  disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px] disabled:opacity-50"
-                >
-                  <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
-                  <option value="STAFF">STAFF</option>
-                  <option value="HOD">HOD</option>
-                  <option value="FINANCE">FINANCE</option>
-                  <option value="LIBRARIAN">LIBRARIAN</option>
-                  <option value="NON_STAFF">NON_STAFF</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  Department
-                </label>
-                <select
-                  name="department_id"
-                  defaultValue={item?.department_id}
-                  disabled={isViewOnly}
-                  onChange={(e) => {
-                    const deptId = e.target.value;
-                    const dept = departments.find((d: any) => d.id === deptId);
-                    if (dept && dept.hod_id) {
-                      const reportsToSelect = document.querySelector(
-                        'select[name="reports_to"]',
-                      ) as HTMLSelectElement;
-                      if (reportsToSelect) {
-                        reportsToSelect.value = dept.hod_id;
-                      }
-                    }
-                  }}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  <option value="">{t('no_department')}</option>
-                  {departments.map((d: any) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  Reports To
-                </label>
-                <select
-                  name="reports_to"
-                  defaultValue={item?.reports_to}
-                  disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  <option value="">No Manager</option>
-                  {data
-                    .filter((s) => s.id !== item?.id)
-                    .map((s: any) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.role})
-                      </option>
-                    ))}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  defaultValue={item?.status || "Active"}
-                  disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  <option value="Active">{t('active')}</option>
-                  <option value="Inactive">{t('inactive')}</option>
-                  <option value="On Leave">{t('on_leave')}</option>
-                </select>
-              </div>
-              {!item && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                    {t('default_password')}
-                  </label>
-                  <input
-                    type="text"
-                    name="password"
-                    readOnly
-                    value="zxcv123$$"
-                    className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm outline-none cursor-not-allowed text-zinc-500"
-                  />
-                  <p className="text-[10px] text-zinc-400">
-                    This password will be assigned to the new teacher account by
-                    default.
-                  </p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              {activeTab === "overview" && (
+                <div className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8">
+                  <section className="space-y-6">
+                    <h4 className="flex items-center gap-3 text-xs font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                      <Mail className="w-4 h-4" />
+                      {t("contact_information")}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                          Email Address
+                        </label>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                          {item.email}
+                        </p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                          Phone Number
+                        </label>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                          {item.phone || "Not Provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="space-y-6">
+                    <h4 className="flex items-center gap-3 text-xs font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                      <CalendarDays className="w-4 h-4" />
+                      {t("personal_details")}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                          Date of Birth
+                        </label>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                          {item.date_of_birth
+                            ? new Date(item.date_of_birth).toLocaleDateString(
+                                undefined,
+                                { dateStyle: "long" },
+                              )
+                            : "Not Set"}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
                 </div>
               )}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('monthly_salary')} ({currency})
-                </label>
-                <input
-                  type="number"
-                  name="salary"
-                  defaultValue={item?.salary || ""}
-                  disabled={isViewOnly}
-                  placeholder="e.g. 5000"
-                  className="w-full px-4 py-2 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
-                />
+
+              {activeTab === "job" && (
+                <div className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8">
+                  <section className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                        {t("department")}
+                      </label>
+                      <div className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-700 rounded-2xl">
+                        <Layers className="w-4 h-4 text-indigo-600" />
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                          {item.department_name || t("no_department")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
+                        {t("reports_to")}
+                      </label>
+                      <div className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-700 rounded-2xl">
+                        <UserCheck className="w-4 h-4 text-emerald-600" />
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                          {item.reports_to_name || t("no_manager")}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              )}
+
+              {activeTab === "payroll" && (
+                <div className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-6 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-3xl">
+                      <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">
+                        Monthly Net
+                      </p>
+                      <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">
+                        {!isStaff || showSalary
+                          ? item.salary
+                            ? `${currency}${Number(item.salary).toLocaleString()}`
+                            : t("not_set")
+                          : `${currency}xxxxxx`}
+                      </p>
+                    </div>
+                    <div className="p-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-3xl">
+                      <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">
+                        Allowances
+                      </p>
+                      <p className="text-2xl font-black text-indigo-700 dark:text-indigo-400">
+                        {!isStaff || showSalary
+                          ? item.allowances
+                            ? `${currency}${Number(item.allowances).toLocaleString()}`
+                            : `${currency}0`
+                          : `${currency}xxxxxx`}
+                      </p>
+                    </div>
+                    <div className="p-6 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50 rounded-3xl">
+                      <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1">
+                        Deductions
+                      </p>
+                      <p className="text-2xl font-black text-rose-700 dark:text-rose-400">
+                        {!isStaff || showSalary
+                          ? item.deductions
+                            ? `${currency}${Number(item.deductions).toLocaleString()}`
+                            : `${currency}0`
+                          : `${currency}xxxxxx`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "system" && (
+                <div className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8">
+                  <section className="space-y-6">
+                    <h4 className="flex items-center gap-3 text-xs font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                      Permissions & Access
+                    </h4>
+                    <div className="flex flex-wrap gap-3">
+                      {item.additional_roles &&
+                      item.additional_roles.length > 0 ? (
+                        item.additional_roles.map((r: string) => (
+                          <span
+                            key={r}
+                            className="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-xs font-bold text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-100 dark:border-indigo-800/50"
+                          >
+                            {r}
+                          </span>
+                        ))
+                      ) : (
+                        <p className="text-xs text-zinc-400 italic">
+                          No additional roles assigned.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-6">
+              <div className="p-6 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl shadow-lg shadow-indigo-600/20 ring-1 ring-white/20">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-white/20 rounded-xl">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <h4 className="font-black text-white uppercase text-xs tracking-widest">
+                    Quick Performance
+                  </h4>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/60">Efficiency Score</span>
+                    <span className="text-white font-black">94%</span>
+                  </div>
+                  <div className="w-full bg-white/20 rounded-full h-2 overflow-hidden shadow-inner">
+                    <div
+                      className="h-full bg-white rounded-full"
+                      style={{ width: "94%" }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('allowances')} ({currency})
-                </label>
-                <input
-                  type="number"
-                  name="allowances"
-                  defaultValue={item?.allowances || ""}
-                  disabled={isViewOnly}
-                  placeholder="e.g. 500"
-                  className="w-full px-4 py-2 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-200 dark:border-indigo-800 rounded-xl text-sm font-bold text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                  {t('deductions')} ({currency})
-                </label>
-                <input
-                  type="number"
-                  name="deductions"
-                  defaultValue={item?.deductions || ""}
-                  disabled={isViewOnly}
-                  placeholder="e.g. 200"
-                  className="w-full px-4 py-2 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl text-sm font-bold text-red-600 outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-                />
-              </div>
-              <div className="space-y-1.5 border-t border-zinc-100 dark:border-zinc-800 pt-4 mt-2 col-span-2">
-                <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-4">
-                  {t('leave_configuration')}
+
+              <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm">
+                <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-6 border-b border-zinc-50 dark:border-zinc-800 pb-3">
+                  Account Activity
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                      Leave Limit Unit
-                    </label>
-                    <select
-                      name="leave_limit_unit"
-                      defaultValue={item?.leave_limit_unit || "Days"}
-                      disabled={isViewOnly}
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="Days">Days</option>
-                      <option value="Months">Months</option>
-                    </select>
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-900 dark:text-white">
+                        Profile Last Updated
+                      </p>
+                      <p className="text-[10px] text-zinc-400">2 days ago</p>
+                    </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                      {t('annual_leave_limit')}
-                    </label>
-                    <input
-                      type="number"
-                      name="annual_leave_limit"
-                      defaultValue={item?.annual_leave_limit || 20}
-                      disabled={isViewOnly}
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                      Current Leave Balance
-                    </label>
-                    <input
-                      type="number"
-                      name="leave_balance"
-                      defaultValue={
-                        item?.leave_balance ?? (item?.annual_leave_limit || 20)
-                      }
-                      disabled={isViewOnly}
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-indigo-600"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                      Carried Over Balance
-                    </label>
-                    <input
-                      type="number"
-                      name="carried_over_balance"
-                      defaultValue={item?.carried_over_balance || 0}
-                      disabled={isViewOnly}
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
+                  <div className="flex items-center gap-4">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    <div>
+                      <p className="text-[10px] font-black text-zinc-900 dark:text-white">
+                        System Login
+                      </p>
+                      <p className="text-[10px] text-zinc-400">Active now</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          );
-        }}
+          </div>
+        </div>
+      );
+    };
+
+    const stats = useMemo(() => {
+      const active = data.filter((s) => s.status === "Active").length;
+      const onLeave = data.filter((s) => s.status === "On Leave").length;
+      const depts = departments.length;
+      const newest = data.filter(
+        (s) =>
+          new Date(s.created_at) >
+          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      ).length;
+
+      return {
+        total: data.length,
+        active,
+        onLeave,
+        depts,
+        newest,
+      };
+    }, [data, departments]);
+
+    const filteredData = useMemo(() => {
+      if (activeFilter === "all") return data;
+      if (activeFilter === "active")
+        return data.filter((s) => s.status === "Active");
+      if (activeFilter === "leave")
+        return data.filter((s) => s.status === "On Leave");
+      if (activeFilter === "new")
+        return data.filter(
+          (s) =>
+            new Date(s.created_at) >
+            new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        );
+      return data;
+    }, [data, activeFilter]);
+
+    const statsCards = [
+      {
+        id: "all",
+        label: t("total_staff"),
+        value: stats.total,
+        icon: Users,
+        color: "indigo",
+      },
+      {
+        id: "active",
+        label: t("active"),
+        value: stats.active,
+        icon: UserCheck,
+        color: "emerald",
+      },
+      {
+        id: "leave",
+        label: t("on_leave"),
+        value: stats.onLeave,
+        icon: UserMinus,
+        color: "amber",
+      },
+      {
+        id: "new",
+        label: t("new_hires"),
+        value: stats.newest,
+        icon: UserPlus,
+        color: "rose",
+      },
+    ];
+
+    const renderManagementHeader = () => (
+      <div className="space-y-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {statsCards.map((card) => (
+            <button
+              key={card.id}
+              onClick={() => setActiveFilter(card.id)}
+              className={cn(
+                "p-4 rounded-2xl border transition-all duration-300 text-left group",
+                activeFilter === card.id
+                  ? `bg-${card.color}-600 border-${card.color}-600 shadow-lg shadow-${card.color}-600/20`
+                  : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700",
+              )}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div
+                  className={cn(
+                    "p-2 rounded-xl transition-colors",
+                    activeFilter === card.id
+                      ? "bg-white/20 text-white"
+                      : `bg-${card.color}-50 dark:bg-${card.color}-900/20 text-${card.color}-600`,
+                  )}
+                >
+                  <card.icon className="w-5 h-5" />
+                </div>
+                {activeFilter === card.id && (
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                )}
+              </div>
+              <div className="mt-4">
+                <p
+                  className={cn(
+                    "text-[10px] font-black uppercase tracking-widest",
+                    activeFilter === card.id
+                      ? "text-white/70"
+                      : "text-zinc-400 group-hover:text-zinc-500",
+                  )}
+                >
+                  {card.label}
+                </p>
+                <h4
+                  className={cn(
+                    "text-2xl font-black mt-1",
+                    activeFilter === card.id
+                      ? "text-white"
+                      : "text-zinc-900 dark:text-white",
+                  )}
+                >
+                  {card.value}
+                </h4>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center gap-2 bg-zinc-100/50 dark:bg-zinc-800/50 p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                viewMode === "grid"
+                  ? "bg-white dark:bg-zinc-900 shadow-sm text-indigo-600"
+                  : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
+              )}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("list")}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                viewMode === "list"
+                  ? "bg-white dark:bg-zinc-900 shadow-sm text-indigo-600"
+                  : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
+              )}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
+          {onSave && !isStaff && (
+            <button
+              onClick={() => (onSave as any)({})}
+              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20 hover:-translate-y-0.5"
+            >
+              <Plus className="w-4 h-4" />
+              {t("add_new_staff")}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+
+    const renderStaffForm = (item: any, isViewOnly: boolean) => (
+      <div key={item?.id || 'new'} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            {t('full_name')}
+          </label>
+          <input
+            type="text"
+            name="name"
+            defaultValue={item?.name}
+            disabled={isViewOnly}
+            required
+            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            {t('email_address')}
+          </label>
+          <input
+            type="email"
+            name="email"
+            defaultValue={item?.email}
+            disabled={isViewOnly}
+            required
+            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            {t('phone_number')}
+          </label>
+          <input
+            type="text"
+            name="phone"
+            defaultValue={item?.phone}
+            disabled={isViewOnly}
+            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            Date of Birth
+          </label>
+          <input
+            type="date"
+            name="date_of_birth"
+            defaultValue={formatDateForInput(item?.date_of_birth)}
+            disabled={isViewOnly}
+            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            {t('designation')}
+          </label>
+          <select
+            name="role"
+            defaultValue={item?.role || "STAFF"}
+            disabled={isViewOnly}
+            required
+            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
+            <option value="STAFF">STAFF</option>
+            <option value="HOD">HOD</option>
+            <option value="FINANCE">FINANCE</option>
+            <option value="LIBRARIAN">LIBRARIAN</option>
+            <option value="NON_STAFF">NON_STAFF</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            {t('additional_roles')} ({t('select_multiple_hint')})
+          </label>
+          <select
+            name="additional_roles"
+            multiple
+            defaultValue={item?.additional_roles || []}
+            disabled={isViewOnly}
+            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px] disabled:opacity-50"
+          >
+            <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
+            <option value="STAFF">STAFF</option>
+            <option value="HOD">HOD</option>
+            <option value="FINANCE">FINANCE</option>
+            <option value="LIBRARIAN">LIBRARIAN</option>
+            <option value="NON_STAFF">NON_STAFF</option>
+          </select>
+        </div>
+      </div>
+    );
+
+    if (viewMode === "grid" && !isStaff) {
+      return (
+        <div className="space-y-8">
+          {renderManagementHeader()}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <AnimatePresence mode="popLayout">
+              {filteredData.map((staff) => (
+                <motion.div
+                  key={staff.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-black/50 transition-all group cursor-pointer"
+                  onClick={() => {
+                    setEditingStaff(staff);
+                    setIsEditingInModal(false);
+                  }}
+                >
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="relative">
+                        <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border-2 border-white dark:border-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">
+                          {staff.profile_image ? (
+                            <img
+                              src={staff.profile_image}
+                              alt={staff.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-8 h-8 text-zinc-400" />
+                          )}
+                        </div>
+                        <div
+                          className={cn(
+                            "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white dark:border-zinc-900",
+                            staff.status === "Active"
+                              ? "bg-emerald-500"
+                              : staff.status === "On Leave"
+                                ? "bg-amber-500"
+                                : "bg-zinc-300",
+                          )}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingStaff(staff);
+                            setIsEditingInModal(false);
+                          }}
+                          className="p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingStaff(staff);
+                            setIsEditingInModal(true);
+                          }}
+                          className="p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <h4 className="font-black text-zinc-900 dark:text-white truncate">
+                        {staff.name}
+                      </h4>
+                      <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                        {staff.role}
+                      </p>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t border-zinc-50 dark:border-zinc-800 space-y-3">
+                      <div className="flex items-center gap-3 text-xs text-zinc-500">
+                        <Briefcase className="w-3.5 h-3.5" />
+                        <span className="truncate">
+                          {staff.department_name || t("no_department")}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-zinc-500">
+                        <Mail className="w-3.5 h-3.5" />
+                        <span className="truncate">{staff.email}</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          <Modal
+            isOpen={!!editingStaff}
+            onClose={() => setEditingStaff(null)}
+            title={isEditingInModal ? t("edit_staff_profile") : t("staff_profile")}
+            maxWidth="max-w-4xl"
+            footer={isEditingInModal ? (
+              <div className="flex justify-end gap-3 px-4 pb-4">
+                <button
+                  onClick={() => setIsEditingInModal(false)}
+                  className="px-6 py-2 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  onClick={async () => {
+                    const form = document.getElementById('grid-staff-edit-form') as HTMLFormElement;
+                    if (form) {
+                      const formData = new FormData(form);
+                      const values: any = {};
+                      formData.forEach((value, key) => {
+                        if (key === 'additional_roles') {
+                          if (!values[key]) values[key] = [];
+                          values[key].push(value);
+                        } else {
+                          values[key] = value;
+                        }
+                      });
+                      if (onSave) {
+                        await onSave({ ...editingStaff, ...values });
+                      }
+                      setEditingStaff(null);
+                    }
+                  }}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700"
+                >
+                  {t('save_changes')}
+                </button>
+              </div>
+            ) : undefined}
+          >
+            <div className="p-4">
+              {isEditingInModal ? (
+                <form id="grid-staff-edit-form" onSubmit={(e) => e.preventDefault()}>
+                  {renderStaffForm(editingStaff, false)}
+                </form>
+              ) : (
+                renderStaffProfile(editingStaff, () => setIsEditingInModal(true))
+              )}
+            </div>
+          </Modal>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {renderManagementHeader()}
+        <DataTable
+          title={isStaff ? "My Profile" : "Staff Management"}
+          data={filteredData}
+          onSave={onSave}
+          onEdit={onSave}
+          onDelete={onDelete}
+          onAdd={onSave ? () => {} : undefined}
+          initialViewItem={isStaff && data.length === 1 ? data[0] : undefined}
+          renderForm={(item, isViewOnly, onEdit) => {
+            if (isViewOnly && item) {
+              return renderStaffProfile(item, (s) => onEdit?.(s));
+            }
+            return renderStaffForm(item, !!isViewOnly);
+          }}
         columns={[
           { header: t('name'), accessor: "name", className: "font-bold" },
           { header: t('role'), accessor: "role" },
@@ -2070,6 +2211,7 @@ export const HRModules = {
           </>
         )}
       />
+    </div>
     );
   },
   StaffAttendance: ({

@@ -44,6 +44,7 @@ export async function init() {
         gemini_api_key TEXT,
         academic_year VARCHAR(20) DEFAULT '2023/2024',
         current_term VARCHAR(20) DEFAULT 'Term 1',
+        organogram_head_title VARCHAR(255) DEFAULT 'School Admin',
         demo_requested BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -105,6 +106,9 @@ export async function init() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'demo_requested') THEN
           ALTER TABLE organizations ADD COLUMN demo_requested BOOLEAN DEFAULT FALSE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'organogram_head_title') THEN
+          ALTER TABLE organizations ADD COLUMN organogram_head_title VARCHAR(255) DEFAULT 'School Admin';
         END IF;
       END $$;
     `);

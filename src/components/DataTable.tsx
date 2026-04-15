@@ -20,7 +20,7 @@ interface DataTableProps<T> {
   onDelete?: (item: T) => void;
   onView?: (item: T) => void;
   searchPlaceholder?: string;
-  renderForm?: (item?: T, isViewOnly?: boolean) => React.ReactNode;
+  renderForm?: (item?: T, isViewOnly?: boolean, onEdit?: (item: T) => void) => React.ReactNode;
   autoModal?: boolean;
   autoViewModal?: boolean;
   extraActions?: (item: T) => React.ReactNode;
@@ -498,7 +498,10 @@ export function DataTable<T extends { id: string | number }>({
           <form id="datatable-form" onSubmit={(e) => e.preventDefault()}>
             {isViewOnly && renderDetails && editingItem 
               ? renderDetails(editingItem) 
-              : (renderForm ? renderForm(editingItem, isViewOnly) : defaultForm(editingItem))}
+              : (renderForm ? renderForm(editingItem, isViewOnly, (item) => {
+                  setEditingItem(item);
+                  setIsViewOnly(false);
+                }) : defaultForm(editingItem))}
           </form>
         </Modal>
       )}

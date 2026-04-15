@@ -253,7 +253,7 @@ export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate
   );
 }
 
-export function SchoolAdminDashboard({ stats, invoices = [], payments = [], students = [], classes = [], organization, attendanceHistory = [], activities = [], unreadMessagesCount = 0, onNavigate }: { stats?: { totalStudents: string; totalStaff: string; attendanceRate: string; feesCollected: string }, invoices?: any[], payments?: any[], students?: any[], classes?: any[], organization?: any, attendanceHistory?: any[], activities?: any[], unreadMessagesCount?: number, onNavigate?: (view: string) => void }) {
+export function SchoolAdminDashboard({ stats, invoices = [], payments = [], students = [], classes = [], organization, attendanceHistory = [], activities = [], unreadMessagesCount = 0, onNavigate, onUpdateOrganization, staffList = [], departments = [] }: { stats?: { totalStudents: string; totalStaff: string; attendanceRate: string; feesCollected: string }, invoices?: any[], payments?: any[], students?: any[], classes?: any[], organization?: any, attendanceHistory?: any[], activities?: any[], unreadMessagesCount?: number, onNavigate?: (view: string) => void, onUpdateOrganization?: (data: any) => void, staffList?: any[], departments?: any[] }) {
   const { currency, t } = useLanguage();
   const [showOwingModal, setShowOwingModal] = useState(false);
   const [modalType, setModalType] = useState<'paid' | 'owing'>('owing');
@@ -614,11 +614,23 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
           />
         </div>
       </Modal>
+      
+      <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
+        <HRModules.Organogram
+          staff={staffList}
+          departments={departments}
+          organization={organization}
+          scopedDeptId={null}
+          strictDepartmentView={false}
+          isReadOnly={false}
+          onUpdateOrganization={onUpdateOrganization}
+        />
+      </div>
     </div>
   );
 }
 
-export function HODDashboard({ data, staffList = [], departments = [], organization, user, unreadMessagesCount = 0, onNavigate }: { data?: any, staffList?: any[], departments?: any[], organization?: any, user?: any, unreadMessagesCount?: number, onNavigate?: (view: string) => void }) {
+export function HODDashboard({ data, staffList = [], departments = [], organization, user, unreadMessagesCount = 0, onNavigate, onUpdateOrganization }: { data?: any, staffList?: any[], departments?: any[], organization?: any, user?: any, unreadMessagesCount?: number, onNavigate?: (view: string) => void, onUpdateOrganization?: (data: any) => void }) {
   const { t } = useLanguage();
   
   // Use real data or empty defaults
@@ -807,13 +819,14 @@ export function HODDashboard({ data, staffList = [], departments = [], organizat
           scopedDeptId={user?.department_id}
           strictDepartmentView={true}
           isReadOnly={true}
+          onUpdateOrganization={onUpdateOrganization}
         />
       </div>
     </div>
   );
 }
 
-export function StaffDashboard({ staffData, user, organization, onNavigate, staffList = [], departments = [], unreadMessagesCount = 0 }: { staffData?: any, user?: any, organization?: any, onNavigate?: (view: string) => void, staffList?: any[], departments?: any[], unreadMessagesCount?: number }) {
+export function StaffDashboard({ staffData, user, organization, onNavigate, staffList = [], departments = [], unreadMessagesCount = 0, onUpdateOrganization }: { staffData?: any, user?: any, organization?: any, onNavigate?: (view: string) => void, staffList?: any[], departments?: any[], unreadMessagesCount?: number, onUpdateOrganization?: (data: any) => void }) {
   const { t } = useLanguage();
   
   const stats = {
@@ -936,6 +949,7 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
           scopedDeptId={user?.department_id}
           strictDepartmentView={true}
           isReadOnly={true}
+          onUpdateOrganization={onUpdateOrganization}
         />
       </div>
 

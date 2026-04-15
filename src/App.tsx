@@ -1038,6 +1038,11 @@ export default function App() {
             ? await updateStudent(data.id, data)
             : await createStudent(data);
           break;
+        case "organization":
+          result = isUpdate
+            ? await updateOrganization(data.id, data)
+            : await createOrganization(data);
+          break;
         case "inquiry":
           result = isUpdate
             ? await updateInquiry(data.id, data)
@@ -1758,6 +1763,7 @@ export default function App() {
                   )}
                   attendanceHistory={studentAttendance}
                   activities={auditLogs.slice(0, 10)}
+                  onUpdateOrganization={(data: any) => handleEntitySave("organization", data)}
                 />
               </div>
             );
@@ -1774,6 +1780,7 @@ export default function App() {
                 )}
                 unreadMessagesCount={unreadMessagesCount}
                 onNavigate={setCurrentView}
+                onUpdateOrganization={(data: any) => handleEntitySave("organization", data)}
               />
             );
           case "STAFF":
@@ -1788,6 +1795,7 @@ export default function App() {
                 departments={departments}
                 unreadMessagesCount={unreadMessagesCount}
                 onNavigate={setCurrentView}
+                onUpdateOrganization={(data: any) => handleEntitySave("organization", data)}
               />
             );
           case "STUDENT":
