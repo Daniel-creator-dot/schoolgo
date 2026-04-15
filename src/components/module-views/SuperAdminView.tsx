@@ -26,12 +26,13 @@ export {
 };
 
 export const SuperAdminModules = {
-  Organizations: ({ data, onAdd, onEdit, onDelete, onApprove }: { data?: any[]; onAdd?: () => void, onEdit?: (item: any) => void, onDelete?: (item: any) => void, onApprove?: (item: any) => void }) => (
+  Organizations: ({ data, onAdd, onEdit, onDelete, onApprove, onView }: { data?: any[]; onAdd?: () => void, onEdit?: (item: any) => void, onDelete?: (item: any) => void, onApprove?: (item: any) => void, onView?: (item: any) => void }) => (
     <DataTable
       title="All Organizations"
       data={data || []}
       onAdd={onAdd}
       onEdit={onEdit}
+      onView={onView}
       onDelete={onDelete}
       columns={[
         { header: 'Name', accessor: 'name', className: 'font-bold' },

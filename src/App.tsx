@@ -1881,6 +1881,9 @@ export default function App() {
           onEdit={(org) =>
             showToast(`Edit for ${org.name} coming soon!`, "info")
           }
+          onView={(org) =>
+            showToast(`View for ${org.name} coming soon!`, "info")
+          }
           onDelete={(org) =>
             setDeleteConfirm({ isOpen: true, item: org, type: "organization" })
           }
