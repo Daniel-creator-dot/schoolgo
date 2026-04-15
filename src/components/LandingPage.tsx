@@ -438,9 +438,45 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
                 {[
-                  { name: t('starter_plan'), features: [t('students_limit').replace('{count}', '200'), t('basic_attendance'), t('gradebook'), t('parent_portal_feature')] },
-                  { name: t('professional_plan'), features: [t('students_limit').replace('{count}', '1000'), t('finance_mgmt'), t('hr_payroll'), t('mobile_app_access')], popular: true },
-                  { name: t('enterprise_plan'), features: [t('unlimited_students'), t('multi_campus_support'), t('custom_ai_insights'), t('priority_support')] }
+                  { 
+                    name: t('starter_plan'), 
+                    features: [
+                      t('students_limit').replace('{count}', '200'), 
+                      t('basic_attendance'), 
+                      t('gradebook'), 
+                      t('parent_portal_feature'),
+                      'Simple Fee Tracking',
+                      'Automated Email Alerts',
+                      'Secure Cloud Backups'
+                    ] 
+                  },
+                  { 
+                    name: t('professional_plan'), 
+                    popular: true,
+                    features: [
+                      t('students_limit').replace('{count}', '1000'), 
+                      t('finance_mgmt'), 
+                      t('hr_payroll'), 
+                      t('mobile_app_access'),
+                      'Advanced Academic Analytics',
+                      'Transport & Hostel Management',
+                      'Automated Fee Collection (Paystack)',
+                      'Teacher Lesson Planning'
+                    ] 
+                  },
+                  { 
+                    name: t('enterprise_plan'), 
+                    features: [
+                      t('unlimited_students'), 
+                      t('multi_campus_support'), 
+                      t('custom_ai_insights'), 
+                      t('priority_support'),
+                      'Custom Report Card Engine',
+                      'API Access & Integrations',
+                      'Dedicated Account Manager',
+                      'White-label Custom Branding'
+                    ] 
+                  }
                 ].map((plan, i) => (
                   <motion.div
                     key={plan.name}
