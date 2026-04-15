@@ -1,8 +1,26 @@
 import express from 'express';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import pool from '../db.ts';
 import { AuthRequest } from '../middleware/auth.ts';
 import { recordAuditLog } from '../lib/audit.ts';
+
+// DEMO REQUESTS
+export const requestDemo = async (req: Request, res: Response) => {
+  const { school_name, contact_email } = req.body;
+  if (!school_name || !contact_email) {
+    return res.status(400).json({ error: 'School name and email are required.' });
+  }
+  try {
+    const result = await pool.query(
+      "INSERT INTO organizations (name, email, status, demo_requested) VALUES ($1, $2, 'Demo Request', TRUE) RETURNING id, name, email",
+      [school_name, contact_email]
+    );
+    res.status(201).json({ message: 'Demo request received successfully.', data: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 // ORGANIZATIONS
 export const getOrganization = async (req: AuthRequest, res: Response) => {

@@ -18,7 +18,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useLanguage } from '../lib/LanguageContext';
-import { registerPartner, loginPartner } from '../lib/api';
+import { registerPartner, loginPartner, requestDemo } from '../lib/api';
 import { UserRole } from '../types';
 import { Modal } from './UI';
 
@@ -35,6 +35,8 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
   const [activeSection, setActiveSection] = useState(0); // 0: Home, 1: Solutions, 2: Pricing
   const [showDemoModal, setShowDemoModal] = useState(false);
   const [isDemoSubmitted, setIsDemoSubmitted] = useState(false);
+  const [demoData, setDemoData] = useState({ school_name: '', contact_email: '' });
+  const [demoLoading, setDemoLoading] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const [policyType, setPolicyType] = useState<'privacy' | 'terms'>('privacy');
   
@@ -506,7 +508,7 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
               >
                 {t('terms')}
               </button>
-              <a href="#" className="hidden sm:block hover:text-indigo-600 transition-colors">{t('support')}</a>
+              <a href="mailto:hello@bytzforge.com" className="hidden sm:block hover:text-indigo-600 transition-colors">{t('support')}</a>
             </div>
           </div>
         </div>
@@ -708,21 +710,51 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
                         {t('request_demo_desc')}
                       </p>
 
-                      <form className="space-y-3 md:space-y-4 text-left">
+                      <form 
+                        className="space-y-3 md:space-y-4 text-left"
+                        onSubmit={async (e) => {
+                          e.preventDefault();
+                          if (!demoData.school_name || !demoData.contact_email) return;
+                          setDemoLoading(true);
+                          try {
+                            await requestDemo(demoData);
+                            setIsDemoSubmitted(true);
+                          } catch (error) {
+                            console.error('Demo request failed:', error);
+                            alert('Failed to request demo. Please try again.');
+                          } finally {
+                            setDemoLoading(false);
+                          }
+                        }}
+                      >
                         <div>
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-3 md:ml-4 mb-1 md:mb-2 block">{t('school_name')}</label>
-                          <input type="text" className="w-full px-5 md:px-6 py-3 md:py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="St. Andrews Academy" />
+                          <input 
+                            required
+                            type="text" 
+                            className="w-full px-5 md:px-6 py-3 md:py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                            placeholder="St. Andrews Academy" 
+                            value={demoData.school_name}
+                            onChange={(e) => setDemoData({ ...demoData, school_name: e.target.value })}
+                          />
                         </div>
                         <div>
                           <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-3 md:ml-4 mb-1 md:mb-2 block">{t('contact_email')}</label>
-                          <input type="email" className="w-full px-5 md:px-6 py-3 md:py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="admin@school.com" />
+                          <input 
+                            required
+                            type="email" 
+                            className="w-full px-5 md:px-6 py-3 md:py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
+                            placeholder="admin@school.com" 
+                            value={demoData.contact_email}
+                            onChange={(e) => setDemoData({ ...demoData, contact_email: e.target.value })}
+                          />
                         </div>
                         <button
-                          type="button"
-                          onClick={() => setIsDemoSubmitted(true)}
-                          className="w-full py-4 md:py-5 bg-indigo-600 text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none"
+                          type="submit"
+                          disabled={demoLoading}
+                          className="w-full py-4 md:py-5 bg-indigo-600 text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {t('schedule_demo')}
+                          {demoLoading ? 'Submitting...' : t('schedule_demo')}
                         </button>
                       </form>
                     </motion.div>
@@ -782,7 +814,7 @@ export default function LandingPage({ onGetStarted, onLogin, onPartnerLogin }: L
               <div className="flex flex-wrap justify-center gap-8 text-xs font-bold uppercase tracking-widest text-zinc-400">
                 <button onClick={() => { setPolicyType('privacy'); setShowPolicyModal(true); }} className="hover:text-indigo-600 transition-colors">{t('privacy_policy_title')}</button>
                 <button onClick={() => { setPolicyType('terms'); setShowPolicyModal(true); }} className="hover:text-indigo-600 transition-colors">{t('partner_terms_title')}</button>
-                <a href="#" className="hover:text-indigo-600 transition-colors">{t('support')}</a>
+                <a href="mailto:hello@bytzforge.com" className="hover:text-indigo-600 transition-colors">{t('support')}</a>
               </div>
 
               <p className="text-[10px] md:text-xs text-zinc-400 font-medium">

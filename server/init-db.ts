@@ -46,6 +46,7 @@ export async function init() {
         current_term VARCHAR(20) DEFAULT 'Term 1',
         organogram_head_title VARCHAR(255) DEFAULT 'School Admin',
         demo_requested BOOLEAN DEFAULT FALSE,
+        expiry_date DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -109,6 +110,9 @@ export async function init() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'organogram_head_title') THEN
           ALTER TABLE organizations ADD COLUMN organogram_head_title VARCHAR(255) DEFAULT 'School Admin';
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'organizations' AND column_name = 'expiry_date') THEN
+          ALTER TABLE organizations ADD COLUMN expiry_date DATE;
         END IF;
       END $$;
     `);

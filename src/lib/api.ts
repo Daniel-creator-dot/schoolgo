@@ -59,6 +59,12 @@ export const fetchPartnerDashboard = async () => {
   return response.data;
 };
 
+export const requestDemo = async (data: { school_name: string, contact_email: string }) => {
+  const response = await api.post('/demo-request', data);
+  return response.data;
+};
+
+
 export const partnerCreateSchool = async (schoolData: any) => {
   const response = await api.post('/partner/schools', schoolData);
   return response.data;

@@ -31,6 +31,8 @@ router.post('/auth/login', AuthController.login);
 router.post('/auth/register', AuthController.register);
 router.post('/auth/partner/login', PartnerController.login);
 router.post('/auth/partner/register', PartnerController.register);
+router.post('/demo-request', OrganizationController.requestDemo);
+
 
 // PROTECTED ROUTES
 router.use(verifyToken);
