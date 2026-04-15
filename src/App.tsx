@@ -665,7 +665,8 @@ export default function App() {
 
   // Filtered data for Staff members (Academics restriction)
   const getStaffFilteredData = () => {
-    if (!["STAFF", "HOD"].includes(currentRole || "") || !currentUser?.email)
+    const staffRoles = ["STAFF", "HOD", "SCHOOL_ADMIN", "FINANCE", "HR", "LIBRARIAN", "BUS_DRIVER", "NON_STAFF"];
+    if (!staffRoles.includes(currentRole || "") || !currentUser?.email)
       return null;
 
     const isHOD = currentRole === "HOD";
@@ -3518,6 +3519,25 @@ export default function App() {
           }
         />
       ),
+      profile:
+        currentRole === "SUPER_ADMIN" ? (
+          <Profile
+            currentUser={currentUser}
+            orgCount={organizations.length}
+            partnerCount={partnerList?.length || 0}
+            totalUsers={platformUsers.length}
+          />
+        ) : staffData?.profile?.length ? (
+          <StaffHRModules.StaffProfile
+            data={staffData.profile}
+            onSave={(data) => handleEntitySave("staff", data)}
+            currentUser={currentUser}
+          />
+        ) : (
+          <div className="p-8 text-center text-zinc-500">
+            Profile Module for {currentRole} coming soon...
+          </div>
+        ),
     };
 
     return (
