@@ -915,7 +915,7 @@ export function SchoolBilling({
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-zinc-500 font-medium">Billed Amount</span>
-                <span className="font-bold text-zinc-200">$ {parseFloat(currentSubscription?.amount || 0).toLocaleString()}</span>
+                <span className="font-bold text-zinc-200">GH₵ {parseFloat(currentSubscription?.amount || 0).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -943,12 +943,6 @@ export function SchoolBilling({
                   ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 scale-105 shadow-xl shadow-indigo-100 dark:shadow-none" 
                   : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm"
               )}>
-                {plan.is_popular && (
-                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-indigo-600 text-white text-[10px] font-black rounded-full uppercase tracking-[0.2em] shadow-lg shadow-indigo-200 dark:shadow-none">
-                    Recommended
-                  </span>
-                )}
-                
                 <div className="mb-8">
                   <div className="flex justify-between items-start mb-4">
                     <h4 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{plan.name}</h4>
@@ -959,7 +953,7 @@ export function SchoolBilling({
                     )}
                   </div>
                   <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-4xl font-black text-zinc-900 dark:text-white">$ {parseFloat(plan.price).toLocaleString()}</span>
+                    <span className="text-4xl font-black text-zinc-900 dark:text-white">GH₵ {parseFloat(plan.price).toLocaleString()}</span>
                     <span className="text-zinc-500 font-bold text-sm">/{plan.period === 'monthly' ? 'mo' : plan.period === 'yearly' ? 'yr' : 'fixed'}</span>
                   </div>
                   <p className="text-sm text-zinc-500 line-clamp-2 leading-relaxed h-10">{plan.description}</p>
@@ -978,15 +972,17 @@ export function SchoolBilling({
                 </div>
 
                 <button
-                  disabled={isCurrent}
+                  onClick={() => {
+                    document.getElementById('contact-support-footer')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
                   className={cn(
-                    "w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all",
+                    "w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all hover:scale-[1.02]",
                     isCurrent
-                      ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
-                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-[1.02]"
+                      ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none"
+                      : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none"
                   )}
                 >
-                  {isCurrent ? "Current Plan" : "Upgrade Now"}
+                  {isCurrent ? "Renew Current Plan" : "Call Admin to Pay"}
                 </button>
               </div>
             );
@@ -995,7 +991,7 @@ export function SchoolBilling({
       </div>
 
       {/* Support Section */}
-      <div className="bg-indigo-600 rounded-[2rem] p-8 sm:p-12 text-white text-center space-y-8 shadow-2xl shadow-indigo-200 dark:shadow-none relative overflow-hidden">
+      <div id="contact-support-footer" className="bg-indigo-600 rounded-[2rem] p-8 sm:p-12 text-white text-center space-y-8 shadow-2xl shadow-indigo-200 dark:shadow-none relative overflow-hidden">
         <div className="relative z-10 space-y-4 max-w-2xl mx-auto">
           <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-md">
             <Mail className="w-8 h-8" />
