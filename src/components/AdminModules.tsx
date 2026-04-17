@@ -79,11 +79,11 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
     email: '',
     role: 'SCHOOL_ADMIN',
     org_id: '',
-    password: ''
+    password: 'zxcv123$$'
   });
 
   const [resetPasswordUser, setResetPasswordUser] = useState<any | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('zxcv123$$');
 
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, user: any | null }>({
     isOpen: false,
@@ -93,7 +93,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
   const [viewingUser, setViewingUser] = useState<any | null>(null);
 
   const handleAdd = () => {
-    setFormData({ name: '', email: '', role: 'SCHOOL_ADMIN', org_id: '', password: '' } as any);
+    setFormData({ name: '', email: '', role: 'SCHOOL_ADMIN', org_id: '', password: 'zxcv123$$' } as any);
     setIsModalOpen(true);
   };
 
@@ -222,7 +222,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
         isOpen={!!resetPasswordUser} 
         onClose={() => {
           setResetPasswordUser(null);
-          setNewPassword('');
+          setNewPassword('zxcv123$$');
         }} 
         title="Reset User Password"
       >
@@ -230,7 +230,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
           <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
             <p className="text-sm text-amber-800 font-medium">
               You are resetting the password for <span className="font-bold">{resetPasswordUser?.name}</span> ({resetPasswordUser?.email}). 
-              The user will need to use this new password for their next login.
+              The system default is <span className="font-bold">zxcv123$$</span>.
             </p>
           </div>
 
@@ -258,7 +258,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
               type="button" 
               onClick={() => {
                 setResetPasswordUser(null);
-                setNewPassword('');
+                setNewPassword('zxcv123$$');
               }} 
               className="px-4 py-2 text-sm font-bold text-zinc-500"
             >
@@ -271,7 +271,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
                   await resetUserPassword(resetPasswordUser.id, { password: newPassword });
                   (window as any).showToast?.('Password reset successfully!', 'success');
                   setResetPasswordUser(null);
-                  setNewPassword('');
+                  setNewPassword('zxcv123$$');
                 } catch (err) {
                   console.error('Failed to reset password:', err);
                   (window as any).showToast?.('Failed to reset password', 'error');
@@ -3775,7 +3775,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
   const [editingPartner, setEditingPartner] = useState<any>(null);
   const [viewingPartner, setViewingPartner] = useState<any>(null);
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', contact_number: '', company_name: '', registration_number: '', status: 'Active', language: 'en'
+    name: '', email: '', password: 'zxcv123$$', contact_number: '', company_name: '', registration_number: '', status: 'Active', language: 'en'
   });
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
   const [resetConfirm, setResetConfirm] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
@@ -3796,7 +3796,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
 
   const handleAdd = () => {
     setEditingPartner(null);
-    setFormData({ name: '', email: '', password: 'partner123', contact_number: '', company_name: '', registration_number: '', status: 'Active', language: 'en' });
+    setFormData({ name: '', email: '', password: 'zxcv123$$', contact_number: '', company_name: '', registration_number: '', status: 'Active', language: 'en' });
     setIsModalOpen(true);
   };
 
@@ -3851,7 +3851,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
     if (!resetConfirm.partner) return;
     try {
       await resetPartnerPassword(resetConfirm.partner.id);
-      (window as any).showToast?.(`Password for ${resetConfirm.partner.name} reset to partner123`, 'success');
+      (window as any).showToast?.(`Password for ${resetConfirm.partner.name} reset to zxcv123$$`, 'success');
     } catch (err) {
       (window as any).showToast?.('Failed to reset password', 'error');
     }
@@ -3946,7 +3946,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
           {!editingPartner && (
             <div className="space-y-1">
               <label className="text-xs font-bold uppercase text-zinc-500">Password</label>
-              <input type="text" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" placeholder="Default: partner123" />
+              <input type="text" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" placeholder="Default: zxcv123$$" />
             </div>
           )}
           <div className="grid grid-cols-2 gap-4">
@@ -3995,7 +3995,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
         onClose={() => setResetConfirm({ ...resetConfirm, isOpen: false })}
         onConfirm={handleConfirmReset}
         title="Reset Partner Password"
-        message={`Are you sure you want to reset the password for "${resetConfirm.partner?.name}" back to the default (partner123)?`}
+        message={`Are you sure you want to reset the password for "${resetConfirm.partner?.name}" back to the default (zxcv123$$)?`}
       />
     </div>
   );

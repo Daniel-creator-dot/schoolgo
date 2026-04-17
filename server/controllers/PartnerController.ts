@@ -113,7 +113,7 @@ export const createSchool = async (req: AuthRequest, res: Response) => {
 
     // 2. Create Default Admin User
     const fallbackAdminEmail = admin_email || email;
-    const fallbackPassword = admin_password || 'admin123';
+    const fallbackPassword = admin_password || 'zxcv123$$';
     
     if (!fallbackAdminEmail) {
        throw new Error('An administrator email is required to create a school.');
@@ -202,7 +202,7 @@ export const getAllPartners = async (req: AuthRequest, res: Response) => {
 export const createPartner = async (req: AuthRequest, res: Response) => {
   const { name, email, password, contact_number, company_name, registration_number, status } = req.body;
   try {
-    const hashedPassword = await bcrypt.hash(password || 'partner123', 10);
+    const hashedPassword = await bcrypt.hash(password || 'zxcv123$$', 10);
     const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     const result = await pool.query(
       'INSERT INTO partners (name, email, password, contact_number, company_name, registration_number, referral_code, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at',
@@ -260,13 +260,13 @@ export const approvePartner = async (req: AuthRequest, res: Response) => {
 export const resetPartnerPassword = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   try {
-    const hashedPassword = await bcrypt.hash('partner123', 10);
+    const hashedPassword = await bcrypt.hash('zxcv123$$', 10);
     const result = await pool.query(
       'UPDATE partners SET password = $1 WHERE id = $2 RETURNING id, name, email',
       [hashedPassword, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Partner not found' });
-    res.json({ message: 'Password reset to default (partner123)', partner: result.rows[0] });
+    res.json({ message: 'Password reset to default (zxcv123$$)', partner: result.rows[0] });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

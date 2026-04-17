@@ -562,11 +562,9 @@ export const verifyPaystackPayment = async (req: AuthRequest, res: Response) => 
 
 export const resetUserPassword = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { password } = req.body;
-
-  if (!password) {
-    return res.status(400).json({ error: 'New password is required.' });
-  }
+  const { password: rawPassword } = req.body;
+  
+  const password = rawPassword || 'zxcv123$$';
 
   try {
     const bcrypt = await import('bcryptjs');

@@ -41,7 +41,7 @@ async function seedPartner() {
 
     // 3. Create a test partner
     const email = 'test@partner.com';
-    const plainPassword = 'partner123';
+    const plainPassword = 'zxcv123$$';
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
     const referralCode = 'OMNI99';
 
@@ -61,7 +61,7 @@ async function seedPartner() {
     console.log('');
     console.log('=== TEST ACCOUNT ===');
     console.log('Email: test@partner.com');
-    console.log('Password: partner123');
+    console.log('Password: zxcv123$$');
     console.log('====================');
 
   } catch (error) {
