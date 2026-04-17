@@ -149,6 +149,13 @@ export const updateOrganization = async (req: AuthRequest, res: Response) => {
       );
     }
 
+    if (req.body.status === 'Inactive') {
+      await client.query(
+        "UPDATE subscriptions SET status = 'Expired' WHERE org_id = $1 AND status = 'Active'",
+        [id]
+      );
+    }
+
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'UPDATE_ORGANIZATION', `Updated organization ID: ${id}`, id, req.ip || '');
     res.json(result.rows[0]);
