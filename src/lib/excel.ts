@@ -31,20 +31,7 @@ export const downloadStudentTemplate = (classes: any[] = []) => {
     'Class Name'
   ];
 
-  const exampleRow = [
-    'John Doe',
-    'ADM-101',
-    'Male',
-    '2010-05-15',
-    'Jane Doe',
-    '0244123456',
-    'jane@email.com',
-    'Christian',
-    'JHS 1',
-    classes[0] ? `${classes[0].name} ${classes[0].section || ''}`.trim() : 'Primary 1'
-  ];
-
-  const ws = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
+  const ws = XLSX.utils.aoa_to_sheet([headers]);
   
   // Add a helper sheet for valid class names
   const classesSheetData = [['Valid Class Names'], ...classes.map(c => [`${c.name} ${c.section || ''}`.trim()])];

@@ -405,12 +405,19 @@ router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req:
     if (!finalAdmissionNo || finalAdmissionNo.startsWith('TEMP-') || /^ADM-\d{13}/.test(finalAdmissionNo)) {
       finalAdmissionNo = await AdmissionsController.getNextAdmissionNumber(pool, orgId);
     }
+    
+    // Auto-generate email if missing to prevent 500 errors on bulk import
+    let finalEmail = email;
+    if (!finalEmail) {
+      const safeName = name ? name.replace(/[^a-zA-Z]/g, '').toLowerCase() : 'student';
+      finalEmail = `${safeName}.${Date.now().toString().slice(-5)}@schoolgo.edu`;
+    }
 
     const result = await pool.query(
       'INSERT INTO students (name, email, parent_email, password, parent_password, status, gpa, admission_no, class_id, parent_name, contact, entrance_exam_score, profile_pic, previous_school_profile_pic, fee_status, fee_amount, org_id, acceptance_id, math_score, english_score, science_score, interview_score, previous_school, custom_scores, date_of_birth, gender, date_enrolled, secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31) RETURNING *',
       [
         name,
-        email,
+        finalEmail,
         parent_email || null,
         hashedPassword,
         hashedParentPassword,

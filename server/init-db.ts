@@ -317,6 +317,9 @@ export async function init() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='fee_amount') THEN
           ALTER TABLE students ADD COLUMN fee_amount NUMERIC(10, 2) DEFAULT 0;
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='password') THEN
+          ALTER TABLE students ADD COLUMN password VARCHAR(255);
+        END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='students' AND column_name='transport_route_id') THEN
           -- transport_routes will be created later, so we will bind this foreign key in a late binding block at the end
           ALTER TABLE students ADD COLUMN transport_route_id UUID; 
