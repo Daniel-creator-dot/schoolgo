@@ -55,6 +55,10 @@ router.delete('/organizations/:id', checkRole(['SUPER_ADMIN']), OrganizationCont
 router.get('/partner/dashboard', checkRole(['PARTNER']), PartnerController.getDashboard);
 router.post('/partner/schools', checkRole(['PARTNER']), PartnerController.createSchool);
 router.post('/partner/approve/:org_id', checkRole(['SUPER_ADMIN']), PartnerController.approveReferral);
+router.get('/partner/banks', checkRole(['PARTNER']), PartnerController.getBanks);
+router.get('/partner/resolve-account', checkRole(['PARTNER']), PartnerController.resolveAccount);
+router.post('/partner/payout-settings', checkRole(['PARTNER']), PartnerController.updatePayoutSettings);
+router.get('/partner/payout-settings', checkRole(['PARTNER']), PartnerController.getPayoutSettings);
 
 // SUPER ADMIN - PARTNER MANAGEMENT
 router.get('/partners', checkRole(['SUPER_ADMIN']), PartnerController.getAllPartners);

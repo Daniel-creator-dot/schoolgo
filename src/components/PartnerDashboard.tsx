@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, Users, Building2, Plus, Search, Filter, 
   CheckCircle2, Clock, XCircle, Send, MessageSquare, 
-  Wallet, TrendingUp, HelpCircle, LogOut, ChevronRight, Layers
+  Wallet, TrendingUp, HelpCircle, LogOut, ChevronRight, Layers, Settings
 } from 'lucide-react';
 import { API_BASE_URL } from '../constants';
 import { useLanguage } from '../lib/LanguageContext';
@@ -31,6 +31,17 @@ export default function PartnerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<SchoolLead | null>(null);
   const [systemPlans, setSystemPlans] = useState<any[]>([]);
+  const [banks, setBanks] = useState<any[]>([]);
+  const [payoutSettings, setPayoutSettings] = useState({
+    payout_type: 'BANK',
+    bank_name: '',
+    bank_code: '',
+    account_number: '',
+    account_name: ''
+  });
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
+  const [resolutionError, setResolutionError] = useState('');
   
   // Chat State
   const [messages, setMessages] = useState<any[]>([]);
@@ -92,6 +103,95 @@ export default function PartnerDashboard() {
       console.error('Fetch error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPayoutSettings = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/partner/payout-settings`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPayoutSettings(prev => ({ ...prev, ...data }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch payout settings:', err);
+    }
+  };
+
+  const fetchBanks = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/partner/banks`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBanks(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch banks:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      fetchPayoutSettings();
+      fetchBanks();
+    }
+  }, [activeTab]);
+
+  const resolveAccount = async () => {
+    if (!payoutSettings.account_number || !payoutSettings.bank_code) return;
+    
+    setIsResolving(true);
+    setResolutionError('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/partner/resolve-account?account_number=${payoutSettings.account_number}&bank_code=${payoutSettings.bank_code}`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPayoutSettings(prev => ({ ...prev, account_name: data.account_name }));
+      } else {
+        setResolutionError(data.error || 'Could not resolve account name');
+        setPayoutSettings(prev => ({ ...prev, account_name: '' }));
+      }
+    } catch (err) {
+      setResolutionError('Verification service unavailable');
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  // Auto-resolve when account number reaches 10 digits (common for banks)
+  useEffect(() => {
+    if (payoutSettings.account_number.length === 10 && payoutSettings.bank_code) {
+      resolveAccount();
+    }
+  }, [payoutSettings.account_number, payoutSettings.bank_code]);
+
+  const handleSavePayout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPayoutLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/partner/payout-settings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payoutSettings)
+      });
+      if (res.ok) {
+        (window as any).showToast?.('Payout settings saved successfully!', 'success');
+      } else {
+        (window as any).showToast?.('Failed to save settings', 'error');
+      }
+    } catch (err) {
+      (window as any).showToast?.('Connection error', 'error');
+    } finally {
+      setPayoutLoading(false);
     }
   };
 
@@ -213,6 +313,7 @@ export default function PartnerDashboard() {
             { id: 'plans', label: 'System Plans', icon: <Layers size={20} /> },
             { id: 'earnings', label: 'Earnings', icon: <Wallet size={20} /> },
             { id: 'chat', label: 'Support Chat', icon: <MessageSquare size={20} /> },
+            { id: 'settings', label: 'Settings', icon: <Settings size={20} /> },
           ].map((item) => (
             <button
               key={item.id}
@@ -521,6 +622,132 @@ export default function PartnerDashboard() {
                </form>
             </div>
           )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              {/* Header */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
+                <div className="flex items-center gap-4 mb-2">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                    <Settings size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Partner Settings</h3>
+                    <p className="text-zinc-500 text-sm font-medium">Manage your payout settings and account preferences</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payout Settings Card */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
+                <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                  <div>
+                    <h4 className="text-lg font-black text-zinc-900 dark:text-white">Payout Method</h4>
+                    <p className="text-xs text-zinc-500 font-medium">Configure where you receive your commissions</p>
+                  </div>
+                  <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+                    <button 
+                      onClick={() => setPayoutSettings({...payoutSettings, payout_type: 'BANK'})}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${payoutSettings.payout_type === 'BANK' ? 'bg-white dark:bg-zinc-700 text-indigo-600 shadow-sm' : 'text-zinc-500'}`}
+                    >
+                      Bank Account
+                    </button>
+                    <button 
+                      onClick={() => setPayoutSettings({...payoutSettings, payout_type: 'MOBILE_MONEY'})}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${payoutSettings.payout_type === 'MOBILE_MONEY' ? 'bg-white dark:bg-zinc-700 text-indigo-600 shadow-sm' : 'text-zinc-500'}`}
+                    >
+                      Mobile Money
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSavePayout} className="p-8 space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                        {payoutSettings.payout_type === 'BANK' ? 'Select Bank' : 'Select Provider'}
+                      </label>
+                      <select 
+                        required
+                        value={payoutSettings.bank_code}
+                        onChange={(e) => {
+                          const bank = banks.find(b => b.code === e.target.value);
+                          setPayoutSettings({ ...payoutSettings, bank_code: e.target.value, bank_name: bank?.name || '' });
+                        }}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+                      >
+                        <option value="">Choose a provider...</option>
+                        {banks.filter(b => payoutSettings.payout_type === 'MOBILE_MONEY' ? b.type === 'momo' || b.name.toLowerCase().includes('mobile money') : b.type !== 'momo').map(bank => (
+                          <option key={bank.id} value={bank.code}>{bank.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                        {payoutSettings.payout_type === 'BANK' ? 'Account Number' : 'Mobile Number'}
+                      </label>
+                      <div className="relative">
+                        <input 
+                          type="text" required
+                          value={payoutSettings.account_number}
+                          onChange={(e) => setPayoutSettings({ ...payoutSettings, account_number: e.target.value, account_name: '' })}
+                          className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+                          placeholder={payoutSettings.payout_type === 'BANK' ? 'e.g. 0581234567' : 'e.g. 0244123456'}
+                        />
+                        {isResolving && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Verification Results */}
+                  {(payoutSettings.account_name || resolutionError) && (
+                    <div className={`p-4 rounded-2xl border flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 ${
+                      resolutionError ? 'bg-red-50 border-red-100 text-red-700' : 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                    }`}>
+                      {resolutionError ? (
+                        <>
+                          <XCircle size={20} className="shrink-0" />
+                          <p className="text-sm font-bold">{resolutionError}</p>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={20} className="shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-[10px] uppercase font-black tracking-widest opacity-60">Verified Account Name</p>
+                            <p className="text-sm font-bold">{payoutSettings.account_name}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="pt-4 flex justify-end">
+                    <button 
+                      type="submit"
+                      disabled={payoutLoading || isResolving || !payoutSettings.account_name}
+                      className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-200 dark:shadow-none disabled:opacity-50 disabled:grayscale"
+                    >
+                      {payoutLoading ? 'Saving...' : 'Update Payout Details'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* Security Note */}
+              <div className="p-6 bg-zinc-100 dark:bg-zinc-800/50 rounded-2xl flex items-start gap-3">
+                <HelpCircle size={20} className="text-zinc-400 mt-0.5" />
+                <p className="text-xs text-zinc-500 font-medium">
+                  We use Paystack's secure verification hub to ensure your payout details are valid. 
+                  Commissions are paid out on the first week of every month to the account verified above.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
@@ -531,6 +758,7 @@ export default function PartnerDashboard() {
             { id: 'plans', label: 'Plans', icon: <Layers size={24} /> },
             { id: 'earnings', label: 'Earnings', icon: <Wallet size={24} /> },
             { id: 'chat', label: 'Support', icon: <MessageSquare size={24} /> },
+            { id: 'settings', label: 'Settings', icon: <Settings size={24} /> },
         ].map((item) => (
             <button
               key={item.id}

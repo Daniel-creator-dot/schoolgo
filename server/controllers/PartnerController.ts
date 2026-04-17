@@ -271,3 +271,71 @@ export const resetPartnerPassword = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getBanks = async (req: AuthRequest, res: Response) => {
+  try {
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    const response = await fetch('https://api.paystack.co/bank?country=ghana', {
+      headers: { Authorization: `Bearer ${paystackSecret}` }
+    });
+    const data = await response.json();
+    res.json(data.data || []);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const resolveAccount = async (req: AuthRequest, res: Response) => {
+  const { account_number, bank_code } = req.query;
+  try {
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    const response = await fetch(`https://api.paystack.co/bank/resolve?account_number=${account_number}&bank_code=${bank_code}`, {
+      headers: { Authorization: `Bearer ${paystackSecret}` }
+    });
+    const data = await response.json();
+    if (!data.status) {
+      return res.status(400).json({ error: data.message });
+    }
+    res.json(data.data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
+  const { payout_type, bank_name, bank_code, account_number, account_name } = req.body;
+  const partnerId = req.user.id;
+
+  try {
+    const result = await pool.query(
+      `UPDATE partners 
+       SET payout_type = $1, bank_name = $2, bank_code = $3, account_number = $4, account_name = $5 
+       WHERE id = $6 RETURNING *`,
+      [payout_type, bank_name, bank_code, account_number, account_name, partnerId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Partner not found' });
+    }
+
+    res.json({ message: 'Payout settings updated successfully', partner: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getPayoutSettings = async (req: AuthRequest, res: Response) => {
+  const partnerId = req.user.id;
+  try {
+    const result = await pool.query(
+      'SELECT payout_type, bank_name, bank_code, account_number, account_name FROM partners WHERE id = $1',
+      [partnerId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Partner not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
