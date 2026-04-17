@@ -824,6 +824,47 @@ export const rejectHostelRequest = async (studentId: string) => {
   return response.data;
 };
 
+// Clubs
+export const fetchClubs = async () => {
+  const response = await api.get('/ops/clubs');
+  return response.data;
+};
+
+export const createClub = async (data: any) => {
+  const response = await api.post('/ops/clubs', data);
+  return response.data;
+};
+
+export const updateClub = async (id: string, data: any) => {
+  const response = await api.patch(`/ops/clubs/${id}`, data);
+  return response.data;
+};
+
+export const deleteClub = async (id: string) => {
+  const response = await api.delete(`/ops/clubs/${id}`);
+  return response.data;
+};
+
+export const fetchClubMemberships = async () => {
+  const response = await api.get('/ops/club-memberships');
+  return response.data;
+};
+
+export const joinClub = async (data: { club_id: string; student_id: string }) => {
+  const response = await api.post('/ops/club-memberships/join', data);
+  return response.data;
+};
+
+export const updateMembershipStatus = async (id: string, status: string) => {
+  const response = await api.patch(`/ops/club-memberships/${id}/status`, { status });
+  return response.data;
+};
+
+export const leaveClub = async (id: string) => {
+  const response = await api.delete(`/ops/club-memberships/${id}/leave`);
+  return response.data;
+};
+
 // Health
 export const fetchHealthRecords = async () => {
   const response = await api.get('/ops/health');

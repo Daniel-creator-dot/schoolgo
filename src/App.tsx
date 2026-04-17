@@ -4,8 +4,6 @@ import {
   UserRole,
   Student,
   Inquiry,
-  Application,
-  Acceptance,
   Ward,
   Book,
   BorrowRecord,
@@ -48,7 +46,7 @@ import {
   AcademicModules,
   AdmissionsModules,
   ExamModules,
-  OnboardingView,
+  AdmitStudentView,
 } from "./components/module-views/SchoolAdminView";
 import { FinanceModules } from "./components/module-views/FinanceView";
 import { HRModules } from "./components/module-views/HRView";
@@ -76,8 +74,6 @@ import {
   fetchStudentFeesSummary,
   fetchStudents,
   fetchInquiries,
-  fetchApplications,
-  fetchAcceptances,
   createStudent,
   updateStudent,
   deleteStudent,
@@ -206,12 +202,6 @@ import {
   createInquiry,
   updateInquiry,
   deleteInquiry,
-  createApplication,
-  updateApplication,
-  deleteApplication,
-  createAcceptance,
-  updateAcceptance,
-  deleteAcceptance,
   fetchTimetables,
   createTimetableEntry,
   updateTimetableEntry,
@@ -261,6 +251,10 @@ import {
   updateCalendarEvent,
   deleteCalendarEvent,
   updateParent,
+  fetchClubs,
+  createClub,
+  updateClub,
+  deleteClub,
 } from "./lib/api";
 
 import { useLanguage } from "./lib/LanguageContext";
@@ -305,9 +299,8 @@ export default function App() {
   // System State
   const [studentList, setStudentList] = useState<Student[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [acceptance, setAcceptance] = useState<Acceptance[]>([]);
   const [staffList, setStaffList] = useState<any[]>([]);
+  const [clubs, setClubs] = useState<any[]>([]);
   const [partnerList, setPartnerList] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [classList, setClassList] = useState<any[]>([]);
@@ -418,8 +411,6 @@ export default function App() {
       const resultsArr = await Promise.allSettled([
         fetchStudents(),
         fetchInquiries(),
-        fetchApplications(),
-        fetchAcceptances(),
         isAdmin || isHR || isStaff || isHOD || isStudent || isParent
           ? fetchStaff()
           : Promise.resolve([]),
@@ -447,6 +438,7 @@ export default function App() {
         fetchInventorySales(),
         fetchSubscriptions(),
         isAdmin || isFinance ? fetchReceipts() : Promise.resolve([]),
+        fetchClubs(),
         currentRole === "SUPER_ADMIN"
           ? fetchPlatformUsers()
           : Promise.resolve([]),
@@ -478,119 +470,70 @@ export default function App() {
           : Promise.resolve(null),
       ]);
 
-      const [
-        stus,
-        inqs,
-        apps,
-        accs,
-        staff,
-        depts,
-        classes,
-        subjects,
-        satt_student,
-        orgs,
-        invs,
-        exps,
-        partners,
-        pusers,
-        exm,
-        res,
-        rec,
-        satt,
-        ln,
-        tod,
-        bh,
-        schol,
-        scholTypes,
-        uni,
-        isales,
-        subs,
-        rpts,
-        pusers_admin,
-        logs,
-        mods,
-        plans,
-        payroll,
-        perf,
-        leave,
-        exitMgt,
-        fees,
-        ttable,
-        gScales,
-        rcTemplates,
-        remTemplates,
-        feesSummary,
-        libBooks,
-        libLoans,
-        transport,
-        hostelList,
-        health,
-        invItems,
-        docTemplates,
-        currentOrgInfo,
-        hStats,
-      ] = resultsArr;
+      const assignIfFulfilled = (index: number, setter: (val: any) => void) => {
+        const res = resultsArr[index];
+        if (res && res.status === "fulfilled") {
+          setter(res.value);
+        }
+      };
 
-      if (stus.status === "fulfilled") setStudentList(stus.value);
-      if (inqs.status === "fulfilled") setInquiries(inqs.value);
-      if (apps.status === "fulfilled") setApplications(apps.value);
-      if (accs.status === "fulfilled") setAcceptance(accs.value);
-      if (staff.status === "fulfilled") setStaffList(staff.value);
-      if (depts.status === "fulfilled") setDepartments(depts.value);
-      if (classes.status === "fulfilled") setClassList(classes.value);
-      if (subjects.status === "fulfilled") setSubjectList(subjects.value);
-      if (satt_student.status === "fulfilled")
-        setStudentAttendance(satt_student.value);
-      if (orgs.status === "fulfilled") setOrganizations(orgs.value);
-      if (invs.status === "fulfilled") setInvoices(invs.value);
-      if (exps.status === "fulfilled") setExpenses(exps.value);
-      if (partners.status === "fulfilled") setPartnerList(partners.value);
-      if (pusers.status === "fulfilled") setPlatformUsers(pusers.value);
-      if (exm.status === "fulfilled") setExams(exm.value);
-      if (res.status === "fulfilled") setResults(res.value);
-      if (rec.status === "fulfilled") setRecruitment(rec.value);
-      if (satt.status === "fulfilled") setStaffAttendance(satt.value);
-      if (ln.status === "fulfilled") setLessonNotes(ln.value);
-      if (tod.status === "fulfilled") setTeachersOnDuty(tod.value);
-      if (bh.status === "fulfilled") setBehaviorIncidents(bh.value);
-      if (schol.status === "fulfilled") setScholarships(schol.value);
-      if (scholTypes.status === "fulfilled")
-        setScholarshipTypes(scholTypes.value);
-      if (uni.status === "fulfilled") setUniforms(uni.value);
-      if (isales.status === "fulfilled") setInventorySales(isales.value);
-      if (subs.status === "fulfilled") setSubscriptions(subs.value);
-      if (rpts.status === "fulfilled") setReceipts(rpts.value);
-      if (pusers_admin.status === "fulfilled") setPlatformUsers(pusers_admin.value);
-      if (logs.status === "fulfilled") setAuditLogs(logs.value);
-      if (mods.status === "fulfilled") setSystemModules(mods.value);
-      if (plans.status === "fulfilled") setPlanTemplates(plans.value);
-      if (payroll.status === "fulfilled") setPayrollEntries(payroll.value);
-      if (perf.status === "fulfilled") setPerformanceReviews(perf.value);
-      if (leave.status === "fulfilled") setLeaveRequests(leave.value);
-      if (exitMgt.status === "fulfilled") setExitManagement(exitMgt.value);
-      if (fees.status === "fulfilled") setFeeStructures(fees.value);
-      if (ttable.status === "fulfilled") setTimetable(ttable.value);
-      if (gScales.status === "fulfilled") setGradingScales(gScales.value);
-      if (rcTemplates && rcTemplates.status === "fulfilled")
-        setReportCardTemplates(rcTemplates.value);
-      if (remTemplates && remTemplates.status === "fulfilled")
-        setRemarkTemplates(remTemplates.value);
-      if (feesSummary && feesSummary.status === "fulfilled")
-        setStudentFeesSummary(feesSummary.value);
-      if (libBooks.status === "fulfilled") setBooks(libBooks.value);
-      if (libLoans.status === "fulfilled") setBookLoans(libLoans.value);
-      if (transport.status === "fulfilled") setTransportRoutes(transport.value);
-      if (hostelList.status === "fulfilled") setHostels(hostelList.value);
-      if (health.status === "fulfilled") setHealthRecords(health.value);
-      if (invItems.status === "fulfilled") setInventory(invItems.value);
-      if (docTemplates.status === "fulfilled")
-        setDocumentTemplates(docTemplates.value);
-
-      if (
-        currentOrgInfo &&
-        currentOrgInfo.status === "fulfilled" &&
-        currentOrgInfo.value
-      ) {
+      assignIfFulfilled(0, setStudentList);
+      assignIfFulfilled(1, setInquiries);
+      assignIfFulfilled(2, setStaffList);
+      assignIfFulfilled(3, setDepartments);
+      assignIfFulfilled(4, setClassList);
+      assignIfFulfilled(5, setSubjectList);
+      assignIfFulfilled(6, setStudentAttendance);
+      assignIfFulfilled(7, setOrganizations);
+      assignIfFulfilled(8, setInvoices);
+      assignIfFulfilled(9, setExpenses);
+      assignIfFulfilled(10, setPartnerList);
+      assignIfFulfilled(11, setPlatformUsers);
+      assignIfFulfilled(12, setExams);
+      assignIfFulfilled(13, setResults);
+      assignIfFulfilled(14, setRecruitment);
+      assignIfFulfilled(15, setStaffAttendance);
+      assignIfFulfilled(16, setLessonNotes);
+      assignIfFulfilled(17, setTeachersOnDuty);
+      assignIfFulfilled(18, setBehaviorIncidents);
+      assignIfFulfilled(19, setScholarships);
+      assignIfFulfilled(20, setScholarshipTypes);
+      assignIfFulfilled(21, setUniforms);
+      assignIfFulfilled(22, setInventorySales);
+      assignIfFulfilled(23, setSubscriptions);
+      assignIfFulfilled(24, setReceipts);
+      assignIfFulfilled(25, setClubs);
+      
+      const adminPlatformUsersRes = resultsArr[26];
+      if (adminPlatformUsersRes && adminPlatformUsersRes.status === "fulfilled") {
+          if (currentRole === "SUPER_ADMIN" && adminPlatformUsersRes.value && adminPlatformUsersRes.value.length > 0) {
+             setPlatformUsers(adminPlatformUsersRes.value);
+          }
+      }
+      
+      assignIfFulfilled(27, setAuditLogs);
+      assignIfFulfilled(28, setSystemModules);
+      assignIfFulfilled(29, setPlanTemplates);
+      assignIfFulfilled(30, setPayrollEntries);
+      assignIfFulfilled(31, setPerformanceReviews);
+      assignIfFulfilled(32, setLeaveRequests);
+      assignIfFulfilled(33, setExitManagement);
+      assignIfFulfilled(34, setFeeStructures);
+      assignIfFulfilled(35, setTimetable);
+      assignIfFulfilled(36, setGradingScales);
+      assignIfFulfilled(37, setReportCardTemplates);
+      assignIfFulfilled(38, setRemarkTemplates);
+      assignIfFulfilled(39, setStudentFeesSummary);
+      assignIfFulfilled(40, setBooks);
+      assignIfFulfilled(41, setBookLoans);
+      assignIfFulfilled(42, setTransportRoutes);
+      assignIfFulfilled(43, setHostels);
+      assignIfFulfilled(44, setHealthRecords);
+      assignIfFulfilled(45, setInventory);
+      assignIfFulfilled(46, setDocumentTemplates);
+      
+      const currentOrgInfo = resultsArr[47];
+      if (currentOrgInfo && currentOrgInfo.status === "fulfilled" && currentOrgInfo.value) {
         if (currentOrgInfo.value.currency) {
           setCurrency(currentOrgInfo.value.currency);
         }
@@ -598,10 +541,8 @@ export default function App() {
           setLanguage(currentOrgInfo.value.language);
         }
       }
-
-      if (hStats && hStats.status === "fulfilled") {
-        setHodStats(hStats.value);
-      }
+      
+      assignIfFulfilled(48, setHodStats);
     } catch (err) {
       console.error("Failed to load data from backend:", err);
     }
@@ -1075,26 +1016,10 @@ export default function App() {
             : await createOrganization(data);
           break;
         case "inquiry":
+          (data as any).org_id = currentUser?.org_id;
           result = isUpdate
             ? await updateInquiry(data.id, data)
             : await createInquiry(data);
-          break;
-        case "application":
-          result = isUpdate
-            ? await updateApplication(data.id, data)
-            : await createApplication(data);
-          break;
-        case "acceptance":
-          const isNewAcceptance = !isUpdate;
-          result = isUpdate
-            ? await updateAcceptance(data.id, data)
-            : await createAcceptance(data);
-          if (isNewAcceptance && data.decision === "Enrolled" && result) {
-            await convertAcceptanceToStudent(
-              { ...data, id: result.id || data.id },
-              true,
-            );
-          }
           break;
         case "staff":
           // Sanitize UUID fields: convert empty strings to null to prevent DB errors
@@ -1280,6 +1205,11 @@ export default function App() {
             ? await updateInventoryItem(data.id, data)
             : await createInventoryItem(data);
           break;
+        case "club":
+          result = isUpdate
+            ? await updateClub(data.id, data)
+            : await createClub(data);
+          break;
         default:
           throw new Error(`Unknown entity type: ${entityType}`);
       }
@@ -1324,12 +1254,8 @@ export default function App() {
         case "inquiry" as any:
           await deleteInquiry(id);
           break;
-        case "application" as any:
-          await deleteApplication(id);
-          break;
-        case "acceptance" as any:
-          await deleteAcceptance(id);
-          break;
+
+
         case "staff" as any:
           await deleteStaff(id);
           break;
@@ -1420,8 +1346,11 @@ export default function App() {
         case "health" as any:
           await deleteHealthRecord(id);
           break;
-        case "inventory" as any:
+        case "inventory":
           await deleteInventoryItem(id);
+          break;
+        case "club":
+          await deleteClub(id);
           break;
         default:
           console.warn(`Delete not implemented for type: ${type}`);
@@ -1449,208 +1378,6 @@ export default function App() {
     }
   };
 
-  // Conversion Handlers
-  const convertInquiryToApplication = async (inquiry: Inquiry) => {
-    try {
-      const applicationData = {
-        name: inquiry.name,
-        grade: inquiry.grade || "Grade 1",
-        date: new Date().toISOString().split("T")[0],
-        status: "Pending Review",
-        decision: "Pending",
-        parent_name: inquiry.parent_name,
-        contact: inquiry.contact,
-        email: inquiry.email,
-        parent_email: inquiry.parent_email,
-        religion: inquiry.religion,
-        secondary_parent_name: (inquiry as any).secondary_parent_name || (inquiry as any).secondaryParentName,
-        secondary_parent_contact: (inquiry as any).secondary_parent_contact || (inquiry as any).secondaryParentContact,
-        secondary_parent_email: (inquiry as any).secondary_parent_email || (inquiry as any).secondaryParentEmail,
-        entrance_exam_score: "TBD",
-        previous_school_profile_pic:
-          inquiry.previous_school_profile_pic ||
-          (inquiry as any).previousSchoolProfilePic,
-      };
-
-      await handleEntitySave("application", applicationData);
-      await handleEntitySave("inquiry", { ...inquiry, status: "Converted" });
-      showToast(`Converted ${inquiry.name} to Application`, "success");
-    } catch (err: any) {
-      console.error("Inquiry conversion failed:", err);
-      const errorMsg =
-        err.response?.data?.error || "Failed to convert inquiry to application";
-      showToast(errorMsg, "error");
-    }
-  };
-
-  const convertApplicationToAcceptance = async (app: Application) => {
-    try {
-      // Ensure numerical data is properly typed
-      const parseScore = (val: any) => {
-        if (!val) return 0;
-        const num = parseFloat(val);
-        return isNaN(num) ? 0 : num;
-      };
-
-      const acceptanceData = {
-        name: app.name,
-        grade: app.grade,
-        decision: "Accepted",
-        date: new Date().toISOString().split("T")[0],
-        fee_status:
-          (app as any).fee_status || (app as any).feeStatus || "Pending",
-        fee_amount: parseScore(
-          (app as any).fee_amount || (app as any).feeAmount,
-        ),
-        parent_name: app.parent_name,
-        contact: app.contact,
-        email: app.email,
-        parent_email: app.parent_email || (app as any).parentEmail,
-        gender: app.gender,
-        date_of_birth: app.date_of_birth || (app as any).dateOfBirth,
-        religion: app.religion,
-        secondary_parent_name: app.secondary_parent_name,
-        secondary_parent_contact: app.secondary_parent_contact,
-        secondary_parent_email: app.secondary_parent_email,
-        entrance_exam_score:
-          app.entrance_exam_score || (app as any).entranceExamScore,
-        math_score: app.math_score || (app as any).mathScore,
-        english_score: app.english_score || (app as any).englishScore,
-        science_score: app.science_score || (app as any).scienceScore,
-        interview_score: app.interview_score || (app as any).interviewScore,
-        previous_school: app.previous_school || (app as any).previousSchool,
-        previous_school_profile_pic:
-          app.previous_school_profile_pic ||
-          (app as any).previousSchoolProfilePic,
-        custom_scores: app.custom_scores,
-      };
-
-      await handleEntitySave("acceptance", acceptanceData);
-      await handleEntitySave("application", { ...app, status: "Accepted" });
-      showToast(`Converted ${app.name} to Acceptance`, "success");
-    } catch (err: any) {
-      console.error("Application conversion failed:", err);
-      const errorMsg =
-        err.response?.data?.error ||
-        "Failed to convert application to acceptance";
-      showToast(errorMsg, "error");
-    }
-  };
-
-  const convertAcceptanceToStudent = async (
-    acc: Acceptance,
-    bypassCheck = false,
-  ) => {
-    if (acc.decision === "Enrolled" && !bypassCheck) {
-      showToast("This student is already enrolled.", "info");
-      return;
-    }
-    try {
-      const newStudent = {
-        name: acc.name,
-        class_id: acc.class_id,
-        class: acc.class || (acc.grade ? acc.grade.replace("Grade ", "") : ""),
-        email:
-          acc.email ||
-          `${(acc.name || "").toLowerCase().replace(/ /g, ".")}@school.com`,
-        gpa: "0.0",
-        section: acc.section,
-        admission_no: `ADM-${Date.now()}`,
-        parent_name: acc.parent_name || (acc as any).parentName,
-        contact: acc.contact || (acc as any).parentPhone || (acc as any).parent_phone,
-        entrance_exam_score:
-          acc.entrance_exam_score || (acc as any).entranceExamScore,
-        previous_school_profile_pic:
-          acc.previous_school_profile_pic ||
-          (acc as any).previousSchoolProfilePic,
-        fee_status: (acc as any).fee_status || (acc as any).feeStatus || "Paid",
-        fee_amount: (acc as any).fee_amount || (acc as any).feeAmount || 0,
-        parent_email: acc.parent_email || (acc as any).parentEmail,
-        religion: acc.religion,
-        secondary_parent_name: acc.secondary_parent_name || (acc as any).secondaryParentName,
-        secondary_parent_contact: acc.secondary_parent_contact || (acc as any).secondaryParentContact,
-        secondary_parent_email: acc.secondary_parent_email || (acc as any).secondaryParentEmail,
-        acceptance_id: acc.id,
-        math_score: acc.math_score,
-        english_score: acc.english_score,
-        science_score: acc.science_score,
-        interview_score: acc.interview_score,
-        previous_school: acc.previous_school || (acc as any).previousSchool,
-        custom_scores: acc.custom_scores,
-        date_of_birth: acc.date_of_birth || (acc as any).dateOfBirth,
-        gender: acc.gender,
-        date_enrolled: new Date().toISOString().split("T")[0],
-      };
-
-      // Check if student already exists for this acceptance
-      const existingStudent = studentList.find(
-        (s) => s.acceptance_id === acc.id,
-      );
-
-      let savedStudent;
-      if (existingStudent) {
-        // Update existing record
-        savedStudent = await updateStudent(existingStudent.id, {
-          ...newStudent,
-          admission_no: existingStudent.admission_no?.startsWith("TEMP-")
-            ? newStudent.admission_no
-            : existingStudent.admission_no,
-        });
-      } else {
-        // Create new record
-        savedStudent = await createStudent(newStudent);
-        // Also create a platform user for the new student
-        await registerPlatformUser({
-          name: newStudent.name,
-          email: newStudent.email,
-          password: "zxcv123$$",
-          role: "STUDENT",
-          org_id: currentUser?.org_id,
-        });
-      }
-
-      // Create invoice if fee structure is selected
-      const rawFeeIds =
-        acc.fee_ids ||
-        (Array.isArray(acc.fee_structure_id)
-          ? acc.fee_structure_id
-          : acc.fee_structure_id
-            ? [acc.fee_structure_id]
-            : []);
-      const feeStatus = (acc as any).fee_status || (acc as any).feeStatus;
-      const feeAmount = (acc as any).fee_amount || (acc as any).feeAmount || 0;
-
-      if (rawFeeIds && rawFeeIds.length > 0) {
-        const transactionId = `ONB-${Date.now()}`;
-        for (const feeId of rawFeeIds) {
-          if (!feeId) continue;
-
-          await handleEntitySave("fee_assignment", {
-            student_id: savedStudent.id,
-            fee_structure_id: feeId,
-            due_date: new Date().toISOString().split("T")[0],
-            target_type: "students",
-            status: feeStatus === "Paid" ? "Paid" : "Pending",
-            payment_method: "Cash",
-            transaction_id: transactionId,
-          });
-        }
-      }
-      await handleEntitySave("acceptance", { ...acc, decision: "Enrolled" });
-      if (existingStudent) {
-        setStudentList((prev) =>
-          prev.map((s) => (s.id === savedStudent.id ? savedStudent : s)),
-        );
-      } else {
-        setStudentList((prev) => [...prev, savedStudent]);
-      }
-      showToast(`${acc.name} is now a Student!`, "success");
-    } catch (err: any) {
-      const errorMsg =
-        err.response?.data?.error || "Failed to save student to database";
-      showToast(errorMsg, "error");
-    }
-  };
 
   useEffect(() => {
     (window as any).showToast = showToast;
@@ -1900,18 +1627,55 @@ export default function App() {
       "Subscription Plan": <ChoosePlan />,
       Receipts: <ReceiptsManagement data={receipts} />,
 
-      Onboarding: (
-        <OnboardingView
-          inquiries={inquiries}
-          applications={applications}
-          acceptance={acceptance}
+      'Admit Student': (
+        <AdmitStudentView
           classes={classList}
           feeStructures={feeStructures}
-          onConvertInquiry={convertInquiryToApplication}
-          onConvertApplication={convertApplicationToAcceptance}
-          onConvertAcceptance={convertAcceptanceToStudent}
-          onSave={(type, data) => handleEntitySave(type, data)}
-          onDelete={(type, item) => handleEntityDelete(type, item)}
+          students={studentList.filter(s => s.status !== 'Alumni')}
+          onAdmit={async (data) => {
+            try {
+              const email = data.email || `${(data.name || '').toLowerCase().replace(/ /g, '.')}@school.com`;
+              const newStudent = await createStudent({
+                ...data,
+                email,
+                gpa: '0.0',
+                admission_no: `ADM-${Date.now()}`,
+                status: 'Active',
+              });
+              await registerPlatformUser({
+                name: data.name,
+                email,
+                password: 'zxcv123$$',
+                role: 'STUDENT',
+                org_id: currentUser?.org_id,
+              });
+              // Create fee invoices if fee_ids provided
+              if (data.fee_ids && data.fee_ids.length > 0) {
+                const transactionId = `ADM-${Date.now()}`;
+                for (const feeId of data.fee_ids) {
+                  if (!feeId) continue;
+                  await handleEntitySave('fee_assignment', {
+                    student_id: newStudent.id,
+                    fee_structure_id: feeId,
+                    due_date: new Date().toISOString().split('T')[0],
+                    target_type: 'students',
+                    status: data.fee_status === 'Paid' ? 'Paid' : 'Pending',
+                    payment_method: 'Cash',
+                    transaction_id: transactionId,
+                  });
+                }
+              }
+              setStudentList(prev => [...prev, newStudent]);
+              showToast(`${data.name} has been admitted successfully!`, 'success');
+            } catch (err: any) {
+              const msg = err?.response?.data?.error || 'Failed to admit student';
+              showToast(msg, 'error');
+              throw err;
+            }
+          }}
+          onSaveEnquiry={(data) => {
+            handleEntitySave('inquiry', { ...data, status: 'New', date: new Date().toISOString().split('T')[0] });
+          }}
         />
       ),
 
@@ -1940,11 +1704,7 @@ export default function App() {
             exams={exams}
             classes={classList}
             gradingScales={gradingScales}
-            onSave={
-              currentRole === "STAFF" || currentRole === "PARENT"
-                ? undefined
-                : (data) => handleEntitySave("student", data)
-            }
+            onSave={undefined}
             onRefresh={loadData}
           />
         ),
@@ -3085,6 +2845,24 @@ export default function App() {
               ? undefined
               : (item) => handleEntityDelete("hostel", item)
           }
+          onRefresh={loadData}
+        />
+      ),
+
+      "Student Clubs": (
+        <OperationsModules.Clubs
+          role={currentRole}
+          currentStudentId={
+            currentRole === "PARENT"
+              ? selectedWardId || undefined
+              : studentList.find((s) => s.email === currentUser?.email)?.id ||
+                currentUser?.id
+          }
+          data={clubs}
+          students={studentList}
+          staff={staffList}
+          onSave={(data) => handleEntitySave("club", data)}
+          onDelete={(item) => handleEntityDelete("club", item)}
           onRefresh={loadData}
         />
       ),

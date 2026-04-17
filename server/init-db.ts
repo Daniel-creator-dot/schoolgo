@@ -587,6 +587,34 @@ export async function init() {
       END $$;
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS clubs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        category VARCHAR(100),
+        meeting_schedule VARCHAR(255),
+        patron_staff_id UUID REFERENCES staff(id),
+        dues_amount NUMERIC(12, 2) DEFAULT 0,
+        dues_frequency VARCHAR(50) DEFAULT 'Per Term',
+        max_members INTEGER,
+        status VARCHAR(20) DEFAULT 'Active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS club_memberships (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        club_id UUID REFERENCES clubs(id) ON DELETE CASCADE,
+        student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+        status VARCHAR(20) DEFAULT 'Active',
+        joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(club_id, student_id)
+      )
+    `);
+
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS timetables (

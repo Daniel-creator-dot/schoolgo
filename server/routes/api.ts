@@ -20,6 +20,7 @@ import * as PartnerController from '../controllers/PartnerController.ts';
 import * as DriveController from '../controllers/DriveController.ts';
 import * as MeetingController from '../controllers/MeetingController.ts';
 import * as AIController from '../controllers/AIController.ts';
+import * as ClubsController from '../controllers/ClubsController.ts';
 import { verifyToken, checkRole } from '../middleware/auth.ts';
 import pool from '../db.ts';
 import bcrypt from 'bcryptjs';
@@ -292,6 +293,16 @@ router.get('/ops/health', OperationsController.getHealthRecords);
 router.post('/ops/health', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'STAFF']), OperationsController.createHealthRecord);
 router.patch('/ops/health/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'STAFF']), OperationsController.updateHealthRecord);
 router.delete('/ops/health/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'STAFF']), OperationsController.deleteHealthRecord);
+
+// CLUBS
+router.get('/ops/clubs', ClubsController.getClubs);
+router.post('/ops/clubs', checkRole(['SCHOOL_ADMIN']), ClubsController.createClub);
+router.patch('/ops/clubs/:id', checkRole(['SCHOOL_ADMIN']), ClubsController.updateClub);
+router.delete('/ops/clubs/:id', checkRole(['SCHOOL_ADMIN']), ClubsController.deleteClub);
+router.get('/ops/club-memberships', ClubsController.getClubMemberships);
+router.post('/ops/club-memberships/join', ClubsController.joinClub);
+router.patch('/ops/club-memberships/:id/status', checkRole(['SCHOOL_ADMIN']), ClubsController.updateMembershipStatus);
+router.delete('/ops/club-memberships/:id/leave', ClubsController.leaveClub);
 
 // E-LEARNING
 // Assignments

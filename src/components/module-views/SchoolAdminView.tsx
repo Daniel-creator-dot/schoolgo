@@ -2555,148 +2555,421 @@ export const AdmissionsModules = {
   },
 };
 
-export const OnboardingView = ({
-  inquiries,
-  applications,
-  acceptance,
+export const AdmitStudentView = ({
   classes = [],
   feeStructures = [],
-  onConvertInquiry,
-  onConvertApplication,
-  onConvertAcceptance,
-  onSave,
-  onDelete
+  students = [],
+  onAdmit,
+  onSaveEnquiry,
 }: {
-  inquiries: Inquiry[],
-  applications: Application[],
-  acceptance: Acceptance[],
   classes?: any[],
   feeStructures?: any[],
-  onConvertInquiry: (i: Inquiry) => void,
-  onConvertApplication: (a: Application) => void,
-  onConvertAcceptance: (acc: Acceptance) => void,
-  onSave?: (type: string, data: any) => void,
-  onDelete?: (type: string, item: any) => void
+  students?: any[],
+  onAdmit: (data: any) => void,
+  onSaveEnquiry?: (data: any) => void,
 }) => {
-  const [activeTab, setActiveTab] = useState<'inquiries' | 'pipeline' | 'acceptance' | 'enrolled'>('inquiries');
+  const { t, currency } = useLanguage();
+  const [activeTab, setActiveTab] = useState<'admit' | 'bulk'>('admit');
+  const [purpose, setPurpose] = useState<'admit' | 'enquiry'>('admit');
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedFeeIds, setSelectedFeeIds] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showOptional, setShowOptional] = useState(false);
+  const [importPreviewItems, setImportPreviewItems] = useState<any[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
 
-  const stats = [
-    { label: 'Inquiries', id: 'inquiries', count: inquiries.length, icon: MessageSquare, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Applications', id: 'pipeline', count: applications.length, icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Acceptances', id: 'acceptance', count: acceptance.filter(a => a.decision !== 'Enrolled').length, icon: GraduationCap, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { label: 'Enrolled', id: 'enrolled', count: acceptance.filter(a => a.decision === 'Enrolled').length, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  ];
+  // Auto-select fees when class changes
+  useEffect(() => {
+    if (selectedClassId) {
+      const classFees = feeStructures.filter(f => f.class_id === selectedClassId);
+      if (classFees.length > 0) {
+        setSelectedFeeIds(classFees.map(f => f.id));
+      } else {
+        setSelectedFeeIds([]);
+      }
+    }
+  }, [selectedClassId, feeStructures]);
+
+  const getTotalFees = () => {
+    return selectedFeeIds.reduce((sum, id) => {
+      const fee = feeStructures.find(f => f.id === id);
+      return sum + (fee ? parseFloat(fee.amount) : 0);
+    }, 0);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const data: any = {};
+    fd.forEach((val, key) => { data[key] = val; });
+
+    if (purpose === 'admit') {
+      if (!selectedClassId) {
+        (window as any).showToast?.('Please select a class.', 'error');
+        return;
+      }
+      data.class_id = selectedClassId;
+      data.fee_ids = selectedFeeIds;
+      data.fee_amount = getTotalFees();
+      data.date_enrolled = new Date().toISOString().split('T')[0];
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (purpose === 'enquiry') {
+        onSaveEnquiry?.(data);
+        (window as any).showToast?.(`Enquiry for ${data.name} saved.`, 'success');
+      } else {
+        await onAdmit(data);
+      }
+      form.reset();
+      setSelectedClassId('');
+      setSelectedFeeIds([]);
+      setShowOptional(false);
+    } catch (err: any) {
+      (window as any).showToast?.(err?.message || 'Operation failed', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleBulkImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    try {
+      const { parseStudentExcel } = await import('../../lib/excel');
+      const parsed = await parseStudentExcel(file, classes);
+      setImportPreviewItems(parsed);
+    } catch (err: any) {
+      (window as any).showToast?.('Failed to parse Excel file.', 'error');
+    } finally {
+      setIsImporting(false);
+      e.target.value = '';
+    }
+  };
+
+  const confirmBulkAdmit = async () => {
+    if (!importPreviewItems.length) return;
+    setIsImporting(true);
+    try {
+      const valid = importPreviewItems.filter(s => s.class_id);
+      for (const item of valid) {
+        await onAdmit({ ...item, date_enrolled: new Date().toISOString().split('T')[0] });
+      }
+      (window as any).showToast?.(`Successfully admitted ${valid.length} students!`, 'success');
+      setImportPreviewItems([]);
+    } catch (err) {
+      (window as any).showToast?.('Bulk admission failed.', 'error');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const todayAdmitted = students.filter(s => s.date_enrolled === new Date().toISOString().split('T')[0]).length;
 
   return (
-    <div className="space-y-10">
-      {/* Professional Pipeline Header */}
-      <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none relative overflow-hidden">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-        <div className="relative z-10 space-y-8">
-          <div className="flex items-center justify-between">
+        <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl" />
+        <div className="relative z-10">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-6">
-              <div className="w-20 h-20 bg-indigo-600 rounded-[2.5rem] flex items-center justify-center shadow-2xl shadow-indigo-200 dark:shadow-none">
-                <LayoutGrid className="w-10 h-10 text-white" />
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-indigo-600 rounded-[2rem] flex items-center justify-center shadow-2xl shadow-indigo-200 dark:shadow-none">
+                <UserPlus className="w-8 h-8 md:w-10 md:h-10 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white">Admission Pipeline</h1>
-                <p className="text-zinc-500 font-bold text-lg">Orchestrate the student journey from first contact to full enrollment.</p>
+                <h1 className="text-3xl md:text-4xl font-black tracking-tight text-zinc-900 dark:text-white">Admit Student</h1>
+                <p className="text-zinc-500 font-bold text-sm md:text-base">Enrol new students or save enquiries for follow-up.</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="px-6 py-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-center">
+                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Today</p>
+                <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{todayAdmitted}</p>
+              </div>
+              <div className="px-6 py-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl text-center">
+                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Total</p>
+                <p className="text-2xl font-black text-indigo-700 dark:text-indigo-400">{students.length}</p>
               </div>
             </div>
           </div>
 
-          {/* Funnel Dashboard */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat) => (
-              <div key={stat.label} className={cn(
-                "group relative p-6 rounded-[2rem] border-2 transition-all hover:scale-[1.02] hover:shadow-lg cursor-pointer",
-                activeTab === stat.id
-                  ? "bg-white dark:bg-zinc-800 border-indigo-600 dark:border-indigo-500 shadow-indigo-100 dark:shadow-none"
-                  : "bg-zinc-50 dark:bg-zinc-800/50 border-transparent hover:bg-white dark:hover:bg-zinc-800"
+          {/* Tab Switcher */}
+          <div className="flex items-center gap-2 p-1.5 bg-zinc-100/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-2xl w-fit mt-8 border border-zinc-200/50 dark:border-zinc-700/50">
+            <button
+              onClick={() => setActiveTab('admit')}
+              className={cn(
+                "px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300",
+                activeTab === 'admit'
+                  ? "bg-white text-indigo-600 shadow-md dark:bg-zinc-900"
+                  : "text-zinc-500 hover:text-zinc-700 hover:bg-white/50 dark:hover:bg-zinc-900/50"
               )}
-                onClick={() => setActiveTab(stat.id as any)}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={cn("p-4 rounded-2xl", stat.bg, stat.color)}>
-                    <stat.icon className="w-6 h-6" />
+            >
+              Admit One
+            </button>
+            <button
+              onClick={() => setActiveTab('bulk')}
+              className={cn(
+                "px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300",
+                activeTab === 'bulk'
+                  ? "bg-white text-indigo-600 shadow-md dark:bg-zinc-900"
+                  : "text-zinc-500 hover:text-zinc-700 hover:bg-white/50 dark:hover:bg-zinc-900/50"
+              )}
+            >
+              Bulk Import
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {activeTab === 'admit' ? (
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Purpose Toggle */}
+          <div className="flex items-center gap-3 p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-2xl w-fit">
+            <button type="button" onClick={() => setPurpose('admit')} className={cn("px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all", purpose === 'admit' ? "bg-indigo-600 text-white shadow-md" : "text-zinc-500 hover:text-zinc-700")}>
+              Admit Now
+            </button>
+            <button type="button" onClick={() => setPurpose('enquiry')} className={cn("px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all", purpose === 'enquiry' ? "bg-amber-500 text-white shadow-md" : "text-zinc-500 hover:text-zinc-700")}>
+              Enquiry Only
+            </button>
+          </div>
+
+          {purpose === 'enquiry' && (
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Enquiry mode — student will NOT be enrolled. Details are saved for follow-up.</p>
+            </div>
+          )}
+
+          {/* Student Details Section */}
+          <div className="space-y-6">
+            <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-900/20 pb-2">
+              <User className="w-3.5 h-3.5" /> Student Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Full Name *</label>
+                <input required type="text" name="name" placeholder="e.g. John Doe" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Gender</label>
+                <select name="gender" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                  <option value="">Select...</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date of Birth</label>
+                <input type="date" name="date_of_birth" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('religion')}</label>
+                <input type="text" name="religion" placeholder="e.g. Christian" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Student Email</label>
+                <input type="email" name="email" placeholder="student@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Grade / Level</label>
+                <input type="text" name="grade" placeholder="e.g. Grade 5" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* Class Assignment & Fees — only shown in Admit mode */}
+          {purpose === 'admit' && (
+            <div className="space-y-6">
+              <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-900/20 pb-2">
+                <GraduationCap className="w-3.5 h-3.5" /> Class & Fees
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Assign to Class *</label>
+                  <select value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                    <option value="">Select class...</option>
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section || ''}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Fee Status</label>
+                  <select name="fee_status" defaultValue="Pending" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Partial">Partial</option>
+                  </select>
+                </div>
+              </div>
+              {feeStructures.length > 0 && (
+                <div className="space-y-3">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Admission Fees</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {feeStructures.filter(f => !selectedClassId || f.class_id === selectedClassId || !f.class_id).map(fee => (
+                      <label key={fee.id} className={cn(
+                        "flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-md",
+                        selectedFeeIds.includes(fee.id) ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20" : "border-zinc-200 dark:border-zinc-700 hover:border-indigo-300"
+                      )}>
+                        <input type="checkbox" checked={selectedFeeIds.includes(fee.id)} onChange={(e) => {
+                          if (e.target.checked) setSelectedFeeIds(prev => [...prev, fee.id]);
+                          else setSelectedFeeIds(prev => prev.filter(id => id !== fee.id));
+                        }} className="w-4 h-4 rounded text-indigo-600" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">{fee.name}</p>
+                          <p className="text-xs text-zinc-500">{currency} {parseFloat(fee.amount).toLocaleString()}</p>
+                        </div>
+                      </label>
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">{stat.label}</p>
-                    <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{stat.count}</h3>
+                  {selectedFeeIds.length > 0 && (
+                    <div className="p-4 bg-zinc-900 dark:bg-black rounded-2xl flex items-center justify-between">
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Total Admission Fees</span>
+                      <span className="text-2xl font-black text-white">{currency} {getTotalFees().toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Parent / Guardian Details */}
+          <div className="space-y-6">
+            <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-900/20 pb-2">
+              <Users className="w-3.5 h-3.5" /> Parent / Guardian
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Parent / Guardian Name {purpose === 'admit' ? '*' : ''}</label>
+                <input type="text" name="parent_name" required={purpose === 'admit'} placeholder="e.g. Mr. James Doe" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Parent Phone</label>
+                <input type="tel" name="contact" placeholder="e.g. 0244123456" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Parent Email</label>
+                <input type="email" name="parent_email" placeholder="parent@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* Optional/Additional Details Toggle */}
+          <button type="button" onClick={() => setShowOptional(!showOptional)} className="flex items-center gap-2 text-xs font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-800 transition-colors">
+            <ChevronDown className={cn("w-4 h-4 transition-transform", showOptional ? "rotate-180" : "")} />
+            {showOptional ? 'Hide' : 'Show'} Additional Details
+          </button>
+
+          {showOptional && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-top-4 duration-300">
+              {/* Secondary Guardian */}
+              <div className="space-y-6 p-6 bg-zinc-50/50 dark:bg-zinc-800/30 rounded-[2rem] border border-zinc-100 dark:border-zinc-800">
+                <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{t('secondary_parent_details')}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('secondary_parent_name')}</label>
+                    <input type="text" name="secondary_parent_name" placeholder="e.g. Mrs. Mary Doe" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('secondary_parent_contact')}</label>
+                    <input type="tel" name="secondary_parent_contact" placeholder="e.g. 0244987654" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('secondary_parent_email')}</label>
+                    <input type="email" name="secondary_parent_email" placeholder="secondary@email.com" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </div>
               </div>
-            ))}
+
+              {/* Academic Background */}
+              <div className="space-y-6 p-6 bg-zinc-50/50 dark:bg-zinc-800/30 rounded-[2rem] border border-zinc-100 dark:border-zinc-800">
+                <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Academic Background</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Previous School</label>
+                    <input type="text" name="previous_school" placeholder="e.g. Sunrise Academy" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Entrance Exam Score</label>
+                    <input type="text" name="entrance_exam_score" placeholder="e.g. 85%" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={cn(
+              "w-full py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs flex items-center justify-center gap-3 shadow-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-60",
+              purpose === 'admit'
+                ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-none"
+                : "bg-amber-500 text-white hover:bg-amber-600 shadow-amber-200 dark:shadow-none"
+            )}
+          >
+            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+            {purpose === 'admit' ? 'Admit Student' : 'Save Enquiry'}
+          </button>
+        </form>
+      ) : (
+        /* Bulk Import Tab */
+        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="text-center space-y-4 py-8">
+            <div className="w-20 h-20 mx-auto bg-indigo-100 dark:bg-indigo-900/30 rounded-[2rem] flex items-center justify-center">
+              <Upload className="w-10 h-10 text-indigo-600" />
+            </div>
+            <h3 className="text-2xl font-black text-zinc-900 dark:text-white">Bulk Student Import</h3>
+            <p className="text-zinc-500 font-medium max-w-md mx-auto">Upload an Excel file with student data. Make sure columns include: Name, Class, Parent Name, Contact.</p>
+            <label className="inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest cursor-pointer hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-200 dark:shadow-none">
+              <Upload className="w-4 h-4" />
+              {isImporting ? 'Processing...' : 'Upload Excel File'}
+              <input type="file" className="hidden" accept=".xlsx,.xls" onChange={handleBulkImport} disabled={isImporting} />
+            </label>
           </div>
 
-          {/* Removed Secondary Tab Navigation as requested */}
+          {importPreviewItems.length > 0 && (
+            <div className="space-y-6">
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <p className="text-xs font-bold text-amber-800 dark:text-amber-300">Review {importPreviewItems.length} records below. Rows with unmatched classes will be skipped.</p>
+              </div>
+              <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-zinc-50 dark:bg-zinc-800">
+                    <tr>
+                      <th className="px-4 py-3 font-black uppercase tracking-widest">Name</th>
+                      <th className="px-4 py-3 font-black uppercase tracking-widest">Class</th>
+                      <th className="px-4 py-3 font-black uppercase tracking-widest">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {importPreviewItems.map((item, i) => (
+                      <tr key={i} className="hover:bg-zinc-50/50">
+                        <td className="px-4 py-3 font-bold">{item.name}</td>
+                        <td className="px-4 py-3">{item.class_id ? <span className="text-emerald-600 font-bold">{item.class_name}</span> : <span className="text-rose-500 font-bold italic">Not found: "{item.class_name}"</span>}</td>
+                        <td className="px-4 py-3">{item.class_id ? <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase">Ready</span> : <span className="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase">Error</span>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex gap-4">
+                <button onClick={() => setImportPreviewItems([])} className="flex-1 py-4 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-zinc-50 transition-colors">Cancel</button>
+                <button onClick={confirmBulkAdmit} disabled={isImporting || !importPreviewItems.some(s => s.class_id)} className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+                  {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                  Admit {importPreviewItems.filter(s => s.class_id).length} Students
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="min-h-[600px] animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {activeTab === 'inquiries' && (
-          <AdmissionsModules.Inquiries
-            data={inquiries}
-            onConvert={onConvertInquiry}
-            onSave={onSave ? (data) => onSave('inquiry', data) : undefined}
-            onDelete={onDelete ? (item) => onDelete('inquiry', item) : undefined}
-          />
-        )}
-        {activeTab === 'pipeline' && (
-          <AdmissionsModules.Applications
-            data={applications}
-            feeStructures={feeStructures}
-            onConvert={onConvertApplication}
-            onSave={onSave ? (data) => onSave('application', data) : undefined}
-            onDelete={onDelete ? (item) => onDelete('application', item) : undefined}
-          />
-        )}
-        {activeTab === 'acceptance' && (
-          <AdmissionsModules.Acceptance
-            data={acceptance.filter(a => a.decision !== 'Enrolled')}
-            classes={classes}
-            feeStructures={feeStructures}
-            onConvert={onConvertAcceptance}
-            onSave={onSave ? (data) => onSave('acceptance', data) : undefined}
-            onDelete={onDelete ? (item) => onDelete('acceptance', item) : undefined}
-          />
-        )}
-        {activeTab === 'enrolled' && (
-          <AdmissionsModules.Acceptance
-            data={acceptance.filter(a => a.decision === 'Enrolled')}
-            classes={classes}
-            feeStructures={feeStructures}
-            onConvert={onConvertAcceptance}
-            onSave={onSave ? (data) => onSave('acceptance', data) : undefined}
-            onDelete={onDelete ? (item) => onDelete('acceptance', item) : undefined}
-            title="Enrolled Students"
-            showBulkActions={true}
-          />
-        )}
-      </div>
-
-      {/* Helper Footer */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 rounded-3xl">
-          <h3 className="font-bold text-emerald-900 dark:text-emerald-400 mb-2 flex items-center gap-2">
-            <Zap className="w-4 h-4" /> Next Steps
-          </h3>
-          <p className="text-sm text-emerald-700 dark:text-emerald-300/70">
-            Current conversion rate from inquiry to application is <span className="font-bold">24%</span>.
-            Automated follow-up emails are active for {inquiries.filter(i => i.status === 'New').length} new leads.
-          </p>
-        </div>
-        <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl">
-          <h3 className="font-bold text-indigo-900 dark:text-indigo-400 mb-2 flex items-center gap-2">
-            <Layers className="w-4 h-4" /> Pipeline Overview
-          </h3>
-          <p className="text-sm text-indigo-700 dark:text-indigo-300/70">
-            {applications.length} students are currently processing documents.
-            {acceptance.filter(a => a.decision !== 'Enrolled').length} students are awaiting final enrollment selection.
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

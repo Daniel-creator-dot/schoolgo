@@ -58,10 +58,10 @@ export const NAVIGATION_CONFIG: NavItem[] = [
     href: 'Dashboard'
   },
   {
-    title: 'Onboarding',
+    title: 'Admit Student',
     icon: UserPlus,
     roles: ['SCHOOL_ADMIN'],
-    href: 'Onboarding'
+    href: 'Admit Student'
   },
   {
     title: 'Subscription Plan',
@@ -212,6 +212,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
     children: [
       { title: 'Transport', href: 'Transport', roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT', 'BUS_DRIVER', 'NON_STAFF'], icon: Globe },
       { title: 'Hostel', href: 'Hostel', roles: ['SCHOOL_ADMIN', 'STUDENT', 'NON_STAFF'], icon: Building2 },
+      { title: 'Student Clubs', href: 'Student Clubs', roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT'], icon: Users },
       { title: 'Assets & Equipment', href: 'Assets', roles: ['SCHOOL_ADMIN', 'NON_STAFF'], icon: Layers },
       { title: 'Health / Medical', href: 'Health / Medical', roles: ['SCHOOL_ADMIN', 'PARENT', 'NON_STAFF', 'STUDENT'], icon: Heart },
       { title: 'Behavior & Discipline', href: 'Behavior & Discipline', roles: ['SCHOOL_ADMIN', 'STUDENT'], icon: ShieldCheck },
@@ -258,8 +259,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
 
 export const MODULE_LINK_MAP: Record<string, string> = {
   'Academics': 'Academic Management',
-  'Admissions': 'Admissions & Onboarding',
-  'Onboarding': 'Admissions & Onboarding',
+  'Admit Student': 'Admissions & Onboarding',
   'Finance': 'Finance & Billing',
   'Human Resources': 'HR & Payroll',
   'Exams': 'Exam & Results',

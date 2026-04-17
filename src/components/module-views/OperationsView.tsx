@@ -5,7 +5,10 @@ import {
   Download, 
   X, 
   FileSpreadsheet,
-  AlertCircle
+  AlertCircle,
+  Users,
+  ShieldCheck,
+  CreditCard
 } from 'lucide-react';
 import { UserRole, Ward } from '../../types';
 import { downloadInventoryTemplate, parseInventoryExcel } from '../../lib/excel';
@@ -1508,4 +1511,321 @@ export const OperationsModules = {
       )}
     />
   ),
+  Clubs: ({ role, currentStudentId, data, students, staff, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], staff?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+    const [viewingMembers, setViewingMembers] = useState<any | null>(null);
+    const [clubMembers, setClubMembers] = useState<any[]>([]);
+    const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+    const [viewMode, setViewMode] = useState<'clubs' | 'memberships'>('clubs');
+    const [allMemberships, setAllMemberships] = useState<any[]>([]);
+    const [isAddingMember, setIsAddingMember] = useState(false);
+
+    const refreshMemberships = async () => {
+      try {
+        const { fetchClubMemberships } = await import('../../lib/api');
+        const res = await fetchClubMemberships();
+        setAllMemberships(res);
+      } catch (err) {
+        console.error('Failed to fetch memberships:', err);
+      }
+    };
+
+    React.useEffect(() => {
+      refreshMemberships();
+    }, [viewMode]);
+
+    const handleViewMembers = async (club: any) => {
+      setViewingMembers(club);
+      setIsLoadingMembers(true);
+      try {
+        // We filter memberships by club_id
+        const res = allMemberships.filter(m => m.club_id === club.id);
+        setClubMembers(res);
+      } catch (err) {
+        console.error('Failed to filter club members:', err);
+      } finally {
+        setIsLoadingMembers(false);
+      }
+    };
+
+    const handleJoin = async (clubId: string, studentId: string) => {
+      try {
+        const { joinClub } = await import('../../lib/api');
+        await joinClub({ club_id: clubId, student_id: studentId });
+        (window as any).showToast?.('Successfully joined club!', 'success');
+        refreshMemberships();
+        onRefresh?.();
+      } catch (err: any) {
+        (window as any).showToast?.(err?.response?.data?.error || 'Failed to join club', 'error');
+      }
+    };
+
+    const handleLeave = async (membershipId: string) => {
+      try {
+        const { leaveClub } = await import('../../lib/api');
+        await leaveClub(membershipId);
+        (window as any).showToast?.('Left club!', 'success');
+        refreshMemberships();
+        onRefresh?.();
+      } catch (err: any) {
+        (window as any).showToast?.(err?.response?.data?.error || 'Failed to leave club', 'error');
+      }
+    };
+
+    const handleApprove = async (membershipId: string) => {
+      try {
+        const { updateMembershipStatus } = await import('../../lib/api');
+        await updateMembershipStatus(membershipId, 'Active');
+        (window as any).showToast?.('Membership approved!', 'success');
+        refreshMemberships();
+      } catch (err: any) {
+        (window as any).showToast?.(err?.response?.data?.error || 'Failed to approve', 'error');
+      }
+    };
+
+    if (role === 'STUDENT' || role === 'PARENT') {
+      return (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(data || []).map((club: any) => {
+              const myMembership = allMemberships.find(m => m.club_id === club.id && m.student_id === currentStudentId);
+              return (
+                <div key={club.id} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+                      <Users className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                    </div>
+                    {club.dues_amount > 0 && (
+                      <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-lg border border-amber-100 dark:border-amber-800">
+                        <CreditCard className="w-3 h-3" />
+                        ${club.dues_amount} / {club.dues_frequency}
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold mb-1">{club.name}</h3>
+                  <p className="text-sm text-zinc-500 mb-4 line-clamp-2">{club.description}</p>
+                  
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between text-xs text-zinc-500">
+                      <span>Schedule:</span>
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-300">{club.meeting_schedule}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-zinc-500">
+                      <span>Category:</span>
+                      <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded-md font-medium text-zinc-600 dark:text-zinc-400">{club.category}</span>
+                    </div>
+                  </div>
+
+                  {myMembership ? (
+                    <div className="flex items-center justify-between mt-auto">
+                      <span className={cn(
+                        "px-3 py-1 text-xs font-bold rounded-full",
+                        myMembership.status === 'Active' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                      )}>
+                        {myMembership.status}
+                      </span>
+                      <button 
+                        onClick={() => handleLeave(myMembership.id)}
+                        className="text-xs font-bold text-red-500 hover:text-red-600"
+                      >
+                        Leave Club
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleJoin(club.id, currentStudentId!)}
+                      disabled={club.status !== 'Active'}
+                      className="w-full py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50"
+                    >
+                      {club.status === 'Active' ? 'Join Club' : 'Inactive'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 p-1 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-xl w-fit">
+          <button
+            onClick={() => setViewMode('clubs')}
+            className={cn(
+              "px-4 py-2 text-sm font-bold rounded-lg transition-all",
+              viewMode === 'clubs' ? "bg-white dark:bg-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+            )}
+          >
+            Manage Clubs
+          </button>
+          <button
+            onClick={() => setViewMode('memberships')}
+            className={cn(
+              "px-4 py-2 text-sm font-bold rounded-lg transition-all",
+              viewMode === 'memberships' ? "bg-white dark:bg-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+            )}
+          >
+            All Memberships
+          </button>
+        </div>
+
+        {viewMode === 'clubs' ? (
+          <DataTable
+            data={data}
+            title="Student Clubs"
+            onSave={onSave}
+            onDelete={onDelete}
+            columns={[
+              { header: 'Club Name', accessor: (row: any) => row.name },
+              { header: 'Category', accessor: (row: any) => row.category },
+              { header: 'Schedule', accessor: (row: any) => row.meeting_schedule },
+              { header: 'Dues', accessor: (row: any) => row.dues_amount ? `$${row.dues_amount}` : 'Free' },
+              { header: 'Members', accessor: (row: any) => row.member_count || 0 },
+              { header: 'Status', accessor: (row: any) => row.status },
+            ]}
+            extraActions={(row) => (
+              <button
+                onClick={() => handleViewMembers(row)}
+                className="flex items-center w-full gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-indigo-600 rounded-lg transition-colors"
+              >
+                <Users className="w-4 h-4" />
+                View Members
+              </button>
+            )}
+            renderForm={(item, isViewOnly) => (
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Club Name</label>
+                    <input name="name" defaultValue={item?.name} required disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Category</label>
+                    <input name="category" defaultValue={item?.category} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Description</label>
+                  <textarea name="description" defaultValue={item?.description} rows={3} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Schedule</label>
+                    <input name="meeting_schedule" defaultValue={item?.meeting_schedule} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" placeholder="e.g. Every Friday, 3 PM" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Patron/Staff ID</label>
+                    <select name="patron_staff_id" defaultValue={item?.patron_staff_id} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm">
+                      <option value="">Select Patron...</option>
+                      {(staff || []).map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.role})</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Dues Amount</label>
+                    <input type="number" name="dues_amount" defaultValue={item?.dues_amount || 0} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Frequency</label>
+                    <select name="dues_frequency" defaultValue={item?.dues_frequency || 'Per Term'} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm">
+                      <option value="One-time">One-time</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="Per Term">Per Term</option>
+                      <option value="Yearly">Yearly</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Status</label>
+                    <select name="status" defaultValue={item?.status || 'Active'} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm">
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          />
+        ) : (
+          <DataTable
+            data={allMemberships}
+            title="Club Memberships"
+            columns={[
+              { header: 'Student', accessor: (row: any) => row.student_name },
+              { header: 'Club', accessor: (row: any) => row.club_name },
+              { header: 'Status', accessor: (row: any) => row.status },
+              { header: 'Date', accessor: (row: any) => row.joined_at ? new Date(row.joined_at).toLocaleDateString() : 'N/A' },
+            ]}
+            extraActions={(row) => (
+              <>
+                {row.status !== 'Active' && (
+                  <button
+                    onClick={() => handleApprove(row.id)}
+                    className="flex items-center w-full gap-3 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 rounded-lg transition-colors"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    Approve
+                  </button>
+                )}
+              </>
+            )}
+            onDelete={async (item) => handleLeave(item.id)}
+          />
+        )}
+
+        {/* Members Dashboard / Overlay */}
+        {viewingMembers && (
+          <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/20 backdrop-blur-sm">
+            <div className="w-full max-w-2xl h-full bg-white dark:bg-zinc-900 shadow-2xl overflow-y-auto">
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-8">
+                  <div>
+                    <h2 className="text-2xl font-black">{viewingMembers?.name}</h2>
+                    <p className="text-zinc-500">Club Members & Enrollment</p>
+                  </div>
+                  <button onClick={() => setViewingMembers(null)} className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-all">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                    <h3 className="text-sm font-bold uppercase text-zinc-400 mb-4">Add Student to Club</h3>
+                    <div className="flex gap-3">
+                      <select id="manualStudentSelector" className="flex-1 px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm">
+                        <option value="">Select Student...</option>
+                        {(students || []).filter(s => !clubMembers.some(m => m.student_id === s.id)).map((s: any) => (
+                          <option key={s.id} value={s.id}>{s.name} ({s.class})</option>
+                        ))}
+                      </select>
+                      <button
+                                    onClick={() => {
+                                      const sid = (document.getElementById('manualStudentSelector') as HTMLSelectElement).value;
+                                      if (sid && viewingMembers?.id) handleJoin(viewingMembers.id, sid);
+                                    }}
+                        className="px-6 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl"
+                      >
+                        Add Member
+                      </button>
+                    </div>
+                  </div>
+
+                  <DataTable
+                    data={allMemberships.filter(m => m.club_id === viewingMembers?.id)}
+                    title="Active Members"
+                    columns={[
+                      { header: 'Student', accessor: (row: any) => row.student_name },
+                      { header: 'Status', accessor: (row: any) => row.status },
+                    ]}
+                    onDelete={(row) => handleLeave(row.id)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  },
 };
