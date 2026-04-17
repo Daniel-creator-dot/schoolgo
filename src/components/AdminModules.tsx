@@ -474,8 +474,9 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. St. Patrick's School"
-                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 required
+                disabled={isEdit}
               />
             </div>
             <div className="space-y-2">
@@ -483,7 +484,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isEdit}
               >
                 <option>Primary School</option>
                 <option>High School</option>
@@ -498,8 +500,9 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="admin@school.com"
-                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 required
+                disabled={isEdit}
               />
             </div>
             <div className="space-y-2">
@@ -510,7 +513,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
                   value={formData.custom_domain}
                   onChange={(e) => setFormData({ ...formData, custom_domain: e.target.value })}
                   placeholder="school-name"
-                  className="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-l-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-l-xl outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isEdit}
                 />
                 <span className="px-4 py-2.5 bg-zinc-100 dark:bg-zinc-700 border border-l-0 border-zinc-200 dark:border-zinc-700 rounded-r-xl text-zinc-500 text-sm">.omniportal.com</span>
               </div>
@@ -525,7 +529,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleFileUpload(e, 'logo')}
-                  className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
+                  className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isEdit}
                 />
               </div>
             </div>
@@ -539,7 +544,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleFileUpload(e, 'signature')}
-                  className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
+                  className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isEdit}
                 />
               </div>
             </div>
@@ -550,7 +556,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
                 value={formData.contact_number}
                 onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })}
                 placeholder="+1 (555) 000-0000"
-                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isEdit}
               />
             </div>
           </div>
@@ -562,7 +569,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               placeholder="Enter full address"
-              className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isEdit}
             ></textarea>
           </div>
 
@@ -597,7 +605,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
               <select
                 value={formData.language}
                 onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isEdit}
               >
                 <option value="en">English</option>
                 <option value="fr">French</option>
@@ -610,7 +619,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
               <select
                 value={formData.timezone}
                 onChange={(e) => setFormData({ ...formData, timezone: e.target.value })}
-                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isEdit}
               >
                 <option value="GMT">GMT (Accra, Abidjan)</option>
                 <option value="WAT">WAT (Lagos, Luanda)</option>
