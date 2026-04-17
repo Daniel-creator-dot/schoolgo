@@ -1066,6 +1066,11 @@ export const deletePlatformUser = async (id: string) => {
   return response.data;
 };
 
+export const resetUserPassword = async (id: string, data: { password: string }) => {
+  const response = await api.post(`/platform/users/${id}/reset-password`, data);
+  return response.data;
+};
+
 export const fetchAuditLogs = async () => {
   const response = await api.get('/audit-logs');
   return response.data;

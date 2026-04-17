@@ -553,3 +553,30 @@ export const verifyPaystackPayment = async (req: AuthRequest, res: Response) => 
   }
 };
 
+export const resetUserPassword = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ error: 'New password is required.' });
+  }
+
+  try {
+    const bcrypt = await import('bcryptjs');
+    const hashedPassword = await bcrypt.default.hash(password, 10);
+    
+    const result = await pool.query(
+      'UPDATE users SET password = $1 WHERE id = $2 RETURNING id, name, email',
+      [hashedPassword, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    await recordAuditLog(req.user.id, 'RESET_PASSWORD', `Reset password for user: ${result.rows[0].email}`, req.user.org_id, req.ip || '');
+    res.json({ message: 'Password reset successfully.', user: result.rows[0] });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

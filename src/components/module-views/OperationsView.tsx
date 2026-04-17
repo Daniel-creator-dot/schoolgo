@@ -1675,6 +1675,7 @@ export const OperationsModules = {
             data={data}
             title="Student Clubs"
             onSave={onSave}
+            onAdd={onSave ? () => {} : undefined}
             onDelete={onDelete}
             columns={[
               { header: 'Club Name', accessor: (row: any) => row.name },

@@ -27,6 +27,7 @@ import PartnerDashboard from "./components/PartnerDashboard";
 import { DataTable } from "./components/DataTable";
 import {
   CreateOrganization,
+  EditOrganization,
   ChoosePlan,
   PlansManagement,
   SubscriptionPlans,
@@ -283,6 +284,8 @@ export default function App() {
     type: "none",
   });
 
+  const [editingOrganization, setEditingOrganization] = useState<any>(null);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -534,7 +537,7 @@ export default function App() {
       
       const currentOrgInfo = resultsArr[47];
       if (currentOrgInfo && currentOrgInfo.status === "fulfilled" && currentOrgInfo.value) {
-        if (currentOrgInfo.value.currency) {
+        if (currentOrgInfo.value.currency && currentRole !== 'SUPER_ADMIN') {
           setCurrency(currentOrgInfo.value.currency);
         }
         if (currentOrgInfo.value.language) {
@@ -1605,9 +1608,10 @@ export default function App() {
         <SuperAdminModules.Organizations
           data={organizations}
           onAdd={() => setCurrentView("Create Organization")}
-          onEdit={(org) =>
-            showToast(`Edit for ${org.name} coming soon!`, "info")
-          }
+          onEdit={(org) => {
+            setEditingOrganization(org);
+            setCurrentView("Edit Organization");
+          }}
           onDelete={(org) =>
             setDeleteConfirm({ isOpen: true, item: org, type: "organization" })
           }
@@ -1624,6 +1628,13 @@ export default function App() {
       ),
 
       "Create Organization": <CreateOrganization onRefresh={loadData} />,
+      "Edit Organization": (
+        <EditOrganization 
+          organization={editingOrganization} 
+          onRefresh={loadData} 
+          onBack={() => setCurrentView("Organizations")} 
+        />
+      ),
       "Subscription Plan": <ChoosePlan />,
       Receipts: <ReceiptsManagement data={receipts} />,
 

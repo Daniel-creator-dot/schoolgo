@@ -66,7 +66,8 @@ import {
   updatePartner,
   deletePartnerAdmin,
   approvePartner,
-  resetPartnerPassword
+  resetPartnerPassword,
+  resetUserPassword
 } from '../lib/api';
 import { API_BASE_URL } from '../constants';
 
@@ -77,8 +78,12 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
     name: '',
     email: '',
     role: 'SCHOOL_ADMIN',
-    org_id: ''
+    org_id: '',
+    password: ''
   });
+
+  const [resetPasswordUser, setResetPasswordUser] = useState<any | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, user: any | null }>({
     isOpen: false,
@@ -129,6 +134,15 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
         onAdd={handleAdd}
         onDelete={handleDeleteClick}
         onView={(user) => setViewingUser(user)}
+        extraActions={(user) => (
+          <button
+            onClick={() => setResetPasswordUser(user)}
+            className="flex items-center w-full gap-3 px-3 py-2 text-sm text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10 rounded-lg transition-colors"
+          >
+            <RotateCw className="w-4 h-4" />
+            Reset Password
+          </button>
+        )}
         columns={[
           { header: 'Name', accessor: 'name', className: 'font-bold' },
           {
@@ -182,7 +196,17 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-between items-center pt-2">
+              <button 
+                onClick={() => {
+                  setResetPasswordUser(viewingUser);
+                  setViewingUser(null);
+                }}
+                className="px-4 py-2 bg-amber-50 text-amber-600 font-bold rounded-xl text-xs flex items-center gap-2"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+                Change Password
+              </button>
               <button 
                 onClick={() => setViewingUser(null)}
                 className="px-6 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold rounded-xl text-sm"
@@ -192,6 +216,73 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal 
+        isOpen={!!resetPasswordUser} 
+        onClose={() => {
+          setResetPasswordUser(null);
+          setNewPassword('');
+        }} 
+        title="Reset User Password"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+            <p className="text-sm text-amber-800 font-medium">
+              You are resetting the password for <span className="font-bold">{resetPasswordUser?.name}</span> ({resetPasswordUser?.email}). 
+              The user will need to use this new password for their next login.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold uppercase text-zinc-500">New Password</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new secure password"
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+              />
+              <button 
+                onClick={() => setNewPassword(Math.random().toString(36).slice(-10))}
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-[10px] font-bold text-zinc-500 hover:text-zinc-900"
+              >
+                Generate
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button 
+              type="button" 
+              onClick={() => {
+                setResetPasswordUser(null);
+                setNewPassword('');
+              }} 
+              className="px-4 py-2 text-sm font-bold text-zinc-500"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={async () => {
+                if (!newPassword) return (window as any).showToast?.('Please enter a password', 'error');
+                try {
+                  await resetUserPassword(resetPasswordUser.id, { password: newPassword });
+                  (window as any).showToast?.('Password reset successfully!', 'success');
+                  setResetPasswordUser(null);
+                  setNewPassword('');
+                } catch (err) {
+                  console.error('Failed to reset password:', err);
+                  (window as any).showToast?.('Failed to reset password', 'error');
+                }
+              }}
+              className="px-6 py-2 bg-amber-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-amber-200"
+            >
+              Update Password
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Add New Platform User">
@@ -275,20 +366,28 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
 }
 
 export function CreateOrganization({ onRefresh }: { onRefresh?: () => void }) {
+  return <OrganizationForm onRefresh={onRefresh} />;
+}
+
+export function EditOrganization({ organization, onRefresh, onBack }: { organization: any, onRefresh?: () => void, onBack?: () => void }) {
+  return <OrganizationForm initialData={organization} isEdit onRefresh={onRefresh} onBack={onBack} />;
+}
+
+function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { initialData?: any, isEdit?: boolean, onRefresh?: () => void, onBack?: () => void }) {
   const { t } = useLanguage();
   const [plans, setPlans] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'Primary School',
-    email: '',
-    contact_number: '',
-    address: '',
-    custom_domain: '',
-    logo: '',
-    signature: '',
-    plan: '',
-    language: 'en',
-    timezone: 'GMT'
+    name: initialData?.name || '',
+    type: initialData?.type || 'Primary School',
+    email: initialData?.email || '',
+    contact_number: initialData?.contact_number || '',
+    address: initialData?.address || '',
+    custom_domain: initialData?.custom_domain || '',
+    logo: initialData?.logo || '',
+    signature: initialData?.signature || '',
+    plan: initialData?.plan || '',
+    language: initialData?.language || 'en',
+    timezone: initialData?.timezone || 'GMT'
   });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'signature') => {
@@ -307,7 +406,7 @@ export function CreateOrganization({ onRefresh }: { onRefresh?: () => void }) {
       try {
         const data = await fetchPlans();
         setPlans(data);
-        if (data.length > 0) {
+        if (data.length > 0 && !formData.plan) {
           setFormData(prev => ({ ...prev, plan: data[0].name }));
         }
       } catch (err) {
@@ -320,33 +419,49 @@ export function CreateOrganization({ onRefresh }: { onRefresh?: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createOrganization(formData);
-      (window as any).showToast?.(t('create_organization') + ' successfully!', 'success');
+      if (isEdit && initialData?.id) {
+        await updateOrganization(initialData.id, formData);
+        (window as any).showToast?.(t('organization') + ' updated successfully!', 'success');
+      } else {
+        await createOrganization(formData);
+        (window as any).showToast?.(t('create_organization') + ' successfully!', 'success');
+        // Reset form if not editing
+        setFormData({
+          name: '',
+          type: 'Primary School',
+          email: '',
+          contact_number: '',
+          address: '',
+          custom_domain: '',
+          logo: '',
+          signature: '',
+          plan: plans[0]?.name || '',
+          language: 'en',
+          timezone: 'GMT'
+        });
+      }
       onRefresh?.();
-      // Reset form
-      setFormData({
-        name: '',
-        type: 'Primary School',
-        email: '',
-        contact_number: '',
-        address: '',
-        custom_domain: '',
-        logo: '',
-        signature: '',
-        plan: plans[0]?.name || '',
-        language: 'en',
-        timezone: 'GMT'
-      });
+      onBack?.();
     } catch (err: any) {
-      console.error('Failed to create organization:', err);
-      (window as any).showToast?.(err.response?.data?.error || 'Failed to create organization', 'error');
+      console.error(`Failed to ${isEdit ? 'update' : 'create'} organization:`, err);
+      (window as any).showToast?.(err.response?.data?.error || `Failed to ${isEdit ? 'update' : 'create'} organization`, 'error');
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 shadow-sm">
-        <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-6">{t('create_new_organization')}</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">{isEdit ? t('edit_organization') : t('create_new_organization')}</h2>
+          {onBack && (
+            <button 
+              onClick={onBack}
+              className="px-4 py-2 text-sm font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
+            >
+              Back to List
+            </button>
+          )}
+        </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -491,8 +606,18 @@ export function CreateOrganization({ onRefresh }: { onRefresh?: () => void }) {
           </div>
 
           <div className="pt-4 flex items-center justify-end gap-4">
-            <button type="button" className="px-6 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors">{t('cancel')}</button>
-            <button type="submit" className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors">{t('create_organization')}</button>
+            {onBack && (
+              <button 
+                type="button" 
+                onClick={onBack}
+                className="px-6 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+              >
+                {t('cancel')}
+              </button>
+            )}
+            <button type="submit" className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors">
+              {isEdit ? t('update_organization') : t('create_organization')}
+            </button>
           </div>
         </form>
       </div>
