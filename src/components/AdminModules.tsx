@@ -386,6 +386,7 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
     logo: initialData?.logo || '',
     signature: initialData?.signature || '',
     plan: initialData?.plan || '',
+    status: initialData?.status || 'Active',
     language: initialData?.language || 'en',
     timezone: initialData?.timezone || 'GMT'
   });
@@ -436,6 +437,7 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
           logo: '',
           signature: '',
           plan: plans[0]?.name || '',
+          status: 'Active',
           language: 'en',
           timezone: 'GMT'
         });
@@ -564,7 +566,7 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
             ></textarea>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('subscription_plan')}</label>
               <select
@@ -575,6 +577,19 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
                 {plans.map(p => (
                   <option key={p.id} value={p.name}>{p.name}</option>
                 ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('status')}</label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Active">Active</option>
+                <option value="Pending">Pending</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Demo Request">Demo Request</option>
               </select>
             </div>
             <div className="space-y-2">
