@@ -64,7 +64,8 @@ export const login = async (req: express.Request, res: express.Response) => {
         company_name: partner.company_name,
         registration_number: partner.registration_number,
         referral_code: partner.referral_code,
-        total_earnings: partner.total_earnings
+        total_earnings: partner.total_earnings,
+        currency: partner.currency || 'GH₵'
       }
     });
   } catch (err: any) {
@@ -76,7 +77,7 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
   try {
     const partnerId = req.user.id;
 
-    const partnerResult = await pool.query('SELECT id, name, email, referral_code, total_earnings FROM partners WHERE id = $1', [partnerId]);
+    const partnerResult = await pool.query('SELECT id, name, email, referral_code, total_earnings, currency FROM partners WHERE id = $1', [partnerId]);
     if (partnerResult.rows.length === 0) {
       return res.status(404).json({ error: 'Partner not found' });
     }
@@ -302,16 +303,15 @@ export const resolveAccount = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
-  const { payout_type, bank_name, bank_code, account_number, account_name } = req.body;
+  const { payout_type, bank_name, bank_code, account_number, account_name, currency } = req.body;
   const partnerId = req.user.id;
 
   try {
     const result = await pool.query(
       `UPDATE partners 
-       SET payout_type = $1, bank_name = $2, bank_code = $3, account_number = $4, account_name = $5 
-       WHERE id = $6 RETURNING *`,
-      [payout_type, bank_name, bank_code, account_number, account_name, partnerId]
+       SET payout_type = $1, bank_name = $2, bank_code = $3, account_number = $4, account_name = $5, currency = $6
+       WHERE id = $7 RETURNING *`,
+      [payout_type, bank_name, bank_code, account_number, account_name, currency || 'GH₵', partnerId]
     );
 
     if (result.rows.length === 0) {
@@ -328,7 +328,7 @@ export const getPayoutSettings = async (req: AuthRequest, res: Response) => {
   const partnerId = req.user.id;
   try {
     const result = await pool.query(
-      'SELECT payout_type, bank_name, bank_code, account_number, account_name FROM partners WHERE id = $1',
+      'SELECT payout_type, bank_name, bank_code, account_number, account_name, currency FROM partners WHERE id = $1',
       [partnerId]
     );
     if (result.rows.length === 0) {

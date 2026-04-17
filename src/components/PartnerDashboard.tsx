@@ -23,7 +23,7 @@ interface SchoolLead {
 }
 
 export default function PartnerDashboard() {
-  const { language, setLanguage, currency, t } = useLanguage();
+  const { language, setLanguage, currency, setCurrency, t } = useLanguage();
   const [partner, setPartner] = useState<any>(null);
   const [schools, setSchools] = useState<SchoolLead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,8 @@ export default function PartnerDashboard() {
     bank_name: '',
     bank_code: '',
     account_number: '',
-    account_name: ''
+    account_name: '',
+    currency: 'GH₵'
   });
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
@@ -166,7 +167,7 @@ export default function PartnerDashboard() {
 
   // Auto-resolve when account number reaches 10 digits (common for banks)
   useEffect(() => {
-    if (payoutSettings.account_number.length === 10 && payoutSettings.bank_code) {
+    if (payoutSettings.account_number?.length === 10 && payoutSettings.bank_code) {
       resolveAccount();
     }
   }, [payoutSettings.account_number, payoutSettings.bank_code]);
@@ -184,7 +185,10 @@ export default function PartnerDashboard() {
         body: JSON.stringify(payoutSettings)
       });
       if (res.ok) {
-        (window as any).showToast?.('Payout settings saved successfully!', 'success');
+        if (payoutSettings.currency) {
+          setCurrency(payoutSettings.currency);
+        }
+        (window as any).showToast?.('Settings saved successfully!', 'success');
       } else {
         (window as any).showToast?.('Failed to save settings', 'error');
       }
@@ -378,7 +382,7 @@ export default function PartnerDashboard() {
                 <Wallet size={64} />
               </div>
               <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Total Earnings</p>
-              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{currency} {partner?.total_earnings?.toLocaleString() || '0.00'}</h3>
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{payoutSettings.currency || currency} {partner?.total_earnings?.toLocaleString() || '0.00'}</h3>
               <p className="mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Finalized on active provisioning</p>
             </div>
 
@@ -548,7 +552,7 @@ export default function PartnerDashboard() {
                     return (
                       <div key={plan.id} className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative flex flex-col hover:border-indigo-500/50 transition-colors">
                         <h4 className="text-2xl font-black mb-2">{plan.name}</h4>
-                        <p className="text-xl font-bold text-indigo-600 mb-6">{currency} {parseFloat(plan.price).toLocaleString()}</p>
+                        <p className="text-xl font-bold text-indigo-600 mb-6">{payoutSettings.currency || currency} {parseFloat(plan.price).toLocaleString()}</p>
                         <ul className="space-y-3 flex-1 mb-6">
                           {modules.map((m: string, i: number) => (
                             <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">
@@ -725,17 +729,37 @@ export default function PartnerDashboard() {
                       )}
                     </div>
                   )}
-
-                  <div className="pt-4 flex justify-end">
-                    <button 
-                      type="submit"
-                      disabled={payoutLoading || isResolving || !payoutSettings.account_name}
-                      className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-indigo-200 dark:shadow-none disabled:opacity-50 disabled:grayscale"
-                    >
-                      {payoutLoading ? 'Saving...' : 'Update Payout Details'}
-                    </button>
-                  </div>
                 </form>
+              </div>
+
+              {/* Currency Preference Card */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
+                <div className="p-8 border-b border-zinc-100 dark:border-zinc-800">
+                  <h4 className="text-lg font-black text-zinc-900 dark:text-white">Display Currency</h4>
+                  <p className="text-xs text-zinc-500 font-medium">This will be your preferred currency for all earnings and financial reports.</p>
+                </div>
+                <div className="p-8">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                        System Currency
+                        <span className="text-[10px] text-zinc-400 font-normal italic">(Updates your hub preference)</span>
+                      </label>
+                      <select 
+                        value={payoutSettings.currency}
+                        onChange={(e) => setPayoutSettings({...payoutSettings, currency: e.target.value})}
+                        className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
+                      >
+                        <option value="GH₵">Ghana Cedis (GH₵)</option>
+                        <option value="₦">Nigerian Naira (₦)</option>
+                        <option value="$">US Dollar ($)</option>
+                        <option value="€">Euro (€)</option>
+                        <option value="£">British Pound (£)</option>
+                        <option value="CFA">CFA Franc (CFA)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Security Note */}

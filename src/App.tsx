@@ -402,6 +402,14 @@ export default function App() {
     if (roleForFetch === 'PARTNER') return; // Partners have their own isolated dashboard fetches
 
     try {
+      if (roleForFetch === 'PARTNER') {
+        const partnerData = await fetchPartnerDashboard();
+        if (partnerData?.partner?.currency) {
+          setCurrency(partnerData.partner.currency);
+        }
+        return;
+      }
+
       const isStaff = roleForFetch === "STAFF";
       const isHOD = roleForFetch === "HOD";
       const isFinance = roleForFetch === "FINANCE";

@@ -234,16 +234,18 @@ export const getPayments = async (req: AuthRequest, res: Response) => {
     let result;
     if (role === 'SUPER_ADMIN') {
       result = await pool.query(`
-        SELECT p.*, s.name as student_name, c.name as class_name
+        SELECT p.*, s.name as student_name, c.name as class_name, o.currency
         FROM payments p
+        JOIN organizations o ON p.org_id = o.id
         JOIN students s ON p.student_id = s.id
         LEFT JOIN classes c ON s.class_id = c.id
         ORDER BY p.date DESC
       `);
     } else {
       result = await pool.query(`
-        SELECT p.*, s.name as student_name, c.name as class_name
+        SELECT p.*, s.name as student_name, c.name as class_name, o.currency
         FROM payments p
+        JOIN organizations o ON p.org_id = o.id
         JOIN students s ON p.student_id = s.id
         LEFT JOIN classes c ON s.class_id = c.id
         WHERE p.org_id = $1

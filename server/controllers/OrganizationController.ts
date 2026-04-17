@@ -184,13 +184,13 @@ export const getSubscriptions = async (req: AuthRequest, res: Response) => {
     let result;
     if (role === 'SUPER_ADMIN') {
       result = await pool.query(`
-        SELECT s.*, o.name as org_name 
+        SELECT s.*, o.name as org_name, o.currency 
         FROM subscriptions s
         JOIN organizations o ON s.org_id = o.id
       `);
     } else {
       result = await pool.query(`
-        SELECT s.*, o.name as org_name 
+        SELECT s.*, o.name as org_name, o.currency 
         FROM subscriptions s
         JOIN organizations o ON s.org_id = o.id
         WHERE s.org_id = $1

@@ -1177,7 +1177,7 @@ export function SchoolBilling({
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-zinc-500 font-medium">Billed Amount</span>
-                <span className="font-bold text-zinc-200">GH₵ {parseFloat(currentSubscription?.amount || 0).toLocaleString()}</span>
+                <span className="font-bold text-zinc-200">{organization?.currency || 'GH₵'} {parseFloat(currentSubscription?.amount || 0).toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -1215,7 +1215,7 @@ export function SchoolBilling({
                     )}
                   </div>
                   <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-4xl font-black text-zinc-900 dark:text-white">GH₵ {parseFloat(plan.price).toLocaleString()}</span>
+                    <span className="text-4xl font-black text-zinc-900 dark:text-white">{organization?.currency || 'GH₵'} {parseFloat(plan.price).toLocaleString()}</span>
                     <span className="text-zinc-500 font-bold text-sm">/{plan.period === 'monthly' ? 'mo' : plan.period === 'yearly' ? 'yr' : 'fixed'}</span>
                   </div>
                   <p className="text-sm text-zinc-500 line-clamp-2 leading-relaxed h-10">{plan.description}</p>
@@ -1370,7 +1370,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
                     <div style="font-size: 13px; color: #64748b;">Expires: ${new Date(sub.expiry_date).toLocaleDateString()}</div>
                   </td>
                   <td style="padding: 24px 16px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 700;">
-                    $ ${parseFloat(sub.amount || 0).toLocaleString()}
+                    ${sub.currency || 'GH₵'} ${parseFloat(sub.amount || 0).toLocaleString()}
                   </td>
                 </tr>
               </tbody>
@@ -1379,7 +1379,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
 
           <div class="amount-box">
             <div class="amount-label">Total Amount Paid</div>
-            <div class="amount-value">$ ${parseFloat(sub.amount || 0).toLocaleString()}</div>
+            <div class="amount-value">${sub.currency || 'GH₵'} ${parseFloat(sub.amount || 0).toLocaleString()}</div>
             <div style="font-size: 12px; color: #94a3b8; margin-top: 8px; font-weight: 600;">Payment Method: ${sub.payment_method}</div>
           </div>
 
@@ -1477,7 +1477,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
         columns={[
           { header: 'Organization', accessor: 'org_name', className: 'font-bold' },
           { header: 'Plan', accessor: 'plan' },
-          { header: 'Amount', accessor: (item: any) => `${currency} ${parseFloat(item.amount || 0).toLocaleString()}`, className: 'font-bold' },
+          { header: 'Amount', accessor: (item: any) => `${item.currency || currency} ${parseFloat(item.amount || 0).toLocaleString()}`, className: 'font-bold' },
           {
             header: 'Status',
             accessor: (item: any) => (
@@ -1607,7 +1607,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
             >
               <option value="">Choose a plan</option>
               {plans.map((plan: any) => (
-                <option key={plan.id} value={plan.name}>{plan.name} - $ {parseFloat(plan.price).toLocaleString()}</option>
+                <option key={plan.id} value={plan.name}>{plan.name} - {currency} {parseFloat(plan.price).toLocaleString()}</option>
               ))}
             </select>
           </div>
@@ -1764,7 +1764,7 @@ export function BillingHistory({ data }: { data?: any[] }) {
     id: `TX-${sub.id.split('-')[0].toUpperCase()}`,
     org: sub.org_name,
     date: new Date(sub.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: '2-digit' }),
-    amount: `${currency} ${parseFloat(sub.amount).toLocaleString()}`,
+    amount: `${sub.currency || currency} ${parseFloat(sub.amount).toLocaleString()}`,
     status: sub.status === 'Active' ? 'Paid' : sub.status,
     method: sub.payment_method || 'Bank Transfer'
   }));
@@ -2455,14 +2455,14 @@ export function ReceiptsManagement({ data }: { data?: any[] }) {
                       <span style="font-size: 12px; color: #666;">Full implementation of selected modules</span>
                     </td>
                     <td>${receipt.plan}</td>
-                    <td class="amount-col">${currency} ${parseFloat(receipt.amount).toLocaleString()}</td>
+                    <td class="amount-col">${receipt.currency || currency} ${parseFloat(receipt.amount).toLocaleString()}</td>
                   </tr>
                 </tbody>
               </table>
 
               <div class="total-section">
                 <div class="total-label">Total Amount Paid</div>
-                <div class="total-amount">${currency} ${parseFloat(receipt.amount).toLocaleString()}</div>
+                <div class="total-amount">${receipt.currency || currency} ${parseFloat(receipt.amount).toLocaleString()}</div>
               </div>
 
               <div class="seal">
@@ -2496,7 +2496,7 @@ export function ReceiptsManagement({ data }: { data?: any[] }) {
         { header: 'Organization', accessor: 'org_name', className: 'font-bold' },
         { header: 'Plan', accessor: 'plan' },
         { header: 'Date', accessor: (item) => new Date(item.created_at).toLocaleDateString() },
-        { header: 'Amount', accessor: (item) => `${currency} ${parseFloat(item.amount).toLocaleString()}`, className: 'font-bold' },
+        { header: 'Amount', accessor: (item) => `${item.currency || currency} ${parseFloat(item.amount).toLocaleString()}`, className: 'font-bold' },
       ]}
       extraActions={(item) => (
         <button
@@ -2635,6 +2635,13 @@ export function Settings({ role }: { role?: UserRole }) {
         currency,
         language
       });
+      
+      // Update global context only if this is NOT a Super Admin setting a specific school's details,
+      // or if it's the school admin themselves.
+      if (role !== 'SUPER_ADMIN') {
+        setCurrency(currency);
+        setLanguage(language as any);
+      }
       
       (window as any).showToast?.(t('save_changes') + ' successful!', 'success');
 
