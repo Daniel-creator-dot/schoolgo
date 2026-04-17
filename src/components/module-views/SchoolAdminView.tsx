@@ -2926,11 +2926,20 @@ export const AdmitStudentView = ({
             </div>
             <h3 className="text-2xl font-black text-zinc-900 dark:text-white">Bulk Student Import</h3>
             <p className="text-zinc-500 font-medium max-w-md mx-auto">Upload an Excel file with student data. Make sure columns include: Name, Class, Parent Name, Contact.</p>
-            <label className="inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest cursor-pointer hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-200 dark:shadow-none">
-              <Upload className="w-4 h-4" />
-              {isImporting ? 'Processing...' : 'Upload Excel File'}
-              <input type="file" className="hidden" accept=".xlsx,.xls" onChange={handleBulkImport} disabled={isImporting} />
-            </label>
+            <div className="flex justify-center gap-4">
+              <button 
+                type="button" 
+                onClick={() => downloadStudentTemplate(classes)}
+                className="inline-flex items-center gap-2 px-6 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
+              >
+                <Download className="w-4 h-4" /> Template
+              </button>
+              <label className="inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest cursor-pointer hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-200 dark:shadow-none">
+                <Upload className="w-4 h-4" />
+                {isImporting ? 'Processing...' : 'Upload Excel File'}
+                <input type="file" className="hidden" accept=".xlsx,.xls" onChange={handleBulkImport} disabled={isImporting} />
+              </label>
+            </div>
           </div>
 
           {importPreviewItems.length > 0 && (
@@ -2944,14 +2953,20 @@ export const AdmitStudentView = ({
                   <thead className="bg-zinc-50 dark:bg-zinc-800">
                     <tr>
                       <th className="px-4 py-3 font-black uppercase tracking-widest">Name</th>
+                      <th className="px-4 py-3 font-black uppercase tracking-widest">Gender</th>
+                      <th className="px-4 py-3 font-black uppercase tracking-widest">Parent</th>
+                      <th className="px-4 py-3 font-black uppercase tracking-widest">Contact</th>
                       <th className="px-4 py-3 font-black uppercase tracking-widest">Class</th>
                       <th className="px-4 py-3 font-black uppercase tracking-widest">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                     {importPreviewItems.map((item, i) => (
-                      <tr key={i} className="hover:bg-zinc-50/50">
+                      <tr key={i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
                         <td className="px-4 py-3 font-bold">{item.name}</td>
+                        <td className="px-4 py-3">{item.gender || '-'}</td>
+                        <td className="px-4 py-3">{item.parent_name || '-'}</td>
+                        <td className="px-4 py-3">{item.contact || '-'}</td>
                         <td className="px-4 py-3">{item.class_id ? <span className="text-emerald-600 font-bold">{item.class_name}</span> : <span className="text-rose-500 font-bold italic">Not found: "{item.class_name}"</span>}</td>
                         <td className="px-4 py-3">{item.class_id ? <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase">Ready</span> : <span className="px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase">Error</span>}</td>
                       </tr>
@@ -2970,6 +2985,48 @@ export const AdmitStudentView = ({
           )}
         </div>
       )}
+
+      {/* Recently Admitted Students */}
+      <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
+        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recently Admitted Students</h3>
+        <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-zinc-50 dark:bg-zinc-800">
+              <tr>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Name</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Admission No</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Class</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Enrolled On</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {[...students].sort((a, b) => new Date(b.date_enrolled || 0).getTime() - new Date(a.date_enrolled || 0).getTime()).slice(0, 10).map((student, i) => {
+                const cls = classes.find(c => c.id === student.class_id);
+                const className = cls ? `${cls.name} ${cls.section || ''}`.trim() : (student.class || '-');
+                return (
+                  <tr key={student.id || i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
+                    <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">{student.name}</td>
+                    <td className="px-6 py-4 text-zinc-500">{student.admission_no || '-'}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-black uppercase">
+                        {className}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-500">
+                      {student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : '-'}
+                    </td>
+                  </tr>
+                );
+              })}
+              {students.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 font-medium">No students enrolled yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

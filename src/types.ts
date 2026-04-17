@@ -66,10 +66,21 @@ export interface Inquiry {
   secondary_parent_email?: string;
   secondary_parent_contact?: string;
   religion?: string;
+}export interface Application {
+  id: string;
+  name: string;
+  grade: string;
+  status: string;
+  [key: string]: any;
 }
 
-
-
+export interface Acceptance {
+  id: string;
+  name: string;
+  grade: string;
+  status: string;
+  [key: string]: any;
+}
 
 export interface Ward {
   id: string;

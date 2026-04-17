@@ -2009,6 +2009,25 @@ export async function init() {
     // Add index for performance
     await client.query(`CREATE INDEX IF NOT EXISTS idx_report_card_templates_org_id ON report_card_templates(org_id)`);
 
+    // Ensure missing columns we diagnosed earlier
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'payroll' AND column_name = 'user_id') THEN
+          ALTER TABLE payroll ADD COLUMN user_id UUID;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'staff' AND column_name = 'employee_id') THEN
+          ALTER TABLE staff ADD COLUMN employee_id VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'staff' AND column_name = 'date_of_joining') THEN
+          ALTER TABLE staff ADD COLUMN date_of_joining DATE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'staff' AND column_name = 'type') THEN
+          ALTER TABLE staff ADD COLUMN type VARCHAR(50);
+        END IF;
+      END $$;
+    `);
+
     await client.query('COMMIT');
     console.log('Database initialized with real data!');
   } catch (err) {
