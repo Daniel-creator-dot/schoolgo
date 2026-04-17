@@ -262,7 +262,7 @@ export const MODULE_LINK_MAP: Record<string, string> = {
   'Finance': 'Finance & Billing',
   'Human Resources': 'HR & Payroll',
   'Exams': 'Exam & Results',
-  'Logistics & Services': 'Operations & Logistics',
+  'Logistics & Services': 'Operations',
   'Library': 'Library System',
   'Files & Storage': 'Cloud Storage (Drive)',
   'AI Assistant': 'AI & Advanced Analytics',
