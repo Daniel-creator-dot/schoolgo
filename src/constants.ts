@@ -204,9 +204,8 @@ export const NAVIGATION_CONFIG: NavItem[] = [
     ]
   },
 
-  // SPECIALIZED MODULES
   {
-    title: 'Operations',
+    title: 'Logistics & Services',
     icon: Settings,
     roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT', 'BUS_DRIVER', 'NON_STAFF'],
     children: [
@@ -263,7 +262,7 @@ export const MODULE_LINK_MAP: Record<string, string> = {
   'Finance': 'Finance & Billing',
   'Human Resources': 'HR & Payroll',
   'Exams': 'Exam & Results',
-  'Operations': 'Operations & Logistics',
+  'Logistics & Services': 'Operations & Logistics',
   'Library': 'Library System',
   'Files & Storage': 'Cloud Storage (Drive)',
   'AI Assistant': 'AI & Advanced Analytics',
