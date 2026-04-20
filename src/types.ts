@@ -62,6 +62,7 @@ export interface Inquiry {
   status: string;
   comments?: InquiryComment[];
   previous_school_profile_pic?: string;
+  profile_pic?: string;
   secondary_parent_name?: string;
   secondary_parent_email?: string;
   secondary_parent_contact?: string;
@@ -71,6 +72,7 @@ export interface Inquiry {
   name: string;
   grade: string;
   status: string;
+  profile_pic?: string;
   [key: string]: any;
 }
 
@@ -79,6 +81,7 @@ export interface Acceptance {
   name: string;
   grade: string;
   status: string;
+  profile_pic?: string;
   [key: string]: any;
 }
 

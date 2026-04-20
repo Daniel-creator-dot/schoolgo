@@ -688,8 +688,8 @@ export const AdmissionsModules = {
                 
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
-                    {item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
-                      <img src={item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" />
+                    {item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
+                      <img src={item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" />
                     ) : (
                       item.name.charAt(0)
                     )}
@@ -845,8 +845,8 @@ export const AdmissionsModules = {
                 <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-indigo-100 dark:border-indigo-900/20 pb-2">Inquiry Lead Portrait</h4>
                 <div className="flex flex-col items-center gap-6 p-8 bg-zinc-50 dark:bg-zinc-800/50 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-inner">
                   <div className="w-32 h-32 rounded-[2rem] bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl">
-                    {(item as any)?.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
-                      <img src={(item as any)?.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" alt="Preview" />
+                    {(item as any)?.profile_pic || (item as any)?.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
+                      <img src={(item as any)?.profile_pic || (item as any)?.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" alt="Preview" />
                     ) : (
                       <ImageIcon className="w-12 h-12 text-zinc-400" />
                     )}
@@ -1036,8 +1036,8 @@ export const AdmissionsModules = {
                 <div className="absolute -right-16 -top-16 w-56 h-56 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none" />
                 <div className="relative flex items-center gap-6 z-10">
                   <div className="w-20 h-20 rounded-[1.5rem] bg-indigo-600 flex items-center justify-center text-white text-3xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 group-hover:scale-105 transition-transform duration-300">
-                    {(viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic ? (
-                      <img src={(viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic} className="w-full h-full object-cover" />
+                    {(viewItem as any).profile_pic || (viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic ? (
+                      <img src={(viewItem as any).profile_pic || (viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic} className="w-full h-full object-cover" />
                     ) : viewItem.name.charAt(0)}
                   </div>
                   <div className="space-y-3">
@@ -1189,8 +1189,8 @@ export const AdmissionsModules = {
                 
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
-                    {item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
-                      <img src={item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" />
+                    {item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
+                      <img src={item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" />
                     ) : (
                       item.name.charAt(0)
                     )}
@@ -1413,8 +1413,8 @@ export const AdmissionsModules = {
                 <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-indigo-100 dark:border-indigo-900/20 pb-2">Student Portrait</h4>
                 <div className="flex flex-col items-center gap-6 p-8 bg-zinc-50 dark:bg-zinc-800/50 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-inner">
                   <div className="w-32 h-32 rounded-[2rem] bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl">
-                    {item?.previous_school_profile_pic ? (
-                      <img src={item.previous_school_profile_pic} className="w-full h-full object-cover" alt="Preview" />
+                    {item?.profile_pic || item?.previous_school_profile_pic ? (
+                      <img src={item.profile_pic || item.previous_school_profile_pic} className="w-full h-full object-cover" alt="Preview" />
                     ) : (
                       <ImageIcon className="w-12 h-12 text-zinc-400" />
                     )}
@@ -1580,8 +1580,8 @@ export const AdmissionsModules = {
                 <div className="absolute -right-16 -top-16 w-56 h-56 bg-violet-500/10 blur-3xl rounded-full pointer-events-none" />
                 <div className="relative flex items-center gap-6 z-10">
                   <div className="w-20 h-20 rounded-[1.5rem] bg-violet-600 flex items-center justify-center text-white text-3xl font-black shadow-2xl shadow-violet-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 group-hover:scale-105 transition-transform duration-300">
-                    {viewItem.previous_school_profile_pic || (viewItem as any)?.previousSchoolProfilePic ? (
-                      <img src={viewItem.previous_school_profile_pic || (viewItem as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" />
+                    {viewItem.profile_pic || viewItem.previous_school_profile_pic || (viewItem as any)?.previousSchoolProfilePic ? (
+                      <img src={viewItem.profile_pic || viewItem.previous_school_profile_pic || (viewItem as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" />
                     ) : viewItem.name.charAt(0)}
                   </div>
                   <div className="space-y-3">
@@ -2110,8 +2110,8 @@ export const AdmissionsModules = {
                 <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-indigo-100 dark:border-indigo-900/20 pb-2">Verified Student Portrait</h4>
                 <div className="flex flex-col items-center gap-8 p-10 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-[3rem] border border-indigo-100/50 dark:border-indigo-800/50 shadow-inner group">
                   <div className="w-40 h-40 rounded-[2.5rem] bg-white dark:bg-zinc-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-zinc-700 shadow-2xl group-hover:scale-105 transition-transform duration-500">
-                    {item?.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
-                      <img src={item?.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" alt="Preview" />
+                    {item?.profile_pic || item?.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
+                      <img src={item?.profile_pic || item?.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" alt="Preview" />
                     ) : (
                       <ImageIcon className="w-16 h-16 text-indigo-200 dark:text-indigo-900" />
                     )}
@@ -2353,8 +2353,8 @@ export const AdmissionsModules = {
                 
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
-                    {(viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic ? (
-                      <img src={(viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic} className="w-full h-full object-cover" />
+                    {(viewItem as any).profile_pic || (viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic ? (
+                      <img src={(viewItem as any).profile_pic || (viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic} className="w-full h-full object-cover" />
                     ) : (
                       viewItem.name.charAt(0)
                     )}
@@ -3223,9 +3223,9 @@ export const AcademicModules = {
                 
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-32 h-32 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-5xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
-                    {item.previous_school_profile_pic || (item as any).previousSchoolProfilePic ? (
+                    {item.profile_pic || item.previous_school_profile_pic || (item as any).previousSchoolProfilePic ? (
                       <img
-                        src={item.previous_school_profile_pic || (item as any).previousSchoolProfilePic}
+                        src={item.profile_pic || item.previous_school_profile_pic || (item as any).previousSchoolProfilePic}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />
@@ -3531,8 +3531,8 @@ export const AcademicModules = {
                 <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-indigo-100 dark:border-indigo-900/20 pb-2">Student Photo</h4>
                 <div className="flex flex-col items-center gap-6 p-8 bg-zinc-50 dark:bg-zinc-800/50 rounded-[2.5rem] border border-zinc-100 dark:border-zinc-800 shadow-inner">
                   <div className="w-32 h-32 rounded-[2rem] bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl">
-                    {(item as any)?.previous_school_profile_pic ? (
-                      <img src={(item as any)?.previous_school_profile_pic} className="w-full h-full object-cover" alt="Preview" />
+                    {(item as any)?.profile_pic || (item as any)?.previous_school_profile_pic ? (
+                      <img src={(item as any)?.profile_pic || (item as any)?.previous_school_profile_pic} className="w-full h-full object-cover" alt="Preview" />
                     ) : (
                       <ImageIcon className="w-12 h-12 text-zinc-400" />
                     )}
@@ -4974,8 +4974,8 @@ export const AcademicModules = {
             >
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-200 dark:border-zinc-700">
-                  {student.previous_school_profile_pic ? (
-                    <img src={student.previous_school_profile_pic} alt="" className="w-full h-full object-cover" />
+                  {student.profile_pic || student.previous_school_profile_pic ? (
+                    <img src={student.profile_pic || student.previous_school_profile_pic} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-zinc-400">
                       <User className="w-6 h-6" />
