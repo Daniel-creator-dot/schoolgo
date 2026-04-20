@@ -63,7 +63,7 @@ export default function PartnerDashboard() {
     language: 'en',
     timezone: 'GMT',
     admin_email: '',
-    admin_password: ''
+    admin_password: 'zxcv123$$'
   });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'signature') => {
@@ -862,10 +862,10 @@ export default function PartnerDashboard() {
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Initial Admin Password</label>
                     <input 
-                      type="password"
-                      value={formData.admin_password} onChange={(e) => setFormData({...formData, admin_password: e.target.value})}
-                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white transition-all text-sm" 
-                      placeholder="Leave blank for 'zxcv123$$'" 
+                      type="text"
+                      readOnly
+                      value={formData.admin_password} 
+                      className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-0 dark:text-zinc-400 transition-all text-sm font-mono cursor-not-allowed" 
                     />
                   </div>
                   <div className="space-y-2">
