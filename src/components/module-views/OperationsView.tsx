@@ -8,7 +8,16 @@ import {
   AlertCircle,
   Users,
   ShieldCheck,
-  CreditCard
+  CreditCard,
+  Home,
+  Activity,
+  ShieldAlert,
+  Package,
+  Navigation,
+  MapPin,
+  Bus,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { UserRole, Ward } from '../../types';
 import { downloadInventoryTemplate, parseInventoryExcel } from '../../lib/excel';
@@ -16,6 +25,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 
 export const OperationsModules = {
   Transport: ({ role, currentStudentId, data, students, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+    const { currency } = useLanguage();
     const [viewingStudents, setViewingStudents] = useState<any | null>(null);
     const [routeStudents, setRouteStudents] = useState<any[]>([]);
     const [isLoadingStudents, setIsLoadingStudents] = useState(false);
@@ -116,7 +126,7 @@ export const OperationsModules = {
                         {a.transport_status || 'Approved'}
                       </span>
                     </div>
-                    <p className="text-xs text-emerald-800/70 dark:text-emerald-200/60 mt-0.5 font-medium">Price: {a.price || '0.00'}</p>
+                    <p className="text-xs text-emerald-800/70 dark:text-emerald-200/60 mt-0.5 font-medium">Price: {currency}{a.price || '0.00'}</p>
                   </div>
                 ))}
               </div>
@@ -142,7 +152,7 @@ export const OperationsModules = {
                   {(data || []).map((route: any) => (
                     <tr key={route.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
                       <td className="px-4 py-3 font-bold">{route.route_name}</td>
-                      <td className="px-4 py-3">{route.price || '0.00'}</td>
+                      <td className="px-4 py-3">{currency}{route.price || '0.00'}</td>
                       <td className="px-4 py-3">{route.driver_name || 'N/A'}</td>
                       <td className="px-4 py-3">{route.driver_phone || 'N/A'}</td>
                       <td className="px-4 py-3">{route.vehicle_number || 'N/A'}</td>
@@ -197,9 +207,7 @@ export const OperationsModules = {
               onClick={() => setIsAddingStudent(true)}
               className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
+              <Plus className="w-3.5 h-3.5" />
               Add Student to Route
             </button>
           )}
@@ -214,7 +222,7 @@ export const OperationsModules = {
             onDelete={onDelete}
             columns={[
             { header: 'Route Name', accessor: (item: any) => item.route_name, className: 'font-bold' },
-            { header: 'Price', accessor: (item: any) => item.price ? `${item.price}` : '0.00' },
+            { header: 'Price', accessor: (item: any) => item.price ? `${currency}${item.price}` : 'Free' },
             { header: 'Students', accessor: (item: any) => (
               <button 
                 onClick={(e) => { e.stopPropagation(); handleViewStudents(item); }}
@@ -286,9 +294,7 @@ export const OperationsModules = {
             <div className="space-y-6">
               <div className="flex items-center gap-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
                 <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
+                  <Navigation className="w-6 h-6" />
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.route_name}</h3>
@@ -409,9 +415,7 @@ export const OperationsModules = {
                   onClick={() => setIsAddingStudent(false)}
                   className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -479,6 +483,7 @@ export const OperationsModules = {
     );
   },
   Hostel: ({ role, currentStudentId, data, students, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+    const { currency, t } = useLanguage();
     const [viewingRoomsHostel, setViewingRoomsHostel] = useState<any | null>(null);
     const [hostelRooms, setHostelRooms] = useState<any[]>([]);
     const [isLoadingRooms, setIsLoadingRooms] = useState(false);
@@ -718,9 +723,7 @@ export const OperationsModules = {
               onClick={() => setIsAddingResident(true)}
               className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
+              <Plus className="w-3.5 h-3.5" />
               Add Resident to Room
             </button>
           )}
@@ -755,6 +758,55 @@ export const OperationsModules = {
             )},
             { header: 'Capacity', accessor: (item: any) => item.total_capacity || '0' },
           ]}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+                  <Home className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-widest",
+                      item.type === 'Boys' ? "bg-blue-100 text-blue-600" : 
+                      item.type === 'Girls' ? "bg-pink-100 text-pink-600" : "bg-zinc-100 text-zinc-600"
+                    )}>
+                      {item.type} Hostel
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Hostel Management</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Total Capacity</p>
+                  <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.total_capacity || 0} Beds</p>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Total Rooms</p>
+                  <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.total_rooms || 0} Units</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Assigned Warden</p>
+                  <p className="text-sm font-black text-zinc-900 dark:text-white">{item.warden_name || 'No warden assigned'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Hostel ID</p>
+                  <p className="text-xs font-mono text-zinc-400 font-bold uppercase">#{item.id.slice(0, 8).toUpperCase()}</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/20">
+                <p className="text-xs font-bold text-amber-600 uppercase mb-1">Management Note</p>
+                <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium italic">All rooms and residents in this hostel are managed through the Room Management sub-module.</p>
+              </div>
+            </div>
+          )}
           onAdd={onSave ? () => {} : undefined}
           renderForm={(item, isViewOnly) => (
             <div className="space-y-4">
@@ -839,7 +891,7 @@ export const OperationsModules = {
                   )}
                 </div>
               )},
-              { header: 'Price', accessor: (item: any) => item.price || '0.00' },
+              { header: 'Price', accessor: (item: any) => item.price ? `${currency}${item.price}` : '0.00' },
             ]}
             onDelete={async (item) => {
               const isPending = item.hostel_status === 'Pending';
@@ -875,9 +927,7 @@ export const OperationsModules = {
                   onClick={() => setViewingRoomsHostel(null)}
                   className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -889,7 +939,7 @@ export const OperationsModules = {
                   onDelete={handleDeleteRoom}
                   columns={[
                     { header: 'Room No.', accessor: (item: any) => item.room_number, className: 'font-bold' },
-                    { header: 'Price', accessor: (item: any) => item.price ? `${item.price}` : '0.00' },
+                    { header: 'Price', accessor: (item: any) => item.price ? `${currency}${item.price}` : '0.00' },
                     { header: 'Students', accessor: (item: any) => (
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleViewStudents(item); }}
@@ -900,6 +950,56 @@ export const OperationsModules = {
                     )},
                     { header: 'Capacity', accessor: (item: any) => item.capacity },
                   ]}
+                  renderDetails={(item) => (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                        <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+                          <Home className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black text-zinc-900 dark:text-white">Room {item.room_number}</h3>
+                          <div className="flex items-center gap-2">
+                             <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                              {item.student_count || 0} / {item.capacity} Occupied
+                            </span>
+                            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Hostel Accommodation</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                          <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Accommodation Fee</p>
+                          <p className="text-2xl font-black text-indigo-600 font-serif">{currency}{parseFloat(item.price || 0).toLocaleString()}</p>
+                        </div>
+                        <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                          <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Room Capacity</p>
+                          <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.capacity} Beds</p>
+                        </div>
+                      </div>
+
+                      <div className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                        <p className="text-xs font-bold text-zinc-500 uppercase mb-3">Residential Status</p>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-zinc-500 font-medium">Availability</span>
+                            <span className={cn(
+                              "font-black uppercase tracking-widest text-[10px] px-2 py-0.5 rounded-full",
+                              (item.student_count || 0) >= item.capacity ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"
+                            )}>
+                              {(item.student_count || 0) >= item.capacity ? 'Full' : 'Available'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+                            <div 
+                              className="bg-indigo-600 h-full transition-all duration-500" 
+                              style={{ width: `${Math.min(100, ((item.student_count || 0) / item.capacity) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   renderForm={(item, isViewOnly) => (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
@@ -955,9 +1055,7 @@ export const OperationsModules = {
                   onClick={() => setViewingStudentsRoom(null)}
                   className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -1009,9 +1107,7 @@ export const OperationsModules = {
                                     onClick={() => handleUnassign(student.id)}
                                     className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                   >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
                                 </td>
                               </tr>
@@ -1036,9 +1132,7 @@ export const OperationsModules = {
                   onClick={() => setIsAddingResident(false)}
                   className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
@@ -1178,6 +1272,21 @@ export const OperationsModules = {
           )}
           renderDetails={(item) => (
             <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.item_name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                      {item.category || 'Asset'}
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Inventory Management</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
                   <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Asset Status</p>
@@ -1468,33 +1577,53 @@ export const OperationsModules = {
           )}
           renderDetails={(item) => (
             <div className="space-y-6">
-              <div className="flex items-center gap-4 p-4 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
+              <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
                 <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-100 dark:shadow-none">
-                  <AlertCircle className="w-6 h-6" />
+                  <Activity className="w-6 h-6" />
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.student_name}</h3>
-                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest">{item.condition}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                      Medical Record
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-[10px] font-bold uppercase text-zinc-400 mb-1">Attending Doctor</p>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.doctor_name || 'N/A'}</p>
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-2 flex items-center gap-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-rose-500" /> Condition Diagnosed
+                  </p>
+                  <p className="text-sm font-black text-zinc-900 dark:text-white">{item.condition || 'Not Specified'}</p>
                 </div>
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-[10px] font-bold uppercase text-zinc-400 mb-1">Record Date</p>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}</p>
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-2 flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Treatment / Action
+                  </p>
+                  <p className="text-sm font-black text-zinc-900 dark:text-white">{item.treatment || 'No Treatment Logged'}</p>
                 </div>
               </div>
 
-              <div className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                <p className="text-xs font-bold text-zinc-500 uppercase mb-2">Treatment Details</p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
-                  {item.treatment || 'No treatment details recorded.'}
-                </p>
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Attending Clinician</p>
+                  <p className="text-base font-black text-zinc-900 dark:text-white">{item.doctor_name || 'School Nurse'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Case Reference</p>
+                  <p className="text-sm font-mono text-zinc-400 font-bold uppercase tracking-widest">#{String(item.id).slice(0, 8)}</p>
+                </div>
               </div>
+
+              {item.notes && (
+                <div className="p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/20">
+                  <p className="text-xs font-bold text-amber-600 uppercase mb-2 italic">Clinical Observations</p>
+                  <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-medium">{item.notes}</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -1515,7 +1644,7 @@ export const OperationsModules = {
         { header: 'Action Taken', accessor: (item: any) => item.action_taken },
         { header: 'Date', accessor: (item: any) => item.date ? new Date(item.date).toLocaleDateString() : 'N/A' },
         { 
-          header: 'Severity', 
+          header: 'Status', 
           accessor: (item: any) => (
             <span className={cn(
               "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
@@ -1598,21 +1727,19 @@ export const OperationsModules = {
               item.severity === 'High' ? "bg-red-600 shadow-red-100" :
               item.severity === 'Medium' ? "bg-amber-500 shadow-amber-100" : "bg-emerald-500 shadow-emerald-100"
             )}>
-              <ShieldCheck className="w-6 h-6" />
+              <ShieldAlert className="w-6 h-6" />
             </div>
             <div>
               <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.student_name}</h3>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
                 <span className={cn(
-                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                  item.severity === 'High' ? "bg-red-50 text-red-600 border border-red-100" :
-                  item.severity === 'Medium' ? "bg-amber-50 text-amber-600 border border-amber-100" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                  "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest",
+                  item.severity === 'High' ? "bg-red-100 text-red-600" :
+                  item.severity === 'Medium' ? "bg-amber-100 text-amber-600" : "bg-emerald-100 text-emerald-600"
                 )}>
                   {item.severity} Severity
                 </span>
-                <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded-full text-[10px] font-bold uppercase">
-                  {item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}
-                </span>
+                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Disciplinary Record</span>
               </div>
             </div>
           </div>
@@ -1620,24 +1747,32 @@ export const OperationsModules = {
           <div className="space-y-4">
             <div className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
               <p className="text-xs font-bold text-zinc-500 uppercase mb-2">Incident Description</p>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium line-clamp-4">
                 {item.incident}
               </p>
             </div>
 
             <div className="p-5 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
-              <p className="text-xs font-bold text-indigo-600 uppercase mb-1">Action Carried Out</p>
+              <p className="text-xs font-bold text-indigo-600 uppercase mb-1 flex items-center gap-2">
+                Action Carried Out
+              </p>
               <p className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
                 {item.action_taken || 'No action recorded yet.'}
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+               <p className="text-[10px] text-zinc-400 uppercase tracking-widest text-center">
+                Recorded On: {item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}
               </p>
             </div>
           </div>
         </div>
       )}
-
     />
   ),
   Clubs: ({ role, currentStudentId, data, students, staff, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], staff?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+    const { currency } = useLanguage();
     const [viewingMembers, setViewingMembers] = useState<any | null>(null);
     const [clubMembers, setClubMembers] = useState<any[]>([]);
     const [isLoadingMembers, setIsLoadingMembers] = useState(false);
@@ -1663,7 +1798,6 @@ export const OperationsModules = {
       setViewingMembers(club);
       setIsLoadingMembers(true);
       try {
-        // We filter memberships by club_id
         const res = allMemberships.filter(m => m.club_id === club.id);
         setClubMembers(res);
       } catch (err) {
@@ -1723,7 +1857,7 @@ export const OperationsModules = {
                     {club.dues_amount > 0 && (
                       <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-lg border border-amber-100 dark:border-amber-800">
                         <CreditCard className="w-3 h-3" />
-                        ${club.dues_amount} / {club.dues_frequency}
+                        {currency}{club.dues_amount} / {club.dues_frequency}
                       </div>
                     )}
                   </div>
@@ -1751,7 +1885,7 @@ export const OperationsModules = {
                       </span>
                       <button 
                         onClick={() => handleLeave(myMembership.id)}
-                        className="text-xs font-bold text-red-500 hover:text-red-600"
+                        className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors"
                       >
                         Leave Club
                       </button>
@@ -1760,7 +1894,7 @@ export const OperationsModules = {
                     <button
                       onClick={() => handleJoin(club.id, currentStudentId!)}
                       disabled={club.status !== 'Active'}
-                      className="w-full py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50"
+                      className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
                     >
                       {club.status === 'Active' ? 'Join Club' : 'Inactive'}
                     </button>
@@ -1804,12 +1938,19 @@ export const OperationsModules = {
             onAdd={onSave ? () => {} : undefined}
             onDelete={onDelete}
             columns={[
-              { header: 'Club Name', accessor: (row: any) => row.name },
+              { header: 'Club Name', accessor: (row: any) => row.name, className: 'font-bold' },
               { header: 'Category', accessor: (row: any) => row.category },
               { header: 'Schedule', accessor: (row: any) => row.meeting_schedule },
-              { header: 'Dues', accessor: (row: any) => row.dues_amount ? `$${row.dues_amount}` : 'Free' },
+              { header: 'Dues', accessor: (row: any) => row.dues_amount ? `${currency}${row.dues_amount}` : 'Free' },
               { header: 'Members', accessor: (row: any) => row.member_count || 0 },
-              { header: 'Status', accessor: (row: any) => row.status },
+              { header: 'Status', accessor: (row: any) => (
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                  row.status === 'Active' ? "bg-emerald-50 text-emerald-600" : "bg-zinc-100 text-zinc-600"
+                )}>
+                  {row.status}
+                </span>
+              )},
             ]}
             extraActions={(row) => (
               <button
@@ -1821,7 +1962,7 @@ export const OperationsModules = {
               </button>
             )}
             renderForm={(item, isViewOnly) => (
-              <div className="space-y-4 py-4">
+              <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-500 uppercase">Club Name</label>
@@ -1842,7 +1983,7 @@ export const OperationsModules = {
                     <input name="meeting_schedule" defaultValue={item?.meeting_schedule} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm" placeholder="e.g. Every Friday, 3 PM" />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">Patron/Staff ID</label>
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Patron In Charge</label>
                     <select name="patron_staff_id" defaultValue={item?.patron_staff_id} disabled={isViewOnly} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm">
                       <option value="">Select Patron...</option>
                       {(staff || []).map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.role})</option>)}
@@ -1909,7 +2050,7 @@ export const OperationsModules = {
                       <p className="text-xs font-bold text-indigo-600 uppercase">Dues & Membership</p>
                     </div>
                     <p className="text-lg font-black text-indigo-700 dark:text-indigo-400">
-                      {item.dues_amount > 0 ? `$${item.dues_amount} / ${item.dues_frequency}` : 'No Membership Fees'}
+                      {item.dues_amount > 0 ? `${currency}${item.dues_amount} / ${item.dues_frequency}` : 'No Membership Fees'}
                     </p>
                   </div>
 
@@ -1927,7 +2068,7 @@ export const OperationsModules = {
                         <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.meeting_schedule || 'Not scheduled'}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-zinc-500 uppercase mb-1 underline decoration-indigo-500/30">Patron/Staff In Charge</p>
+                        <p className="text-xs font-bold text-zinc-500 uppercase mb-1 underline decoration-indigo-500/30">Patron In Charge</p>
                         <p className="text-sm font-bold text-zinc-900 dark:text-white">{patron?.name || 'Not assigned'}</p>
                       </div>
                     </div>
@@ -1942,9 +2083,16 @@ export const OperationsModules = {
             data={allMemberships}
             title="Club Memberships"
             columns={[
-              { header: 'Student', accessor: (row: any) => row.student_name },
+              { header: 'Student', accessor: (row: any) => row.student_name, className: 'font-bold' },
               { header: 'Club', accessor: (row: any) => row.club_name },
-              { header: 'Status', accessor: (row: any) => row.status },
+              { header: 'Status', accessor: (row: any) => (
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                  row.status === 'Active' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                )}>
+                  {row.status}
+                </span>
+              )},
               { header: 'Date', accessor: (row: any) => row.joined_at ? new Date(row.joined_at).toLocaleDateString() : 'N/A' },
             ]}
             extraActions={(row) => (
@@ -1964,7 +2112,7 @@ export const OperationsModules = {
           />
         )}
 
-        {/* Members Dashboard / Overlay */}
+        {/* Member Modal for Admin */}
         {viewingMembers && (
           <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/20 backdrop-blur-sm">
             <div className="w-full max-w-2xl h-full bg-white dark:bg-zinc-900 shadow-2xl overflow-y-auto">
@@ -1990,11 +2138,11 @@ export const OperationsModules = {
                         ))}
                       </select>
                       <button
-                                    onClick={() => {
-                                      const sid = (document.getElementById('manualStudentSelector') as HTMLSelectElement).value;
-                                      if (sid && viewingMembers?.id) handleJoin(viewingMembers.id, sid);
-                                    }}
-                        className="px-6 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl"
+                        onClick={() => {
+                          const sid = (document.getElementById('manualStudentSelector') as HTMLSelectElement).value;
+                          if (sid && viewingMembers?.id) handleJoin(viewingMembers.id, sid);
+                        }}
+                        className="px-6 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl shadow-lg active:scale-95 transition-all"
                       >
                         Add Member
                       </button>
@@ -2005,8 +2153,15 @@ export const OperationsModules = {
                     data={allMemberships.filter(m => m.club_id === viewingMembers?.id)}
                     title="Active Members"
                     columns={[
-                      { header: 'Student', accessor: (row: any) => row.student_name },
-                      { header: 'Status', accessor: (row: any) => row.status },
+                      { header: 'Student', accessor: (row: any) => row.student_name, className: 'font-bold' },
+                      { header: 'Status', accessor: (row: any) => (
+                         <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                          row.status === 'Active' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                        )}>
+                          {row.status}
+                        </span>
+                      )},
                     ]}
                     onDelete={(row) => handleLeave(row.id)}
                   />

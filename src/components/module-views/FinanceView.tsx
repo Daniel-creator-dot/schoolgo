@@ -24,7 +24,9 @@ import {
   FileUp,
   Loader2,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Star,
+  UserCheck
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { downloadFeeTemplate, parseFeeExcel } from '../../lib/excel';
@@ -216,8 +218,48 @@ export const FinanceModules = {
         data={data || []}
         onSave={onSave}
         onDelete={onDelete}
-        onView={() => {}}
-        onEdit={role === 'STUDENT' ? undefined : (item) => {}}
+        renderDetails={(item) => (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+              <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+                <Wallet className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.name}</h3>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                    {item.period}
+                  </span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('fee_structure')}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <p className="text-xs font-bold text-zinc-500 uppercase mb-1">{t('amount_label')}</p>
+                <p className="text-2xl font-black text-indigo-600 font-serif">{currency}{parseFloat(item.amount).toLocaleString()}</p>
+              </div>
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <p className="text-xs font-bold text-zinc-500 uppercase mb-1">{t('assigned_students')}</p>
+                <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.assignment_count || 0}</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t('assigned_classes')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {item.assigned_classes && item.assigned_classes.length > 0 ? item.assigned_classes.map((c: any) => (
+                    <span key={c.id} className="px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                      {c.name}
+                    </span>
+                  )) : <span className="text-xs text-zinc-400 italic">No classes assigned</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         columns={[
           { header: 'Name', accessor: 'name', className: 'font-bold' },
           { 
@@ -1262,6 +1304,48 @@ export const FinanceModules = {
           title={t('daily_collections')}
           data={data || []}
           onSave={onSave}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
+                <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-100 dark:shadow-none">
+                  <CreditCard className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.student_name || 'Walk-in Collection'}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                      {item.method}
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{new Date(item.date).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Collection Amount</p>
+                  <p className="text-2xl font-black text-emerald-600 font-serif">{currency}{parseFloat(item.amount).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Status</p>
+                  <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold uppercase">
+                    {item.status || 'Received'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-zinc-500 uppercase">Transaction ID</p>
+                  <p className="text-sm text-zinc-900 dark:text-white font-black font-mono">#{item.transaction_id || 'N/A'}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-xs font-bold text-zinc-500 uppercase">Reference</p>
+                  <p className="text-sm text-zinc-900 dark:text-white font-medium">{item.id.slice(0, 8).toUpperCase()}</p>
+                </div>
+              </div>
+            </div>
+          )}
           onEdit={(item) => {}}
           columns={[
             { header: 'Student', accessor: 'student_name', className: 'font-bold' },
@@ -1367,6 +1451,42 @@ export const FinanceModules = {
           data={data || []}
           onSave={onSave}
           onDelete={onDelete}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
+                <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-100 dark:shadow-none">
+                  <ShoppingCart className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.item_name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                      {item.size || 'Standard'}
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('inventory_item')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Available Stock</p>
+                  <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.stock} Units</p>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Unit Price</p>
+                  <p className="text-2xl font-black text-indigo-600">{currency}{parseFloat(item.price).toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                <p className="text-xs font-bold text-indigo-600 uppercase mb-1">Total Inventory Value</p>
+                <p className="text-3xl font-black text-indigo-700 dark:text-indigo-400 font-serif">
+                  {currency}{(parseFloat(item.stock) * parseFloat(item.price)).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
           onEdit={() => {}}
           columns={[
             { header: 'Item', accessor: 'item_name', className: 'font-bold' },
@@ -1547,6 +1667,54 @@ export const FinanceModules = {
           title={t('inventory_sales')}
           data={data || []}
           onSave={onSave}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/20">
+                <div className="w-12 h-12 rounded-xl bg-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-100 dark:shadow-none">
+                  <ShoppingCart className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.item_name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                      Qty: {item.quantity}
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{new Date(item.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Total Sale Value</p>
+                  <p className="text-2xl font-black text-amber-600 font-serif">{currency}{parseFloat(item.total_price).toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Buyer Status</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    {item.add_to_fees ? (
+                      <span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase">Unpaid / Invoiced</span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase">Paid Immediately</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Assigned Buyer</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 text-xs font-black">
+                    {item.student_name?.charAt(0) || 'B'}
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-zinc-900 dark:text-white">{item.student_name || item.buyer_name || 'Walk-in Customer'}</p>
+                    <p className="text-[10px] text-zinc-500 font-bold uppercase">{item.class_name || 'Individual'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           onEdit={() => {}}
           columns={[
             { header: 'Date', accessor: (item: any) => new Date(item.created_at).toLocaleDateString() },
@@ -2079,6 +2247,49 @@ export const FinanceModules = {
           data={filteredData}
           onSave={onSave}
           onDelete={onDelete}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/20">
+                <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.invoice_description || 'General Invoice'}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-widest",
+                      item.status === 'Paid' || item.status === 'Completed' ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
+                    )}>
+                      {item.status}
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{item.student_name}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                <div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Invoice Amount</p>
+                  <p className="text-2xl font-black text-zinc-900 dark:text-white font-serif">{currency}{parseFloat(item.amount).toLocaleString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Billing Date</p>
+                  <p className="text-sm font-black text-zinc-900 dark:text-white">{new Date(item.created_at || item.date).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-zinc-500 uppercase">Item ID</p>
+                  <p className="text-sm text-zinc-900 dark:text-white font-black font-mono">#{item.id.slice(0, 8).toUpperCase()}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-xs font-bold text-zinc-500 uppercase">Transaction ID</p>
+                  <p className="text-sm text-zinc-900 dark:text-white font-medium">{item.transaction_id || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+          )}
           onEdit={role === 'STUDENT' ? undefined : (item) => {}}
           columns={[
             { header: 'Client/Student', accessor: 'student_name', className: 'font-bold' },
@@ -2206,6 +2417,29 @@ export const FinanceModules = {
           data={scholarshipTypes || []}
           onSave={onSaveType}
           onDelete={onDeleteType}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+                  <Star className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.name}</h3>
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Scholarship Classification</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Standard Disbursement Amount</p>
+                <p className="text-3xl font-black text-indigo-600 font-serif">{currency}{parseFloat(item.amount).toLocaleString()}</p>
+              </div>
+
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <p className="text-xs font-bold text-zinc-500 uppercase mb-2 italic">Eligibility Criteria / Description</p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium"> This scholarship type defines a predefined financial aid package that can be assigned to eligible students during billing cycles.</p>
+              </div>
+            </div>
+          )}
           onEdit={() => {}}
           columns={[
             { header: 'Type Name', accessor: 'name', className: 'font-bold' },
@@ -2220,6 +2454,43 @@ export const FinanceModules = {
           data={data || []}
           onSave={onSave}
           onDelete={onDelete}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
+                <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-100 dark:shadow-none">
+                  <UserCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.student_name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-widest",
+                      item.status === 'Active' ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                    )}>
+                      {item.status || 'Active'}
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{item.type_name || 'Assigned Aid'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Awarded Amount</p>
+                  <p className="text-2xl font-black text-indigo-600 font-serif">{currency}{parseFloat(item.amount).toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Application Date</p>
+                  <p className="text-xl font-black text-zinc-900 dark:text-white">{new Date(item.created_at || Date.now()).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/20">
+                <p className="text-xs font-bold text-amber-600 uppercase mb-1">Award Status & Notes</p>
+                <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">This student has been granted {item.type_name || 'financial aid'} covering {currency} {parseFloat(item.amount).toLocaleString()} of their billable fees.</p>
+              </div>
+            </div>
+          )}
           onEdit={(item) => {}}
           columns={[
             { header: 'Student', accessor: 'student_name', className: 'font-bold' },
