@@ -2868,9 +2868,13 @@ export const HRModules = {
           >
             <div className="p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-800/50">
               <p className="text-sm text-emerald-700 dark:text-emerald-400">
-                {t('hire_candidate_desc').replace('{name}', hiringApplicant?.name || t('candidate'))}
+                {t('hire_candidate_desc').replace('{name}', hiringApplicant?.name || hiringApplicant?.applicant_name || t('candidate'))}
               </p>
             </div>
+
+            {/* Hidden fields to ensure handleEntitySave has the name and email for user creation */}
+            <input type="hidden" name="name" defaultValue={hiringApplicant?.name || hiringApplicant?.applicant_name} />
+            <input type="hidden" name="email" defaultValue={hiringApplicant?.email} />
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-500 uppercase">

@@ -1088,11 +1088,11 @@ export default function App() {
           break;
         case "recruitment-hire":
           result = await hireCandidate(data.id, data);
-          if (result) {
+          if (result && result.staff) {
             // Also create a platform user for the newly hired staff member
             await registerPlatformUser({
-              name: data.name,
-              email: data.email,
+              name: result.staff.name || data.name,
+              email: result.staff.email || data.email,
               password: "zxcv123$$",
               role: "STAFF",
               org_id: currentUser?.org_id,
