@@ -2401,7 +2401,6 @@ export const HRModules = {
     const [viewingOfferLetter, setViewingOfferLetter] = useState<any | null>(
       null,
     );
-    const [isDesignerOpen, setIsDesignerOpen] = useState(false);
 
     const handleHire = async (id: string, formData: any) => {
       if (onHire) {
@@ -2426,15 +2425,6 @@ export const HRModules = {
 
     return (
       <div className="space-y-6">
-        <div className="flex justify-end">
-          <button
-            onClick={() => setIsDesignerOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-bold text-indigo-600 hover:bg-indigo-50 transition-all shadow-sm"
-          >
-            <Palette className="w-4 h-4" />
-            Design Offer Letter Template
-          </button>
-        </div>
         <DataTable
           title={t('recruitment_portal')}
           data={data}
@@ -2491,7 +2481,7 @@ export const HRModules = {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-zinc-500">Score</span>
-                      <span className="text-xs font-black text-indigo-600">85%</span>
+                      <span className="text-xs font-black text-indigo-600">{item.score || 0}%</span>
                     </div>
                   </div>
                 </div>
@@ -2525,6 +2515,11 @@ export const HRModules = {
             { header: t('applicant'), accessor: "name", className: "font-bold" },
             { header: t('position'), accessor: "position" },
             { header: t('email'), accessor: "email" },
+            { header: t('phone'), accessor: "phone" },
+            { 
+              header: t('department'), 
+              accessor: (item: any) => item.department_name || t('no_department') 
+            },
             {
               header: "Status",
               accessor: (item: any) => (
@@ -2554,11 +2549,11 @@ export const HRModules = {
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    defaultValue={item?.name}
+                    name="applicant_name"
+                    defaultValue={item?.applicant_name || item?.name}
                     required
                     disabled={isViewOnly}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -2571,7 +2566,7 @@ export const HRModules = {
                     defaultValue={item?.position}
                     required
                     disabled={isViewOnly}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -2586,7 +2581,7 @@ export const HRModules = {
                     defaultValue={item?.email}
                     required
                     disabled={isViewOnly}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -2597,76 +2592,104 @@ export const HRModules = {
                     type="text"
                     name="phone"
                     defaultValue={item?.phone}
-                    required
                     disabled={isViewOnly}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  defaultValue={item?.status || "In Review"}
-                  disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                >
-                  <option value="In Review">{t('in_review')}</option>
-                  <option value="Interviewed">{t('interviewed')}</option>
-                  <option value="Qualified">{t('qualified')}</option>
-                  <option value="Hired">{t('hired')}</option>
-                  <option value="Rejected">{t('rejected')}</option>
-                </select>
-              </div>
-              {item?.status === "Qualified" && (
-                <div className="p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-800/50 space-y-4">
-                  <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-400">
-                    Proposed Package
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-zinc-400 uppercase">
-                        Basic Salary
-                      </label>
-                      <input
-                        type="number"
-                        name="salary"
-                        defaultValue={item?.salary}
-                        disabled={isViewOnly}
-                        className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-zinc-400 uppercase">
-                        Allowances
-                      </label>
-                      <input
-                        type="number"
-                        name="allowances"
-                        defaultValue={item?.allowances}
-                        disabled={isViewOnly}
-                        className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-zinc-400 uppercase">
-                        Deductions
-                      </label>
-                      <input
-                        type="number"
-                        name="deductions"
-                        defaultValue={item?.deductions}
-                        disabled={isViewOnly}
-                        className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm"
-                      />
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    defaultValue={item?.status || "In Review"}
+                    disabled={isViewOnly}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="In Review">{t('in_review')}</option>
+                    <option value="Interviewed">{t('interviewed')}</option>
+                    <option value="Qualified">{t('qualified')}</option>
+                    <option value="Hired">{t('hired')}</option>
+                    <option value="Rejected">{t('rejected')}</option>
+                  </select>
                 </div>
-              )}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">
+                    Interview Score (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="score"
+                    defaultValue={item?.score || 0}
+                    disabled={isViewOnly}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-800/50 space-y-4">
+                <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-400">
+                  Proposed Package & Department
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase">
+                      Basic Salary
+                    </label>
+                    <input
+                      type="number"
+                      name="salary"
+                      defaultValue={item?.salary || 0}
+                      disabled={isViewOnly}
+                      className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase">
+                      Allowances
+                    </label>
+                    <input
+                      type="number"
+                      name="allowances"
+                      defaultValue={item?.allowances || 0}
+                      disabled={isViewOnly}
+                      className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase">
+                      Deductions
+                    </label>
+                    <input
+                      type="number"
+                      name="deductions"
+                      defaultValue={item?.deductions || 0}
+                      disabled={isViewOnly}
+                      className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-zinc-400 uppercase">
+                      Department
+                    </label>
+                    <select
+                      name="department_id"
+                      defaultValue={item?.department_id || ""}
+                      disabled={isViewOnly}
+                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">Select Dept...</option>
+                    {departments.map((dept: any) => (
+                      <option key={dept.id} value={dept.id}>{dept.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
+        )}
           extraActions={(item) => (
             <>
               {item.status !== "Qualified" && item.status !== "Hired" && (
@@ -3024,23 +3047,6 @@ export const HRModules = {
           </div>
         </Modal>
 
-        <Modal
-          isOpen={isDesignerOpen}
-          onClose={() => setIsDesignerOpen(false)}
-          title={t('offer_letter_designer')}
-          maxWidth="max-w-5xl"
-          maxHeight="max-h-[90vh]"
-        >
-          <div className="p-6">
-            <DocumentBuilder
-              data={documentTemplates}
-              onRefresh={onRefreshTemplates}
-              organization={organization}
-              lockedType="OfferLetter"
-              hideTypeSelect={true}
-            />
-          </div>
-        </Modal>
       </div>
     );
   },

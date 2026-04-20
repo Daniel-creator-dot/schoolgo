@@ -535,12 +535,18 @@ export const getRecruitment = async (req: AuthRequest, res: Response) => {
 };
 
 export const createApplicant = async (req: AuthRequest, res: Response) => {
-  const { position, applicant_name, email, interview_date } = req.body;
+  const { 
+    position, applicant_name, email, interview_date, 
+    phone, salary, allowances, deductions, department_id, score 
+  } = req.body;
   try {
     const orgId = req.user.org_id;
     const result = await pool.query(
-      'INSERT INTO recruitment (org_id, position, applicant_name, email, interview_date) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [orgId, position, applicant_name, email, interview_date]
+      'INSERT INTO recruitment (org_id, position, applicant_name, email, interview_date, phone, salary, allowances, deductions, department_id, score) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+      [
+        orgId, position, applicant_name, email, interview_date || null, 
+        phone || null, salary || 0, allowances || 0, deductions || 0, department_id || null, score || 0
+      ]
     );
     await recordAuditLog(req.user.id, 'CREATE_APPLICANT', `Created applicant: ${applicant_name}`, req.user.org_id);
     res.status(201).json(result.rows[0]);
@@ -786,12 +792,18 @@ export const deletePayroll = async (req: AuthRequest, res: Response) => {
 
 export const updateApplicant = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { position, status, interview_date, score, phone, salary, allowances, deductions, department_id } = req.body;
+  const { 
+    applicant_name, position, status, interview_date, 
+    score, phone, salary, allowances, deductions, department_id 
+  } = req.body;
   try {
     const orgId = req.user.org_id;
     const result = await pool.query(
-      'UPDATE recruitment SET position = $1, status = $2, interview_date = $3, score = $4, phone = $5, salary = $6, allowances = $7, deductions = $8, department_id = $9 WHERE id = $10 AND org_id = $11 RETURNING *',
-      [position, status, interview_date, score, phone || null, salary || 0, allowances || 0, deductions || 0, department_id || null, id, orgId]
+      'UPDATE recruitment SET applicant_name = $1, position = $2, status = $3, interview_date = $4, score = $5, phone = $6, salary = $7, allowances = $8, deductions = $9, department_id = $10 WHERE id = $11 AND org_id = $12 RETURNING *',
+      [
+        applicant_name, position, status, interview_date, 
+        score || 0, phone || null, salary || 0, allowances || 0, deductions || 0, department_id || null, id, orgId
+      ]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Applicant not found' });
     await recordAuditLog(req.user.id, 'UPDATE_APPLICANT', `Updated applicant ID: ${id} (${status})`, orgId, req.ip || '');
