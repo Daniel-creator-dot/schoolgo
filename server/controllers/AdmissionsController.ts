@@ -99,11 +99,39 @@ export const getApplications = async (req: AuthRequest, res: Response) => {
 export const getNextAdmissionNumber = async (client: any, orgId: string) => {
   const orgResult = await client.query('SELECT admission_no_prefix, admission_no_suffix, admission_no_start_from FROM organizations WHERE id = $1', [orgId]);
   const settings = orgResult.rows[0];
-  
-  const studentCountResult = await client.query('SELECT COUNT(*) FROM students WHERE org_id = $1', [orgId]);
-  const nextNum = parseInt(studentCountResult.rows[0].count) + (settings?.admission_no_start_from || 1);
-  
-  return `${settings?.admission_no_prefix || 'ADM-'}${nextNum}${settings?.admission_no_suffix || ''}`;
+  const prefix = settings?.admission_no_prefix || 'ADM-';
+  const startFrom = settings?.admission_no_start_from || 1;
+  const suffix = settings?.admission_no_suffix || '';
+
+  // Get all admission numbers for this org to find the maximum numeric value
+  // We use regex to extract the number between prefix and suffix
+  const studentResult = await client.query(
+    `SELECT admission_no 
+     FROM students 
+     WHERE org_id = $1 AND admission_no LIKE $2`,
+    [orgId, `${prefix}%${suffix}`]
+  );
+
+  let maxNum = startFrom - 1;
+  for (const row of studentResult.rows) {
+    const admissionNo = row.admission_no;
+    // Extract the numeric part: remove prefix from start and suffix from end
+    let numericStr = admissionNo;
+    if (prefix && numericStr.startsWith(prefix)) {
+      numericStr = numericStr.substring(prefix.length);
+    }
+    if (suffix && numericStr.endsWith(suffix)) {
+      numericStr = numericStr.substring(0, numericStr.length - suffix.length);
+    }
+    
+    const num = parseInt(numericStr);
+    if (!isNaN(num) && num > maxNum) {
+      maxNum = num;
+    }
+  }
+
+  const nextNum = maxNum + 1;
+  return `${prefix}${nextNum}${suffix}`;
 };
 
 

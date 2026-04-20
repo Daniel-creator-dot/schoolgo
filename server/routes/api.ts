@@ -375,92 +375,84 @@ router.get('/students', async (req: any, res) => {
 });
 
 router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req: any, res) => {
+  const client = await pool.connect();
   const {
     name, email, parent_email, password, parent_password, status, gpa, admission_no, class_id, parent_name, contact, entrance_exam_score,
     profile_pic, previous_school_profile_pic, fee_status, fee_amount, acceptance_id,
     math_score, english_score, science_score, interview_score, previous_school, custom_scores, date_of_birth, gender, date_enrolled,
     secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion
   } = req.body;
+
   try {
     const orgId = req.user.org_id;
+    await client.query('BEGIN');
+    console.log(`>>> [Admission] Starting transaction for: ${name} (Org: ${orgId})`);
 
-    // 1. Check if already enrolled (if acceptance_id provided)
-    if (req.user.role === 'STUDENT') {
-      const studentResult = await pool.query('SELECT id FROM students WHERE email = $1 AND org_id = $2', [req.user.email, orgId]);
-      const studentId = studentResult.rows[0]?.id;
-      if (studentResult.rows.length > 0) {
-        return res.status(400).json({ error: 'This student has already been enrolled from this acceptance.' });
-      }
-    }
+    // 1. Check for existing student with same email or acceptance_id in this org
     if (acceptance_id) {
-      const existingAcc = await pool.query('SELECT id FROM students WHERE acceptance_id = $1 AND org_id = $2', [acceptance_id, orgId]);
+      const existingAcc = await client.query('SELECT id FROM students WHERE acceptance_id = $1 AND org_id = $2', [acceptance_id, orgId]);
       if (existingAcc.rows.length > 0) {
+        await client.query('ROLLBACK');
         return res.status(400).json({ error: 'This student has already been enrolled from this acceptance.' });
       }
     }
 
-    // 2. Insert student record directly (allow duplicate emails for siblings)
-
-    // Hash password or default to 'zxcv123$$'
+    // 2. Prepare passwords
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password || 'zxcv123$$', saltRounds);
     const hashedParentPassword = await bcrypt.hash(parent_password || 'parent@123', saltRounds);
 
+    // 3. Handle Admission Number
     let finalAdmissionNo = admission_no;
     if (!finalAdmissionNo || finalAdmissionNo.startsWith('TEMP-') || /^ADM-\d{13}/.test(finalAdmissionNo)) {
-      finalAdmissionNo = await AdmissionsController.getNextAdmissionNumber(pool, orgId);
+      finalAdmissionNo = await AdmissionsController.getNextAdmissionNumber(client, orgId);
+      console.log(`>>> [Admission] Regenerated Admission No: ${finalAdmissionNo}`);
     }
-    
-    // Helper to handle empty strings for strict types (UUID, DATE, NUMERIC)
+
+    // Helper to handle empty strings for strict types
     const toNull = (val: any) => (val === '' || val === undefined) ? null : val;
 
-    // Auto-generate email if missing to prevent 500 errors on bulk import
+    // Auto-generate email if missing
     let finalEmail = toNull(email);
     if (!finalEmail) {
       const safeName = name ? name.replace(/[^a-zA-Z]/g, '').toLowerCase() : 'student';
       finalEmail = `${safeName}.${Date.now().toString().slice(-5)}@schoolgo.edu`;
     }
 
-    const result = await pool.query(
+    console.log(`>>> [Admission] Executing INSERT for: ${finalAdmissionNo}`);
+    const result = await client.query(
       'INSERT INTO students (name, email, parent_email, password, parent_password, status, gpa, admission_no, class_id, parent_name, contact, entrance_exam_score, profile_pic, previous_school_profile_pic, fee_status, fee_amount, org_id, acceptance_id, math_score, english_score, science_score, interview_score, previous_school, custom_scores, date_of_birth, gender, date_enrolled, secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31) RETURNING *',
       [
-        name,
-        finalEmail,
-        toNull(parent_email),
-        hashedPassword,
-        hashedParentPassword,
-        status || 'Present',
-        gpa || '0.0',
-        finalAdmissionNo,
-        toNull(class_id),
-        parent_name,
-        contact,
-        entrance_exam_score,
-        toNull(profile_pic),
-        toNull(previous_school_profile_pic),
-        fee_status || 'Paid',
-        fee_amount || 0,
-        orgId,
-        toNull(acceptance_id),
-        toNull(math_score),
-        toNull(english_score),
-        toNull(science_score),
-        toNull(interview_score),
-        toNull(previous_school),
-        JSON.stringify(custom_scores || {}),
-        toNull(date_of_birth),
-        toNull(gender),
-        toNull(date_enrolled),
-        toNull(secondary_parent_name),
-        toNull(secondary_parent_email),
-        toNull(secondary_parent_contact),
-        toNull(religion)
+        name, finalEmail, toNull(parent_email), hashedPassword, hashedParentPassword,
+        status || 'Present', gpa || '0.0', finalAdmissionNo, toNull(class_id), parent_name,
+        contact, entrance_exam_score, toNull(profile_pic), toNull(previous_school_profile_pic),
+        fee_status || 'Paid', fee_amount || 0, orgId, toNull(acceptance_id),
+        toNull(math_score), toNull(english_score), toNull(science_score), toNull(interview_score),
+        toNull(previous_school), JSON.stringify(custom_scores || {}), toNull(date_of_birth),
+        toNull(gender), toNull(date_enrolled), toNull(secondary_parent_name),
+        toNull(secondary_parent_email), toNull(secondary_parent_contact), toNull(religion)
       ]
     );
+
+    await client.query('COMMIT');
+    console.log(`>>> [Admission] Successfully committed: ${finalAdmissionNo}`);
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
-    console.error('Student admission error:', err);
+    await client.query('ROLLBACK');
+    console.error('>>> [Admission] Error:', err);
+    
+    if (err.code === '23505') { // Unique constraint violation
+      if (err.constraint === 'students_admission_no_key') {
+        return res.status(409).json({ error: `Admission number ${admission_no} is already in use.`, detail: err.detail });
+      }
+      if (err.constraint === 'students_email_key') {
+        return res.status(409).json({ error: 'A student with this email already exists.', detail: err.detail });
+      }
+    }
+    
     res.status(500).json({ error: err.message, detail: err.detail });
+  } finally {
+    client.release();
   }
 });
 
