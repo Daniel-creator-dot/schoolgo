@@ -2138,11 +2138,13 @@ export const HRModules = {
       <div className="space-y-6">
         {renderManagementHeader()}
         <DataTable
-          title={isStaff ? "My Profile" : "Staff Management"}
+          title={isStaff ? t("my_profile") : t("staff_directory")}
+          addLabel={t("add_staff_member")}
           data={filteredData}
           onSave={onSave}
           onEdit={onSave}
           onDelete={onDelete}
+          onAdd={isStaff ? undefined : () => {}}
           initialViewItem={isStaff && data.length === 1 ? data[0] : undefined}
           renderForm={(item, isViewOnly, onEdit) => {
             if (isViewOnly && item) {
@@ -2322,8 +2324,88 @@ export const HRModules = {
           title={t('recruitment_portal')}
           data={data}
           onSave={onSave}
-          onEdit={() => {}}
+          onEdit={onSave}
           onDelete={onDelete}
+          onAdd={onSave ? () => {} : undefined}
+          autoViewModal={true}
+          renderDetails={(item) => (
+            <div className="p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-indigo-500/20">
+                    {item.name?.charAt(0)}
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white">{item.name}</h3>
+                    <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">{item.position}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={cn(
+                    "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border",
+                    item.status === "Hired" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                    item.status === "Qualified" ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
+                    "bg-zinc-50 text-zinc-600 border-zinc-100"
+                  )}>
+                    {item.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-3xl space-y-4">
+                  <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 border-b border-zinc-50 pb-2">Contact Details</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-4 h-4 text-zinc-400" />
+                      <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item.email}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-4 h-4 text-zinc-400" />
+                      <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item.phone}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-3xl space-y-4">
+                  <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2 border-b border-zinc-50 pb-2">Application Info</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-zinc-500">Applied On</span>
+                      <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">{new Date(item.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-zinc-500">Score</span>
+                      <span className="text-xs font-black text-indigo-600">85%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {item.status === "Qualified" && (
+                <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30 rounded-3xl space-y-4">
+                  <h4 className="flex items-center gap-2 text-xs font-black text-indigo-600 uppercase tracking-widest">
+                    <Wallet className="w-4 h-4" />
+                    Proposed Financial Package
+                  </h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-indigo-50 dark:border-indigo-900/50">
+                      <p className="text-[10px] text-zinc-400 uppercase mb-1">Basic Salary</p>
+                      <p className="text-lg font-black text-zinc-900 dark:text-white">{currency}{Number(item.salary).toLocaleString()}</p>
+                    </div>
+                    <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-indigo-50 dark:border-indigo-900/50">
+                      <p className="text-[10px] text-zinc-400 uppercase mb-1">Allowances</p>
+                      <p className="text-lg font-black text-zinc-900 dark:text-white">{currency}{Number(item.allowances).toLocaleString()}</p>
+                    </div>
+                    <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-indigo-50 dark:border-indigo-900/50">
+                      <p className="text-[10px] text-zinc-400 uppercase mb-1">Deductions</p>
+                      <p className="text-lg font-black text-red-600">{currency}{Number(item.deductions).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           columns={[
             { header: t('applicant'), accessor: "name", className: "font-bold" },
             { header: t('position'), accessor: "position" },
@@ -2348,7 +2430,6 @@ export const HRModules = {
               ),
             },
           ]}
-          onAdd={onSave ? () => {} : undefined}
           renderForm={(item, isViewOnly) => (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
