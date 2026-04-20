@@ -411,8 +411,11 @@ router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req:
       finalAdmissionNo = await AdmissionsController.getNextAdmissionNumber(pool, orgId);
     }
     
+    // Helper to handle empty strings for strict types (UUID, DATE, NUMERIC)
+    const toNull = (val: any) => (val === '' || val === undefined) ? null : val;
+
     // Auto-generate email if missing to prevent 500 errors on bulk import
-    let finalEmail = email;
+    let finalEmail = toNull(email);
     if (!finalEmail) {
       const safeName = name ? name.replace(/[^a-zA-Z]/g, '').toLowerCase() : 'student';
       finalEmail = `${safeName}.${Date.now().toString().slice(-5)}@schoolgo.edu`;
@@ -423,40 +426,41 @@ router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req:
       [
         name,
         finalEmail,
-        parent_email || null,
+        toNull(parent_email),
         hashedPassword,
         hashedParentPassword,
         status || 'Present',
         gpa || '0.0',
         finalAdmissionNo,
-        class_id || null,
+        toNull(class_id),
         parent_name,
         contact,
         entrance_exam_score,
-        profile_pic,
-        previous_school_profile_pic,
+        toNull(profile_pic),
+        toNull(previous_school_profile_pic),
         fee_status || 'Paid',
         fee_amount || 0,
         orgId,
-        acceptance_id || null,
-        math_score || null,
-        english_score || null,
-        science_score || null,
-        interview_score || null,
-        previous_school || null,
+        toNull(acceptance_id),
+        toNull(math_score),
+        toNull(english_score),
+        toNull(science_score),
+        toNull(interview_score),
+        toNull(previous_school),
         JSON.stringify(custom_scores || {}),
-        date_of_birth || null,
-        gender || null,
-        date_enrolled || null,
-        secondary_parent_name || null,
-        secondary_parent_email || null,
-        secondary_parent_contact || null,
-        religion || null
+        toNull(date_of_birth),
+        toNull(gender),
+        toNull(date_enrolled),
+        toNull(secondary_parent_name),
+        toNull(secondary_parent_email),
+        toNull(secondary_parent_contact),
+        toNull(religion)
       ]
     );
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error('Student admission error:', err);
+    res.status(500).json({ error: err.message, detail: err.detail });
   }
 });
 

@@ -1710,7 +1710,8 @@ export default function App() {
               await loadData();
               showToast(`${data.name} has been admitted successfully!`, 'success');
             } catch (err: any) {
-              const msg = err?.response?.data?.error || 'Failed to admit student';
+              const data = err?.response?.data;
+              const msg = data?.detail || data?.error || 'Failed to admit student';
               showToast(msg, 'error');
               throw err;
             }
