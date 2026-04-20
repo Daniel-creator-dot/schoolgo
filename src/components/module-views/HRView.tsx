@@ -2514,8 +2514,6 @@ export const HRModules = {
           columns={[
             { header: t('applicant'), accessor: "name", className: "font-bold" },
             { header: t('position'), accessor: "position" },
-            { header: t('email'), accessor: "email" },
-            { header: t('phone'), accessor: "phone" },
             { 
               header: t('department'), 
               accessor: (item: any) => item.department_name || t('no_department') 
