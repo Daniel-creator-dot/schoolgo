@@ -161,7 +161,7 @@ export const AIModules = {
             data={students || []}
             columns={[
               { header: 'Student Name', accessor: (item: any) => <span className="font-bold">{item.name}</span> },
-              { header: 'ID Number', accessor: (item: any) => item.student_id },
+              { header: 'ID Number', accessor: (item: any) => item.admission_no || item.id },
               { header: 'Class/Grade', accessor: (item: any) => item.class },
               { header: 'Current GPA', accessor: (item: any) => <span className="text-indigo-600 font-bold">{item.gpa || 'N/A'}</span> },
               { header: 'Attendance', accessor: (item: any) => (
