@@ -2298,7 +2298,7 @@ export default function App() {
 
       "Student ID Cards": (
         <AcademicModules.StudentIDCards
-          students={studentList.filter((s) => s.status === "Present")}
+          students={studentList.filter((s) => s.status !== "Alumni" && s.status !== "Expelled")}
           classes={classList}
         />
       ),
