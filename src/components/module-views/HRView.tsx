@@ -2258,6 +2258,8 @@ export const HRModules = {
           onEdit={onSave}
           onDelete={onDelete}
           onAdd={isStaff ? undefined : () => {}}
+          detailsMaxWidth="max-w-4xl"
+          renderDetails={(item) => renderStaffProfile(item)}
           initialViewItem={isStaff && data.length === 1 ? data[0] : undefined}
           renderForm={(item, isViewOnly, onEdit) => {
             if (isViewOnly && item) {
