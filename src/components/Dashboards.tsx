@@ -498,25 +498,37 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
         </div>
 
         <div className="lg:col-span-2 p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-sm">
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-8">{t('recent_activities')}</h3>
-          <div className="space-y-4">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{t('recent_activities')}</h3>
+              <p className="text-sm text-zinc-500 mt-1">Latest updates from your school staff.</p>
+            </div>
+            <button 
+              onClick={() => onNavigate?.('Audit Logs')}
+              className="flex items-center gap-2 px-4 py-2 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded-xl text-xs font-bold transition-all"
+            >
+              View All <ArrowUpRight className="w-3 h-3" />
+            </button>
+          </div>
+          
+          <div className="space-y-4 max-h-[440px] overflow-y-auto pr-2 custom-scrollbar">
             {activities.length > 0 ? (
               activities.map((activity, i) => (
                 <div key={i} className="flex items-center gap-6 p-4 bg-white dark:bg-zinc-800/20 rounded-2xl border border-zinc-100 dark:border-zinc-800 hover:border-indigo-600/30 hover:shadow-lg hover:shadow-indigo-500/5 transition-all group">
-                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 bg-indigo-50 text-indigo-600")}>
+                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 bg-indigo-50 text-indigo-600 shrink-0")}>
                     <Settings className="w-6 h-6" />
                   </div>
-                  <div className="flex-1 flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                  <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">
                         {activity.user_name || 'System'}
                         <span className="mx-2 text-zinc-400 font-normal">|</span>
                         <span className="text-zinc-500 font-medium">{activity.action_type || 'Activity'}</span>
                       </p>
                       <p className="text-xs text-zinc-400 mt-1">{new Date(activity.created_at).toLocaleString()}</p>
                     </div>
-                    <div className="text-right">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
+                    <div className="text-left sm:text-right">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800 max-w-full truncate">
                         {activity.details || 'System Log'}
                       </span>
                     </div>
