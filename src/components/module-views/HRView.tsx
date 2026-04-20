@@ -1272,6 +1272,7 @@ export const HRModules = {
               },
             ]}
             onEdit={handleOpenModal}
+            autoModal={false}
           />
         </div>
 
