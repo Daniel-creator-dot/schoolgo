@@ -1707,7 +1707,7 @@ export default function App() {
                   });
                 }
               }
-              setStudentList(prev => [...prev, newStudent]);
+              await loadData();
               showToast(`${data.name} has been admitted successfully!`, 'success');
             } catch (err: any) {
               const msg = err?.response?.data?.error || 'Failed to admit student';
