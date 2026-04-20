@@ -303,6 +303,8 @@ export const resolveAccount = async (req: AuthRequest, res: Response) => {
   }
 };
 
+
+export const updatePayoutSettings = async (req: AuthRequest, res: Response) => {
   const { payout_type, bank_name, bank_code, account_number, account_name, currency } = req.body;
   const partnerId = req.user.id;
 

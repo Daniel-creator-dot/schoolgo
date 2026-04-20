@@ -282,6 +282,55 @@ export const OperationsModules = {
               </div>
             </div>
           )}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.route_name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-[10px] font-bold uppercase">
+                      {item.student_count || 0} Students
+                    </span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase">Price: {item.price || '0.00'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 mb-1">Vehicle License</p>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white underline decoration-indigo-500/30 font-mono tracking-wider">{item.vehicle_number || 'Not Assigned'}</p>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 mb-1">Registration Date</p>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-4">
+                <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase text-zinc-400 mb-0.5">Assigned Driver</p>
+                    <p className="text-sm font-bold text-zinc-900 dark:text-white leading-relaxed font-medium">
+                      {item.driver_name || 'No driver assigned yet.'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold uppercase text-zinc-400 mb-0.5">Driver Contact</p>
+                    <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                      {item.driver_phone || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
         />
         ) : (
           <DataTable 
@@ -1417,6 +1466,38 @@ export const OperationsModules = {
               </div>
             </div>
           )}
+          renderDetails={(item) => (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-4 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
+                <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-100 dark:shadow-none">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.student_name}</h3>
+                  <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest">{item.condition}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 mb-1">Attending Doctor</p>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.doctor_name || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 mb-1">Record Date</p>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                <p className="text-xs font-bold text-zinc-500 uppercase mb-2">Treatment Details</p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
+                  {item.treatment || 'No treatment details recorded.'}
+                </p>
+              </div>
+            </div>
+          )}
+
         />
       </div>
     );
@@ -1509,6 +1590,51 @@ export const OperationsModules = {
           </div>
         </div>
       )}
+      renderDetails={(item) => (
+        <div className="space-y-6">
+          <div className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+            <div className={cn(
+              "w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-lg",
+              item.severity === 'High' ? "bg-red-600 shadow-red-100" :
+              item.severity === 'Medium' ? "bg-amber-500 shadow-amber-100" : "bg-emerald-500 shadow-emerald-100"
+            )}>
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.student_name}</h3>
+              <div className="flex gap-2">
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                  item.severity === 'High' ? "bg-red-50 text-red-600 border border-red-100" :
+                  item.severity === 'Medium' ? "bg-amber-50 text-amber-600 border border-amber-100" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                )}>
+                  {item.severity} Severity
+                </span>
+                <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded-full text-[10px] font-bold uppercase">
+                  {item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              <p className="text-xs font-bold text-zinc-500 uppercase mb-2">Incident Description</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
+                {item.incident}
+              </p>
+            </div>
+
+            <div className="p-5 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+              <p className="text-xs font-bold text-indigo-600 uppercase mb-1">Action Carried Out</p>
+              <p className="text-sm font-bold text-indigo-700 dark:text-indigo-300">
+                {item.action_taken || 'No action recorded yet.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
     />
   ),
   Clubs: ({ role, currentStudentId, data, students, staff, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], staff?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
@@ -1747,6 +1873,69 @@ export const OperationsModules = {
                 </div>
               </div>
             )}
+            renderDetails={(item) => {
+              const patron = (staff || []).find((s: any) => s.id === item.patron_staff_id);
+              return (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                    <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.name}</h3>
+                      <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{item.category}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex flex-col justify-between">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase mb-2">Club Status</p>
+                      <span className={cn(
+                        "px-2 py-1 rounded-full text-[10px] font-bold uppercase w-fit",
+                        item.status === 'Active' ? "bg-emerald-50 text-emerald-600" : "bg-zinc-100 text-zinc-600"
+                      )}>
+                        {item.status || 'Active'}
+                      </span>
+                    </div>
+                    <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Total Members</p>
+                      <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.member_count || 0}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-5 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CreditCard className="w-4 h-4 text-indigo-600" />
+                      <p className="text-xs font-bold text-indigo-600 uppercase">Dues & Membership</p>
+                    </div>
+                    <p className="text-lg font-black text-indigo-700 dark:text-indigo-400">
+                      {item.dues_amount > 0 ? `$${item.dues_amount} / ${item.dues_frequency}` : 'No Membership Fees'}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-xs font-bold text-zinc-500 uppercase mb-2">Club Description</p>
+                      <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
+                        {item.description || 'No description provided for this club.'}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                      <div>
+                        <p className="text-xs font-bold text-zinc-500 uppercase mb-1 underline decoration-indigo-500/30">Meeting Schedule</p>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.meeting_schedule || 'Not scheduled'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-zinc-500 uppercase mb-1 underline decoration-indigo-500/30">Patron/Staff In Charge</p>
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">{patron?.name || 'Not assigned'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }}
+
           />
         ) : (
           <DataTable
