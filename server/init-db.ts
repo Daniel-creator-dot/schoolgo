@@ -230,6 +230,7 @@ export async function init() {
         class_teacher_id UUID REFERENCES staff(id),
         org_id UUID REFERENCES organizations(id),
         grading_scale_id UUID REFERENCES grading_scales(id),
+        report_card_template_id UUID,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -264,6 +265,9 @@ export async function init() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='classes' AND column_name='promotion_threshold') THEN
           ALTER TABLE classes ADD COLUMN promotion_threshold NUMERIC(5,2) DEFAULT 50;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='classes' AND column_name='report_card_template_id') THEN
+          ALTER TABLE classes ADD COLUMN report_card_template_id UUID;
         END IF;
       END $$;
     `);
@@ -514,6 +518,9 @@ export async function init() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='classes' AND column_name='required_credits') THEN
           ALTER TABLE classes ADD COLUMN required_credits INTEGER DEFAULT 0;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='classes' AND column_name='report_card_template_id') THEN
+          ALTER TABLE classes ADD COLUMN report_card_template_id UUID;
         END IF;
       END $$;
     `);
@@ -2027,6 +2034,14 @@ export async function init() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'staff' AND column_name = 'type') THEN
           ALTER TABLE staff ADD COLUMN type VARCHAR(50);
+        END IF;
+        
+        -- Classes table extensions for report card templates
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'classes' AND column_name = 'report_card_template_id') THEN
+          ALTER TABLE classes ADD COLUMN report_card_template_id UUID;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'fk_classes_report_card_template') THEN
+          ALTER TABLE classes ADD CONSTRAINT fk_classes_report_card_template FOREIGN KEY (report_card_template_id) REFERENCES report_card_templates(id);
         END IF;
       END $$;
     `);
