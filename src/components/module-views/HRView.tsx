@@ -1963,24 +1963,32 @@ export const HRModules = {
             <option value="NON_STAFF">NON_STAFF</option>
           </select>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-3">
           <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            {t('additional_roles')} ({t('select_multiple_hint')})
+            {t('additional_roles')}
           </label>
-          <select
-            name="additional_roles"
-            multiple
-            defaultValue={item?.additional_roles || []}
-            disabled={isViewOnly}
-            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px] disabled:opacity-50"
-          >
-            <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
-            <option value="STAFF">STAFF</option>
-            <option value="HOD">HOD</option>
-            <option value="FINANCE">FINANCE</option>
-            <option value="LIBRARIAN">LIBRARIAN</option>
-            <option value="NON_STAFF">NON_STAFF</option>
-          </select>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+            {['SCHOOL_ADMIN', 'STAFF', 'HOD', 'FINANCE', 'LIBRARIAN', 'NON_STAFF'].map(roleOption => (
+              <label key={roleOption} className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    name="additional_roles"
+                    value={roleOption}
+                    defaultChecked={item?.additional_roles?.includes(roleOption)}
+                    disabled={isViewOnly}
+                    className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-zinc-900 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <span className={cn(
+                  "text-xs font-bold transition-colors",
+                  isViewOnly ? "text-zinc-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-indigo-600"
+                )}>
+                  {roleOption.replace('_', ' ')}
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
     );
