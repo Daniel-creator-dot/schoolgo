@@ -1855,11 +1855,12 @@ export const AdmissionsModules = {
                 
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
-                    {item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
-                      <img src={item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" />
+                    {item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
+                      <img src={item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic} className="w-full h-full object-cover" />
                     ) : (
                       item.name.charAt(0)
                     )}
+
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                   
@@ -2577,6 +2578,23 @@ export const AdmitStudentView = ({
   const [showOptional, setShowOptional] = useState(false);
   const [importPreviewItems, setImportPreviewItems] = useState<any[]>([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [profilePic, setProfilePic] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        (window as any).showToast?.('Image is too large. Max 2MB.', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProfilePic(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   // Auto-select fees when class changes
   useEffect(() => {
@@ -2615,6 +2633,11 @@ export const AdmitStudentView = ({
       data.date_enrolled = new Date().toISOString().split('T')[0];
     }
 
+    if (profilePic) {
+      data.profile_pic = profilePic;
+    }
+
+
     setIsSubmitting(true);
     try {
       if (purpose === 'enquiry') {
@@ -2627,6 +2650,8 @@ export const AdmitStudentView = ({
       setSelectedClassId('');
       setSelectedFeeIds([]);
       setShowOptional(false);
+      setProfilePic(null);
+
     } catch (err: any) {
       (window as any).showToast?.(err?.message || 'Operation failed', 'error');
     } finally {
@@ -2750,6 +2775,50 @@ export const AdmitStudentView = ({
             <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-900/20 pb-2">
               <User className="w-3.5 h-3.5" /> Student Details
             </h3>
+
+            {/* Profile Picture Upload Section */}
+            <div className="flex flex-col md:flex-row items-center gap-8 p-6 bg-zinc-50/50 dark:bg-zinc-800/30 rounded-[2rem] border border-dashed border-zinc-200 dark:border-zinc-700">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 overflow-hidden flex items-center justify-center shadow-inner group-hover:border-indigo-200 transition-all">
+                  {profilePic ? (
+                    <img src={profilePic} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-12 h-12 text-zinc-200" />
+                  )}
+                </div>
+                {profilePic && (
+                  <button 
+                    type="button"
+                    onClick={() => setProfilePic(null)}
+                    className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-xl shadow-lg hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 space-y-3 text-center md:text-left">
+                <div>
+                  <h4 className="text-sm font-black text-zinc-900 dark:text-white">Student Photograph</h4>
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-1">PNG, JPG or JPEG. Max 2MB.</p>
+                </div>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                  <label className="cursor-pointer px-5 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-black uppercase tracking-widest hover:border-indigo-600 hover:text-indigo-600 transition-all shadow-sm active:scale-95">
+                    Choose Photo
+                    <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  </label>
+                  {profilePic && (
+                    <button 
+                      type="button" 
+                      onClick={() => setProfilePic(null)} 
+                      className="px-5 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Full Name *</label>
@@ -4951,13 +5020,14 @@ export const AcademicModules = {
                 {/* Main Info */}
                 <div className="flex gap-4 items-center flex-1">
                   <div className="w-20 h-24 rounded-xl bg-zinc-50 border border-zinc-100 overflow-hidden flex-shrink-0 shadow-inner">
-                    {student.previous_school_profile_pic ? (
-                      <img src={student.previous_school_profile_pic} alt="" className="w-full h-full object-cover" />
+                    {student.profile_pic || student.previous_school_profile_pic ? (
+                      <img src={student.profile_pic || student.previous_school_profile_pic} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-zinc-200">
                         <User className="w-10 h-10" />
                       </div>
                     )}
+
                   </div>
                   <div className="flex flex-col gap-2 min-w-0 flex-1">
                     <div className="space-y-0.5">
