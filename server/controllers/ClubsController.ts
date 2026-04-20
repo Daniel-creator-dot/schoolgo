@@ -105,7 +105,7 @@ export const joinClub = async (req: AuthRequest, res: Response) => {
     const club = clubResult.rows[0];
 
     // 2. Create membership (status is Active by default for direct admin add, or Pending for student request)
-    const status = req.user.role === 'SCHOOL_ADMIN' ? 'Active' : 'Pending';
+    const status = req.user.role === 'SCHOOL_ADMIN' || req.user.role === 'SUPER_ADMIN' ? 'Active' : 'Pending';
     const membershipResult = await client.query(
       `INSERT INTO club_memberships (club_id, student_id, status) 
        VALUES ($1, $2, $3) 
@@ -114,9 +114,14 @@ export const joinClub = async (req: AuthRequest, res: Response) => {
       [club_id, student_id, status]
     );
 
-    // 3. If Active and has dues, create invoice (simulated via handleEntitySave logic in frontend, but here we'll just log it or we could use FinanceController logic if exposed)
-    // For simplicity, we'll just record the membership. The frontend App.tsx handles the actual invoice generation via handleEntitySave('fee_assignment')
-    // but doing it here is more robust. However, let's stick to the controller pattern.
+    // 3. If Active and has dues, create invoice automatically
+    if (status === 'Active' && club.dues_amount > 0) {
+      const description = `Club Dues: ${club.name} (${club.dues_frequency || 'Per Term'})`;
+      await client.query(
+        "INSERT INTO invoices (org_id, student_id, amount, due_date, status, description) VALUES ($1, $2, $3, CURRENT_DATE + INTERVAL '7 days', 'Pending', $4)",
+        [orgId, student_id, club.dues_amount, description]
+      );
+    }
 
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'JOIN_CLUB', `Student ${student_id} joined club ${club_id}`, orgId, req.ip || '');
@@ -132,20 +137,45 @@ export const joinClub = async (req: AuthRequest, res: Response) => {
 export const updateMembershipStatus = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
     const orgId = req.user.org_id;
-    const result = await pool.query(
-      `UPDATE club_memberships cm 
-       SET status = $1 
-       FROM clubs c 
-       WHERE cm.id = $2 AND cm.club_id = c.id AND c.org_id = $3 
-       RETURNING cm.*`,
-      [status, id, orgId]
+
+    // 1. Get old membership info and club dues
+    const membershipRes = await client.query(
+      `SELECT cm.*, c.name as club_name, c.dues_amount, c.dues_frequency 
+       FROM club_memberships cm 
+       JOIN clubs c ON cm.club_id = c.id 
+       WHERE cm.id = $1 AND c.org_id = $2`,
+      [id, orgId]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Membership not found' });
+    
+    if (membershipRes.rows.length === 0) throw new Error('Membership not found');
+    const membership = membershipRes.rows[0];
+
+    // 2. Update status
+    const result = await client.query(
+      `UPDATE club_memberships SET status = $1 WHERE id = $2 RETURNING *`,
+      [status, id]
+    );
+
+    // 3. Create invoice if status became Active and has dues
+    if (membership.status !== 'Active' && status === 'Active' && membership.dues_amount > 0) {
+      const description = `Club Dues: ${membership.club_name} (${membership.dues_frequency || 'Per Term'})`;
+      await client.query(
+        "INSERT INTO invoices (org_id, student_id, amount, due_date, status, description) VALUES ($1, $2, $3, CURRENT_DATE + INTERVAL '7 days', 'Pending', $4)",
+        [orgId, membership.student_id, membership.dues_amount, description]
+      );
+    }
+
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (err: any) {
+    await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 

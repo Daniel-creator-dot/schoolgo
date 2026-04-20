@@ -256,6 +256,7 @@ import {
   createClub,
   updateClub,
   deleteClub,
+  fetchPartnerDashboard,
 } from "./lib/api";
 
 import { useLanguage } from "./lib/LanguageContext";
@@ -647,7 +648,8 @@ export default function App() {
 
   // Filtered data for Staff members (Academics restriction)
   const getStaffFilteredData = () => {
-    const staffRoles = ["STAFF", "HOD", "SCHOOL_ADMIN", "FINANCE", "HR", "LIBRARIAN", "BUS_DRIVER", "NON_STAFF"];
+    // Only STAFF and HOD should have their views artificially restricted
+    const staffRoles = ["STAFF", "HOD"];
     if (!staffRoles.includes(currentRole || "") || !currentUser?.email)
       return null;
 
