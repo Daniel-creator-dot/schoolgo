@@ -2401,6 +2401,7 @@ export const HRModules = {
     const [viewingOfferLetter, setViewingOfferLetter] = useState<any | null>(
       null,
     );
+    const [resolvedOfferLetter, setResolvedOfferLetter] = useState<string>("");
 
     const handleHire = async (id: string, formData: any) => {
       if (onHire) {
@@ -2712,7 +2713,38 @@ export const HRModules = {
                 <button
                   onClick={async () => {
                     const res = await onFetchOfferLetter?.(item.id);
+                    if (!res) return;
+
+                    // Resolve template immediately for editing
+                    const template = (documentTemplates || [])
+                      .filter((t: any) => t.type === "OfferLetter")
+                      .sort(
+                        (a: any, b: any) =>
+                          new Date(b.created_at).getTime() -
+                          new Date(a.created_at).getTime(),
+                      )[0];
+
+                    let resolvedText = res.letter || "";
+                    if (template) {
+                      const config = template.layout_config || {};
+                      resolvedText = config.content || res.letter || "";
+
+                      const replacements: Record<string, string> = {
+                        "{{staff_name}}": res.data?.applicant_name || item.name || "Candidate Name",
+                        "{{position}}": res.data?.position || item.position || "Staff",
+                        "{{salary}}": res.data?.salary ? `${currency}${res.data.salary}` : "N/A",
+                        "{{join_date}}": new Date().toLocaleDateString(),
+                        "{{department}}": departments.find((d: any) => d.id === (res.data?.department_id || item.department_id))?.name || "N/A",
+                        "{{school_name}}": organization?.name || "The School",
+                      };
+
+                      Object.entries(replacements).forEach(([key, value]) => {
+                        resolvedText = resolvedText.split(key).join(value);
+                      });
+                    }
+
                     setViewingOfferLetter(res);
+                    setResolvedOfferLetter(resolvedText);
                   }}
                   className="flex items-center w-full gap-3 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg transition-colors"
                 >
@@ -2921,16 +2953,28 @@ export const HRModules = {
           title={t('offer_letter')}
         >
           <div className="p-6 space-y-6">
-            <div className="p-8 bg-zinc-50 dark:bg-zinc-800 rounded-[2rem] border border-zinc-200 dark:border-zinc-700 shadow-inner max-h-[500px] overflow-y-auto whitespace-pre-wrap font-serif text-zinc-800 dark:text-zinc-200 leading-relaxed">
-              {viewingOfferLetter?.letter}
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">
+                Editable Document Content
+              </label>
+              <textarea
+                className="w-full h-[500px] p-8 bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-inner overflow-y-auto font-serif text-zinc-800 dark:text-zinc-200 leading-relaxed outline-none focus:ring-2 focus:ring-indigo-500 resize-none transition-all"
+                value={resolvedOfferLetter}
+                onChange={(e) => setResolvedOfferLetter(e.target.value)}
+                placeholder="Start typing your offer letter content here..."
+              />
+              <p className="text-[10px] text-zinc-400 italic px-2">
+                Tip: Manually edit any part of the letter above before printing.
+              </p>
             </div>
+            
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
                   const template = (documentTemplates || [])
-                    .filter((t) => t.type === "OfferLetter")
+                    .filter((t: any) => t.type === "OfferLetter")
                     .sort(
-                      (a, b) =>
+                      (a: any, b: any) =>
                         new Date(b.created_at).getTime() -
                         new Date(a.created_at).getTime(),
                     )[0];
@@ -2938,38 +2982,10 @@ export const HRModules = {
                   const printWindow = window.open("", "_blank");
                   if (printWindow) {
                     let printHtml = "";
+                    const body = resolvedOfferLetter;
 
                     if (template) {
                       const config = template.layout_config || {};
-                      let body =
-                        config.content || viewingOfferLetter.letter || "";
-
-                      const replacements: Record<string, string> = {
-                        "{{staff_name}}":
-                          viewingOfferLetter?.name || "Candidate Name",
-                        "{{position}}": viewingOfferLetter?.position || "Staff",
-                        "{{salary}}": viewingOfferLetter?.salary
-                          ? `${currency}${viewingOfferLetter.salary}`
-                          : "N/A",
-                        "{{join_date}}": new Date().toLocaleDateString(),
-                        "{{department}}":
-                          departments.find(
-                            (d: any) =>
-                              d.id === viewingOfferLetter?.department_id,
-                          )?.name || "N/A",
-                        "{{school_name}}": organization?.name || "The School",
-                        "{{school_logo}}": organization?.logo
-                          ? `<img src="${organization.logo}" style="max-height: 80px; display: block; margin: 0 auto;" alt="Logo" />`
-                          : "",
-                        "{{principal_signature}}": organization?.signature
-                          ? `<img src="${organization.signature}" style="max-height: 50px;" alt="Signature" />`
-                          : "",
-                      };
-
-                      Object.entries(replacements).forEach(([key, value]) => {
-                        body = body.split(key).join(value);
-                      });
-
                       printHtml = `
                         <html>
                           <head>
@@ -2978,6 +2994,7 @@ export const HRModules = {
                               body { font-family: 'Times New Roman', serif; padding: 60px; line-height: 1.8; color: #1a1a1a; }
                               .header { text-align: center; margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
                               .footer { margin-top: 60px; border-top: 1px solid #eee; padding-top: 20px; }
+                              .letter-body { white-space: pre-wrap; }
                               ${config.styles || ""}
                             </style>
                           </head>
@@ -2998,7 +3015,7 @@ export const HRModules = {
                               body { font-family: 'Times New Roman', serif; padding: 60px; line-height: 1.8; color: #1a1a1a; }
                               .header { display: flex; flex-direction: column; align-items: center; text-align: center; border-bottom: 2px solid #eee; margin-bottom: 40px; padding-bottom: 20px; }
                               .logo { max-height: 100px; margin-bottom: 10px; }
-                              .school-name { font-size: 24px; font-bold; color: #1e1b4b; margin: 0; }
+                              .school-name { font-size: 24px; font-weight: bold; color: #1e1b4b; margin: 0; }
                               .school-info { font-size: 12px; color: #666; margin: 2px 0; }
                               .letter-body { white-space: pre-wrap; font-size: 16px; min-height: 400px; }
                               .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #eee; }
@@ -3016,7 +3033,7 @@ export const HRModules = {
                               <p class="school-info">${organization?.support_email || ""}</p>
                             </div>
                             
-                            <div class="letter-body">${viewingOfferLetter.letter}</div>
+                            <div class="letter-body">${body}</div>
                             
                             <div class="footer">
                               <div class="signature-box">
@@ -3030,6 +3047,8 @@ export const HRModules = {
                         </html>
                       `;
                     }
+
+                    printWindow.document.write(printHtml);
 
                     printWindow.document.write(printHtml);
                     printWindow.document.close();
