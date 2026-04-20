@@ -1892,102 +1892,207 @@ export const HRModules = {
     );
 
     const renderStaffForm = (item: any, isViewOnly: boolean) => (
-      <div key={item?.id || 'new'} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            {t('full_name')}
-          </label>
-          <input
-            type="text"
-            name="name"
-            defaultValue={item?.name}
-            disabled={isViewOnly}
-            required
-            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            {t('email_address')}
-          </label>
-          <input
-            type="email"
-            name="email"
-            defaultValue={item?.email}
-            disabled={isViewOnly}
-            required
-            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-          />
+      <div key={item?.id || 'new'} className="space-y-8 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* PERSONAL INFORMATION SECTION */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+            <User className="w-4 h-4 text-indigo-600" />
+            <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('personal_information')}</h4>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('full_name')}</label>
+              <input
+                type="text"
+                name="name"
+                defaultValue={item?.name}
+                disabled={isViewOnly}
+                required
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('email_address')}</label>
+              <input
+                type="email"
+                name="email"
+                defaultValue={item?.email}
+                disabled={isViewOnly}
+                required
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('phone_number')}</label>
+              <input
+                type="text"
+                name="phone"
+                defaultValue={item?.phone}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('date_of_birth')}</label>
+              <input
+                type="date"
+                name="date_of_birth"
+                defaultValue={formatDateForInput(item?.date_of_birth)}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            {t('phone_number')}
-          </label>
-          <input
-            type="text"
-            name="phone"
-            defaultValue={item?.phone}
-            disabled={isViewOnly}
-            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            Date of Birth
-          </label>
-          <input
-            type="date"
-            name="date_of_birth"
-            defaultValue={formatDateForInput(item?.date_of_birth)}
-            disabled={isViewOnly}
-            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            {t('designation')}
-          </label>
-          <select
-            name="role"
-            defaultValue={item?.role || "STAFF"}
-            disabled={isViewOnly}
-            required
-            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-          >
-            <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
-            <option value="STAFF">STAFF</option>
-            <option value="HOD">HOD</option>
-            <option value="FINANCE">FINANCE</option>
-            <option value="LIBRARIAN">LIBRARIAN</option>
-            <option value="NON_STAFF">NON_STAFF</option>
-          </select>
-        </div>
-        <div className="space-y-3">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-            {t('additional_roles')}
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700">
-            {['SCHOOL_ADMIN', 'STAFF', 'HOD', 'FINANCE', 'LIBRARIAN', 'NON_STAFF'].map(roleOption => (
-              <label key={roleOption} className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative flex items-center">
+        {/* EMPLOYMENT INFORMATION SECTION */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+            <Briefcase className="w-4 h-4 text-indigo-600" />
+            <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('employment_details')}</h4>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('department')}</label>
+              <select
+                name="department_id"
+                defaultValue={item?.department_id || ""}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                <option value="">Select Department...</option>
+                {departments.map((d: any) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('reporting_to')}</label>
+              <select
+                name="reports_to"
+                defaultValue={item?.reports_to || ""}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                <option value="">Select Supervisor...</option>
+                {data.filter(s => s.id !== item?.id).map((s: any) => (
+                  <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('designation')}</label>
+              <select
+                name="role"
+                defaultValue={item?.role || "STAFF"}
+                disabled={isViewOnly}
+                required
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
+                <option value="STAFF">STAFF</option>
+                <option value="HOD">HOD</option>
+                <option value="FINANCE">FINANCE</option>
+                <option value="LIBRARIAN">LIBRARIAN</option>
+                <option value="NON_STAFF">NON_STAFF</option>
+              </select>
+            </div>
+          </div>
+          <div className="space-y-3 pt-2">
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('additional_roles')}</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+              {['SCHOOL_ADMIN', 'STAFF', 'HOD', 'FINANCE', 'LIBRARIAN', 'NON_STAFF'].map(roleOption => (
+                <label key={roleOption} className="flex items-center gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     name="additional_roles"
                     value={roleOption}
                     defaultChecked={item?.additional_roles?.includes(roleOption)}
                     disabled={isViewOnly}
-                    className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-zinc-900 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-zinc-900 transition-all cursor-pointer disabled:opacity-50"
                   />
-                </div>
-                <span className={cn(
-                  "text-xs font-bold transition-colors",
-                  isViewOnly ? "text-zinc-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-indigo-600"
-                )}>
-                  {roleOption.replace('_', ' ')}
-                </span>
-              </label>
-            ))}
+                  <span className={cn(
+                    "text-[10px] font-black uppercase tracking-tighter transition-colors",
+                    isViewOnly ? "text-zinc-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-indigo-600"
+                  )}>
+                    {roleOption.replace('_', ' ')}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* FINANCIAL INFORMATION SECTION */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+            <Wallet className="w-4 h-4 text-indigo-600" />
+            <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('financial_info')}</h4>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('basic_salary')} ({currency})</label>
+              <input
+                type="number"
+                name="salary"
+                defaultValue={item?.salary || 0}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('allowances')} ({currency})</label>
+              <input
+                type="number"
+                name="allowances"
+                defaultValue={item?.allowances || 0}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('deductions')} ({currency})</label>
+              <input
+                type="number"
+                name="deductions"
+                defaultValue={item?.deductions || 0}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-red-600 outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* HR & LEAVE SECTION */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+            <Calendar className="w-4 h-4 text-indigo-600" />
+            <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('hr_leave_settings')}</h4>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('annual_leave_limit')}</label>
+              <input
+                type="number"
+                name="annual_leave_limit"
+                defaultValue={item?.annual_leave_limit || 20}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('leave_unit')}</label>
+              <select
+                name="leave_limit_unit"
+                defaultValue={item?.leave_limit_unit || "Days"}
+                disabled={isViewOnly}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                <option value="Days">Days</option>
+                <option value="Weeks">Weeks</option>
+                <option value="Months">Months</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
