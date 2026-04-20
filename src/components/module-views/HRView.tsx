@@ -3983,9 +3983,7 @@ export const HRModules = {
           title={t('staff_records')}
           data={filteredData}
           onSave={onSave}
-          onDelete={onDelete}
-          onEdit={() => {}}
-          onView={() => {}}
+          onView={(item) => handlePrintPayslip(item)}
           columns={[
             { header: "Staff Name", accessor: "name", className: "font-bold" },
             {
