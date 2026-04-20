@@ -341,6 +341,8 @@ export default function App() {
   const [planTemplates, setPlanTemplates] = useState<any[]>([]);
   const [payrollEntries, setPayrollEntries] = useState<any[]>([]);
   const [performanceReviews, setPerformanceReviews] = useState<any[]>([]);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [didSubscriptionFetchFail, setDidSubscriptionFetchFail] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
   const [bookLoans, setBookLoans] = useState<BorrowRecord[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
@@ -512,7 +514,15 @@ export default function App() {
       assignIfFulfilled(20, setScholarshipTypes);
       assignIfFulfilled(21, setUniforms);
       assignIfFulfilled(22, setInventorySales);
-      assignIfFulfilled(23, setSubscriptions);
+      
+      const subRes = resultsArr[23];
+      if (subRes && subRes.status === "fulfilled") {
+          setSubscriptions(subRes.value);
+          setDidSubscriptionFetchFail(false);
+      } else if (subRes && subRes.status === "rejected") {
+          setDidSubscriptionFetchFail(true);
+      }
+
       assignIfFulfilled(24, setReceipts);
       assignIfFulfilled(25, setClubs);
       
@@ -557,6 +567,8 @@ export default function App() {
       assignIfFulfilled(48, setHodStats);
     } catch (err) {
       console.error("Failed to load data from backend:", err);
+    } finally {
+      setIsInitialLoading(false);
     }
   };
 
@@ -571,7 +583,16 @@ export default function App() {
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
       )[0];
 
-    if (!activeSub) return { status: 'None', daysRemaining: null, isExpired: true };
+    if (!activeSub) {
+      const definitivelyExpired = !isInitialLoading && !didSubscriptionFetchFail;
+      return { 
+        status: 'None', 
+        daysRemaining: null, 
+        isExpired: definitivelyExpired,
+        loading: isInitialLoading,
+        error: didSubscriptionFetchFail
+      };
+    }
 
     const expiryDate = activeSub.expiry_date ? new Date(activeSub.expiry_date) : null;
     const now = new Date();
