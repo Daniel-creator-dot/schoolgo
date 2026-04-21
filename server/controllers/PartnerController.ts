@@ -6,6 +6,25 @@ import { AuthRequest } from '../middleware/auth.ts';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_key';
 
+const EXCHANGE_RATES: Record<string, number> = {
+  'GH₵': 1.0,
+  'GHS': 1.0,
+  'USD': 0.075,
+  'NGN': 110.0,
+  'EUR': 0.07,
+  'GBP': 0.06,
+  'CFA': 45.0,
+  'ZAR': 1.4
+};
+
+const convertFromGHS = (amount: number, targetCurrency: string) => {
+  const rate = EXCHANGE_RATES[targetCurrency] || 1.0;
+  return {
+    amount: amount * rate,
+    rate: rate
+  };
+};
+
 export const register = async (req: express.Request, res: express.Response) => {
   const { name, email, password, contact_number, company_name, registration_number } = req.body;
 
@@ -87,8 +106,15 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
         [partnerId]
     );
 
+    const partner = partnerResult.rows[0];
+    const conversion = convertFromGHS(parseFloat(partner.total_earnings || 0), partner.currency || 'GH₵');
+
     res.json({
-      partner: partnerResult.rows[0],
+      partner: {
+        ...partner,
+        converted_total_earnings: conversion.amount,
+        exchange_rate: conversion.rate
+      },
       schools: schoolsResult.rows
     });
   } catch (err: any) {
@@ -194,7 +220,15 @@ export const getAllPartners = async (req: AuthRequest, res: Response) => {
     const result = await pool.query(
       'SELECT id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at, payout_type, bank_name, account_number, account_name, currency FROM partners ORDER BY created_at DESC'
     );
-    res.json(result.rows);
+    const partners = result.rows.map(partner => {
+      const conversion = convertFromGHS(parseFloat(partner.total_earnings || 0), partner.currency || 'GH₵');
+      return {
+        ...partner,
+        converted_total_earnings: conversion.amount,
+        exchange_rate: conversion.rate
+      };
+    });
+    res.json(partners);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -280,7 +314,22 @@ export const getBanks = async (req: AuthRequest, res: Response) => {
       headers: { Authorization: `Bearer ${paystackSecret}` }
     });
     const data = await response.json();
-    res.json(data.data || []);
+    const allBanks = data.data || [];
+    
+    // Deduplicate by name, preferring GHS where possible
+    const uniqueBanks = allBanks.reduce((acc: any[], current: any) => {
+      const existing = acc.find(b => b.name === current.name);
+      if (!existing) {
+        acc.push(current);
+      } else if (current.currency === 'GHS') {
+        // If we find a version of the same bank with GHS currency, use its code
+        const idx = acc.findIndex(b => b.name === current.name);
+        acc[idx] = current;
+      }
+      return acc;
+    }, []);
+
+    res.json(uniqueBanks);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

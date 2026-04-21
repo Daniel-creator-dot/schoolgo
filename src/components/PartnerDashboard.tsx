@@ -382,7 +382,9 @@ export default function PartnerDashboard() {
                 <Wallet size={64} />
               </div>
               <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Total Earnings</p>
-              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{payoutSettings.currency || currency} {parseFloat(partner?.total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">
+                {partner?.currency || currency} {parseFloat(partner?.converted_total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+              </h3>
               <p className="mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Finalized on active provisioning</p>
             </div>
 
@@ -512,7 +514,9 @@ export default function PartnerDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Total Commission</p>
-                      <h4 className="text-2xl font-black text-zinc-900 dark:text-white">{currency} {parseFloat(partner?.total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h4>
+                      <h4 className="text-2xl font-black text-zinc-900 dark:text-white">
+                        {partner?.currency || currency} {parseFloat(partner?.converted_total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      </h4>
                    </div>
                    <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Payout Rate</p>
@@ -520,7 +524,7 @@ export default function PartnerDashboard() {
                    </div>
                    <div className="p-6 rounded-2xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200 dark:shadow-none">
                       <p className="text-[10px] font-black uppercase text-white/60 tracking-widest mb-1">Next Payout</p>
-                      <h4 className="text-2xl font-black text-white">{currency} 0.00</h4>
+                      <h4 className="text-2xl font-black text-white">{partner?.currency || currency} 0.00</h4>
                    </div>
                 </div>
               </div>
@@ -552,7 +556,9 @@ export default function PartnerDashboard() {
                     return (
                       <div key={plan.id} className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 relative flex flex-col hover:border-indigo-500/50 transition-colors">
                         <h4 className="text-2xl font-black mb-2">{plan.name}</h4>
-                        <p className="text-xl font-bold text-indigo-600 mb-6">{payoutSettings.currency || currency} {parseFloat(plan.price).toLocaleString()}</p>
+                        <p className="text-xl font-bold text-indigo-600 mb-6">
+                          {partner?.currency || currency} {parseFloat((parseFloat(plan.price) * (partner?.exchange_rate || 1.0)).toString()).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </p>
                         <ul className="space-y-3 flex-1 mb-6">
                           {modules.map((m: string, i: number) => (
                             <li key={i} className="flex items-start gap-2 text-sm text-zinc-600 dark:text-zinc-400">

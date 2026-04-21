@@ -3890,7 +3890,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
           { header: 'Email', accessor: 'email', className: 'text-zinc-500' },
           { header: 'Status', accessor: (item: any) => statusBadge(item.status || 'Pending') },
           { header: 'Referral Code', accessor: 'referral_code', className: 'font-mono text-indigo-600' },
-          { header: 'Earnings', accessor: (item: any) => `$ ${parseFloat(item.total_earnings || 0).toLocaleString()}` }
+          { header: 'Earnings', accessor: (item: any) => `${item.currency || 'GH₵'} ${parseFloat(item.converted_total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` }
         ]}
       />
 
@@ -3919,7 +3919,14 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
               </div>
               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Total Earnings</p>
-                <p className="font-bold text-emerald-600">$ {parseFloat(viewingPartner.total_earnings || 0).toLocaleString()}</p>
+                <p className="font-bold text-emerald-600">
+                  GH₵ {parseFloat(viewingPartner.total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  {viewingPartner.currency && viewingPartner.currency !== 'GH₵' && (
+                    <span className="block text-[10px] text-zinc-500 font-medium">
+                      ≈ {viewingPartner.currency} {parseFloat(viewingPartner.converted_total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Joined</p>
