@@ -1709,6 +1709,10 @@ export default function App() {
                 }
               }
               await loadData();
+              if (data.source_inquiry_id) {
+                await deleteInquiry(data.source_inquiry_id);
+                await loadData();
+              }
               showToast(`${data.name} has been admitted successfully!`, 'success');
             } catch (err: any) {
               const data = err?.response?.data;
@@ -1717,8 +1721,9 @@ export default function App() {
               throw err;
             }
           }}
-          onSaveEnquiry={(data) => {
-            handleEntitySave('inquiry', { ...data, status: 'New', date: new Date().toISOString().split('T')[0] });
+          onSaveEnquiry={async (data) => {
+            await handleEntitySave('inquiry', { ...data, status: 'New', date: new Date().toISOString().split('T')[0] });
+            await loadData();
           }}
         />
       ),

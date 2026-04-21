@@ -3106,23 +3106,19 @@ export const AdmitStudentView = ({
             <thead className="bg-zinc-50 dark:bg-zinc-800">
               <tr>
                 <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Name</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Admission No</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Status / Class</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Decision/Grade</th>
                 <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Date Added</th>
                 <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {[...inquiries].sort((a, b) => new Date(b.date || b.created_at || 0).getTime() - new Date(a.date || a.created_at || 0).getTime()).slice(0, 15).map((inquiry, i) => {
-                const isEnquiry = true;
-                const className = inquiry.grade || 'No Grade Specified';
+              {[...inquiries].sort((a, b) => new Date(b.date || b.created_at || 0).getTime() - new Date(a.date || a.created_at || 0).getTime()).slice(0, 10).map((inquiry, i) => {
                 return (
                   <tr key={inquiry.id || i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
                     <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">{inquiry.name}</td>
-                    <td className="px-6 py-4 text-zinc-500">ENQ-{inquiry.id.substring(0,4)}</td>
                     <td className="px-6 py-4">
                       <span className="px-3 py-1.5 rounded-xl text-xs font-black uppercase bg-amber-50 text-amber-600 dark:bg-amber-900/20">
-                        Enquiry: {className}
+                        {inquiry.grade || 'Enquiry'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-zinc-500">
@@ -3130,7 +3126,7 @@ export const AdmitStudentView = ({
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
-                        onClick={() => setEnrollModalItem(inquiry)}
+                        onClick={() => setEnrollModalItem({ ...inquiry, source_inquiry_id: inquiry.id })}
                         className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md transition-all active:scale-95 flex items-center gap-2 ml-auto"
                       >
                         <ArrowRightCircle className="w-3.5 h-3.5" /> Admit Now
@@ -3141,7 +3137,49 @@ export const AdmitStudentView = ({
               })}
               {inquiries.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-zinc-500 font-medium">No recent enquiries found.</td>
+                  <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 font-medium">No recent enquiries found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Recently Admitted Students */}
+      <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
+        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recently Admitted Students</h3>
+        <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-zinc-50 dark:bg-zinc-800">
+              <tr>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Name</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Admission No</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Class</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Enrolled On</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {[...students].sort((a, b) => new Date(b.date_enrolled || b.created_at || 0).getTime() - new Date(a.date_enrolled || a.created_at || 0).getTime()).slice(0, 10).map((student, i) => {
+                const cls = classes.find(c => c.id === student.class_id);
+                const className = cls ? `${cls.name} ${cls.section || ''}`.trim() : (student.class || 'Assigned');
+                return (
+                  <tr key={student.id || i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
+                    <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">{student.name}</td>
+                    <td className="px-6 py-4 text-zinc-500">{student.admission_no || '-'}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-black uppercase">
+                        {className}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-500">
+                      {student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : (student.created_at ? new Date(student.created_at).toLocaleDateString() : '-')}
+                    </td>
+                  </tr>
+                );
+              })}
+              {students.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 font-medium">No students enrolled today.</td>
                 </tr>
               )}
             </tbody>
