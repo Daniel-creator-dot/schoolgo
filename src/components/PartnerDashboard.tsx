@@ -282,7 +282,7 @@ export default function PartnerDashboard() {
             name: '', type: 'Primary School', email: '', contact_number: '',
             address: '', custom_domain: '', logo: '', signature: '', 
             plan: systemPlans[0]?.name || 'Professional', language: 'en', timezone: 'GMT',
-            admin_email: '', admin_password: ''
+            admin_email: '', admin_password: 'zxcv123$$'
         });
       }
     } catch (err) {
@@ -382,7 +382,7 @@ export default function PartnerDashboard() {
                 <Wallet size={64} />
               </div>
               <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-2 uppercase tracking-widest font-black">Total Earnings</p>
-              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{payoutSettings.currency || currency} {partner?.total_earnings?.toLocaleString() || '0.00'}</h3>
+              <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{payoutSettings.currency || currency} {parseFloat(partner?.total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
               <p className="mt-4 text-zinc-500 dark:text-zinc-500 text-xs font-medium">Finalized on active provisioning</p>
             </div>
 
@@ -512,7 +512,7 @@ export default function PartnerDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Total Commission</p>
-                      <h4 className="text-2xl font-black text-zinc-900 dark:text-white">{currency} {partner?.total_earnings?.toLocaleString() || '0.00'}</h4>
+                      <h4 className="text-2xl font-black text-zinc-900 dark:text-white">{currency} {parseFloat(partner?.total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h4>
                    </div>
                    <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800">
                       <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-1">Payout Rate</p>
@@ -681,7 +681,7 @@ export default function PartnerDashboard() {
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
                       >
                         <option value="">Choose a provider...</option>
-                        {banks.filter(b => payoutSettings.payout_type === 'MOBILE_MONEY' ? b.type === 'momo' || b.name.toLowerCase().includes('mobile money') : b.type !== 'momo').map(bank => (
+                        {(banks || []).filter(b => payoutSettings.payout_type === 'MOBILE_MONEY' ? b.type === 'momo' || b.name?.toLowerCase().includes('mobile money') : b.type !== 'momo').map(bank => (
                           <option key={bank.id} value={bank.code}>{bank.name}</option>
                         ))}
                       </select>
@@ -729,6 +729,17 @@ export default function PartnerDashboard() {
                       )}
                     </div>
                   )}
+
+                  <div className="flex justify-end pt-4">
+                    <button 
+                      type="submit" 
+                      disabled={payoutLoading}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {payoutLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Settings size={18} />}
+                      Save Payout Settings
+                    </button>
+                  </div>
                 </form>
               </div>
 

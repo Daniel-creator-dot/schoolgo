@@ -192,7 +192,7 @@ export const approveReferral = async (req: AuthRequest, res: Response) => {
 export const getAllPartners = async (req: AuthRequest, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at FROM partners ORDER BY created_at DESC'
+      'SELECT id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at, payout_type, bank_name, account_number, account_name, currency FROM partners ORDER BY created_at DESC'
     );
     res.json(result.rows);
   } catch (err: any) {
@@ -206,7 +206,7 @@ export const createPartner = async (req: AuthRequest, res: Response) => {
     const hashedPassword = await bcrypt.hash(password || 'zxcv123$$', 10);
     const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     const result = await pool.query(
-      'INSERT INTO partners (name, email, password, contact_number, company_name, registration_number, referral_code, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at',
+      'INSERT INTO partners (name, email, password, contact_number, company_name, registration_number, referral_code, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at, payout_type, bank_name, account_number, account_name, currency',
       [name, email, hashedPassword, contact_number || '', company_name || '', registration_number || '', referralCode, status || 'Active']
     );
     res.status(201).json(result.rows[0]);
@@ -223,7 +223,7 @@ export const updatePartner = async (req: AuthRequest, res: Response) => {
   const { name, email, contact_number, company_name, registration_number, status } = req.body;
   try {
     const result = await pool.query(
-      'UPDATE partners SET name = COALESCE($1, name), email = COALESCE($2, email), contact_number = COALESCE($3, contact_number), company_name = COALESCE($4, company_name), registration_number = COALESCE($5, registration_number), status = COALESCE($6, status) WHERE id = $7 RETURNING id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at',
+      'UPDATE partners SET name = COALESCE($1, name), email = COALESCE($2, email), contact_number = COALESCE($3, contact_number), company_name = COALESCE($4, company_name), registration_number = COALESCE($5, registration_number), status = COALESCE($6, status) WHERE id = $7 RETURNING id, name, email, contact_number, company_name, registration_number, referral_code, total_earnings, status, created_at, payout_type, bank_name, account_number, account_name, currency',
       [name, email, contact_number, company_name, registration_number, status, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Partner not found' });
@@ -248,7 +248,7 @@ export const approvePartner = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   try {
     const result = await pool.query(
-      "UPDATE partners SET status = 'Active' WHERE id = $1 RETURNING id, name, email, status",
+      "UPDATE partners SET status = 'Active' WHERE id = $1 RETURNING id, name, email, status, payout_type, bank_name, account_number, account_name, currency",
       [id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Partner not found' });

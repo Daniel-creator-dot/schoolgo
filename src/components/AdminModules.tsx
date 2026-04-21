@@ -3926,6 +3926,35 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
                 <p className="font-medium text-zinc-700 dark:text-zinc-300">{new Date(viewingPartner.created_at).toLocaleDateString()}</p>
               </div>
             </div>
+
+            {/* Payout Information Section */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-black uppercase text-zinc-400 tracking-wider flex items-center gap-2">
+                <CreditCard className="w-3 h-3" />
+                Payout Information
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Method</p>
+                  <p className="font-bold text-zinc-900 dark:text-white capitalize">
+                    {viewingPartner.payout_type?.replace('_', ' ').toLowerCase() || 'Not Configured'}
+                  </p>
+                </div>
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Bank / Provider</p>
+                  <p className="font-bold text-zinc-900 dark:text-white">{viewingPartner.bank_name || '—'}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Account / Mobile Number</p>
+                  <p className="font-bold text-zinc-900 dark:text-white font-mono">{viewingPartner.account_number || '—'}</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 space-y-1">
+                  <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Account Name</p>
+                  <p className="font-bold text-emerald-600">{viewingPartner.account_name || '—'}</p>
+                </div>
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3 pt-2">
               {viewingPartner.status !== 'Active' && (
                 <button onClick={() => { handleApprove(viewingPartner); setViewingPartner(null); }} className="px-5 py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-sm hover:bg-emerald-700 transition-colors">Approve</button>
