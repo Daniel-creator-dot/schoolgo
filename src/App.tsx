@@ -1672,6 +1672,7 @@ export default function App() {
       'Admit Student': (
         <AdmitStudentView
           classes={classList}
+          inquiries={inquiries}
           feeStructures={feeStructures}
           students={studentList.filter(s => s.status !== 'Alumni')}
           onAdmit={async (data) => {
