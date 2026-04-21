@@ -2886,11 +2886,11 @@ export const AdmitStudentView = ({
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date of Birth</label>
-                <input type="date" name="date_of_birth" defaultValue={editingInquiry?.date_of_birth?.split('T')[0] || ''} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="date" name="date_of_birth" defaultValue={editingInquiry?.date_of_birth?.split('T')[0] || editingInquiry?.dateOfBirth?.split('T')[0] || ''} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('religion')}</label>
-                <select name="religion" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                <select name="religion" defaultValue={editingInquiry?.religion || ''} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
                   <option value="">Select Religion</option>
                   <option value="Christian">Christian</option>
                   <option value="Muslim">Muslim</option>
@@ -2901,7 +2901,7 @@ export const AdmitStudentView = ({
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Student Email</label>
-                <input type="email" name="email" defaultValue={editingInquiry?.email || ''} placeholder="student@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="email" name="email" defaultValue={editingInquiry?.email || editingInquiry?.student_email || ''} placeholder="student@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
             </div>
           </div>
@@ -2918,6 +2918,7 @@ export const AdmitStudentView = ({
                   <select value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
                     <option value="">Select class...</option>
                     {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section || ''}</option>)}
+                    {purpose === 'enquiry' && editingInquiry?.grade && <option value="manual">{editingInquiry.grade}</option>}
                   </select>
                 </div>
                 <div className="space-y-1.5">
@@ -2968,7 +2969,7 @@ export const AdmitStudentView = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Parent / Guardian Name {purpose === 'admit' ? '*' : ''}</label>
-                <input type="text" name="parent_name" defaultValue={editingInquiry?.parent_name || ''} required={purpose === 'admit'} placeholder="e.g. Mr. James Doe" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+                <input type="text" name="parent_name" defaultValue={editingInquiry?.parent_name || editingInquiry?.parentName || ''} required={purpose === 'admit'} placeholder="e.g. Mr. James Doe" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Parent Phone</label>
@@ -3146,6 +3147,7 @@ export const AdmitStudentView = ({
                           <button 
                             onClick={() => {
                               setEditingInquiry(inquiry);
+                              setPurpose('enquiry');
                               window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
                             className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-indigo-600 transition-colors"
