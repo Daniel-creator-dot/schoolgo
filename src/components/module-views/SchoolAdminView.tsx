@@ -2581,6 +2581,7 @@ export const AdmitStudentView = ({
   const [importPreviewItems, setImportPreviewItems] = useState<any[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [editingInquiry, setEditingInquiry] = useState<any>(null);
 
   const [enrollModalItem, setEnrollModalItem] = useState<any>(null);
   const [enrollClassId, setEnrollClassId] = useState('');
@@ -2681,10 +2682,11 @@ export const AdmitStudentView = ({
     setIsSubmitting(true);
     try {
       if (purpose === 'enquiry') {
-        onSaveEnquiry?.(data);
+        onSaveEnquiry?.({ ...data, id: editingInquiry?.id });
+        setEditingInquiry(null);
         (window as any).showToast?.(`Enquiry for ${data.name} saved.`, 'success');
       } else {
-        await onAdmit(data);
+        await onAdmit({ ...data, source_inquiry_id: editingInquiry?.id });
       }
       form.reset();
       setSelectedClassId('');
@@ -2792,7 +2794,16 @@ export const AdmitStudentView = ({
       </div>
 
       {activeTab === 'admit' ? (
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <form key={editingInquiry?.id || 'new'} onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {editingInquiry && (
+            <div className="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-2xl">
+              <div className="flex items-center gap-3">
+                <Edit className="w-5 h-5 text-indigo-600" />
+                <p className="text-sm font-black text-indigo-900 dark:text-white uppercase tracking-widest">Editing Enquiry: {editingInquiry.name}</p>
+              </div>
+              <button type="button" onClick={() => setEditingInquiry(null)} className="text-xs font-black text-rose-600 uppercase tracking-widest hover:text-rose-800 transition-colors">Cancel Edit</button>
+            </div>
+          )}
           {/* Purpose Toggle */}
           <div className="flex items-center gap-3 p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-2xl w-fit">
             <button type="button" onClick={() => setPurpose('admit')} className={cn("px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all", purpose === 'admit' ? "bg-indigo-600 text-white shadow-md" : "text-zinc-500 hover:text-zinc-700")}>
@@ -2862,11 +2873,11 @@ export const AdmitStudentView = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Full Name *</label>
-                <input required type="text" name="name" placeholder="e.g. John Doe" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+                <input required type="text" name="name" defaultValue={editingInquiry?.name || ''} placeholder="e.g. John Doe" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Gender</label>
-                <select name="gender" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                <select name="gender" defaultValue={editingInquiry?.gender || ''} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
                   <option value="">Select...</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -2875,7 +2886,7 @@ export const AdmitStudentView = ({
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date of Birth</label>
-                <input type="date" name="date_of_birth" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="date" name="date_of_birth" defaultValue={editingInquiry?.date_of_birth?.split('T')[0] || ''} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('religion')}</label>
@@ -2890,7 +2901,7 @@ export const AdmitStudentView = ({
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Student Email</label>
-                <input type="email" name="email" placeholder="student@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="email" name="email" defaultValue={editingInquiry?.email || ''} placeholder="student@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
             </div>
           </div>
@@ -2957,15 +2968,15 @@ export const AdmitStudentView = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Parent / Guardian Name {purpose === 'admit' ? '*' : ''}</label>
-                <input type="text" name="parent_name" required={purpose === 'admit'} placeholder="e.g. Mr. James Doe" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
+                <input type="text" name="parent_name" defaultValue={editingInquiry?.parent_name || ''} required={purpose === 'admit'} placeholder="e.g. Mr. James Doe" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Parent Phone</label>
-                <input type="tel" name="contact" placeholder="e.g. 0244123456" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="tel" name="contact" defaultValue={editingInquiry?.contact || ''} placeholder="e.g. 0244123456" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Parent Email</label>
-                <input type="email" name="parent_email" placeholder="parent@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="email" name="parent_email" defaultValue={editingInquiry?.parent_email || ''} placeholder="parent@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
             </div>
           </div>
@@ -2984,15 +2995,15 @@ export const AdmitStudentView = ({
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('secondary_parent_name')}</label>
-                    <input type="text" name="secondary_parent_name" placeholder="e.g. Mrs. Mary Doe" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" name="secondary_parent_name" defaultValue={editingInquiry?.secondary_parent_name || ''} placeholder="e.g. Mrs. Mary Doe" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('secondary_parent_contact')}</label>
-                    <input type="tel" name="secondary_parent_contact" placeholder="e.g. 0244987654" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="tel" name="secondary_parent_contact" defaultValue={editingInquiry?.secondary_parent_contact || ''} placeholder="e.g. 0244987654" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('secondary_parent_email')}</label>
-                    <input type="email" name="secondary_parent_email" placeholder="secondary@email.com" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="email" name="secondary_parent_email" defaultValue={editingInquiry?.secondary_parent_email || ''} placeholder="secondary@email.com" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </div>
               </div>
@@ -3098,94 +3109,112 @@ export const AdmitStudentView = ({
         </div>
       )}
 
-      {/* Recent Enquiries */}
-      <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
-        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recent Enquiries</h3>
-        <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 dark:bg-zinc-800">
-              <tr>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Name</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Decision/Grade</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Date Added</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {[...inquiries].sort((a, b) => new Date(b.date || b.created_at || 0).getTime() - new Date(a.date || a.created_at || 0).getTime()).slice(0, 10).map((inquiry, i) => {
-                return (
-                  <tr key={inquiry.id || i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
-                    <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">{inquiry.name}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1.5 rounded-xl text-xs font-black uppercase bg-amber-50 text-amber-600 dark:bg-amber-900/20">
-                        {inquiry.grade || 'Enquiry'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-zinc-500">
-                      {inquiry.date ? new Date(inquiry.date).toLocaleDateString() : (inquiry.created_at ? new Date(inquiry.created_at).toLocaleDateString() : '-')}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => setEnrollModalItem({ ...inquiry, source_inquiry_id: inquiry.id })}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md transition-all active:scale-95 flex items-center gap-2 ml-auto"
-                      >
-                        <ArrowRightCircle className="w-3.5 h-3.5" /> Admit Now
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-              {inquiries.length === 0 && (
+      {/* Table Section — conditional based on purpose */}
+      {purpose === 'enquiry' ? (
+        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-black text-zinc-900 dark:text-white">Recent Enquiries</h3>
+            <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-800 flex items-center gap-2">
+              <List className="w-3.5 h-3.5" /> View All
+            </button>
+          </div>
+          <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 font-medium">No recent enquiries found.</td>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Name</th>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Decision/Grade</th>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Date Added</th>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500 text-right">Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Recently Admitted Students */}
-      <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
-        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recently Admitted Students</h3>
-        <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 dark:bg-zinc-800">
-              <tr>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Name</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Admission No</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Class</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Enrolled On</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {[...students].sort((a, b) => new Date(b.date_enrolled || b.created_at || 0).getTime() - new Date(a.date_enrolled || a.created_at || 0).getTime()).slice(0, 10).map((student, i) => {
-                const cls = classes.find(c => c.id === student.class_id);
-                const className = cls ? `${cls.name} ${cls.section || ''}`.trim() : (student.class || 'Assigned');
-                return (
-                  <tr key={student.id || i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
-                    <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">{student.name}</td>
-                    <td className="px-6 py-4 text-zinc-500">{student.admission_no || '-'}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-black uppercase">
-                        {className}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-zinc-500">
-                      {student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : (student.created_at ? new Date(student.created_at).toLocaleDateString() : '-')}
-                    </td>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {[...inquiries].sort((a, b) => new Date(b.date || b.created_at || 0).getTime() - new Date(a.date || a.created_at || 0).getTime()).slice(0, 10).map((inquiry, i) => {
+                  return (
+                    <tr key={inquiry.id || i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
+                      <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">{inquiry.name}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-3 py-1.5 rounded-xl text-xs font-black uppercase bg-amber-50 text-amber-600 dark:bg-amber-900/20">
+                          {inquiry.grade || 'Enquiry'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-zinc-500">
+                        {inquiry.date ? new Date(inquiry.date).toLocaleDateString() : (inquiry.created_at ? new Date(inquiry.created_at).toLocaleDateString() : '-')}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => {
+                              setEditingInquiry(inquiry);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-zinc-400 hover:text-indigo-600 transition-colors"
+                            title="Edit Enquiry"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => setEnrollModalItem({ ...inquiry, source_inquiry_id: inquiry.id })}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md transition-all active:scale-95 flex items-center gap-2"
+                          >
+                            <ArrowRightCircle className="w-3.5 h-3.5" /> Admit Now
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {inquiries.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 font-medium">No recent enquiries found.</td>
                   </tr>
-                );
-              })}
-              {students.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 font-medium">No students enrolled today.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
+          <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recently Admitted Students</h3>
+          <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-zinc-50 dark:bg-zinc-800">
+                <tr>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Name</th>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Admission No</th>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Class</th>
+                  <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Enrolled On</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {[...students].sort((a, b) => new Date(b.date_enrolled || b.created_at || 0).getTime() - new Date(a.date_enrolled || a.created_at || 0).getTime()).slice(0, 10).map((student, i) => {
+                  const cls = classes.find(c => c.id === student.class_id);
+                  const className = cls ? `${cls.name} ${cls.section || ''}`.trim() : (student.class || 'Assigned');
+                  return (
+                    <tr key={student.id || i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
+                      <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">{student.name}</td>
+                      <td className="px-6 py-4 text-zinc-500">{student.admission_no || '-'}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-black uppercase">
+                          {className}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-zinc-500">
+                        {student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : (student.created_at ? new Date(student.created_at).toLocaleDateString() : '-')}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {students.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 font-medium">No students enrolled today.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <Modal
         isOpen={!!enrollModalItem}
