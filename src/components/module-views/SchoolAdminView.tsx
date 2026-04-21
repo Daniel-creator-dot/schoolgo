@@ -2580,6 +2580,44 @@ export const AdmitStudentView = ({
   const [isImporting, setIsImporting] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
 
+  const [enrollModalItem, setEnrollModalItem] = useState<any>(null);
+  const [enrollClassId, setEnrollClassId] = useState('');
+  const [enrollFeeIds, setEnrollFeeIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (enrollClassId) {
+      const classFees = feeStructures.filter(f => f.class_id === enrollClassId);
+      if (classFees.length > 0) setEnrollFeeIds(classFees.map(f => f.id));
+      else setEnrollFeeIds([]);
+    }
+  }, [enrollClassId, feeStructures]);
+
+  const handleEnrollModalSubmit = async () => {
+    if (!enrollModalItem || !enrollClassId) return;
+    const totalFees = enrollFeeIds.reduce((sum, id) => {
+      const fee = feeStructures.find(f => f.id === id);
+      return sum + (fee ? parseFloat(fee.amount) : 0);
+    }, 0).toFixed(2);
+    
+    setIsSubmitting(true);
+    try {
+      await onAdmit({
+        ...enrollModalItem,
+        class_id: enrollClassId,
+        fee_ids: enrollFeeIds,
+        fee_amount: totalFees,
+        decision: 'Enrolled',
+        date_enrolled: new Date().toISOString().split('T')[0]
+      });
+      (window as any).showToast?.('Student enrolled successfully!', 'success');
+      setEnrollModalItem(null);
+    } catch(err: any) {
+      (window as any).showToast?.(err?.message || 'Enrollment failed', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -3058,47 +3096,133 @@ export const AdmitStudentView = ({
         </div>
       )}
 
-      {/* Recently Admitted Students */}
+      {/* Recent Admissions & Enquiries */}
       <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
-        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recently Admitted Students</h3>
+        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recent Admissions & Enquiries</h3>
         <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-800">
               <tr>
                 <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Name</th>
                 <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Admission No</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Class</th>
-                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Enrolled On</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Status / Class</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500">Date Added</th>
+                <th className="px-6 py-4 font-black text-xs uppercase tracking-widest text-zinc-500 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {[...students].sort((a, b) => new Date(b.date_enrolled || 0).getTime() - new Date(a.date_enrolled || 0).getTime()).slice(0, 10).map((student, i) => {
+              {[...students].sort((a, b) => new Date(b.created_at || b.date_enrolled || 0).getTime() - new Date(a.created_at || a.date_enrolled || 0).getTime()).slice(0, 15).map((student, i) => {
                 const cls = classes.find(c => c.id === student.class_id);
-                const className = cls ? `${cls.name} ${cls.section || ''}`.trim() : (student.class || '-');
+                const isEnquiry = !student.class_id || student.decision === 'Enquiry';
+                const className = cls ? `${cls.name} ${cls.section || ''}`.trim() : (student.class || 'No Class Assigned');
                 return (
                   <tr key={student.id || i} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50">
                     <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">{student.name}</td>
                     <td className="px-6 py-4 text-zinc-500">{student.admission_no || '-'}</td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl text-xs font-black uppercase">
-                        {className}
+                      <span className={cn("px-3 py-1.5 rounded-xl text-xs font-black uppercase",
+                        isEnquiry ? "bg-amber-50 text-amber-600 dark:bg-amber-900/20" : "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20"
+                      )}>
+                        {isEnquiry ? 'Enquiry Only' : className}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-zinc-500">
-                      {student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : '-'}
+                      {student.date_enrolled ? new Date(student.date_enrolled).toLocaleDateString() : (student.created_at ? new Date(student.created_at).toLocaleDateString() : '-')}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {isEnquiry && (
+                        <button 
+                          onClick={() => setEnrollModalItem(student)}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md transition-all active:scale-95 flex items-center gap-2 ml-auto"
+                        >
+                          <ArrowRightCircle className="w-3.5 h-3.5" /> Admit Now
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
               })}
               {students.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-zinc-500 font-medium">No students enrolled yet.</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-zinc-500 font-medium">No students or enquiries yet.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      <Modal
+        isOpen={!!enrollModalItem}
+        onClose={() => setEnrollModalItem(null)}
+        title={`Admit Student: ${enrollModalItem?.name}`}
+        maxWidth="max-w-xl"
+      >
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Academic Placement</h4>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Assign Class *</label>
+              <select
+                value={enrollClassId}
+                onChange={(e) => setEnrollClassId(e.target.value)}
+                className="w-full px-5 py-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 overflow-hidden"
+              >
+                <option value="">Select Class</option>
+                {classes.map((cls: any) => (
+                  <option key={cls.id} value={cls.id}>{cls.name} {cls.section}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+             <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em]">Admission Fees</h4>
+             {feeStructures.length > 0 ? (
+               <div className="grid grid-cols-1 gap-2 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 max-h-48 overflow-y-auto custom-scrollbar">
+                 {feeStructures.map((fee: any) => (
+                   <label key={fee.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white dark:hover:bg-zinc-800 cursor-pointer transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/50">
+                     <div className="flex items-center gap-3">
+                       <input
+                         type="checkbox"
+                         checked={enrollFeeIds.includes(fee.id)}
+                         onChange={(e) => {
+                           if (e.target.checked) setEnrollFeeIds(prev => [...prev, fee.id]);
+                           else setEnrollFeeIds(prev => prev.filter(id => id !== fee.id));
+                         }}
+                         className="w-4 h-4 rounded text-indigo-600 border-zinc-300 focus:ring-indigo-500 cursor-pointer"
+                       />
+                       <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">{fee.name}</span>
+                     </div>
+                     <span className="text-xs font-black text-zinc-900 dark:text-white">{currency} {parseFloat(fee.amount).toFixed(2)}</span>
+                   </label>
+                 ))}
+               </div>
+             ) : (
+               <p className="text-xs text-zinc-500 italic">No fee structures defined.</p>
+             )}
+          </div>
+
+          <div className="pt-4 flex gap-3">
+             <button
+               onClick={() => setEnrollModalItem(null)}
+               className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+               disabled={isSubmitting}
+             >
+               Cancel
+             </button>
+             <button
+               onClick={handleEnrollModalSubmit}
+               disabled={!enrollClassId || isSubmitting}
+               className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 shadow-xl shadow-indigo-200 dark:shadow-none transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+             >
+               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+               Admit & Keep Student
+             </button>
+          </div>
+        </div>
+      </Modal>
+
     </div>
   );
 };
