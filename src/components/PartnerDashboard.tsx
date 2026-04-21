@@ -90,6 +90,7 @@ export default function PartnerDashboard() {
       if (response.ok) {
         setPartner(data.partner);
         setSchools(data.schools);
+        if (data.support_id) setSuperAdminId(data.support_id);
       }
 
       const plansRes = await fetch(`${API_BASE_URL}/plans`, {
@@ -209,20 +210,10 @@ export default function PartnerDashboard() {
         const data = await res.json();
         setMessages(data);
         
-        // Try to identify Super Admin from messages or fetch
+        // Try to identify Super Admin from messages
         const saMsg = data.find((m: any) => m.sender_role === 'SUPER_ADMIN' || m.receiver_role === 'SUPER_ADMIN');
-        if (saMsg) {
+        if (saMsg && !superAdminId) {
            setSuperAdminId(saMsg.sender_role === 'SUPER_ADMIN' ? saMsg.sender_id : saMsg.receiver_id);
-        } else {
-           // Fallback: Fetch platform users to find a Super Admin
-           const usersRes = await fetch(`${API_BASE_URL}/users`, {
-             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-           });
-           if (usersRes.ok) {
-              const users = await usersRes.json();
-              const sa = users.find((u: any) => u.role === 'SUPER_ADMIN');
-              if (sa) setSuperAdminId(sa.id);
-           }
         }
       }
     } catch (err) {

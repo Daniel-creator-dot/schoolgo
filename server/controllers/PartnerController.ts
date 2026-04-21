@@ -109,13 +109,17 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
     const partner = partnerResult.rows[0];
     const conversion = convertFromGHS(parseFloat(partner.total_earnings || 0), partner.currency || 'GH₵');
 
+    const saResult = await pool.query("SELECT id FROM users WHERE role = 'SUPER_ADMIN' LIMIT 1");
+    const supportId = saResult.rows[0]?.id || null;
+
     res.json({
       partner: {
         ...partner,
         converted_total_earnings: conversion.amount,
         exchange_rate: conversion.rate
       },
-      schools: schoolsResult.rows
+      schools: schoolsResult.rows,
+      support_id: supportId
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
