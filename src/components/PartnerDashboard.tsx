@@ -188,6 +188,7 @@ export default function PartnerDashboard() {
         if (payoutSettings.currency) {
           setCurrency(payoutSettings.currency);
         }
+        await fetchDashboardData(); // Refresh to get new conversion rates and earnings
         (window as any).showToast?.('Settings saved successfully!', 'success');
       } else {
         (window as any).showToast?.('Failed to save settings', 'error');
