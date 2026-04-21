@@ -648,6 +648,7 @@ export default function PartnerDashboard() {
                   </div>
                 </div>
               </div>
+              <form onSubmit={handleSavePayout} className="space-y-6">
 
               {/* Payout Settings Card */}
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
@@ -672,7 +673,7 @@ export default function PartnerDashboard() {
                   </div>
                 </div>
 
-                <form onSubmit={handleSavePayout} className="p-8 space-y-6">
+                <div className="p-8 space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
@@ -740,18 +741,8 @@ export default function PartnerDashboard() {
                     </div>
                   )}
 
-                  <div className="flex justify-end pt-4">
-                    <button 
-                      type="submit" 
-                      disabled={payoutLoading}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all flex items-center gap-2 disabled:opacity-50"
-                    >
-                      {payoutLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Settings size={18} />}
-                      Save Payout Settings
-                    </button>
                   </div>
-                </form>
-              </div>
+                </div>
 
               {/* Currency Preference Card */}
               <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
@@ -772,16 +763,30 @@ export default function PartnerDashboard() {
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
                       >
                         <option value="GH₵">Ghana Cedis (GH₵)</option>
-                        <option value="₦">Nigerian Naira (₦)</option>
-                        <option value="$">US Dollar ($)</option>
-                        <option value="€">Euro (€)</option>
-                        <option value="£">British Pound (£)</option>
+                        <option value="NGN">Nigerian Naira (₦)</option>
+                        <option value="USD">US Dollar ($)</option>
+                        <option value="EUR">Euro (€)</option>
+                        <option value="GBP">British Pound (£)</option>
                         <option value="CFA">CFA Franc (CFA)</option>
+                        <option value="ZAR">South African Rand (ZAR)</option>
                       </select>
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Form Submit Footer */}
+              <div className="flex justify-end pt-2 pb-4">
+                <button 
+                  type="submit" 
+                  disabled={payoutLoading}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-3.5 rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 dark:shadow-none transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {payoutLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Settings size={18} />}
+                  Save All Settings
+                </button>
+              </div>
+              </form>
 
               {/* Security Note */}
               <div className="p-6 bg-zinc-100 dark:bg-zinc-800/50 rounded-2xl flex items-start gap-3">
