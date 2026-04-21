@@ -681,7 +681,10 @@ export default function PartnerDashboard() {
                         className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium"
                       >
                         <option value="">Choose a provider...</option>
-                        {(banks || []).filter(b => payoutSettings.payout_type === 'MOBILE_MONEY' ? b.type === 'momo' || b.name?.toLowerCase().includes('mobile money') : b.type !== 'momo').map(bank => (
+                        {(banks || []).filter(b => {
+                          const isMomo = b.type === 'mobile_money' || b.type === 'momo' || b.name?.toLowerCase().includes('money') || b.name?.toLowerCase().includes('cash') || ['MTN', 'VODAFONE', 'AIRTEL', 'TIGO'].some(p => b.name?.toUpperCase().includes(p));
+                          return payoutSettings.payout_type === 'MOBILE_MONEY' ? isMomo : !isMomo;
+                        }).map(bank => (
                           <option key={bank.id} value={bank.code}>{bank.name}</option>
                         ))}
                       </select>
