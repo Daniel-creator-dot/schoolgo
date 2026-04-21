@@ -3096,9 +3096,9 @@ export const AdmitStudentView = ({
         </div>
       )}
 
-      {/* Recent Admissions & Enquiries */}
+      {/* Recent Enquiries */}
       <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
-        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recent Admissions & Enquiries</h3>
+        <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recent Enquiries</h3>
         <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-800">
@@ -3111,7 +3111,7 @@ export const AdmitStudentView = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {[...students].sort((a, b) => new Date(b.created_at || b.date_enrolled || 0).getTime() - new Date(a.created_at || a.date_enrolled || 0).getTime()).slice(0, 15).map((student, i) => {
+              {[...students].filter(s => !s.class_id || s.decision === 'Enquiry').sort((a, b) => new Date(b.created_at || b.date_enrolled || 0).getTime() - new Date(a.created_at || a.date_enrolled || 0).getTime()).slice(0, 15).map((student, i) => {
                 const cls = classes.find(c => c.id === student.class_id);
                 const isEnquiry = !student.class_id || student.decision === 'Enquiry';
                 const className = cls ? `${cls.name} ${cls.section || ''}`.trim() : (student.class || 'No Class Assigned');
