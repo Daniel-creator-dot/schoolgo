@@ -672,29 +672,54 @@ export const FinanceModules = {
                   <FileText className="w-4 h-4 text-indigo-600" /> {t('invoices')}
                 </h4>
                 <div className="space-y-2">
-                  {studentInvoices.length > 0 ? studentInvoices.map((inv: any) => (
-                    <div key={inv.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl flex justify-between items-center border border-zinc-100 dark:border-zinc-800">
-                      <div>
-                        <p className="text-sm font-bold text-zinc-900 dark:text-white">{currency} {parseFloat(inv.amount).toLocaleString()}</p>
-                        <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">{inv.description || "General Fee"} • Due: {new Date(inv.due_date).toLocaleDateString()}</p>
+                  {studentInvoices.length > 0 ? studentInvoices.map((inv: any) => {
+                    const paidForInvoice = studentPayments
+                      .filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id))
+                      .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+                    const invoiceAmount = parseFloat(inv.amount || 0);
+                    const balanceDue = invoiceAmount - paidForInvoice;
+                    const computedStatus = paidForInvoice >= invoiceAmount ? 'Paid' : paidForInvoice > 0 ? 'Partial' : 'Pending';
+
+                    return (
+                      <div key={inv.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-sm font-bold text-zinc-900 dark:text-white">{inv.description || "General Fee"}</p>
+                            <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mt-0.5">Due: {new Date(inv.due_date).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase h-fit",
+                              computedStatus === 'Paid' ? "bg-emerald-50 text-emerald-600" : computedStatus === 'Partial' ? "bg-amber-50 text-amber-600" : "bg-rose-50 text-rose-600"
+                            )}>
+                              {computedStatus}
+                            </span>
+                            <button
+                              onClick={() => handlePrintInvoice(inv)}
+                              className="p-1 px-2 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                            >
+                              <FileText className="w-3 h-3" />
+                              {computedStatus === 'Paid' ? t('print_receipt') : t('print_invoice')}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-2 border-t border-zinc-100 dark:border-zinc-700 grid grid-cols-3 gap-2">
+                          <div>
+                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Billed</p>
+                            <p className="text-xs font-black text-zinc-800 dark:text-white">{currency}{invoiceAmount.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Paid</p>
+                            <p className="text-xs font-black text-emerald-600">{currency}{paidForInvoice.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">Balance</p>
+                            <p className={cn("text-xs font-black", balanceDue > 0 ? "text-rose-600" : "text-emerald-600")}>{currency}{balanceDue.toLocaleString()}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <span className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase h-fit",
-                          inv.status === 'Paid' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-                        )}>
-                          {inv.status}
-                        </span>
-                        <button
-                          onClick={() => handlePrintInvoice(inv)}
-                          className="p-1 px-2 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1"
-                        >
-                          <FileText className="w-3 h-3" />
-                          {inv.status === 'Paid' || inv.status === 'Full' ? t('print_receipt') : t('print_invoice')}
-                        </button>
-                      </div>
-                    </div>
-                  )) : <p className="text-sm text-zinc-400 py-4">No invoices found</p>}
+                    );
+                  }) : <p className="text-sm text-zinc-400 py-4">No invoices found</p>}
                 </div>
               </div>
 
