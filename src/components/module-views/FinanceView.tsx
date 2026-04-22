@@ -408,11 +408,19 @@ export const FinanceModules = {
       if (printWindow) {
         let printHtml = '';
 
-        const isPaid = invoice.status === 'Paid' || invoice.status === 'Full';
+        // Compute paid amount dynamically
+        const invoiceAmount = parseFloat(invoice.amount || 0);
+        const studentPays = (payments || []);
+        const paidForThis = studentPays
+          .filter((p: any) => String(p.invoice_id) === String(invoice.id) || String(p.invoiceId) === String(invoice.id))
+          .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+        const balanceDue = invoiceAmount - paidForThis;
+        const isPaid = paidForThis >= invoiceAmount;
+        const isPartial = paidForThis > 0 && !isPaid;
         const docTitle = isPaid ? 'RECEIPT' : 'INVOICE';
-        const statusLabel = isPaid ? 'PAID IN FULL' : 'PAYMENT DUE';
-        const accentGradient = isPaid ? 'linear-gradient(90deg, #10b981, #3b82f6)' : 'linear-gradient(90deg, #f59e0b, #ef4444)';
-        const statusBadgeBg = isPaid ? '#dcfce7' : '#fef3c7';
+        const statusLabel = isPaid ? 'PAID IN FULL' : isPartial ? 'PARTIAL PAYMENT' : 'PAYMENT DUE';
+        const accentGradient = isPaid ? 'linear-gradient(90deg, #10b981, #3b82f6)' : isPartial ? 'linear-gradient(90deg, #f59e0b, #3b82f6)' : 'linear-gradient(90deg, #f59e0b, #ef4444)';
+        const statusBadgeBg = isPaid ? '#dcfce7' : isPartial ? '#fef3c7' : '#fef3c7';
         const statusBadgeColor = isPaid ? '#10b981' : '#b45309';
         const statusBadgeBorder = isPaid ? '#bbf7d0' : '#fde68a';
 
@@ -542,13 +550,23 @@ export const FinanceModules = {
                         <td>
                           <strong style="color: #1e293b;">${invoice.description || 'General School Fee'}</strong>
                         </td>
-                        <td style="text-align: right; font-weight: 600;">${currency} ${parseFloat(invoice.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td style="text-align: right; font-weight: 600;">${currency} ${invoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       </tr>
                     </tbody>
                   </table>
-                  <div class="amount-row">
-                    <div class="label">${isPaid ? 'Amount Paid' : 'Total Due'}</div>
-                    <div class="value">${currency} ${parseFloat(invoice.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                  <div style="margin-top: 24px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; padding: 14px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                      <span style="font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Total Billed</span>
+                      <span style="font-size: 15px; font-weight: 700; color: #334155;">${currency} ${invoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid #f1f5f9;">
+                      <span style="font-size: 13px; color: #059669; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Amount Paid</span>
+                      <span style="font-size: 15px; font-weight: 700; color: #059669;">${currency} ${paidForThis.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 16px 24px; background: ${isPaid ? '#f0fdf4' : '#fef2f2'};">
+                      <span style="font-size: 14px; color: ${isPaid ? '#059669' : '#dc2626'}; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">${isPaid ? 'Fully Settled' : 'Balance Due'}</span>
+                      <span style="font-size: 22px; font-weight: 800; color: ${isPaid ? '#059669' : '#dc2626'};">${currency} ${balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    </div>
                   </div>
                   <div class="footer">
                     <div class="thank-you">${isPaid ? 'Thank you for your payment!' : 'Please pay by the due date. Thank you!'}</div>
@@ -671,7 +689,7 @@ export const FinanceModules = {
                 <h4 className="font-bold flex items-center gap-2 text-zinc-900 dark:text-white">
                   <FileText className="w-4 h-4 text-indigo-600" /> {t('invoices')}
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {studentInvoices.length > 0 ? studentInvoices.map((inv: any) => {
                     const paidForInvoice = studentPayments
                       .filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id))
