@@ -2405,7 +2405,7 @@ export default function App() {
       "Daily Collections": (
         <FinanceModules.DailyCollections
           students={studentList}
-          data={receipts}
+          data={receipts.filter((r) => !r.invoice_id && !r.invoiceId)}
           invoices={invoices}
           organization={organizations.find((o) => o.id === currentUser?.org_id)}
           documentTemplates={documentTemplates}
