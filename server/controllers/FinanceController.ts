@@ -3,6 +3,7 @@ import { Response } from 'express';
 import pool from '../db.ts';
 import { AuthRequest } from '../middleware/auth.ts';
 import { recordAuditLog } from '../lib/audit.ts';
+import { SMSService } from '../services/SMSService.ts';
 
 const parseAmount = (val: any) => {
   if (val === undefined || val === null) return 0;
@@ -218,7 +219,27 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
 
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'PROCESS_PAYMENT', `Processed payment for student ID: ${student_id} (${amount})`, req.user.org_id);
-    res.status(201).json(paymentResult.rows[0]);
+    const payment = paymentResult.rows[0];
+
+    // Send SMS Notification
+    try {
+      const studentResult = await client.query('SELECT name, contact FROM students WHERE id = $1', [student_id]);
+      if (studentResult.rows.length > 0 && studentResult.rows[0].contact) {
+        const student = studentResult.rows[0];
+        const orgRes = await client.query('SELECT currency FROM organizations WHERE id = $1', [orgId]);
+        const currency = orgRes.rows[0]?.currency || '$';
+
+        SMSService.sendSMS(
+          orgId,
+          student.contact,
+          `Payment Receipt: Received ${currency}${amount} for ${student.name}. Thank you.`
+        ).catch(err => console.error('SMS Notification failed:', err));
+      }
+    } catch (smsErr) {
+      console.error('Failed to prepare SMS notification:', smsErr);
+    }
+
+    res.status(201).json(payment);
   } catch (err: any) {
     await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });

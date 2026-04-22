@@ -81,6 +81,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
       { title: 'Plans', href: 'Plans', roles: ['SUPER_ADMIN'], icon: Layers },
       { title: 'Users', href: 'Users', roles: ['SUPER_ADMIN'], icon: Users },
       { title: 'Partners', href: 'Partners', roles: ['SUPER_ADMIN'], icon: Users },
+      { title: 'SMS Settings', href: 'SMS Settings', roles: ['SUPER_ADMIN'], icon: MessageSquare },
       { title: 'Module Control', href: 'Module Control', roles: ['SUPER_ADMIN'], icon: Layers },
       { title: 'Audit Logs', href: 'Audit Logs', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD'], icon: History },
     ]

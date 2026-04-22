@@ -731,7 +731,7 @@ export const fetchTransportAssignments = async () => {
 };
 
 export const assignStudentToTransport = async (routeId: string, studentId: string, pickupLocation?: string) => {
-  const response = await api.post(`/ops/transport/${routeId}/assign`, { 
+  const response = await api.post(`/ops/transport/${routeId}/assign`, {
     student_id: studentId,
     pickup_location: pickupLocation
   });
@@ -1238,3 +1238,19 @@ export const markMessageRead = async (id: string) => {
 };
 
 export default api;
+
+// SMS
+export const fetchSMSSettings = async () => {
+  const response = await api.get('/sms/settings');
+  return response.data;
+};
+
+export const updateSMSSettings = async (data: any) => {
+  const response = await api.post('/sms/settings', data);
+  return response.data;
+};
+
+export const distributeSMS = async (data: { org_id: string, amount: number, price: number }) => {
+  const response = await api.post('/sms/distribute', data);
+  return response.data;
+};

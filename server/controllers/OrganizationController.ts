@@ -103,8 +103,8 @@ export const updateOrganization = async (req: AuthRequest, res: Response) => {
   let paramIndex = 1;
 
   const fields = [
-    'name', 'type', 'status', 'plan', 'language', 'timezone', 'email', 
-    'contact_number', 'address', 'custom_domain', 'logo_url', 'logo', 
+    'name', 'type', 'status', 'plan', 'language', 'timezone', 'email',
+    'contact_number', 'address', 'custom_domain', 'logo_url', 'logo',
     'signature', 'default_leave_limit', 'default_leave_limit_unit', 'gemini_api_key',
     'academic_year', 'current_term', 'admission_no_prefix', 'admission_no_suffix', 'admission_no_start_from', 'currency'
   ];
@@ -124,7 +124,7 @@ export const updateOrganization = async (req: AuthRequest, res: Response) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    
+
     values.push(id);
     const result = await client.query(
       `WITH updated_org AS (
@@ -563,13 +563,13 @@ export const verifyPaystackPayment = async (req: AuthRequest, res: Response) => 
 export const resetUserPassword = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { password: rawPassword } = req.body;
-  
+
   const password = rawPassword || 'zxcv123$$';
 
   try {
     const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.default.hash(password, 10);
-    
+
     const result = await pool.query(
       'UPDATE users SET password = $1 WHERE id = $2 RETURNING id, name, email',
       [hashedPassword, id]
@@ -583,5 +583,64 @@ export const resetUserPassword = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'Password reset successfully.', user: result.rows[0] });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const getSMSSettings = async (req: AuthRequest, res: Response) => {
+  try {
+    // Get the global SMS config from a dedicated 'system' organization or just the first superadmin one
+    const result = await pool.query("SELECT sms_api_config FROM organizations WHERE type = 'Superadmin' LIMIT 1");
+    res.json(result.rows[0]?.sms_api_config || {});
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const updateSMSSettings = async (req: AuthRequest, res: Response) => {
+  const { custom_url, api_key, sender_id } = req.body;
+  try {
+    const config = JSON.stringify({ custom_url, api_key, sender_id });
+    await pool.query("UPDATE organizations SET sms_api_config = $1 WHERE type = 'Superadmin'", [config]);
+    await recordAuditLog(req.user.id, 'UPDATE_SMS_SETTINGS', `Updated global SMS API settings`, req.user.org_id, req.ip || '');
+    res.json({ message: 'SMS settings updated successfully' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const distributeSMS = async (req: AuthRequest, res: Response) => {
+  const { org_id, amount, price } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Get current balance
+    const orgRes = await client.query('SELECT sms_balance FROM organizations WHERE id = $1', [org_id]);
+    if (orgRes.rows.length === 0) throw new Error('Organization not found');
+
+    const prevBalance = orgRes.rows[0].sms_balance || 0;
+    const newBalance = prevBalance + amount;
+
+    // 2. Update balance and price
+    await client.query(
+      'UPDATE organizations SET sms_balance = $1, sms_unit_price = $2 WHERE id = $3',
+      [newBalance, price, org_id]
+    );
+
+    // 3. Record transaction
+    await client.query(
+      'INSERT INTO sms_transactions (org_id, type, amount, previous_balance, new_balance, description) VALUES ($1, $2, $3, $4, $5, $6)',
+      [org_id, 'Distribution', amount, prevBalance, newBalance, `Superadmin distributed ${amount} SMS credits`]
+    );
+
+    await client.query('COMMIT');
+    await recordAuditLog(req.user.id, 'SMS_DISTRIBUTION', `Distributed ${amount} SMS to org ${org_id}`, req.user.org_id, req.ip || '');
+
+    res.json({ message: 'SMS distributed successfully', new_balance: newBalance });
+  } catch (err: any) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };

@@ -62,6 +62,11 @@ import {
 } from "./components/module-views/StaffView";
 import { LibraryModules } from "./components/module-views/LibrarianView";
 import { SuperAdminModules } from "./components/module-views/SuperAdminView";
+import {
+  distributeSMS,
+  updateSMSSettings,
+  fetchSMSSettings
+} from "./lib/api";
 import { StudentModules } from "./components/module-views/StudentView";
 import { CalendarView } from "./components/module-views/CalendarView";
 import { Profile } from "./components/module-views/Profile";
@@ -289,6 +294,7 @@ export default function App() {
   });
 
   const [editingOrganization, setEditingOrganization] = useState<any>(null);
+  const [smsSettings, setSmsSettings] = useState<any>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -1415,6 +1421,27 @@ export default function App() {
     }
   };
 
+  const handleDistributeSMS = async (orgId: string, amount: number, price: number) => {
+    try {
+      await distributeSMS({ org_id: orgId, amount, price });
+      showToast(`Successfully distributed ${amount} SMS credits!`, "success");
+      await loadData();
+    } catch (err: any) {
+      showToast(err.response?.data?.error || "Failed to distribute SMS", "error");
+    }
+  };
+
+  const handleUpdateSMSSettings = async (data: any) => {
+    try {
+      await updateSMSSettings(data);
+      showToast("SMS Gateway settings updated!", "success");
+      const settings = await fetchSMSSettings();
+      setSmsSettings(settings);
+    } catch (err: any) {
+      showToast(err.response?.data?.error || "Failed to update SMS settings", "error");
+    }
+  };
+
 
   useEffect(() => {
     (window as any).showToast = showToast;
@@ -1521,6 +1548,7 @@ export default function App() {
                     })
                   }
                   onApprove={handleApproveReferral}
+                  onDistributeSMS={handleDistributeSMS}
                 />
               </div>
             );
@@ -1650,6 +1678,7 @@ export default function App() {
             setDeleteConfirm({ isOpen: true, item: org, type: "organization" })
           }
           onApprove={handleApproveReferral}
+          onDistributeSMS={handleDistributeSMS}
         />
       ),
 
@@ -1667,6 +1696,12 @@ export default function App() {
           organization={editingOrganization}
           onRefresh={loadData}
           onBack={() => setCurrentView("Organizations")}
+        />
+      ),
+      "SMS Settings": (
+        <SuperAdminModules.SMSSettings
+          config={smsSettings}
+          onSave={handleUpdateSMSSettings}
         />
       ),
       "Subscription Plan": <ChoosePlan />,

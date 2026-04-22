@@ -4,6 +4,7 @@ import pool from '../db.ts';
 import { AuthRequest } from '../middleware/auth.ts';
 import { recordAuditLog } from '../lib/audit.ts';
 import bcrypt from 'bcryptjs';
+import { SMSService } from '../services/SMSService.ts';
 
 // INQUIRIES
 export const getInquiries = async (req: AuthRequest, res: Response) => {
@@ -233,6 +234,16 @@ export const createApplication = async (req: AuthRequest, res: Response) => {
 
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'CREATE_APPLICATION', `Created application for: ${name}`, orgId, req.ip || '');
+
+    // Send SMS Notification
+    if (app.contact) {
+      SMSService.sendSMS(
+        orgId,
+        app.contact,
+        `Hello ${app.parent_name || 'Parent'}, your application for ${app.name} has been received. Status: ${app.status}.`
+      ).catch(err => console.error('SMS Notification failed:', err));
+    }
+
     res.status(201).json(app);
   } catch (err: any) {
     await client.query('ROLLBACK');
@@ -280,6 +291,16 @@ export const updateApplication = async (req: AuthRequest, res: Response) => {
 
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'UPDATE_APPLICATION', `Updated application ID: ${id}`, orgId, req.ip || '');
+
+    // Send SMS Notification if decision changed
+    if (app.contact && decision && decision !== 'Pending') {
+      SMSService.sendSMS(
+        orgId,
+        app.contact,
+        `Hello ${app.parent_name || 'Parent'}, the application for ${app.name} has been ${decision.toLowerCase()}.`
+      ).catch(err => console.error('SMS Notification failed:', err));
+    }
+
     res.json(app);
   } catch (err: any) {
     await client.query('ROLLBACK');

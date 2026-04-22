@@ -88,6 +88,11 @@ router.get('/platform/users', checkRole(['SUPER_ADMIN']), OrganizationController
 router.post('/platform/users/:id/reset-password', checkRole(['SUPER_ADMIN']), OrganizationController.resetUserPassword);
 router.delete('/platform/users/:id', checkRole(['SUPER_ADMIN']), OrganizationController.deleteUser);
 
+// SMS SYSTEM
+router.get('/sms/settings', checkRole(['SUPER_ADMIN']), OrganizationController.getSMSSettings);
+router.post('/sms/settings', checkRole(['SUPER_ADMIN']), OrganizationController.updateSMSSettings);
+router.post('/sms/distribute', checkRole(['SUPER_ADMIN']), OrganizationController.distributeSMS);
+
 // ACADEMIC
 router.get('/academic/departments', HRController.getDepartments);
 router.post('/academic/departments', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), HRController.createDepartment);
@@ -440,7 +445,7 @@ router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req:
   } catch (err: any) {
     await client.query('ROLLBACK');
     console.error('>>> [Admission] Error:', err);
-    
+
     if (err.code === '23505') { // Unique constraint violation
       if (err.constraint === 'students_admission_no_key') {
         return res.status(409).json({ error: `Admission number ${admission_no} is already in use.`, detail: err.detail });
@@ -449,7 +454,7 @@ router.post('/students', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), async (req:
         return res.status(409).json({ error: 'A student with this email already exists.', detail: err.detail });
       }
     }
-    
+
     res.status(500).json({ error: err.message, detail: err.detail });
   } finally {
     client.release();

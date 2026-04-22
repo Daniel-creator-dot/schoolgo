@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { HRModules } from './module-views/HRView';
-import { 
-  Users, 
-  Building2, 
-  CreditCard, 
-  TrendingUp, 
-  ArrowUpRight, 
+import {
+  Users,
+  Building2,
+  CreditCard,
+  TrendingUp,
+  ArrowUpRight,
   ArrowDownRight,
   School,
   GraduationCap,
@@ -35,15 +35,15 @@ import {
 import { useLanguage } from '../lib/LanguageContext';
 import { Modal } from './UI';
 import { DataTable } from './DataTable';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  AreaChart, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
   Area,
   PieChart,
   Pie,
@@ -110,7 +110,7 @@ function MessageAlert({ count, onNavigate }: { count: number, onNavigate?: (view
   if (count <= 0) return null;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={() => onNavigate?.('Messages')}
@@ -139,7 +139,7 @@ function PendingReferralAlert({ count, onNavigate }: { count: number, onNavigate
   if (count <= 0) return null;
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       onClick={() => onNavigate?.('Organizations')}
@@ -208,13 +208,13 @@ export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate
               <AreaChart data={data}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1}/>
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                 <Area type="monotone" dataKey="value" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
               </AreaChart>
@@ -261,7 +261,7 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
   // Calculate Attendance Trends from real history
   const attendanceTrendData = useMemo(() => {
     if (!attendanceHistory || attendanceHistory.length === 0) return [];
-    
+
     // Group by date
     const groups: Record<string, { total: number, present: number }> = {};
     attendanceHistory.forEach(record => {
@@ -349,22 +349,22 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
             <Zap className={cn(
               "w-4 h-4",
               daysRemaining === null ? "text-zinc-400" :
-              daysRemaining < 5 ? "text-red-500" :
-              daysRemaining < 15 ? "text-amber-500" :
-              "text-emerald-500"
+                daysRemaining < 5 ? "text-red-500" :
+                  daysRemaining < 15 ? "text-amber-500" :
+                    "text-emerald-500"
             )} />
             <div className="flex flex-col leading-none">
               <span className="text-zinc-900 dark:text-white">{organization?.plan || 'Free'} Plan</span>
               <span className={cn(
                 "text-[9px] mt-0.5",
                 daysRemaining === null ? "text-zinc-500" :
-                daysRemaining < 5 ? "text-red-500" :
-                daysRemaining < 15 ? "text-amber-500" :
-                "text-zinc-500"
+                  daysRemaining < 5 ? "text-red-500" :
+                    daysRemaining < 15 ? "text-amber-500" :
+                      "text-zinc-500"
               )}>
-                {daysRemaining === null ? 'No Expiry Set' : 
-                 daysRemaining < 0 ? 'Expired' : 
-                 `Expires in ${daysRemaining} days`}
+                {daysRemaining === null ? 'No Expiry Set' :
+                  daysRemaining < 0 ? 'Expired' :
+                    `Expires in ${daysRemaining} days`}
               </span>
             </div>
           </div>
@@ -374,11 +374,19 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard title={t('total_students')} value={stats?.totalStudents || "0"} change="Active" trend="up" icon={GraduationCap} color="bg-blue-600" />
         <StatCard title={t('total_staff')} value={stats?.totalStaff || "0"} change="Verified" trend="up" icon={Briefcase} color="bg-purple-600" />
         <StatCard title={t('attendance_rate')} value={stats?.attendanceRate || "0%"} change="Live" trend="up" icon={ClipboardCheck} color="bg-teal-600" />
         <StatCard title={t('fees_collected')} value={stats?.feesCollected || `${currency} 0`} change="Target" trend="up" icon={Wallet} color="bg-emerald-600" />
+        <StatCard
+          title="SMS Balance"
+          value={(organization?.sms_balance || 0).toLocaleString()}
+          change={`Price: ${currency}${organization?.sms_unit_price || 0}/unit`}
+          trend="up"
+          icon={MessageSquare}
+          color="bg-amber-600"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -398,9 +406,9 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
               {attendanceTrendData.length > 0 ? (
                 <AreaChart data={attendanceTrendData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.5} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
-                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
-                  <Tooltip 
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                  <Tooltip
                     contentStyle={{ backgroundColor: '#fff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                     itemStyle={{ fontWeight: 'bold', color: '#14b8a6' }}
                   />
@@ -423,7 +431,7 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
               <p className="text-sm text-zinc-500 mt-1">Status of student fee payments.</p>
             </div>
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={() => {
                   setModalType('owing');
                   setShowOwingModal(true);
@@ -458,7 +466,7 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
                           <Cell key={`cell-${index}`} fill={PAYMENT_COLORS[index % PAYMENT_COLORS.length]} className="cursor-pointer hover:opacity-80 transition-opacity" />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
                       />
                       <Legend iconType="circle" />
@@ -466,7 +474,7 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
                   </ResponsiveContainer>
                 </div>
                 <div className="hidden sm:block pl-8 space-y-4">
-                  <div 
+                  <div
                     className="space-y-1 cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/10 p-2 rounded-xl transition-colors"
                     onClick={() => {
                       setModalType('paid');
@@ -476,7 +484,7 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
                     <p className="text-2xl font-black text-emerald-600">{paidCount}</p>
                     <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Paid Students</p>
                   </div>
-                  <div 
+                  <div
                     className="space-y-1 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-900/10 p-2 rounded-xl transition-colors"
                     onClick={() => {
                       setModalType('owing');
@@ -503,14 +511,14 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
               <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{t('recent_activities')}</h3>
               <p className="text-sm text-zinc-500 mt-1">Latest updates from your school staff.</p>
             </div>
-            <button 
+            <button
               onClick={() => onNavigate?.('Audit Logs')}
               className="flex items-center gap-2 px-4 py-2 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded-xl text-xs font-bold transition-all"
             >
               View All <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
-          
+
           <div className="space-y-4 max-h-[440px] overflow-y-auto pr-2 custom-scrollbar">
             {activities.length > 0 ? (
               activities.map((activity, i) => (
@@ -591,8 +599,8 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
             })}
             columns={[
               { header: 'Student Name', accessor: 'name', className: 'font-bold' },
-              { 
-                header: 'Class', 
+              {
+                header: 'Class',
                 accessor: (s: any) => {
                   const studentClass = classes.find((c: any) => c.id === s.class_id);
                   const className = studentClass?.name || s.class_name || 'N/A';
@@ -600,8 +608,8 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
                   return `${className} ${classSection}`.trim();
                 }
               },
-              { 
-                header: 'Status', 
+              {
+                header: 'Status',
                 accessor: (s: any) => {
                   const sStats = studentStatusMap[s.id];
                   const balance = (sStats.invoiced || 0) - (sStats.paid || 0);
@@ -612,7 +620,7 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
                         {balance > 0 && <span className="text-rose-600 text-right">Balance: {currency} {balance.toLocaleString()}</span>}
                       </div>
                       <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={cn("h-full transition-all", balance > 0 ? "bg-amber-500" : "bg-emerald-500")}
                           style={{ width: `${Math.min(100, ((sStats.paid || 0) / (sStats.invoiced || 1)) * 100)}%` }}
                         />
@@ -626,14 +634,14 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
           />
         </div>
       </Modal>
-      
+
     </div>
   );
 }
 
 export function HODDashboard({ data, staffList = [], departments = [], organization, user, unreadMessagesCount = 0, onNavigate, onUpdateOrganization }: { data?: any, staffList?: any[], departments?: any[], organization?: any, user?: any, unreadMessagesCount?: number, onNavigate?: (view: string) => void, onUpdateOrganization?: (data: any) => void }) {
   const { t } = useLanguage();
-  
+
   // Use real data or empty defaults
   const staffPerformanceData = data?.performanceHistory || [];
   const departmentMetrics = data?.metrics || [];
@@ -683,26 +691,26 @@ export function HODDashboard({ data, staffList = [], departments = [], organizat
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={staffPerformanceData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 11, fill: '#9ca3af'}}
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: '#9ca3af' }}
                   angle={-45}
                   textAnchor="end"
                   height={60}
                 />
-                <YAxis 
-                  domain={[0, 100]} 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fontSize: 11, fill: '#9ca3af'}}
+                <YAxis
+                  domain={[0, 100]}
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: '#9ca3af' }}
                 />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    borderRadius: '12px', 
-                    border: 'none', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    borderRadius: '12px',
+                    border: 'none',
                     boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                     fontSize: '12px'
                   }}
@@ -727,15 +735,15 @@ export function HODDashboard({ data, staffList = [], departments = [], organizat
                   <span className="text-zinc-500">{metric.value}% / {metric.target}%</span>
                 </div>
                 <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-3">
-                  <div 
+                  <div
                     className="h-3 rounded-full transition-all duration-1000"
-                    style={{ 
+                    style={{
                       width: `${metric.value}%`,
                       backgroundColor: metric.color,
                       boxShadow: `0 0 10px ${metric.color}40`
                     }}
                   ></div>
-                  <div 
+                  <div
                     className="absolute top-0 h-3 w-1 bg-white/50 rounded-full"
                     style={{ left: `${metric.target}%` }}
                   ></div>
@@ -756,12 +764,12 @@ export function HODDashboard({ data, staffList = [], departments = [], organizat
             </div>
             <div>
               <p className="font-bold text-zinc-900 dark:text-white">
-                {staffPerformanceData.length > 0 
-                  ? staffPerformanceData.reduce((prev: any, current: any) => (prev.performance > current.performance) ? prev : current).name 
+                {staffPerformanceData.length > 0
+                  ? staffPerformanceData.reduce((prev: any, current: any) => (prev.performance > current.performance) ? prev : current).name
                   : '—'}
               </p>
               <p className="text-sm text-zinc-500">
-                Performance: {staffPerformanceData.length > 0 
+                Performance: {staffPerformanceData.length > 0
                   ? Math.round(staffPerformanceData.reduce((prev: any, current: any) => (prev.performance > current.performance) ? prev : current).performance)
                   : 0}%
               </p>
@@ -777,12 +785,12 @@ export function HODDashboard({ data, staffList = [], departments = [], organizat
             </div>
             <div>
               <p className="font-bold text-zinc-900 dark:text-white">
-                {staffPerformanceData.length > 0 
-                  ? staffPerformanceData.reduce((prev: any, current: any) => (prev.attendance > current.attendance) ? prev : current).name 
+                {staffPerformanceData.length > 0
+                  ? staffPerformanceData.reduce((prev: any, current: any) => (prev.attendance > current.attendance) ? prev : current).name
                   : '—'}
               </p>
               <p className="text-sm text-zinc-500">
-                Attendance: {staffPerformanceData.length > 0 
+                Attendance: {staffPerformanceData.length > 0
                   ? Math.round(staffPerformanceData.reduce((prev: any, current: any) => (prev.attendance > current.attendance) ? prev : current).attendance)
                   : 0}%
               </p>
@@ -798,12 +806,12 @@ export function HODDashboard({ data, staffList = [], departments = [], organizat
             </div>
             <div>
               <p className="font-bold text-zinc-900 dark:text-white">
-                {staffPerformanceData.length > 0 
-                  ? staffPerformanceData.reduce((prev: any, current: any) => (prev.workload > current.workload) ? prev : current).name 
+                {staffPerformanceData.length > 0
+                  ? staffPerformanceData.reduce((prev: any, current: any) => (prev.workload > current.workload) ? prev : current).name
                   : '—'}
               </p>
               <p className="text-sm text-zinc-500">
-                Avg workload: {staffPerformanceData.length > 0 
+                Avg workload: {staffPerformanceData.length > 0
                   ? Math.round(staffPerformanceData.reduce((prev: any, current: any) => (prev.workload > current.workload) ? prev : current).workload)
                   : 0}%
               </p>
@@ -829,7 +837,7 @@ export function HODDashboard({ data, staffList = [], departments = [], organizat
 
 export function StaffDashboard({ staffData, user, organization, onNavigate, staffList = [], departments = [], unreadMessagesCount = 0, onUpdateOrganization }: { staffData?: any, user?: any, organization?: any, onNavigate?: (view: string) => void, staffList?: any[], departments?: any[], unreadMessagesCount?: number, onUpdateOrganization?: (data: any) => void }) {
   const { t } = useLanguage();
-  
+
   const stats = {
     classes: staffData?.classes?.length || 0,
     students: staffData?.students?.length || 0,
@@ -841,15 +849,15 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
 
   const upcomingClasses = staffData?.timetable
     ? staffData.timetable
-        .filter((t: any) => {
-          const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          const today = days[new Date().getDay()];
-          // Case-insensitive comparison and handling potential short forms
-          return (t.day_of_week || '').toLowerCase() === today.toLowerCase() || 
-                 (t.day_of_week || '').toLowerCase() === today.slice(0, 3).toLowerCase();
-        })
-        .sort((a: any, b: any) => (a.start_time || '').localeCompare(b.start_time || ''))
-        .slice(0, 3)
+      .filter((t: any) => {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const today = days[new Date().getDay()];
+        // Case-insensitive comparison and handling potential short forms
+        return (t.day_of_week || '').toLowerCase() === today.toLowerCase() ||
+          (t.day_of_week || '').toLowerCase() === today.slice(0, 3).toLowerCase();
+      })
+      .sort((a: any, b: any) => (a.start_time || '').localeCompare(b.start_time || ''))
+      .slice(0, 3)
     : [];
 
   return (
@@ -891,14 +899,14 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
                 <AreaChart data={staffData.attendanceTrends}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} unit="%" />
-                  <Tooltip 
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} unit="%" />
+                  <Tooltip
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   />
                   <Area type="monotone" dataKey="value" stroke="#4f46e5" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
@@ -964,12 +972,12 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
                 <div className={cn(
                   "p-2 rounded-lg",
                   activity.type === 'birthday' ? "bg-rose-100 text-rose-600 dark:bg-rose-900/20" :
-                  activity.type === 'leave' ? "bg-amber-100 text-amber-600 dark:bg-amber-900/20" :
-                  activity.type === 'attendance' ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20" : "bg-blue-100 text-blue-600 dark:bg-blue-900/20"
+                    activity.type === 'leave' ? "bg-amber-100 text-amber-600 dark:bg-amber-900/20" :
+                      activity.type === 'attendance' ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/20" : "bg-blue-100 text-blue-600 dark:bg-blue-900/20"
                 )}>
                   {activity.type === 'birthday' ? <Gift className="w-4 h-4" /> :
-                   activity.type === 'leave' ? <Calendar className="w-4 h-4" /> :
-                   activity.type === 'attendance' ? <ClipboardCheck className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                    activity.type === 'leave' ? <Calendar className="w-4 h-4" /> :
+                      activity.type === 'attendance' ? <ClipboardCheck className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-zinc-900 dark:text-white">{activity.title}</p>
@@ -989,16 +997,16 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
   );
 }
 
-export function ParentDashboard({ 
-  wards = [], 
-  selectedWardId, 
+export function ParentDashboard({
+  wards = [],
+  selectedWardId,
   onWardSelect,
   organization,
   unreadMessagesCount = 0,
   onNavigate
-}: { 
-  wards?: any[], 
-  selectedWardId: string | null, 
+}: {
+  wards?: any[],
+  selectedWardId: string | null,
   onWardSelect: (id: string) => void,
   organization?: any,
   unreadMessagesCount?: number,
@@ -1037,8 +1045,8 @@ export function ParentDashboard({
                     onClick={() => onWardSelect(ward.id)}
                     className={cn(
                       "px-4 py-2 rounded-xl text-sm font-bold transition-all",
-                      selectedWardId === ward.id 
-                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" 
+                      selectedWardId === ward.id
+                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
                         : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     )}
                   >
@@ -1064,8 +1072,8 @@ export function ParentDashboard({
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={selectedWard.performanceData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
-              <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
               <Tooltip />
               <Area type="monotone" dataKey="value" stroke="#4f46e5" fill="#4f46e5" fillOpacity={0.1} />
             </AreaChart>
@@ -1099,8 +1107,8 @@ export function FinanceDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#9ca3af'}} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
                 <Tooltip />
                 <Area type="monotone" dataKey="value" stroke="#10b981" fill="#10b981" fillOpacity={0.1} />
               </AreaChart>
@@ -1258,7 +1266,7 @@ export function LibrarianDashboard() {
 
 export function HRDashboard() {
   const { t } = useLanguage();
-  
+
   const staffStats = [
     { label: 'Total Staff', value: '128', trend: '+2' },
     { label: 'On Leave', value: '5', trend: '0' },
@@ -1396,16 +1404,16 @@ export function NonStaffDashboard() {
   );
 }
 
-export function StudentDashboard({ 
-  onNavigate, 
-  user, 
-  students = [], 
-  attendance = [], 
+export function StudentDashboard({
+  onNavigate,
+  user,
+  students = [],
+  attendance = [],
   invoices = [],
   timetable = [],
   organization,
   unreadMessagesCount = 0
-}: { 
+}: {
   onNavigate?: (view: string) => void,
   user?: any,
   students?: any[],
@@ -1416,7 +1424,7 @@ export function StudentDashboard({
   unreadMessagesCount?: number
 }) {
   const { currency, t } = useLanguage();
-  
+
   const student = students.find(s => s.email === user?.email);
   const studentAttendance = attendance.filter(a => a.student_id === student?.id);
   const attendanceRate = studentAttendance.length > 0
@@ -1446,7 +1454,7 @@ export function StudentDashboard({
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -1458,10 +1466,10 @@ export function StudentDashboard({
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
           <div className="relative">
             <div className="w-32 h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden">
-               {(student?.profile_pic || student?.previous_school_profile_pic || user?.profile_pic) ? (
-                <img 
-                  src={student?.profile_pic || student?.previous_school_profile_pic || user?.profile_pic} 
-                  alt={student?.name || user?.name} 
+              {(student?.profile_pic || student?.previous_school_profile_pic || user?.profile_pic) ? (
+                <img
+                  src={student?.profile_pic || student?.previous_school_profile_pic || user?.profile_pic}
+                  alt={student?.name || user?.name}
                   className="w-full h-full object-cover rounded-2xl"
                   referrerPolicy="no-referrer"
                 />
@@ -1475,7 +1483,7 @@ export function StudentDashboard({
               <CheckCircle className="w-5 h-5 text-white" />
             </div>
           </div>
-          
+
           <div className="text-center md:text-left flex-1">
             <div className="inline-flex items-center gap-2 px-0 py-1 bg-transparent rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 border-none text-zinc-600 dark:text-zinc-400">
               <Zap className="w-3 h-3 text-amber-500" />
@@ -1487,15 +1495,15 @@ export function StudentDashboard({
             <p className="text-zinc-500 dark:text-zinc-400 text-lg font-medium max-w-xl">
               You're doing great! Your attendance is at <span className="text-indigo-600 dark:text-indigo-400 font-bold">{attendanceRate}%</span> and your profile is <span className="text-indigo-600 dark:text-indigo-400 font-bold">up to date</span>.
             </p>
-            
+
             <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-start">
-              <button 
+              <button
                 onClick={() => onNavigate?.('Personal Information')}
                 className="px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-bold text-sm hover:opacity-90 transition-all active:scale-95 shadow-lg"
               >
                 {t('view_full_profile')}
               </button>
-              <button 
+              <button
                 onClick={() => onNavigate?.('Ask AI')}
                 className="px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-700 rounded-2xl font-bold text-sm hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all active:scale-95"
               >
@@ -1542,25 +1550,25 @@ export function StudentDashboard({
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => onNavigate?.('Timetable')}
                 className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-xl text-xs font-bold hover:bg-indigo-50 hover:text-indigo-600 transition-all"
               >
                 {t('full_timetable')}
               </button>
             </div>
-            
+
             <div className="space-y-0 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-100 dark:before:bg-zinc-800">
               {(() => {
                 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const today = days[new Date().getDay()];
-                
 
-                
+
+
                 // We need timetable prop here. I'll add it to the component signature in the next step or here.
                 // Assuming timetable is passed as part of props.
-                
-                const mySchedule = timetable?.filter((t: any) => 
+
+                const mySchedule = timetable?.filter((t: any) =>
                   t.day_of_week === today && String(t.class_id) === String(student?.class_id)
                 ).sort((a: any, b: any) => a.start_time.localeCompare(b.start_time)) || [];
 
@@ -1576,29 +1584,29 @@ export function StudentDashboard({
                   const now = new Date();
                   const [startH, startM] = item.start_time.split(':').map(Number);
                   const [endH, endM] = item.end_time.split(':').map(Number);
-                  
+
                   const start = new Date(); start.setHours(startH, startM, 0);
                   const end = new Date(); end.setHours(endH, endM, 0);
-                  
+
                   let status = 'Upcoming';
                   if (now > end) status = 'Completed';
                   else if (now >= start && now <= end) status = 'Ongoing';
-                  
+
                   return (
                     <div key={i} className="relative pl-16 pb-8 last:pb-0 group">
                       <div className={cn(
                         "absolute left-4 top-1 w-4 h-4 rounded-full border-4 border-white dark:border-zinc-900 z-10 transition-all group-hover:scale-125",
-                        status === 'Completed' ? "bg-emerald-500" : 
-                        status === 'Ongoing' ? "bg-indigo-600 animate-ping" : "bg-zinc-200 dark:bg-zinc-700"
+                        status === 'Completed' ? "bg-emerald-500" :
+                          status === 'Ongoing' ? "bg-indigo-600 animate-ping" : "bg-zinc-200 dark:bg-zinc-700"
                       )}></div>
                       {status === 'Ongoing' && (
                         <div className="absolute left-4 top-1 w-4 h-4 rounded-full bg-indigo-600 z-10"></div>
                       )}
-                      
+
                       <div className={cn(
                         "p-5 rounded-3xl border transition-all duration-300",
-                        status === 'Ongoing' 
-                          ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-900/30 shadow-sm" 
+                        status === 'Ongoing'
+                          ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-900/30 shadow-sm"
                           : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 dark:hover:border-zinc-700"
                       )}>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1618,7 +1626,7 @@ export function StudentDashboard({
                               </div>
                             </div>
                           </div>
-                          
+
                           {status === 'Ongoing' && (
                             <button className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20">
                               Join Class
@@ -1663,11 +1671,11 @@ export function StudentDashboard({
               <div className="flex items-end justify-between h-32 gap-2">
                 {[40, 70, 45, 90, 65, 85, 92].map((height, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                    <div 
+                    <div
                       className={cn(
                         "w-full rounded-t-lg transition-all duration-1000",
                         i === 6 ? "bg-indigo-600" : "bg-zinc-100 dark:bg-zinc-800"
-                      )} 
+                      )}
                       style={{ height: `${height}%` }}
                     ></div>
                     <span className="text-[8px] font-bold text-zinc-400 uppercase">{['M', 'T', 'W', 'T', 'F', 'S', 'S'][i]}</span>
@@ -1696,10 +1704,10 @@ export function StudentDashboard({
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Exam Countdown</span>
               </div>
-              
+
               <h3 className="text-2xl font-black mb-2 tracking-tight">Physics Mid-term</h3>
               <p className="text-zinc-400 text-sm mb-8">Review Chapter 4: Thermodynamics and Chapter 5: Electromagnetism.</p>
-              
+
               <div className="grid grid-cols-3 gap-4 mb-8">
                 {[
                   { val: '03', unit: 'Days' },
@@ -1712,8 +1720,8 @@ export function StudentDashboard({
                   </div>
                 ))}
               </div>
-              
-              <button 
+
+              <button
                 onClick={() => onNavigate?.('Study Materials')}
                 className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-indigo-600/40 active:scale-95"
               >
@@ -1742,7 +1750,7 @@ export function StudentDashboard({
                 </div>
               ))}
             </div>
-            <button 
+            <button
               onClick={() => onNavigate?.('Announcements')}
               className="w-full mt-8 py-4 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-2xl text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all"
             >
@@ -1834,7 +1842,7 @@ export function OldPartnerDashboard() {
             )}
           </div>
         </div>
-        <button 
+        <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
         >
@@ -1915,12 +1923,12 @@ export function OldPartnerDashboard() {
             <form onSubmit={handleCreateSchool} className="space-y-4">
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">School Name</label>
-                <input required type="text" value={newSchool.name} onChange={e => setNewSchool({...newSchool, name: e.target.value})} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Lincoln High" />
+                <input required type="text" value={newSchool.name} onChange={e => setNewSchool({ ...newSchool, name: e.target.value })} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Lincoln High" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">Type</label>
-                  <select value={newSchool.type} onChange={e => setNewSchool({...newSchool, type: e.target.value})} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500">
+                  <select value={newSchool.type} onChange={e => setNewSchool({ ...newSchool, type: e.target.value })} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500">
                     <option>K-12</option>
                     <option>Primary</option>
                     <option>Secondary</option>
@@ -1929,27 +1937,27 @@ export function OldPartnerDashboard() {
                 </div>
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">Contact Number</label>
-                  <input required type="text" value={newSchool.contact_number} onChange={e => setNewSchool({...newSchool, contact_number: e.target.value})} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" />
+                  <input required type="text" value={newSchool.contact_number} onChange={e => setNewSchool({ ...newSchool, contact_number: e.target.value })} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" />
                 </div>
               </div>
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">School General Email</label>
-                <input required type="email" value={newSchool.email} onChange={e => setNewSchool({...newSchool, email: e.target.value})} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" />
+                <input required type="email" value={newSchool.email} onChange={e => setNewSchool({ ...newSchool, email: e.target.value })} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div className="pt-4 mt-4 border-t border-zinc-100 dark:border-zinc-800">
                 <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-4">First Admin Account</h4>
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">Admin Email</label>
-                    <input required type="email" value={newSchool.admin_email} onChange={e => setNewSchool({...newSchool, admin_email: e.target.value})} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" />
+                    <input required type="email" value={newSchool.admin_email} onChange={e => setNewSchool({ ...newSchool, admin_email: e.target.value })} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div>
                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1 block">Admin Password</label>
-                    <input required type="password" value={newSchool.admin_password} onChange={e => setNewSchool({...newSchool, admin_password: e.target.value})} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" />
+                    <input required type="password" value={newSchool.admin_password} onChange={e => setNewSchool({ ...newSchool, admin_password: e.target.value })} className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-4 pt-6">
                 <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 px-4 py-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition">Cancel</button>
                 <button type="submit" className="flex-1 px-4 py-4 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 dark:shadow-none">Provision School</button>
