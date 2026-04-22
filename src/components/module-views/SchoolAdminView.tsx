@@ -871,20 +871,33 @@ export const AdmissionsModules = {
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Candidate Full Name</label>
                     <input type="text" name="name" defaultValue={item?.name} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-base outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm font-bold" />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Gender</label>
+                      <select name="gender" defaultValue={item?.gender} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                        <option value="">Select...</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date of Birth</label>
+                      <input type="date" name="date_of_birth" defaultValue={item?.date_of_birth?.split('T')[0]} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Target Grade</label>
                       <input type="text" name="grade" defaultValue={item?.grade} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Inquiry Date</label>
-                      <input
-                        type="date"
-                        name="date"
-                        defaultValue={item?.date ? new Date(item.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
-                        className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
-                      />
-                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Inquiry Date</label>
+                    <input
+                      type="date"
+                      name="date"
+                      defaultValue={item?.date ? new Date(item.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
+                      className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                    />
                   </div>
                 </div>
               </div>
@@ -2561,6 +2574,7 @@ export const AdmitStudentView = ({
   feeStructures = [],
   students = [],
   inquiries = [],
+  preselectedInquiry = null,
   onNavigate,
   onAdmit,
   onSaveEnquiry,
@@ -2569,13 +2583,15 @@ export const AdmitStudentView = ({
   feeStructures?: any[];
   students?: any[];
   inquiries?: any[];
+  preselectedInquiry?: any;
   onNavigate?: (view: string) => void;
   onAdmit: (data: any) => void;
   onSaveEnquiry?: (data: any) => void;
 }) => {
   const { t, currency } = useLanguage();
   const [activeTab, setActiveTab] = useState<'admit' | 'bulk'>('admit');
-  const [purpose, setPurpose] = useState<'admit' | 'enquiry'>('admit');
+  const [editingInquiry, setEditingInquiry] = useState<any>(preselectedInquiry);
+  const [purpose, setPurpose] = useState<'admit' | 'enquiry'>(preselectedInquiry ? 'enquiry' : 'admit');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedFeeIds, setSelectedFeeIds] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -2583,11 +2599,17 @@ export const AdmitStudentView = ({
   const [importPreviewItems, setImportPreviewItems] = useState<any[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [profilePic, setProfilePic] = useState<string | null>(null);
-  const [editingInquiry, setEditingInquiry] = useState<any>(null);
-
   const [enrollModalItem, setEnrollModalItem] = useState<any>(null);
   const [enrollClassId, setEnrollClassId] = useState('');
   const [enrollFeeIds, setEnrollFeeIds] = useState<string[]>([]);
+
+  // Sync editingInquiry when preselectedInquiry changes (e.g. from View All -> Convert)
+  useEffect(() => {
+    if (preselectedInquiry) {
+      setEditingInquiry(preselectedInquiry);
+      setPurpose('enquiry');
+    }
+  }, [preselectedInquiry]);
 
   useEffect(() => {
     if (enrollClassId) {

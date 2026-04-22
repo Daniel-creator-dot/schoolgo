@@ -23,17 +23,19 @@ export const getInquiries = async (req: AuthRequest, res: Response) => {
 };
 
 export const createInquiry = async (req: AuthRequest, res: Response) => {
-  const { 
+  const {
     name, parent_name, parent, email, contact, phone, grade, comments, date, previous_school_profile_pic,
-    secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion
+    secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion,
+    gender, date_of_birth, parent_email
   } = req.body;
   try {
     const orgId = req.user.org_id;
     const result = await pool.query(
-      'INSERT INTO inquiries (org_id, name, parent_name, email, contact, grade, comments, date, previous_school_profile_pic, secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
+      'INSERT INTO inquiries (org_id, name, parent_name, email, contact, grade, comments, date, previous_school_profile_pic, secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion, gender, date_of_birth, parent_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *',
       [
         orgId, name, parent_name || parent, email, contact || phone, grade, JSON.stringify(comments || []), date || new Date(), previous_school_profile_pic,
-        secondary_parent_name || null, secondary_parent_email || null, secondary_parent_contact || null, religion || null
+        secondary_parent_name || null, secondary_parent_email || null, secondary_parent_contact || null, religion || null,
+        gender || null, date_of_birth || null, parent_email || null
       ]
     );
     await recordAuditLog(req.user.id, 'CREATE_INQUIRY', `Created inquiry for: ${name}`, orgId, req.ip || '');
@@ -45,17 +47,19 @@ export const createInquiry = async (req: AuthRequest, res: Response) => {
 
 export const updateInquiry = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { 
+  const {
     name, parent_name, parent, email, contact, phone, grade, status, comments, date, previous_school_profile_pic,
-    secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion
+    secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion,
+    gender, date_of_birth, parent_email
   } = req.body;
   try {
     const orgId = req.user.org_id;
     const result = await pool.query(
-      'UPDATE inquiries SET name = $1, parent_name = $2, email = $3, contact = $4, grade = $5, status = $6, comments = $7, date = $8, previous_school_profile_pic = $9, secondary_parent_name = $10, secondary_parent_email = $11, secondary_parent_contact = $12, religion = $13 WHERE id = $14 AND org_id = $15 RETURNING *',
+      'UPDATE inquiries SET name = $1, parent_name = $2, email = $3, contact = $4, grade = $5, status = $6, comments = $7, date = $8, previous_school_profile_pic = $9, secondary_parent_name = $10, secondary_parent_email = $11, secondary_parent_contact = $12, religion = $13, gender = $14, date_of_birth = $15, parent_email = $16 WHERE id = $17 AND org_id = $18 RETURNING *',
       [
         name, parent_name || parent, email, contact || phone, grade, status, JSON.stringify(comments || []), date, previous_school_profile_pic,
         secondary_parent_name || null, secondary_parent_email || null, secondary_parent_contact || null, religion || null,
+        gender || null, date_of_birth || null, parent_email || null,
         id, orgId
       ]
     );
@@ -123,7 +127,7 @@ export const getNextAdmissionNumber = async (client: any, orgId: string) => {
     if (suffix && numericStr.endsWith(suffix)) {
       numericStr = numericStr.substring(0, numericStr.length - suffix.length);
     }
-    
+
     const num = parseInt(numericStr);
     if (!isNaN(num) && num > maxNum) {
       maxNum = num;
@@ -194,17 +198,17 @@ const handleFeePayment = async (client: any, orgId: string, data: any) => {
 };
 
 export const createApplication = async (req: AuthRequest, res: Response) => {
-  const { 
-    name, grade, parent_name, parentName, contact, contact_phone, parent_phone, parentPhone, 
-    email, parent_email, parentEmail, 
-    gender, entrance_exam_score, 
+  const {
+    name, grade, parent_name, parentName, contact, contact_phone, parent_phone, parentPhone,
+    email, parent_email, parentEmail,
+    gender, entrance_exam_score,
     mathScore, englishScore, scienceScore, interviewScore, previousSchool,
     math_score, english_score, science_score, interview_score, previous_school,
     previous_school_profile_pic, date_of_birth, dateOfBirth, status, decision, custom_scores,
     fee_status, fee_amount, fee_structure_id,
     secondary_parent_name, secondaryParentName, secondary_parent_email, secondaryParentEmail, secondary_parent_contact, secondaryParentContact, religion
   } = req.body;
-  
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -212,7 +216,7 @@ export const createApplication = async (req: AuthRequest, res: Response) => {
     const result = await client.query(
       'INSERT INTO applications (org_id, name, grade, parent_name, contact, email, parent_email, gender, entrance_exam_score, math_score, english_score, science_score, interview_score, previous_school, previous_school_profile_pic, date_of_birth, status, decision, custom_scores, fee_status, fee_amount, fee_structure_id, secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26) RETURNING *',
       [
-        orgId, name, grade, parent_name || parentName, contact || contact_phone || parent_phone || parentPhone, email, parent_email || parentEmail, gender, entrance_exam_score, 
+        orgId, name, grade, parent_name || parentName, contact || contact_phone || parent_phone || parentPhone, email, parent_email || parentEmail, gender, entrance_exam_score,
         mathScore || math_score, englishScore || english_score, scienceScore || science_score, interviewScore || interview_score, previousSchool || previous_school,
         previous_school_profile_pic, date_of_birth || dateOfBirth, status || 'Pending Review', decision || 'Pending', JSON.stringify(custom_scores || {}),
         fee_status || 'Pending', fee_amount || 0, Array.isArray(fee_structure_id) ? fee_structure_id[0] : fee_structure_id,
@@ -222,7 +226,7 @@ export const createApplication = async (req: AuthRequest, res: Response) => {
 
     const app = result.rows[0];
     await handleFeePayment(client, orgId, app);
-    
+
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'CREATE_APPLICATION', `Created application for: ${name}`, orgId, req.ip || '');
     res.status(201).json(app);
@@ -236,8 +240,8 @@ export const createApplication = async (req: AuthRequest, res: Response) => {
 
 export const updateApplication = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { 
-    name, grade, parent_name, parentName, contact, contact_phone, parent_phone, parentPhone, 
+  const {
+    name, grade, parent_name, parentName, contact, contact_phone, parent_phone, parentPhone,
     email, parent_email, parentEmail,
     gender, entrance_exam_score, status, decision,
     mathScore, englishScore, scienceScore, interviewScore, previousSchool,
@@ -311,8 +315,8 @@ export const getAcceptances = async (req: AuthRequest, res: Response) => {
 };
 
 export const createAcceptance = async (req: AuthRequest, res: Response) => {
-  const { 
-    name, grade, class_id, parent_name, parentName, contact, contact_phone, parent_phone, parentPhone, 
+  const {
+    name, grade, class_id, parent_name, parentName, contact, contact_phone, parent_phone, parentPhone,
     email, parent_email, parentEmail, gender, decision, fee_status, fee_amount, fee_structure_id,
     entranceExamScore, entrance_exam_score,
     mathScore, englishScore, scienceScore, interviewScore, previousSchool,
@@ -321,7 +325,7 @@ export const createAcceptance = async (req: AuthRequest, res: Response) => {
     date_of_birth, dateOfBirth, custom_scores,
     secondary_parent_name, secondaryParentName, secondary_parent_email, secondaryParentEmail, secondary_parent_contact, secondaryParentContact, religion
   } = req.body;
-  
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -354,8 +358,8 @@ export const createAcceptance = async (req: AuthRequest, res: Response) => {
 
 export const updateAcceptance = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { 
-    name, grade, class_id, parent_name, parentName, contact, contact_phone, parent_phone, parentPhone, 
+  const {
+    name, grade, class_id, parent_name, parentName, contact, contact_phone, parent_phone, parentPhone,
     email, parent_email, parentEmail, gender, decision, fee_status, fee_amount, fee_structure_id,
     entranceExamScore, entrance_exam_score,
     mathScore, englishScore, scienceScore, interviewScore, previousSchool,

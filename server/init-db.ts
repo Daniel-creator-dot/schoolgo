@@ -415,7 +415,7 @@ export async function init() {
         org_id UUID REFERENCES organizations(id)
       )
     `);
-    
+
     await client.query(`
       DO $$
       BEGIN
@@ -797,6 +797,15 @@ export async function init() {
         END IF;
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inquiries' AND column_name='religion') THEN
           ALTER TABLE inquiries ADD COLUMN religion VARCHAR(100);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inquiries' AND column_name='gender') THEN
+          ALTER TABLE inquiries ADD COLUMN gender VARCHAR(20);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inquiries' AND column_name='date_of_birth') THEN
+          ALTER TABLE inquiries ADD COLUMN date_of_birth DATE;
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inquiries' AND column_name='parent_email') THEN
+          ALTER TABLE inquiries ADD COLUMN parent_email VARCHAR(255);
         END IF;
       END $$;
     `);
@@ -1574,7 +1583,7 @@ export async function init() {
         SELECT 'Admin User', 'admin@' || LOWER(REPLACE($1, ' ', '')) || '.com', $2, 'SCHOOL_ADMIN', $3
         WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@' || LOWER(REPLACE($1, ' ', '')) || '.com')
       `, [org.name, hashedPassword, org.id]);
-      
+
       await client.query(`
         INSERT INTO users (name, email, password, role, org_id)
         SELECT 'Staff User', 'staff@' || LOWER(REPLACE($1, ' ', '')) || '.com', $2, 'STAFF', $3

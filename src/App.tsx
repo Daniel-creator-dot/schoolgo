@@ -267,9 +267,12 @@ export default function App() {
   const [showLanding, setShowLanding] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [showPartnerLogin, setShowPartnerLogin] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<any>(null);
+  const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
   const [currentRole, setCurrentRole] = useState<UserRole>("SUPER_ADMIN");
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentView, setCurrentView] = useState("Dashboard");
+  const [preselectedInquiry, setPreselectedInquiry] = useState<any>(null);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [toast, setToast] = useState<{
     message: string;
@@ -1672,10 +1675,14 @@ export default function App() {
       'Admit Student': (
         <AdmitStudentView
           classes={classList}
-          inquiries={inquiries}
           feeStructures={feeStructures}
           students={studentList.filter(s => s.status !== 'Alumni')}
-          onNavigate={setCurrentView}
+          inquiries={inquiries}
+          preselectedInquiry={preselectedInquiry}
+          onNavigate={(view) => {
+            if (view !== 'Admit Student') setPreselectedInquiry(null);
+            setCurrentView(view);
+          }}
           onAdmit={async (data) => {
             try {
               const email = data.email || `${(data.name || '').toLowerCase().replace(/ /g, '.')}@school.com`;
@@ -1734,6 +1741,7 @@ export default function App() {
           data={inquiries}
           onConvert={(item) => {
             // Logic to transition from inquiry to admit view
+            setPreselectedInquiry(item);
             showToast(`Converting enquiry for ${item.name}...`, 'info');
             setCurrentView('Admit Student');
           }}
