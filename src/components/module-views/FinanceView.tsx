@@ -30,14 +30,14 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { downloadFeeTemplate, parseFeeExcel } from '../../lib/excel';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
   Cell,
   PieChart as RePieChart,
   Pie,
@@ -262,13 +262,13 @@ export const FinanceModules = {
         )}
         columns={[
           { header: 'Name', accessor: 'name', className: 'font-bold' },
-          { 
-            header: 'Amount', 
-            accessor: (item) => `${currency} ${parseFloat(item.amount).toLocaleString()}` 
+          {
+            header: 'Amount',
+            accessor: (item) => `${currency} ${parseFloat(item.amount).toLocaleString()}`
           },
           { header: 'Period', accessor: 'period' },
-          { 
-            header: 'Assigned Classes', 
+          {
+            header: 'Assigned Classes',
             accessor: (item) => (
               <div className="flex flex-wrap gap-1 max-w-[200px]">
                 {item.assigned_classes && Array.isArray(item.assigned_classes) && item.assigned_classes.length > 0 ? (
@@ -281,8 +281,8 @@ export const FinanceModules = {
               </div>
             )
           },
-          ...(role === 'STUDENT' ? [] : [{ 
-            header: 'Students', 
+          ...(role === 'STUDENT' ? [] : [{
+            header: 'Students',
             accessor: (item: any) => item.assignment_count,
             className: 'text-center'
           }])
@@ -372,9 +372,9 @@ export const FinanceModules = {
         <button
           onClick={() => {
             if (selectedFeeIds.length === 0) return;
-            onGenerate({ 
-              class_ids: selectedClassIds, 
-              fee_structure_ids: selectedFeeIds, 
+            onGenerate({
+              class_ids: selectedClassIds,
+              fee_structure_ids: selectedFeeIds,
               due_date: dueDate,
               term: term,
               academic_year: academicYear
@@ -383,7 +383,7 @@ export const FinanceModules = {
           className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:translate-y-0"
           disabled={selectedFeeIds.length === 0}
         >
-          {selectedClassIds.length > 0 
+          {selectedClassIds.length > 0
             ? `Generate Invoices for ${selectedClassIds.length} Selected Class(es)`
             : `Generate Invoices using Assigned Classes`}
         </button>
@@ -419,7 +419,7 @@ export const FinanceModules = {
         if (false && template) {
           const config = template.layout_config || {};
           let body = config.content || '';
-          
+
           const replacements: Record<string, string> = {
             '{{student_name}}': selectedStudent?.name || 'N/A',
             '{{admission_no}}': selectedStudent?.admission_no || 'N/A',
@@ -542,13 +542,13 @@ export const FinanceModules = {
                         <td>
                           <strong style="color: #1e293b;">${invoice.description || 'General School Fee'}</strong>
                         </td>
-                        <td style="text-align: right; font-weight: 600;">${currency} ${parseFloat(invoice.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: 600;">${currency} ${parseFloat(invoice.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       </tr>
                     </tbody>
                   </table>
                   <div class="amount-row">
                     <div class="label">${isPaid ? 'Amount Paid' : 'Total Due'}</div>
-                    <div class="value">${currency} ${parseFloat(invoice.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    <div class="value">${currency} ${parseFloat(invoice.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                   </div>
                   <div class="footer">
                     <div class="thank-you">${isPaid ? 'Thank you for your payment!' : 'Please pay by the due date. Thank you!'}</div>
@@ -642,7 +642,7 @@ export const FinanceModules = {
 
       return (
         <div className="space-y-6">
-          <button 
+          <button
             onClick={() => setSelectedStudent(null)}
             className="flex items-center gap-2 text-zinc-500 hover:text-indigo-600 transition-colors font-bold text-sm"
           >
@@ -686,7 +686,7 @@ export const FinanceModules = {
                           {inv.status}
                         </span>
                         {inv.status !== 'Paid' && onRecordPayment && (
-                          <button 
+                          <button
                             onClick={() => setPaymentModalData(inv)}
                             className="p-1 px-2 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold hover:bg-emerald-100 transition-colors flex items-center gap-1"
                           >
@@ -694,7 +694,7 @@ export const FinanceModules = {
                             {t('pay')}
                           </button>
                         )}
-                        <button 
+                        <button
                           onClick={() => handlePrintInvoice(inv)}
                           className="p-1 px-2 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1"
                         >
@@ -769,7 +769,27 @@ export const FinanceModules = {
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-2">
                   <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('paying_for')}</p>
                   <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">{paymentModalData?.description || t('school_fee')}</p>
-                  <p className="text-xs text-zinc-500 mt-0.5">{t('invoice_amount')}: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
+                  <div className="flex justify-between items-center mt-2 group">
+                    <p className="text-xs text-zinc-500">{t('invoice_amount')}: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
+                  </div>
+                  {(() => {
+                    const alreadyPaid = (payments || [])
+                      .filter((p: any) => p.invoice_id === paymentModalData?.id)
+                      .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+                    const balance = parseFloat(paymentModalData?.amount || 0) - alreadyPaid;
+                    return (
+                      <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
+                        <div className="flex justify-between items-center">
+                          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Already Paid</p>
+                          <p className="text-xs font-black text-emerald-600">{currency} {alreadyPaid.toLocaleString()}</p>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Balance Due</p>
+                          <p className="text-xs font-black text-rose-600">{currency} {balance.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('amount_paying')} ({currency})</label>
@@ -887,7 +907,7 @@ export const FinanceModules = {
               <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Smarter fee management via Excel</p>
             </div>
           </div>
-          
+
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-2xl">
               <button
@@ -924,7 +944,7 @@ export const FinanceModules = {
                 <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
                 Template
               </button>
-              
+
               <label className="relative cursor-pointer">
                 <input type="file" accept=".xlsx,.xls" onChange={handleFileImport} className="hidden" />
                 <div className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-zinc-200 dark:shadow-none">
@@ -946,8 +966,8 @@ export const FinanceModules = {
             { header: 'Total Invoiced', accessor: (item: any) => `${currency} ${parseFloat(item.total_invoiced || 0).toLocaleString()}` },
             { header: 'Total Paid', accessor: (item: any) => `${currency} ${parseFloat(item.total_paid || 0).toLocaleString()}` },
             { header: 'Scholarships', accessor: (item: any) => `${currency} ${parseFloat(item.total_scholarships || 0).toLocaleString()}` },
-            { 
-              header: 'Outstanding', 
+            {
+              header: 'Outstanding',
               accessor: (item: any) => (
                 <span className={cn(
                   "font-bold",
@@ -955,10 +975,10 @@ export const FinanceModules = {
                 )}>
                   {currency} {parseFloat(item.outstanding_amount || 0).toLocaleString()}
                 </span>
-              ) 
+              )
             },
           ]}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           renderForm={renderFeeAssignmentForm}
           extraActions={(item) => (
             <button
@@ -997,7 +1017,27 @@ export const FinanceModules = {
             <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-2">
               <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Paying For</p>
               <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">{paymentModalData?.description || 'School Fee'}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Invoice Amount: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-xs text-zinc-500">Invoice Amount: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
+              </div>
+              {(() => {
+                const alreadyPaid = (payments || [])
+                  .filter((p: any) => p.invoice_id === paymentModalData?.id)
+                  .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+                const balance = parseFloat(paymentModalData?.amount || 0) - alreadyPaid;
+                return (
+                  <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
+                    <div className="flex justify-between items-center">
+                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Already Paid</p>
+                      <p className="text-xs font-black text-emerald-600">{currency} {alreadyPaid.toLocaleString()}</p>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Balance Due</p>
+                      <p className="text-xs font-black text-rose-600">{currency} {balance.toLocaleString()}</p>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount Paying ({currency})</label>
@@ -1271,13 +1311,13 @@ export const FinanceModules = {
                         <td>
                           <strong style="color: #1e293b;">${receipt.description || 'School Fees Payment'}</strong>
                         </td>
-                        <td style="text-align: right; font-weight: 600; color: #334155;">${currency} ${parseFloat(receipt.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td style="text-align: right; font-weight: 600; color: #334155;">${currency} ${parseFloat(receipt.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       </tr>
                     </tbody>
                   </table>
                   <div class="amount-row">
                     <div class="label">Total Paid</div>
-                    <div class="value">${currency} ${parseFloat(receipt.amount).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    <div class="value">${currency} ${parseFloat(receipt.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                   </div>
                   <div class="footer">
                     <div class="thank-you">Thank you for your payment!</div>
@@ -1346,7 +1386,7 @@ export const FinanceModules = {
               </div>
             </div>
           )}
-          onEdit={(item) => {}}
+          onEdit={(item) => { }}
           columns={[
             { header: 'Student', accessor: 'student_name', className: 'font-bold' },
             { header: 'Class', accessor: 'class_name' },
@@ -1365,7 +1405,7 @@ export const FinanceModules = {
               )
             },
           ]}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           renderForm={renderCollectionForm}
           extraActions={(item) => (
             <button
@@ -1487,14 +1527,14 @@ export const FinanceModules = {
               </div>
             </div>
           )}
-          onEdit={() => {}}
+          onEdit={() => { }}
           columns={[
             { header: 'Item', accessor: 'item_name', className: 'font-bold' },
             { header: 'Category/Size', accessor: 'size' },
             { header: 'Stock', accessor: 'stock' },
             { header: 'Price', accessor: (item: any) => `${currency} ${item.price}` },
           ]}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           renderForm={renderUniformForm}
         />
       </>
@@ -1525,7 +1565,7 @@ export const FinanceModules = {
             const itemNameInput = form.querySelector('input[name="item_name"]') as HTMLInputElement;
             const totalPriceInput = form.querySelector('input[name="total_price"]') as HTMLInputElement;
             const quantityInput = form.querySelector('input[name="quantity"]') as HTMLInputElement;
-            
+
             if (itemNameInput) itemNameInput.value = selectedItem.item_name;
             if (totalPriceInput && quantityInput) {
               totalPriceInput.value = (parseFloat(selectedItem.price || 0) * parseInt(quantityInput.value || '1')).toString();
@@ -1547,7 +1587,7 @@ export const FinanceModules = {
               onValueChange={handleItemSelect}
             />
           </div>
-          
+
           {/* Hidden input to keep item_name for legacy/reporting if needed, though backend uses item_id now */}
           <input type="hidden" name="item_name" defaultValue={item?.item_name} />
 
@@ -1573,7 +1613,7 @@ export const FinanceModules = {
               className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
             />
           </div>
-          
+
           <input
             type="hidden"
             name="total_price"
@@ -1650,8 +1690,8 @@ export const FinanceModules = {
                   }}
                 />
                 <label htmlFor="sale_add_to_fees" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                  {isViewOnly 
-                    ? (item?.add_to_fees ? "Added to student fees (Pay Later)" : "Paid Immediately") 
+                  {isViewOnly
+                    ? (item?.add_to_fees ? "Added to student fees (Pay Later)" : "Paid Immediately")
                     : "Add to student fees (Pay Later)"}
                 </label>
               </div>
@@ -1715,7 +1755,7 @@ export const FinanceModules = {
               </div>
             </div>
           )}
-          onEdit={() => {}}
+          onEdit={() => { }}
           columns={[
             { header: 'Date', accessor: (item: any) => new Date(item.created_at).toLocaleDateString() },
             { header: 'Item', accessor: 'item_name', className: 'font-bold' },
@@ -1729,7 +1769,7 @@ export const FinanceModules = {
                 <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">Paid</span>
             },
           ]}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           renderForm={renderSaleForm}
         />
       </>
@@ -1934,299 +1974,299 @@ export const FinanceModules = {
       }
     };
 
-      const renderInvoiceForm = (item?: any, isViewOnly?: boolean) => {
-        const [selectedFee, setSelectedFee] = useState<any>(null);
-        const [selectedDebt, setSelectedDebt] = useState<any>(null);
-        const [selectedStudent, setSelectedStudent] = useState<any>(null);
+    const renderInvoiceForm = (item?: any, isViewOnly?: boolean) => {
+      const [selectedFee, setSelectedFee] = useState<any>(null);
+      const [selectedDebt, setSelectedDebt] = useState<any>(null);
+      const [selectedStudent, setSelectedStudent] = useState<any>(null);
 
-        useEffect(() => {
-          if (item?.student_id) {
-            const student = (students || []).find(s => s.id === item.student_id);
-            setSelectedStudent(student || null);
-          }
-        }, [item]);
-
-        const handleStudentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const student = (students || []).find(s => s.id === e.target.value);
+      useEffect(() => {
+        if (item?.student_id) {
+          const student = (students || []).find(s => s.id === item.student_id);
           setSelectedStudent(student || null);
-          setSelectedDebt(null);
-          setSelectedFee(null);
-        };
-
-        const handleItemChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-          const val = e.target.value;
-          if (val.startsWith('debt_')) {
-            const debtId = val.replace('debt_', '');
-            const debt = (data || []).find(d => String(d.id) === String(debtId));
-            setSelectedDebt(debt || null);
-            setSelectedFee(null);
-          } else {
-            const fee = (feeStructures || []).find(f => f.id === val);
-            setSelectedFee(fee || null);
-            setSelectedDebt(null);
-          }
-        };
-
-        const studentPendingDebts = selectedStudent 
-          ? (data || []).filter(inv => {
-              const studentIdMatch = String(inv.student_id) === String(selectedStudent.id);
-              const statusMatch = String(inv.status).toLowerCase().trim() === 'pending';
-              return studentIdMatch && statusMatch;
-            })
-          : [];
-
-        if (isViewOnly && item) {
-          const isPaid = item.status === 'Paid' || item.status === 'Completed';
-          return (
-            <div className="space-y-8 p-4">
-              {/* Document Header */}
-              <div className="flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 pb-6">
-                <div>
-                  <h1 className="text-2xl font-black text-indigo-600 tracking-tight uppercase">
-                    {isPaid ? 'Official Receipt' : 'Invoice'}
-                  </h1>
-                  <p className="text-xs text-zinc-500 font-bold mt-1 uppercase tracking-widest">
-                    ID: {item.id ? item.id.substring(0, 8).toUpperCase() : 'N/A'}
-                  </p>
-                </div>
-                <div className={cn(
-                  "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest",
-                  isPaid ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-blue-50 text-blue-600 border border-blue-100"
-                )}>
-                  {item.status}
-                </div>
-              </div>
-
-              {/* Document Body */}
-              <div className="grid grid-cols-2 gap-12">
-                <div className="space-y-6">
-                  <div>
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">{t('billed_to')}</label>
-                    <p className="text-lg font-bold text-zinc-900 dark:text-white leading-tight">{item.student_name}</p>
-                    <p className="text-sm text-zinc-500 font-medium">Class: {item.student_class || 'N/A'}</p>
-                    <p className="text-sm text-zinc-500 font-medium">Admission No: {item.student_admission_no || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">{t('description')}</label>
-                    <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item.invoice_description}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Issue Date</label>
-                      <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Due Date</label>
-                      <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                        {item.due_date ? new Date(item.due_date).toLocaleDateString() : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Payment Method</label>
-                    <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item.payment_method || 'N/A'}</p>
-                    {item.payment_reference && (
-                      <p className="text-xs text-zinc-500 mt-0.5 font-medium">Ref: {item.payment_reference}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Section */}
-              <div className="bg-zinc-50 dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                <span className="text-sm font-black text-zinc-500 uppercase tracking-wider">Total Amount</span>
-                <span className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{currency} {item.amount}</span>
-              </div>
-
-              {/* Footer / Actions */}
-              <div className="flex justify-between items-center pt-4">
-                <p className="text-[10px] text-zinc-400 italic">This is an official document of the school.</p>
-                <button
-                  type="button"
-                  onClick={() => handlePrintReceipt(item)}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
-                >
-                  Print Document
-                </button>
-              </div>
-            </div>
-          );
         }
+      }, [item]);
 
+      const handleStudentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const student = (students || []).find(s => s.id === e.target.value);
+        setSelectedStudent(student || null);
+        setSelectedDebt(null);
+        setSelectedFee(null);
+      };
+
+      const handleItemChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const val = e.target.value;
+        if (val.startsWith('debt_')) {
+          const debtId = val.replace('debt_', '');
+          const debt = (data || []).find(d => String(d.id) === String(debtId));
+          setSelectedDebt(debt || null);
+          setSelectedFee(null);
+        } else {
+          const fee = (feeStructures || []).find(f => f.id === val);
+          setSelectedFee(fee || null);
+          setSelectedDebt(null);
+        }
+      };
+
+      const studentPendingDebts = selectedStudent
+        ? (data || []).filter(inv => {
+          const studentIdMatch = String(inv.student_id) === String(selectedStudent.id);
+          const statusMatch = String(inv.status).toLowerCase().trim() === 'pending';
+          return studentIdMatch && statusMatch;
+        })
+        : [];
+
+      if (isViewOnly && item) {
+        const isPaid = item.status === 'Paid' || item.status === 'Completed';
         return (
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Student</label>
-              <select
-                name="student_id"
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                defaultValue={item?.student_id || ""}
-                onChange={handleStudentChange}
-              >
-                <option value="">Select Student...</option>
-                {(students || []).map(s => <option key={s.id} value={s.id}>{s.name} — {s.class || "No Class"}</option>)}
-              </select>
+          <div className="space-y-8 p-4">
+            {/* Document Header */}
+            <div className="flex justify-between items-start border-b border-zinc-100 dark:border-zinc-800 pb-6">
+              <div>
+                <h1 className="text-2xl font-black text-indigo-600 tracking-tight uppercase">
+                  {isPaid ? 'Official Receipt' : 'Invoice'}
+                </h1>
+                <p className="text-xs text-zinc-500 font-bold mt-1 uppercase tracking-widest">
+                  ID: {item.id ? item.id.substring(0, 8).toUpperCase() : 'N/A'}
+                </p>
+              </div>
+              <div className={cn(
+                "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest",
+                isPaid ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-blue-50 text-blue-600 border border-blue-100"
+              )}>
+                {item.status}
+              </div>
             </div>
 
-            {selectedStudent && (
-              <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl">
-                <div className="flex items-center gap-6">
+            {/* Document Body */}
+            <div className="grid grid-cols-2 gap-12">
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">{t('billed_to')}</label>
+                  <p className="text-lg font-bold text-zinc-900 dark:text-white leading-tight">{item.student_name}</p>
+                  <p className="text-sm text-zinc-500 font-medium">Class: {item.student_class || 'N/A'}</p>
+                  <p className="text-sm text-zinc-500 font-medium">Admission No: {item.student_admission_no || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">{t('description')}</label>
+                  <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item.invoice_description}</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Student Info</p>
-                    <p className="text-sm font-bold text-zinc-800 dark:text-white mt-0.5">{selectedStudent.name}</p>
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Issue Date</label>
+                    <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Class</p>
-                    <p className="text-sm font-bold text-zinc-800 dark:text-white mt-0.5">{selectedStudent.class || "N/A"}</p>
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Due Date</label>
+                    <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                      {item.due_date ? new Date(item.due_date).toLocaleDateString() : 'N/A'}
+                    </p>
                   </div>
-                  {studentPendingDebts.length > 0 && (
-                    <div className="ml-auto text-right">
-                      <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Pending Items</p>
-                      <p className="text-sm font-black text-rose-600 mt-0.5">{studentPendingDebts.length} Unpaid</p>
-                    </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Payment Method</label>
+                  <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{item.payment_method || 'N/A'}</p>
+                  {item.payment_reference && (
+                    <p className="text-xs text-zinc-500 mt-0.5 font-medium">Ref: {item.payment_reference}</p>
                   )}
                 </div>
               </div>
-            )}
+            </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Item Paying For</label>
-              <select
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                onChange={handleItemChange}
-                defaultValue=""
+            {/* Total Section */}
+            <div className="bg-zinc-50 dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+              <span className="text-sm font-black text-zinc-500 uppercase tracking-wider">Total Amount</span>
+              <span className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{currency} {item.amount}</span>
+            </div>
+
+            {/* Footer / Actions */}
+            <div className="flex justify-between items-center pt-4">
+              <p className="text-[10px] text-zinc-400 italic">This is an official document of the school.</p>
+              <button
+                type="button"
+                onClick={() => handlePrintReceipt(item)}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
               >
-                <option value="">Choose item / specific debt...</option>
+                Print Document
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Student</label>
+            <select
+              name="student_id"
+              className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              defaultValue={item?.student_id || ""}
+              onChange={handleStudentChange}
+            >
+              <option value="">Select Student...</option>
+              {(students || []).map(s => <option key={s.id} value={s.id}>{s.name} — {s.class || "No Class"}</option>)}
+            </select>
+          </div>
+
+          {selectedStudent && (
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl">
+              <div className="flex items-center gap-6">
+                <div>
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Student Info</p>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-white mt-0.5">{selectedStudent.name}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Class</p>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-white mt-0.5">{selectedStudent.class || "N/A"}</p>
+                </div>
                 {studentPendingDebts.length > 0 && (
-                  <optgroup label="Pending Invoices / Inventory Debts">
-                    {studentPendingDebts.map(d => (
-                      <option key={d.id} value={`debt_${d.id}`}>
-                        {d.invoice_description || 'Unnamed Debt'} — {currency} {d.amount}
-                      </option>
-                    ))}
-                  </optgroup>
+                  <div className="ml-auto text-right">
+                    <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Pending Items</p>
+                    <p className="text-sm font-black text-rose-600 mt-0.5">{studentPendingDebts.length} Unpaid</p>
+                  </div>
                 )}
-                <optgroup label="Standard Fees Structures">
-                  {(feeStructures || []).map(f => (
-                    <option key={f.id} value={f.id}>
-                      {f.name} — {currency} {f.amount}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Item Paying For</label>
+            <select
+              className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              onChange={handleItemChange}
+              defaultValue=""
+            >
+              <option value="">Choose item / specific debt...</option>
+              {studentPendingDebts.length > 0 && (
+                <optgroup label="Pending Invoices / Inventory Debts">
+                  {studentPendingDebts.map(d => (
+                    <option key={d.id} value={`debt_${d.id}`}>
+                      {d.invoice_description || 'Unnamed Debt'} — {currency} {d.amount}
                     </option>
                   ))}
                 </optgroup>
+              )}
+              <optgroup label="Standard Fees Structures">
+                {(feeStructures || []).map(f => (
+                  <option key={f.id} value={f.id}>
+                    {f.name} — {currency} {f.amount}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Academic Year</label>
+              <input
+                type="text"
+                name="academic_year"
+                placeholder="e.g. 2023/2024"
+                defaultValue={item?.academic_year || organization?.academic_year || ""}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Term</label>
+              <select
+                name="term"
+                defaultValue={item?.term || organization?.current_term || ""}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Select Term (Optional)</option>
+                <option value="Term 1">Term 1</option>
+                <option value="Term 2">Term 2</option>
+                <option value="Term 3">Term 3</option>
               </select>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Description</label>
+            <input
+              type="text"
+              name="description"
+              placeholder="e.g. Tuition Fee - Term 1"
+              defaultValue={item?.invoice_description || selectedDebt?.invoice_description || selectedFee?.name || ""}
+              key={`${selectedDebt?.id}-${selectedFee?.id}`}
+              className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount ({currency})</label>
+              <input
+                type="number"
+                name="amount"
+                defaultValue={selectedDebt?.amount || selectedFee?.amount || item?.amount}
+                key={`amount-${selectedDebt?.id}-${selectedFee?.id}`}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Due Date</label>
+              <input
+                type="date"
+                name="due_date"
+                defaultValue={selectedDebt?.due_date ? new Date(selectedDebt.due_date).toISOString().split('T')[0] : (item?.due_date ? new Date(item.due_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-4">Payment Recording</label>
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Academic Year</label>
-                <input
-                  type="text"
-                  name="academic_year"
-                  placeholder="e.g. 2023/2024"
-                  defaultValue={item?.academic_year || organization?.academic_year || ""}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Payment Method</label>
+                <select
+                  name="payment_method"
+                  className="w-full px-4 py-2 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                  defaultValue="Cash"
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Mobile Money">Mobile Money</option>
+                  <option value="Cheque">Cheque</option>
+                </select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Term</label>
-                <select
-                  name="term"
-                  defaultValue={item?.term || organization?.current_term || ""}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Select Term (Optional)</option>
-                  <option value="Term 1">Term 1</option>
-                  <option value="Term 2">Term 2</option>
-                  <option value="Term 3">Term 3</option>
-                </select>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Reference / ID</label>
+                <input
+                  type="text"
+                  name="payment_reference"
+                  placeholder="Optional"
+                  className="w-full px-4 py-2 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Description</label>
-              <input
-                type="text"
-                name="description"
-                placeholder="e.g. Tuition Fee - Term 1"
-                defaultValue={item?.invoice_description || selectedDebt?.invoice_description || selectedFee?.name || ""}
-                key={`${selectedDebt?.id}-${selectedFee?.id}`}
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Status</label>
+              <select
+                name="status"
                 className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+                defaultValue={item?.status || "Paid"}
+              >
+                <option value="Pending">Pending / Invoiced Only</option>
+                <option value="Paid">Mark as Paid Immediately</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount ({currency})</label>
-                <input
-                  type="number"
-                  name="amount"
-                  defaultValue={selectedDebt?.amount || selectedFee?.amount || item?.amount}
-                  key={`amount-${selectedDebt?.id}-${selectedFee?.id}`}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Due Date</label>
-                <input
-                  type="date"
-                  name="due_date"
-                  defaultValue={selectedDebt?.due_date ? new Date(selectedDebt.due_date).toISOString().split('T')[0] : (item?.due_date ? new Date(item.due_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
-              <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-4">Payment Recording</label>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Payment Method</label>
-                  <select
-                    name="payment_method"
-                    className="w-full px-4 py-2 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                    defaultValue="Cash"
-                  >
-                    <option value="Cash">Cash</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Mobile Money">Mobile Money</option>
-                    <option value="Cheque">Cheque</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Reference / ID</label>
-                  <input
-                    type="text"
-                    name="payment_reference"
-                    placeholder="Optional"
-                    className="w-full px-4 py-2 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/50 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Status</label>
-                <select
-                  name="status"
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  defaultValue={item?.status || "Paid"}
-                >
-                  <option value="Pending">Pending / Invoiced Only</option>
-                  <option value="Paid">Mark as Paid Immediately</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-            </div>
-            
-            {/* Hidden field to link to existing debt if selected */}
-            <input type="hidden" name="id" value={selectedDebt?.id || item?.id || ""} />
           </div>
-        );
-      };
+
+          {/* Hidden field to link to existing debt if selected */}
+          <input type="hidden" name="id" value={selectedDebt?.id || item?.id || ""} />
+        </div>
+      );
+    };
 
     return (
       <div className="space-y-4">
@@ -2290,7 +2330,7 @@ export const FinanceModules = {
               </div>
             </div>
           )}
-          onEdit={role === 'STUDENT' ? undefined : (item) => {}}
+          onEdit={role === 'STUDENT' ? undefined : (item) => { }}
           columns={[
             { header: 'Client/Student', accessor: 'student_name', className: 'font-bold' },
             { header: 'Item / Description', accessor: 'invoice_description' },
@@ -2307,7 +2347,7 @@ export const FinanceModules = {
               )
             },
           ]}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           renderForm={renderInvoiceForm}
           extraActions={(item) => (
             (item.status === 'Paid' || item.status === 'Completed') && (
@@ -2440,12 +2480,12 @@ export const FinanceModules = {
               </div>
             </div>
           )}
-          onEdit={() => {}}
+          onEdit={() => { }}
           columns={[
             { header: 'Type Name', accessor: 'name', className: 'font-bold' },
             { header: 'Default Amount', accessor: (item: any) => `${currency} ${item.amount}`, className: 'text-indigo-600 font-bold' },
           ]}
-          onAdd={onSaveType ? () => {} : undefined}
+          onAdd={onSaveType ? () => { } : undefined}
           renderForm={renderScholarshipTypeForm}
         />
 
@@ -2491,7 +2531,7 @@ export const FinanceModules = {
               </div>
             </div>
           )}
-          onEdit={(item) => {}}
+          onEdit={(item) => { }}
           columns={[
             { header: 'Student', accessor: 'student_name', className: 'font-bold' },
             { header: 'Scholarship Type', accessor: (item: any) => item.type_name || item.type },
@@ -2501,15 +2541,15 @@ export const FinanceModules = {
               accessor: (item: any) => (
                 <span className={cn(
                   "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                  item.status === 'Active' ? "bg-emerald-50 text-emerald-600" : 
-                  item.status === 'Pending' ? "bg-amber-50 text-amber-600" : "bg-zinc-100 text-zinc-600"
+                  item.status === 'Active' ? "bg-emerald-50 text-emerald-600" :
+                    item.status === 'Pending' ? "bg-amber-50 text-amber-600" : "bg-zinc-100 text-zinc-600"
                 )}>
                   {item.status || 'Active'}
                 </span>
               )
             },
           ]}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           renderForm={renderScholarshipForm}
         />
       </div>
@@ -2522,10 +2562,10 @@ export const FinanceModules = {
     const totalBudget = (budgets || []).reduce((sum, b) => sum + parseFloat(b.amount || 0), 0);
     const [isManagingBudget, setIsManagingBudget] = useState(false);
 
-    const getCategorySpent = (cat: string) => 
+    const getCategorySpent = (cat: string) =>
       (data || []).filter(e => e.category === cat).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
 
-    const getCategoryBudget = (cat: string) => 
+    const getCategoryBudget = (cat: string) =>
       (budgets || []).find(b => b.category === cat)?.amount || 0;
 
     const handlePrintVoucher = (item: any) => {
@@ -2664,7 +2704,7 @@ export const FinanceModules = {
             </div>
             <h3 className="text-2xl font-black">{currency} {totalSpent.toLocaleString()}</h3>
             <div className="mt-2 h-1 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-white transition-all duration-1000" style={{ width: `${Math.min(100, (totalSpent/totalBudget)*100)}%` }} />
+              <div className="h-full bg-white transition-all duration-1000" style={{ width: `${Math.min(100, (totalSpent / totalBudget) * 100)}%` }} />
             </div>
           </div>
 
@@ -2680,7 +2720,7 @@ export const FinanceModules = {
           </div>
 
           <div className="p-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl flex flex-col justify-center">
-            <button 
+            <button
               onClick={() => setIsManagingBudget(true)}
               className="group w-full h-full p-6 bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-900 dark:hover:bg-white text-zinc-900 dark:text-white hover:text-white dark:hover:text-zinc-900 rounded-[1.4rem] transition-all duration-300 flex flex-col items-center justify-center gap-2"
             >
@@ -2699,13 +2739,13 @@ export const FinanceModules = {
               data={data || []}
               onSave={onSave}
               onDelete={onDelete}
-              onEdit={(item) => {}}
+              onEdit={(item) => { }}
               columns={[
                 { header: 'Date', accessor: (item: any) => new Date(item.date).toLocaleDateString() },
                 { header: 'Category', accessor: 'category', className: 'font-bold' },
                 { header: 'Description', accessor: 'description' },
-                { 
-                  header: 'Amount', 
+                {
+                  header: 'Amount',
                   accessor: (item: any) => (
                     <div className="flex flex-col items-end">
                       <span className="font-bold text-rose-600">{currency} {parseFloat(item.amount).toLocaleString()}</span>
@@ -2713,10 +2753,10 @@ export const FinanceModules = {
                         <span className="text-[8px] font-black uppercase tracking-widest text-indigo-500 bg-indigo-50 px-1 rounded-sm mt-0.5">System Generated</span>
                       )}
                     </div>
-                  ) 
+                  )
                 },
               ]}
-              onAdd={onSave ? () => {} : undefined}
+              onAdd={onSave ? () => { } : undefined}
               renderForm={(item, isViewOnly) => {
                 if (isViewOnly && item) {
                   return (
@@ -2861,16 +2901,16 @@ export const FinanceModules = {
                         </div>
                       </div>
                       <div className="h-3 bg-white/10 rounded-full overflow-hidden p-0.5">
-                        <div 
+                        <div
                           className={cn(
                             "h-full rounded-full transition-all duration-1000 flex justify-end items-center px-1",
-                            isOver ? "bg-gradient-to-r from-rose-600 to-rose-400" : 
-                            isCritical ? "bg-gradient-to-r from-amber-600 to-amber-400" : 
-                            "bg-gradient-to-r from-indigo-600 to-indigo-400"
+                            isOver ? "bg-gradient-to-r from-rose-600 to-rose-400" :
+                              isCritical ? "bg-gradient-to-r from-amber-600 to-amber-400" :
+                                "bg-gradient-to-r from-indigo-600 to-indigo-400"
                           )}
                           style={{ width: `${percent}%` }}
                         >
-                           {percent > 20 && <div className="w-1 h-1 bg-white rounded-full opacity-50 shadow-sm" />}
+                          {percent > 20 && <div className="w-1 h-1 bg-white rounded-full opacity-50 shadow-sm" />}
                         </div>
                       </div>
                     </div>
@@ -2882,15 +2922,15 @@ export const FinanceModules = {
         </div>
 
         {isManagingBudget && (
-          <Modal 
+          <Modal
             isOpen={isManagingBudget}
-            title={t('manage_budgets')} 
+            title={t('manage_budgets')}
             onClose={() => setIsManagingBudget(false)}
           >
             <div className="space-y-4 p-1">
               {categories.map(cat => (
-                <form 
-                  key={cat} 
+                <form
+                  key={cat}
                   onSubmit={(e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
@@ -2901,13 +2941,13 @@ export const FinanceModules = {
                   <label className="flex-1 text-sm font-bold text-zinc-700 dark:text-zinc-300">{cat}</label>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-zinc-400">{currency}</span>
-                    <input 
-                      type="number" 
-                      name="amount" 
+                    <input
+                      type="number"
+                      name="amount"
                       defaultValue={getCategoryBudget(cat)}
                       className="w-32 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
                     />
-                    <button 
+                    <button
                       type="submit"
                       className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                     >
@@ -2997,7 +3037,7 @@ export const FinanceModules = {
 
     const downloadCSV = (title: string, data: any[]) => {
       const headers = Object.keys(data[0] || {}).join(',');
-      const rows = data.map(row => 
+      const rows = data.map(row =>
         Object.values(row).map(val => `"${val}"`).join(',')
       ).join('\n');
       const csvContent = `${headers}\n${rows}`;
@@ -3096,7 +3136,7 @@ export const FinanceModules = {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                     cursor={{ fill: 'transparent' }}
                   />
@@ -3129,7 +3169,7 @@ export const FinanceModules = {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend layout="vertical" align="right" verticalAlign="middle" iconType="circle" />
@@ -3161,7 +3201,7 @@ export const FinanceModules = {
                       <Cell key={`cell-${index}`} fill={PAYMENT_COLORS[index % PAYMENT_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend verticalAlign="bottom" iconType="circle" />
@@ -3186,7 +3226,7 @@ export const FinanceModules = {
               {t('downloadable_reports')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-              <button 
+              <button
                 onClick={() => handleDownload('income')}
                 className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-left hover:bg-white transition-all group"
               >
@@ -3200,7 +3240,7 @@ export const FinanceModules = {
                   </div>
                 </div>
               </button>
-              <button 
+              <button
                 onClick={() => handleDownload('balance')}
                 className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-left hover:bg-white transition-all group"
               >
@@ -3214,7 +3254,7 @@ export const FinanceModules = {
                   </div>
                 </div>
               </button>
-              <button 
+              <button
                 onClick={() => handleDownload('variance')}
                 className="p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-left hover:bg-white transition-all group"
               >
