@@ -807,6 +807,12 @@ export async function init() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inquiries' AND column_name='parent_email') THEN
           ALTER TABLE inquiries ADD COLUMN parent_email VARCHAR(255);
         END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inquiries' AND column_name='previous_school') THEN
+          ALTER TABLE inquiries ADD COLUMN previous_school VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='inquiries' AND column_name='entrance_exam_score') THEN
+          ALTER TABLE inquiries ADD COLUMN entrance_exam_score VARCHAR(50);
+        END IF;
       END $$;
     `);
 

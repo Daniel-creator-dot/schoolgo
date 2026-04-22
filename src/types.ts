@@ -69,7 +69,11 @@ export interface Inquiry {
   gender?: string;
   date_of_birth?: string;
   religion?: string;
-}export interface Application {
+  previous_school?: string;
+  entrance_exam_score?: string;
+}
+
+export interface Application {
   id: string;
   name: string;
   grade: string;

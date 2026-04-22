@@ -26,16 +26,18 @@ export const createInquiry = async (req: AuthRequest, res: Response) => {
   const {
     name, parent_name, parent, email, contact, phone, grade, comments, date, previous_school_profile_pic,
     secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion,
-    gender, date_of_birth, parent_email
+    gender, date_of_birth, parent_email,
+    previous_school, entrance_exam_score
   } = req.body;
   try {
     const orgId = req.user.org_id;
     const result = await pool.query(
-      'INSERT INTO inquiries (org_id, name, parent_name, email, contact, grade, comments, date, previous_school_profile_pic, secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion, gender, date_of_birth, parent_email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *',
+      'INSERT INTO inquiries (org_id, name, parent_name, email, contact, grade, comments, date, previous_school_profile_pic, secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion, gender, date_of_birth, parent_email, previous_school, entrance_exam_score) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *',
       [
         orgId, name, parent_name || parent, email, contact || phone, grade, JSON.stringify(comments || []), date || new Date(), previous_school_profile_pic,
         secondary_parent_name || null, secondary_parent_email || null, secondary_parent_contact || null, religion || null,
-        gender || null, date_of_birth || null, parent_email || null
+        gender || null, date_of_birth || null, parent_email || null,
+        previous_school || null, entrance_exam_score || null
       ]
     );
     await recordAuditLog(req.user.id, 'CREATE_INQUIRY', `Created inquiry for: ${name}`, orgId, req.ip || '');
@@ -50,16 +52,18 @@ export const updateInquiry = async (req: AuthRequest, res: Response) => {
   const {
     name, parent_name, parent, email, contact, phone, grade, status, comments, date, previous_school_profile_pic,
     secondary_parent_name, secondary_parent_email, secondary_parent_contact, religion,
-    gender, date_of_birth, parent_email
+    gender, date_of_birth, parent_email,
+    previous_school, entrance_exam_score
   } = req.body;
   try {
     const orgId = req.user.org_id;
     const result = await pool.query(
-      'UPDATE inquiries SET name = $1, parent_name = $2, email = $3, contact = $4, grade = $5, status = $6, comments = $7, date = $8, previous_school_profile_pic = $9, secondary_parent_name = $10, secondary_parent_email = $11, secondary_parent_contact = $12, religion = $13, gender = $14, date_of_birth = $15, parent_email = $16 WHERE id = $17 AND org_id = $18 RETURNING *',
+      'UPDATE inquiries SET name = $1, parent_name = $2, email = $3, contact = $4, grade = $5, status = $6, comments = $7, date = $8, previous_school_profile_pic = $9, secondary_parent_name = $10, secondary_parent_email = $11, secondary_parent_contact = $12, religion = $13, gender = $14, date_of_birth = $15, parent_email = $16, previous_school = $17, entrance_exam_score = $18 WHERE id = $19 AND org_id = $20 RETURNING *',
       [
         name, parent_name || parent, email, contact || phone, grade, status, JSON.stringify(comments || []), date, previous_school_profile_pic,
         secondary_parent_name || null, secondary_parent_email || null, secondary_parent_contact || null, religion || null,
         gender || null, date_of_birth || null, parent_email || null,
+        previous_school || null, entrance_exam_score || null,
         id, orgId
       ]
     );

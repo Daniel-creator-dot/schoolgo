@@ -890,6 +890,16 @@ export const AdmissionsModules = {
                       <input type="text" name="grade" defaultValue={item?.grade} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                     </div>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Previous School</label>
+                      <input type="text" name="previous_school" defaultValue={item?.previous_school} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Entrance Exam Score</label>
+                      <input type="text" name="entrance_exam_score" defaultValue={item?.entrance_exam_score} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                  </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Inquiry Date</label>
                     <input
@@ -3049,11 +3059,11 @@ export const AdmitStudentView = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Previous School</label>
-                    <input type="text" name="previous_school" placeholder="e.g. Sunrise Academy" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" name="previous_school" defaultValue={editingInquiry?.previous_school || ''} placeholder="e.g. Sunrise Academy" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Entrance Exam Score</label>
-                    <input type="text" name="entrance_exam_score" placeholder="e.g. 85%" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" name="entrance_exam_score" defaultValue={editingInquiry?.entrance_exam_score || ''} placeholder="e.g. 85%" className="w-full px-5 py-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </div>
               </div>
