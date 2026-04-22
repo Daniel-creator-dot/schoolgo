@@ -23,8 +23,8 @@ export const generateResponse = async (req: AuthRequest, res: Response) => {
 
   if (!apiKey) {
     const orgId = req.user?.org_id;
-    return res.status(503).json({ 
-      error: 'AI service not configured', 
+    return res.status(503).json({
+      error: 'AI service not configured',
       message: `No Groq API key found in settings or environment. (Org ID: ${orgId || 'None'})`,
       instruction: 'Please go to School Admin > Settings and save your Groq API Key.'
     });
@@ -65,7 +65,12 @@ export const generateResponse = async (req: AuthRequest, res: Response) => {
     }
 
     const data = await response.json();
-    const content = data.choices[0]?.message?.content;
+    const content = data.choices?.[0]?.message?.content;
+
+    if (!content) {
+      console.warn('Groq AI returned unexpected format:', JSON.stringify(data).substring(0, 200));
+      return res.json({ text: "Sorry, I couldn't generate a response based on the current data." });
+    }
 
     res.json({ text: content });
   } catch (err: any) {

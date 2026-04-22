@@ -4,6 +4,8 @@ import { Bot, X, Send, Minus, Maximize2, MessageSquare, Sparkles, User } from 'l
 import { GoogleGenAI } from "@google/genai";
 import { cn } from '../lib/utils';
 import { safeAiFetch } from '../lib/aiUtils';
+import { API_BASE_URL } from '../constants';
+
 
 interface Message {
   role: 'user' | 'ai';
@@ -47,7 +49,7 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
 
     try {
       const token = localStorage.getItem('token');
-      const result = await safeAiFetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+      const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,13 +109,13 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <button 
+                <button
                   onClick={() => setIsMinimized(true)}
                   className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <button 
+                <button
                   onClick={() => setIsOpen(false)}
                   className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
                 >
@@ -123,13 +125,13 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
             </div>
 
             {/* Messages */}
-            <div 
+            <div
               ref={scrollRef}
               className="flex-1 p-4 overflow-y-auto space-y-4 bg-zinc-50 dark:bg-zinc-950/50"
             >
               {messages.map((msg, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={cn(
                     "flex gap-3 max-w-[85%]",
                     msg.role === 'user' ? "ml-auto flex-row-reverse" : ""
@@ -143,8 +145,8 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
                   </div>
                   <div className={cn(
                     "p-3 text-sm shadow-sm",
-                    msg.role === 'ai' 
-                      ? "bg-white dark:bg-zinc-800 rounded-2xl rounded-tl-none border border-zinc-100 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200" 
+                    msg.role === 'ai'
+                      ? "bg-white dark:bg-zinc-800 rounded-2xl rounded-tl-none border border-zinc-100 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200"
                       : "bg-indigo-600 text-white rounded-2xl rounded-tr-none"
                   )}>
                     {msg.content}
@@ -168,7 +170,7 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
             {/* Input */}
             <div className="p-4 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800">
               <div className="relative">
-                <input 
+                <input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -176,7 +178,7 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
                   placeholder="Ask me anything..."
                   className="w-full pl-4 pr-12 py-3 bg-zinc-100 dark:bg-zinc-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
                 />
-                <button 
+                <button
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-600 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors"

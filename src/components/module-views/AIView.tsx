@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  Brain, 
-  Search, 
-  Bot, 
-  Users, 
-  Settings, 
+import {
+  Brain,
+  Search,
+  Bot,
+  Users,
+  Settings,
   Zap,
   Sparkles,
   TrendingUp,
@@ -16,20 +16,22 @@ import {
 import { cn } from '../../lib/utils';
 import { DataTable } from '../DataTable';
 import { safeAiFetch, extractJsonFromAiResponse } from '../../lib/aiUtils';
+import { API_BASE_URL } from '../../constants';
+
 
 export const AIModules = {
-  PerformancePrediction: ({ 
-    organization, 
-    results, 
+  PerformancePrediction: ({
+    organization,
+    results,
     students,
-    onSave, 
-    onDelete 
-  }: { 
+    onSave,
+    onDelete
+  }: {
     organization?: any,
     results?: any[],
     students?: any[],
-    onSave?: (data: any) => void, 
-    onDelete?: (item: any) => void 
+    onSave?: (data: any) => void,
+    onDelete?: (item: any) => void
   }) => {
     const [isAnalyzing, setIsAnalyzing] = React.useState(false);
     const [aiInsights, setAiInsights] = React.useState<any[]>([]);
@@ -40,8 +42,8 @@ export const AIModules = {
         const dataSummary = {
           studentCount: students?.length || 0,
           resultsCount: results?.length || 0,
-          averageScore: results && results.length > 0 
-            ? results.reduce((acc, curr) => acc + (Number(curr.score) || 0), 0) / results.length 
+          averageScore: results && results.length > 0
+            ? results.reduce((acc, curr) => acc + (Number(curr.score) || 0), 0) / results.length
             : 0,
         };
 
@@ -51,7 +53,7 @@ export const AIModules = {
         Example: [{"title": "Academic Growth", "value": "+12%", "trend": "up", "status": "success", "icon_name": "TrendingUp"}]`;
 
         const token = localStorage.getItem('token');
-        const result = await safeAiFetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+        const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -66,7 +68,7 @@ export const AIModules = {
 
         const aiText = result.data?.text || "[]";
         const insights = extractJsonFromAiResponse(aiText);
-        
+
         if (!insights || !Array.isArray(insights)) {
           throw new Error('AI analysis produced invalid data format. Please try again.');
         }
@@ -88,7 +90,7 @@ export const AIModules = {
     ];
 
     const getIcon = (name: string) => {
-      switch(name) {
+      switch (name) {
         case 'TrendingUp': return TrendingUp;
         case 'AlertCircle': return AlertCircle;
         case 'Users': return Users;
@@ -103,7 +105,7 @@ export const AIModules = {
             <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Performance Insights</h2>
             <p className="text-sm text-zinc-500">AI-driven academic predictions and student performance tracking</p>
           </div>
-          <button 
+          <button
             onClick={handleAnalysis}
             disabled={isAnalyzing}
             className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center gap-2"
@@ -126,16 +128,16 @@ export const AIModules = {
                   <div className={cn(
                     "w-12 h-12 rounded-2xl flex items-center justify-center",
                     stat.status === 'success' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
-                    stat.status === 'warning' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
-                    "bg-blue-50 dark:bg-blue-900/20 text-blue-600"
+                      stat.status === 'warning' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
+                        "bg-blue-50 dark:bg-blue-900/20 text-blue-600"
                   )}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className={cn(
                     "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full",
                     stat.trend === 'up' ? "bg-emerald-50 text-emerald-600" :
-                    stat.trend === 'down' ? "bg-amber-50 text-amber-600" :
-                    "bg-zinc-100 text-zinc-600"
+                      stat.trend === 'down' ? "bg-amber-50 text-amber-600" :
+                        "bg-zinc-100 text-zinc-600"
                   )}>
                     {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : stat.trend === 'down' ? <ArrowDownRight className="w-3 h-3" /> : null}
                     {stat.trend.toUpperCase()}
@@ -156,7 +158,7 @@ export const AIModules = {
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
             </div>
           </div>
-          <DataTable 
+          <DataTable
             title="Student Academic Rankings"
             data={students || []}
             columns={[
@@ -164,14 +166,16 @@ export const AIModules = {
               { header: 'ID Number', accessor: (item: any) => item.admission_no || item.id },
               { header: 'Class/Grade', accessor: (item: any) => item.class },
               { header: 'Current GPA', accessor: (item: any) => <span className="text-indigo-600 font-bold">{item.gpa || 'N/A'}</span> },
-              { header: 'Attendance', accessor: (item: any) => (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 w-16 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500" style={{ width: item.attendance }} />
+              {
+                header: 'Attendance', accessor: (item: any) => (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 w-16 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: item.attendance }} />
+                    </div>
+                    <span className="text-[10px] font-bold text-zinc-500">{item.attendance}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-zinc-500">{item.attendance}</span>
-                </div>
-              )},
+                )
+              },
             ]}
           />
         </div>
@@ -207,8 +211,8 @@ export const AIModules = {
                   <span className="font-bold text-sm">{a.title}</span>
                   <span className={cn(
                     "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
-                    a.severity === 'High' ? "bg-red-50 text-red-600" : 
-                    a.severity === 'Medium' ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
+                    a.severity === 'High' ? "bg-red-50 text-red-600" :
+                      a.severity === 'Medium' ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
                   )}>{a.severity}</span>
                 </div>
                 <p className="text-xs text-zinc-500">{a.desc}</p>
@@ -252,15 +256,15 @@ export const AIModules = {
 
       try {
         const token = localStorage.getItem('token');
-        const result = await safeAiFetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
+        const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ 
-            prompt, 
-            systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional." 
+          body: JSON.stringify({
+            prompt,
+            systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
           })
         });
 
@@ -277,10 +281,10 @@ export const AIModules = {
         setMessages(prev => [...prev, aiMessage]);
       } catch (error: any) {
         console.error("AI Error:", error);
-        setMessages(prev => [...prev, { 
-          role: 'ai', 
-          content: `Sorry, I encountered an error (Error: ${error?.message || 'Unknown'}). Please try again later.`, 
-          timestamp: new Date() 
+        setMessages(prev => [...prev, {
+          role: 'ai',
+          content: `Sorry, I encountered an error (Error: ${error?.message || 'Unknown'}). Please try again later.`,
+          timestamp: new Date()
         }]);
       } finally {
         setIsLoading(false);
@@ -338,15 +342,15 @@ export const AIModules = {
         </div>
         <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
           <div className="relative">
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask anything..." 
+              placeholder="Ask anything..."
               className="w-full pl-4 pr-12 py-3 bg-zinc-100 dark:bg-zinc-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-600 transition-all dark:text-white outline-none"
             />
-            <button 
+            <button
               onClick={handleSend}
               disabled={isLoading || !input.trim()}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-600 text-white rounded-xl disabled:opacity-50"
