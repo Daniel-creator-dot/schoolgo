@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus,
   Wallet,
@@ -1733,7 +1733,41 @@ export const FinanceModules = {
     const { t, currency } = useLanguage();
     const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
     const [paymentModalData, setPaymentModalData] = useState<any>(null);
+    const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("");
+
     const filteredData = role === 'PARENT' ? (data || []).filter(d => d.wardId === selectedWardId) : (data || []);
+
+    const groupedByStudent = useMemo(() => {
+      const map = new Map();
+      filteredData.forEach((inv: any) => {
+        const studentId = inv.student_id;
+        if (!studentId) return;
+        if (!map.has(studentId)) {
+          map.set(studentId, {
+            student_id: studentId,
+            student_name: inv.student_name,
+            invoices: [],
+            totalBilled: 0,
+            id: studentId
+          });
+        }
+        const student = map.get(studentId);
+        student.invoices.push(inv);
+        student.totalBilled += parseFloat(inv.amount || 0);
+      });
+
+      return Array.from(map.values()).map((student: any) => {
+        const totalPaid = (payments || [])
+          .filter((p: any) => {
+            const hasInv = p.invoice_id || p.invoiceId;
+            return hasInv && student.invoices.some((i: any) => String(i.id) === String(hasInv));
+          })
+          .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+        student.totalPaid = totalPaid;
+        student.balanceOwing = student.totalBilled - student.totalPaid;
+        return student;
+      });
+    }, [filteredData, payments]);
 
     const handlePrintReceipt = (item: any) => {
       const printWindow = window.open('', '_blank');
@@ -1929,7 +1963,7 @@ export const FinanceModules = {
       }
     };
 
-    const renderInvoiceForm = (item?: any, isViewOnly?: boolean) => {
+    const InvoiceFormContent = ({ item, isViewOnly }: any) => {
       const [selectedFee, setSelectedFee] = useState<any>(null);
       const [selectedDebt, setSelectedDebt] = useState<any>(null);
       const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -2217,11 +2251,12 @@ export const FinanceModules = {
             </div>
           </div>
 
-          {/* Hidden field to link to existing debt if selected */}
           <input type="hidden" name="id" value={selectedDebt?.id || item?.id || ""} />
         </div>
       );
     };
+
+    const renderInvoiceForm = (item?: any, isViewOnly?: boolean) => <InvoiceFormContent item={item} isViewOnly={isViewOnly} />;
 
     return (
       <div className="space-y-4">
@@ -2239,84 +2274,82 @@ export const FinanceModules = {
         )}
         <DataTable
           title={t('invoices_and_payments')}
-          data={filteredData}
+          data={groupedByStudent}
           onSave={onSave}
-          onDelete={onDelete}
+          onDelete={undefined}
           renderDetails={(item) => (
             <div className="space-y-6">
               <div className="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/20">
                 <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100 dark:shadow-none">
-                  <FileText className="w-6 h-6" />
+                  <UserCheck className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.invoice_description || 'General Invoice'}</h3>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.student_name}</h3>
                   <div className="flex items-center gap-2">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-widest",
-                      item.status === 'Paid' || item.status === 'Completed' ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
-                    )}>
-                      {item.status}
+                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-blue-100 text-blue-600">
+                      Client Profile
                     </span>
-                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{item.student_name}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                <div>
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Invoice Amount</p>
-                  <p className="text-2xl font-black text-zinc-900 dark:text-white font-serif">{currency}{parseFloat(item.amount).toLocaleString()}</p>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">Total Billed</p>
+                  <p className="text-xl font-black text-zinc-900 dark:text-white">{currency}{item.totalBilled.toLocaleString()}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Billing Date</p>
-                  <p className="text-sm font-black text-zinc-900 dark:text-white">{new Date(item.created_at || item.date).toLocaleDateString()}</p>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">Total Paid</p>
+                  <p className="text-xl font-black text-emerald-600">{currency}{item.totalPaid.toLocaleString()}</p>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase mb-1">Balance</p>
+                  <p className="text-xl font-black text-rose-600">{currency}{item.balanceOwing.toLocaleString()}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-zinc-500 uppercase">Item ID</p>
-                  <p className="text-sm text-zinc-900 dark:text-white font-black font-mono">#{String(item.id || '').substring(0, 8).toUpperCase()}</p>
-                </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-xs font-bold text-zinc-500 uppercase">Transaction ID</p>
-                  <p className="text-sm text-zinc-900 dark:text-white font-medium">{item.transaction_id || 'N/A'}</p>
+              <div className="mt-4">
+                <h4 className="text-sm font-bold mb-3 uppercase text-zinc-500">Invoices Breakdown</h4>
+                <div className="space-y-2">
+                  {item.invoices.map((inv: any) => {
+                    const paid = (payments || []).filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id)).reduce((s: number, p: any) => s + parseFloat(p.amount || 0), 0);
+                    const bal = parseFloat(inv.amount || 0) - paid;
+                    return (
+                      <div key={inv.id} className="p-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-sm text-zinc-900 dark:text-white">{inv.invoice_description || 'General Fees'}</p>
+                          <p className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">Billed: {currency}{parseFloat(inv.amount || 0).toLocaleString()} • Due: {currency}{bal.toLocaleString()}</p>
+                        </div>
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                          bal <= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                        )}>
+                          {bal <= 0 ? 'Paid' : 'Pending'}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           )}
           onEdit={role === 'STUDENT' ? undefined : (item) => { }}
           columns={[
-            { header: 'Client/Student', accessor: 'student_name', className: 'font-bold' },
-            { header: 'Item / Description', accessor: 'invoice_description' },
-            { header: `Total Billed`, accessor: (item: any) => `${currency} ${parseFloat(item.amount || 0).toLocaleString()}` },
-            {
-              header: `Amount Paid`,
-              accessor: (item: any) => {
-                const invoiceLinkedPaid = (payments || [])
-                  .filter((p: any) => (p.invoice_id && String(p.invoice_id) === String(item?.id)) || (p.invoiceId && String(p.invoiceId) === String(item?.id)))
-                  .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
-                return `${currency} ${invoiceLinkedPaid.toLocaleString()}`;
-              }
-            },
+            { header: 'Student Name', accessor: 'student_name', className: 'font-bold' },
+            { header: `Total Billed`, accessor: (item: any) => `${currency} ${item.totalBilled.toLocaleString()}` },
+            { header: `Total Paid`, accessor: (item: any) => `${currency} ${item.totalPaid.toLocaleString()}` },
             {
               header: `Balance Owing`,
-              accessor: (item: any) => {
-                const invoiceLinkedPaid = (payments || [])
-                  .filter((p: any) => (p.invoice_id && String(p.invoice_id) === String(item?.id)) || (p.invoiceId && String(p.invoiceId) === String(item?.id)))
-                  .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
-                const bal = parseFloat(item.amount || 0) - invoiceLinkedPaid;
-                return <span className={bal > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}>{currency} {bal.toLocaleString()}</span>;
-              }
+              accessor: (item: any) => <span className={item.balanceOwing > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}>{currency} {item.balanceOwing.toLocaleString()}</span>
             },
             {
               header: 'Status',
               accessor: (item: any) => (
                 <span className={cn(
                   "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                  item.status === 'Paid' || item.status === 'Completed' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                  item.balanceOwing <= 0 ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
                 )}>
-                  {item.status}
+                  {item.balanceOwing <= 0 ? 'Full Paid' : 'Pending'}
                 </span>
               )
             },
@@ -2325,82 +2358,106 @@ export const FinanceModules = {
           renderForm={renderInvoiceForm}
           extraActions={(item) => (
             <div className="flex gap-2">
-              {item.status !== 'Paid' && item.status !== 'Completed' && onRecordPayment && (
+              {item.balanceOwing > 0 && onRecordPayment && (
                 <button
-                  onClick={() => setPaymentModalData(item)}
+                  onClick={() => {
+                    setPaymentModalData(item);
+                    setSelectedInvoiceId("");
+                  }}
                   className="flex items-center gap-1.5 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 rounded-lg transition-colors"
-                  title="Record Payment"
+                  title="Make Payment"
                 >
                   <DollarSign className="w-4 h-4" />
                   <span className="hidden sm:inline">Pay</span>
                 </button>
               )}
-              <button
-                onClick={() => handlePrintReceipt(item)}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg transition-colors"
-                title={(item.status === 'Paid' || item.status === 'Completed') ? "Print Receipt" : "Print Invoice"}
-              >
-                <FileText className="w-4 h-4" />
-                <span className="hidden sm:inline">{(item.status === 'Paid' || item.status === 'Completed') ? "Receipt" : "Invoice"}</span>
-              </button>
             </div>
           )}
         />
 
         <Modal
           isOpen={!!paymentModalData}
-          onClose={() => setPaymentModalData(null)}
+          onClose={() => {
+            setPaymentModalData(null);
+            setSelectedInvoiceId("");
+          }}
           title={t('record_payment')}
         >
           <form className="space-y-4 p-6" onSubmit={(e) => {
             e.preventDefault();
+            if (!selectedInvoiceId) return;
             const formData = new FormData(e.currentTarget);
             if (onRecordPayment) {
+              const inv = paymentModalData?.invoices?.find((i: any) => String(i.id) === String(selectedInvoiceId));
               onRecordPayment({
                 student_id: paymentModalData?.student_id,
-                invoice_id: paymentModalData?.id,
+                invoice_id: selectedInvoiceId,
                 amount: formData.get('amount'),
                 method: formData.get('method'),
                 date: formData.get('date'),
                 transaction_id: formData.get('transaction_id'),
-                description: paymentModalData?.invoice_description || 'Fees Payment',
+                description: inv?.invoice_description || 'Fees Payment',
                 term: formData.get('term'),
                 academic_year: formData.get('academic_year')
               });
               setPaymentModalData(null);
+              setSelectedInvoiceId("");
             }
           }}>
             <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-2">
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Paying For</p>
-              <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">{paymentModalData?.invoice_description || 'Invoice Payment'}</p>
-              <p className="text-xs font-bold text-zinc-500 mt-1 uppercase">Client: {paymentModalData?.student_name}</p>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Client: {paymentModalData?.student_name}</p>
 
-              <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
+              <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700 space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Select Invoice to Pay</label>
+                  <select
+                    name="invoice_id"
+                    className="w-full px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={selectedInvoiceId}
+                    onChange={(e) => setSelectedInvoiceId(e.target.value)}
+                    required
+                  >
+                    <option value="">-- Choose Pending Invoice --</option>
+                    {paymentModalData?.invoices.map((inv: any) => {
+                      const paid = (payments || []).filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id)).reduce((s: number, p: any) => s + parseFloat(p.amount || 0), 0);
+                      const bal = parseFloat(inv.amount || 0) - paid;
+                      if (bal > 0) {
+                        return <option key={inv.id} value={inv.id}>{inv.invoice_description} - Bal: {currency}{bal}</option>;
+                      }
+                      return null;
+                    })}
+                  </select>
+                </div>
+
                 {(() => {
+                  if (!selectedInvoiceId) return null;
+                  const inv = paymentModalData?.invoices.find((i: any) => String(i.id) === String(selectedInvoiceId));
+                  if (!inv) return null;
+
                   const invoiceLinkedPaid = (payments || [])
                     .filter((p: any) =>
-                      (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) ||
-                      (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id))
+                      (p.invoice_id && String(p.invoice_id) === String(inv.id)) ||
+                      (p.invoiceId && String(p.invoiceId) === String(inv.id))
                     )
                     .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
 
-                  const balance = parseFloat(paymentModalData?.amount || 0) - invoiceLinkedPaid;
+                  const balance = parseFloat(inv.amount || 0) - invoiceLinkedPaid;
 
                   return (
-                    <>
+                    <div className="space-y-1 bg-white dark:bg-zinc-900 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800">
                       <div className="flex justify-between items-center text-zinc-600">
                         <p className="text-[10px] font-bold uppercase tracking-wider">Total Billed</p>
-                        <p className="text-xs font-black font-serif">{currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
+                        <p className="text-xs font-black font-serif">{currency} {parseFloat(inv.amount || 0).toLocaleString()}</p>
                       </div>
                       <div className="flex justify-between items-center text-emerald-600">
                         <p className="text-[10px] font-bold uppercase tracking-wider">Already Paid</p>
                         <p className="text-xs font-black font-serif">{currency} {invoiceLinkedPaid.toLocaleString()}</p>
                       </div>
-                      <div className="flex justify-between items-center text-rose-600 mt-2">
+                      <div className="flex justify-between items-center text-rose-600 mt-2 border-t border-zinc-100 dark:border-zinc-800 pt-2">
                         <p className="text-[10px] font-bold uppercase tracking-wider">Balance Due</p>
                         <p className="text-xs font-black font-serif">{currency} {balance.toLocaleString()}</p>
                       </div>
-                    </>
+                    </div>
                   );
                 })()}
               </div>
@@ -2408,12 +2465,15 @@ export const FinanceModules = {
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount Paying ({currency})</label>
               <input type="number" name="amount" defaultValue={(() => {
+                if (!selectedInvoiceId) return 0;
+                const inv = paymentModalData?.invoices.find((i: any) => String(i.id) === String(selectedInvoiceId));
+                if (!inv) return 0;
                 const invoiceLinkedPaid = (payments || [])
-                  .filter((p: any) => (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) || (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id)))
+                  .filter((p: any) => (p.invoice_id && String(p.invoice_id) === String(inv.id)) || (p.invoiceId && String(p.invoiceId) === String(inv.id)))
                   .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
-                const bal = parseFloat(paymentModalData?.amount || 0) - invoiceLinkedPaid;
+                const bal = parseFloat(inv.amount || 0) - invoiceLinkedPaid;
                 return bal > 0 ? bal : 0;
-              })()} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" required />
+              })()} key={selectedInvoiceId} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" required />
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Payment Method</label>
