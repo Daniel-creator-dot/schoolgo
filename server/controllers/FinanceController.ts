@@ -126,7 +126,7 @@ export const getInvoices = async (req: AuthRequest, res: Response) => {
       WHERE 1=1
     `;
     let params: any[] = [];
-    
+
     if (role !== 'SUPER_ADMIN') {
       params.push(orgId);
       query += ` AND i.org_id = $${params.length}`;
@@ -145,15 +145,15 @@ export const getInvoices = async (req: AuthRequest, res: Response) => {
 };
 
 export const createInvoice = async (req: AuthRequest, res: Response) => {
-    const { student_id, amount, due_date, status, description, term, academic_year } = req.body;
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      const orgId = req.user.org_id;
-      const result = await client.query(
-        'INSERT INTO invoices (org_id, student_id, amount, due_date, status, description, term, academic_year) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-        [orgId, student_id, amount, due_date, status || 'Pending', description || null, term || null, academic_year || null]
-      );
+  const { student_id, amount, due_date, status, description, term, academic_year } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const orgId = req.user.org_id;
+    const result = await client.query(
+      'INSERT INTO invoices (org_id, student_id, amount, due_date, status, description, term, academic_year) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [orgId, student_id, amount, due_date, status || 'Pending', description || null, term || null, academic_year || null]
+    );
     const invoice = result.rows[0];
 
     // If marked as Paid immediately, record a payment entry
@@ -204,7 +204,7 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
       // Check if fully paid
       const sumResult = await client.query('SELECT SUM(amount) as paid_total FROM payments WHERE invoice_id = $1', [invoice_id]);
       const paidTotal = parseFloat(sumResult.rows[0].paid_total || 0);
-      
+
       const invResult = await client.query('SELECT amount FROM invoices WHERE id = $1', [invoice_id]);
       const invAmount = parseFloat(invResult.rows[0].amount || 0);
 
@@ -421,7 +421,7 @@ export const getScholarships = async (req: AuthRequest, res: Response) => {
       LEFT JOIN scholarship_types ty ON s.type_id = ty.id
       WHERE ${role === 'SUPER_ADMIN' ? '1=1' : 's.org_id = $1'}
     `;
-    
+
     if (role === 'SUPER_ADMIN') {
       result = await pool.query(query);
     } else {
@@ -483,38 +483,55 @@ export const deleteFeeStructure = async (req: AuthRequest, res: Response) => {
 
 export const updateInvoice = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-    const { amount, due_date, status, description, term, academic_year } = req.body;
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      const orgId = req.user.org_id;
-  
-      // Check old status
-      const oldResult = await client.query('SELECT status, student_id, amount FROM invoices WHERE id = $1 AND org_id = $2', [id, orgId]);
-      if (oldResult.rows.length === 0) throw new Error('Invoice not found');
-      const oldInvoice = oldResult.rows[0];
-  
-      const result = await client.query(
-        'UPDATE invoices SET amount = $1, due_date = $2, status = $3, description = $4, term = $5, academic_year = $6 WHERE id = $7 AND org_id = $8 RETURNING *',
-        [amount, due_date, status, description, term || null, academic_year || null, id, orgId]
-      );
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const orgId = req.user.org_id;
+
+    // Check old status
+    const oldResult = await client.query('SELECT status, student_id, amount FROM invoices WHERE id = $1 AND org_id = $2', [id, orgId]);
+    if (oldResult.rows.length === 0) throw new Error('Invoice not found');
+    const oldInvoice = oldResult.rows[0];
+
+    // Dynamically build SET clause from only provided fields
+    const updatableFields: Record<string, any> = {};
+    if (req.body.amount !== undefined) updatableFields.amount = req.body.amount;
+    if (req.body.due_date !== undefined) updatableFields.due_date = req.body.due_date;
+    if (req.body.status !== undefined) updatableFields.status = req.body.status;
+    if (req.body.description !== undefined) updatableFields.description = req.body.description;
+    if (req.body.term !== undefined) updatableFields.term = req.body.term || null;
+    if (req.body.academic_year !== undefined) updatableFields.academic_year = req.body.academic_year || null;
+
+    const keys = Object.keys(updatableFields);
+    if (keys.length === 0) throw new Error('No fields to update');
+
+    const setClauses = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
+    const values = keys.map(k => updatableFields[k]);
+    values.push(id, orgId);
+
+    const result = await client.query(
+      `UPDATE invoices SET ${setClauses} WHERE id = $${keys.length + 1} AND org_id = $${keys.length + 2} RETURNING *`,
+      values
+    );
     const updatedInvoice = result.rows[0];
+    const finalAmount = updatedInvoice.amount;
+    const newStatus = req.body.status;
 
     // If status changed to Paid, record a payment entry
-    if (oldInvoice.status !== 'Paid' && status === 'Paid') {
+    if (oldInvoice.status !== 'Paid' && newStatus === 'Paid') {
       // Check if there's already payments that sum up to this amount
       const paymentsSum = await client.query('SELECT COALESCE(SUM(amount), 0) as paid FROM payments WHERE invoice_id = $1', [id]);
       const alreadyPaid = parseFloat(paymentsSum.rows[0].paid);
-      
-      if (alreadyPaid < amount) {
+
+      if (alreadyPaid < finalAmount) {
         const paymentMethod = req.body.payment_method || 'Cash';
         const paymentRef = req.body.payment_reference || '';
-        await recordAutomaticPayment(client, orgId, id, oldInvoice.student_id, amount - alreadyPaid, paymentMethod, paymentRef);
+        await recordAutomaticPayment(client, orgId, id, oldInvoice.student_id, finalAmount - alreadyPaid, paymentMethod, paymentRef);
       }
     }
 
     await client.query('COMMIT');
-    await recordAuditLog(req.user.id, 'UPDATE_INVOICE', `Updated invoice ID: ${id} (${status})`, orgId, req.ip || '');
+    await recordAuditLog(req.user.id, 'UPDATE_INVOICE', `Updated invoice ID: ${id} (${newStatus || 'update'})`, orgId, req.ip || '');
     res.json(updatedInvoice);
   } catch (err: any) {
     await client.query('ROLLBACK');
@@ -598,53 +615,53 @@ export const deleteScholarship = async (req: AuthRequest, res: Response) => {
 };
 
 export const assignFee = async (req: AuthRequest, res: Response) => {
-    const { student_id, fee_structure_id, due_date, target_type, class_id, status, payment_method, transaction_id, term, academic_year } = req.body;
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      const orgId = req.user.org_id;
-  
-      // 1. Get fee details
-      const final_fee_id = Array.isArray(fee_structure_id) ? fee_structure_id[0] : fee_structure_id;
-      const feeResult = await client.query('SELECT name, amount, class_id, class_ids FROM fee_structures WHERE id = $1', [final_fee_id]);
-      if (feeResult.rows.length === 0) throw new Error('Fee structure not found');
-      const { name, amount, class_id: feeClassId, class_ids: feeClassIds } = feeResult.rows[0];
-  
-      if (target_type === 'students' && student_id) {
+  const { student_id, fee_structure_id, due_date, target_type, class_id, status, payment_method, transaction_id, term, academic_year } = req.body;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const orgId = req.user.org_id;
+
+    // 1. Get fee details
+    const final_fee_id = Array.isArray(fee_structure_id) ? fee_structure_id[0] : fee_structure_id;
+    const feeResult = await client.query('SELECT name, amount, class_id, class_ids FROM fee_structures WHERE id = $1', [final_fee_id]);
+    if (feeResult.rows.length === 0) throw new Error('Fee structure not found');
+    const { name, amount, class_id: feeClassId, class_ids: feeClassIds } = feeResult.rows[0];
+
+    if (target_type === 'students' && student_id) {
+      const invResult = await client.query(
+        'INSERT INTO invoices (org_id, student_id, amount, due_date, description, status, term, academic_year) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+        [orgId, student_id, amount, due_date, name, status || 'Pending', term || null, academic_year || null]
+      );
+
+      if (status === 'Paid') {
+        await recordAutomaticPayment(client, orgId, invResult.rows[0].id, student_id, amount, payment_method || 'Cash', transaction_id);
+      }
+    } else if (target_type === 'class') {
+      let classIds = req.body.class_ids || (class_id ? [class_id] : []);
+
+      // If no class IDs provided, use the ones pre-assigned to the fee structure
+      if ((!classIds || classIds.length === 0) && (feeClassId || feeClassIds)) {
+        classIds = feeClassIds || [feeClassId];
+      }
+
+      if (!classIds || classIds.length === 0) {
+        throw new Error(`No classes selected or pre-assigned for fee: ${name}`);
+      }
+
+      if (typeof classIds === 'string') classIds = classIds.split(',');
+
+      const studentsResult = await client.query('SELECT id FROM students WHERE class_id = ANY($1) AND org_id = $2', [classIds, orgId]);
+      for (const student of studentsResult.rows) {
         const invResult = await client.query(
           'INSERT INTO invoices (org_id, student_id, amount, due_date, description, status, term, academic_year) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
-          [orgId, student_id, amount, due_date, name, status || 'Pending', term || null, academic_year || null]
+          [orgId, student.id, amount, due_date, name, status || 'Pending', term || null, academic_year || null]
         );
-        
+
         if (status === 'Paid') {
-          await recordAutomaticPayment(client, orgId, invResult.rows[0].id, student_id, amount, payment_method || 'Cash', transaction_id);
-        }
-      } else if (target_type === 'class') {
-        let classIds = req.body.class_ids || (class_id ? [class_id] : []);
-        
-        // If no class IDs provided, use the ones pre-assigned to the fee structure
-        if ((!classIds || classIds.length === 0) && (feeClassId || feeClassIds)) {
-          classIds = feeClassIds || [feeClassId];
-        }
-  
-        if (!classIds || classIds.length === 0) {
-          throw new Error(`No classes selected or pre-assigned for fee: ${name}`);
-        }
-  
-        if (typeof classIds === 'string') classIds = classIds.split(',');
-        
-        const studentsResult = await client.query('SELECT id FROM students WHERE class_id = ANY($1) AND org_id = $2', [classIds, orgId]);
-        for (const student of studentsResult.rows) {
-          const invResult = await client.query(
-            'INSERT INTO invoices (org_id, student_id, amount, due_date, description, status, term, academic_year) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
-            [orgId, student.id, amount, due_date, name, status || 'Pending', term || null, academic_year || null]
-          );
-  
-          if (status === 'Paid') {
-            await recordAutomaticPayment(client, orgId, invResult.rows[0].id, student.id, amount, payment_method || 'Cash', transaction_id);
-          }
+          await recordAutomaticPayment(client, orgId, invResult.rows[0].id, student.id, amount, payment_method || 'Cash', transaction_id);
         }
       }
+    }
 
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'ASSIGN_FEE', `Assigned fee to ${target_type}: ${name}`, req.user.org_id);
@@ -684,7 +701,7 @@ export const getStudentFeesSummary = async (req: AuthRequest, res: Response) => 
       query += ` AND s.org_id = $${params.length}`;
     }
     query += ` GROUP BY s.id, s.name, c.name`;
-    
+
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err: any) {
