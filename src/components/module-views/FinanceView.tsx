@@ -773,22 +773,35 @@ export const FinanceModules = {
                     <p className="text-xs text-zinc-500">{t('invoice_amount')}: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
                   </div>
                   {(() => {
-                    const alreadyPaid = (payments || [])
+                    const invoiceLinkedPaid = (payments || [])
                       .filter((p: any) =>
                         (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) ||
                         (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id))
                       )
                       .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+
+                    const unlinkedPaid = (payments || [])
+                      .filter((p: any) =>
+                        !p.invoice_id && !p.invoiceId &&
+                        String(p.student_id) === String(paymentModalData?.student_id)
+                      )
+                      .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+
+                    const alreadyPaid = invoiceLinkedPaid + unlinkedPaid;
                     const balance = parseFloat(paymentModalData?.amount || 0) - alreadyPaid;
+
                     return (
                       <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
-                        <div className="flex justify-between items-center">
-                          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Already Paid</p>
-                          <p className="text-xs font-black text-emerald-600 font-serif">{currency} {alreadyPaid.toLocaleString()}</p>
+                        <div className="flex justify-between items-center text-emerald-600">
+                          <p className="text-[10px] font-bold uppercase tracking-wider">Already Paid</p>
+                          <p className="text-xs font-black font-serif">{currency} {alreadyPaid.toLocaleString()}</p>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Balance Due</p>
-                          <p className="text-xs font-black text-rose-600 font-serif">{currency} {balance.toLocaleString()}</p>
+                        {unlinkedPaid > 0 && (
+                          <p className="text-[9px] text-zinc-400 italic">Includes {currency} {unlinkedPaid.toLocaleString()} unallocated student payments</p>
+                        )}
+                        <div className="flex justify-between items-center text-rose-600">
+                          <p className="text-[10px] font-bold uppercase tracking-wider">Balance Due</p>
+                          <p className="text-xs font-black font-serif">{currency} {balance.toLocaleString()}</p>
                         </div>
                       </div>
                     );
@@ -1024,22 +1037,35 @@ export const FinanceModules = {
                 <p className="text-xs text-zinc-500">Invoice Amount: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
               </div>
               {(() => {
-                const alreadyPaid = (payments || [])
+                const invoiceLinkedPaid = (payments || [])
                   .filter((p: any) =>
                     (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) ||
                     (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id))
                   )
                   .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+
+                const unlinkedPaid = (payments || [])
+                  .filter((p: any) =>
+                    !p.invoice_id && !p.invoiceId &&
+                    String(p.student_id) === String(paymentModalData?.student_id)
+                  )
+                  .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+
+                const alreadyPaid = invoiceLinkedPaid + unlinkedPaid;
                 const balance = parseFloat(paymentModalData?.amount || 0) - alreadyPaid;
+
                 return (
                   <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
-                    <div className="flex justify-between items-center">
-                      <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Already Paid</p>
-                      <p className="text-xs font-black text-emerald-600 font-serif">{currency} {alreadyPaid.toLocaleString()}</p>
+                    <div className="flex justify-between items-center text-emerald-600">
+                      <p className="text-[10px] font-bold uppercase tracking-wider">Already Paid</p>
+                      <p className="text-xs font-black font-serif">{currency} {alreadyPaid.toLocaleString()}</p>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Balance Due</p>
-                      <p className="text-xs font-black text-rose-600 font-serif">{currency} {balance.toLocaleString()}</p>
+                    {unlinkedPaid > 0 && (
+                      <p className="text-[9px] text-zinc-400 italic">Includes {currency} {unlinkedPaid.toLocaleString()} unallocated student payments</p>
+                    )}
+                    <div className="flex justify-between items-center text-rose-600">
+                      <p className="text-[10px] font-bold uppercase tracking-wider">Balance Due</p>
+                      <p className="text-xs font-black font-serif">{currency} {balance.toLocaleString()}</p>
                     </div>
                   </div>
                 );
@@ -1167,7 +1193,7 @@ export const FinanceModules = {
       </div>
     );
   },
-  DailyCollections: ({ students, data, onSave, onDelete, organization, documentTemplates, onRefreshTemplates }: { students: Student[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, organization?: any, documentTemplates?: any[], onRefreshTemplates?: () => Promise<void> }) => {
+  DailyCollections: ({ students, data, invoices, onSave, onDelete, organization, documentTemplates, onRefreshTemplates }: { students: Student[], data?: any[], invoices?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, organization?: any, documentTemplates?: any[], onRefreshTemplates?: () => Promise<void> }) => {
     const { t, currency } = useLanguage();
     const [isDesignerOpen, setIsDesignerOpen] = useState(false);
     const renderCollectionForm = (item?: any) => {
@@ -1186,7 +1212,24 @@ export const FinanceModules = {
               options={studentOptions}
               defaultValue={item?.student_id}
               placeholder="Select Student..."
+              onValueChange={(val) => {
+                // Trigger refresh or state update if needed for invoice selection
+              }}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Allocated To (Invoice)</label>
+            <select
+              name="invoice_id"
+              defaultValue={item?.invoice_id}
+              className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">Unallocated Collection</option>
+              {item?.student_id && (invoices || []).filter((inv: any) => inv.student_id === item.student_id).map((inv: any) => (
+                <option key={inv.id} value={inv.id}>{inv.description} ({currency} {inv.amount})</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

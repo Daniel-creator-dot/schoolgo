@@ -2410,6 +2410,7 @@ export default function App() {
         <FinanceModules.DailyCollections
           students={studentList}
           data={receipts}
+          invoices={invoices}
           organization={organizations.find((o) => o.id === currentUser?.org_id)}
           documentTemplates={documentTemplates}
           onSave={(data) => handleEntitySave("receipt", data)}
@@ -2937,6 +2938,7 @@ export default function App() {
           onRefresh={loadData}
         />
       ),
+
 
       "Assets & Equipment": (
         <OperationsModules.Inventory
