@@ -1197,11 +1197,14 @@ export const FinanceModules = {
     const { t, currency } = useLanguage();
     const [isDesignerOpen, setIsDesignerOpen] = useState(false);
     const renderCollectionForm = (item?: any) => {
-      const studentOptions = students.map(s => ({
-        value: s.id,
-        label: s.name,
-        sublabel: s.class
-      }));
+      const studentOptions = [
+        { value: '', label: 'Unallocated / Standalone Collection', sublabel: 'General' },
+        ...students.map(s => ({
+          value: s.id,
+          label: s.name,
+          sublabel: s.class
+        }))
+      ];
 
       return (
         <div className="space-y-4">
@@ -1230,6 +1233,17 @@ export const FinanceModules = {
                 <option key={inv.id} value={inv.id}>{inv.description} ({currency} {inv.amount})</option>
               ))}
             </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Description / Source</label>
+            <input
+              type="text"
+              name="description"
+              defaultValue={item?.description}
+              placeholder="e.g. Sunday Offering, Donation"
+              className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -1430,15 +1444,15 @@ export const FinanceModules = {
                 </div>
                 <div className="space-y-1 text-right">
                   <p className="text-xs font-bold text-zinc-500 uppercase">Reference</p>
-                  <p className="text-sm text-zinc-900 dark:text-white font-medium">{item.id.slice(0, 8).toUpperCase()}</p>
+                  <p className="text-sm text-zinc-900 dark:text-white font-medium">{String(item.id || '').substring(0, 8).toUpperCase()}</p>
                 </div>
               </div>
             </div>
           )}
           onEdit={(item) => { }}
           columns={[
-            { header: 'Student', accessor: 'student_name', className: 'font-bold' },
-            { header: 'Class', accessor: 'class_name' },
+            { header: 'Source/Student', accessor: (item: any) => item.student_name || 'Walk-in / General', className: 'font-bold' },
+            { header: 'Description', accessor: (item: any) => item.description || 'Collection' },
             { header: `Amount (${currency})`, accessor: 'amount' },
             { header: 'Date', accessor: (item: any) => new Date(item.date).toLocaleDateString() },
             { header: 'Method', accessor: 'method' },
@@ -1449,7 +1463,7 @@ export const FinanceModules = {
                   "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
                   item.status === 'Completed' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
                 )}>
-                  {item.status}
+                  {item.status || 'Received'}
                 </span>
               )
             },
@@ -1952,7 +1966,7 @@ export const FinanceModules = {
                   </div>
                   <div class="receipt-title">
                     <h1>Receipt</h1>
-                    <p style="margin:4px 0 0 0; font-size:12px; color:#6b7280; font-weight:700;">#${item.id.substring(0, 8).toUpperCase()}</p>
+                    <p style="margin:4px 0 0 0; font-size:12px; color:#6b7280; font-weight:700;">#${String(item.id || '').substring(0, 8).toUpperCase()}</p>
                   </div>
                 </div>
                 
@@ -2075,7 +2089,7 @@ export const FinanceModules = {
                   {isPaid ? 'Official Receipt' : 'Invoice'}
                 </h1>
                 <p className="text-xs text-zinc-500 font-bold mt-1 uppercase tracking-widest">
-                  ID: {item.id ? item.id.substring(0, 8).toUpperCase() : 'N/A'}
+                  ID: {item.id ? String(item.id).substring(0, 8).toUpperCase() : 'N/A'}
                 </p>
               </div>
               <div className={cn(
@@ -2370,7 +2384,7 @@ export const FinanceModules = {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-zinc-500 uppercase">Item ID</p>
-                  <p className="text-sm text-zinc-900 dark:text-white font-black font-mono">#{item.id.slice(0, 8).toUpperCase()}</p>
+                  <p className="text-sm text-zinc-900 dark:text-white font-black font-mono">#{String(item.id || '').substring(0, 8).toUpperCase()}</p>
                 </div>
                 <div className="space-y-1 text-right">
                   <p className="text-xs font-bold text-zinc-500 uppercase">Transaction ID</p>

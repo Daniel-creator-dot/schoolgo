@@ -2395,6 +2395,23 @@ export default function App() {
           onDelete={(item) => handleEntityDelete("fee_assignment", item)}
           onRecordPayment={async (data) => {
             await handleEntitySave("receipt", data);
+
+            // Check if the invoice is fully paid
+            if (data.invoice_id) {
+              const invoice = invoices.find((i) => String(i.id) === String(data.invoice_id));
+              if (invoice) {
+                const priorPayments = receipts.filter(
+                  (r) => String(r.invoice_id) === String(data.invoice_id) || String(r.invoiceId) === String(data.invoice_id)
+                );
+                const totalPaid = priorPayments.reduce((s, p) => s + parseFloat(p.amount || 0), 0) + parseFloat(data.amount || 0);
+
+                if (totalPaid >= parseFloat(invoice.amount || 0)) {
+                  await handleEntitySave("invoice", { id: data.invoice_id, status: "Paid" });
+                } else if (totalPaid > 0) {
+                  await handleEntitySave("invoice", { id: data.invoice_id, status: "Partial" });
+                }
+              }
+            }
             loadData();
           }}
           organization={organizations.find((o) => o.id === currentUser?.org_id)}
