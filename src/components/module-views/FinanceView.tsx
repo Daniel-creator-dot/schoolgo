@@ -685,15 +685,6 @@ export const FinanceModules = {
                         )}>
                           {inv.status}
                         </span>
-                        {inv.status !== 'Paid' && onRecordPayment && (
-                          <button
-                            onClick={() => setPaymentModalData(inv)}
-                            className="p-1 px-2 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold hover:bg-emerald-100 transition-colors flex items-center gap-1"
-                          >
-                            <DollarSign className="w-3 h-3" />
-                            {t('pay')}
-                          </button>
-                        )}
                         <button
                           onClick={() => handlePrintInvoice(inv)}
                           className="p-1 px-2 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-bold hover:bg-indigo-100 transition-colors flex items-center gap-1"
@@ -744,106 +735,6 @@ export const FinanceModules = {
               </div>
             </div>
 
-            <Modal
-              isOpen={!!paymentModalData}
-              onClose={() => setPaymentModalData(null)}
-              title={t('record_payment')}
-            >
-              <form className="space-y-4 p-6" onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                if (onRecordPayment) {
-                  onRecordPayment({
-                    student_id: selectedStudent?.id,
-                    amount: formData.get('amount'),
-                    method: formData.get('method'),
-                    date: formData.get('date'),
-                    transaction_id: formData.get('transaction_id'),
-                    description: paymentModalData?.description || 'Fees Payment',
-                    academic_year: formData.get('academic_year'),
-                    term: formData.get('term')
-                  });
-                  setPaymentModalData(null);
-                }
-              }}>
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-2">
-                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('paying_for')}</p>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">{paymentModalData?.description || t('school_fee')}</p>
-                  <div className="flex justify-between items-center mt-2 group">
-                    <p className="text-xs text-zinc-500">{t('invoice_amount')}: {currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
-                  </div>
-                  {(() => {
-                    const invoiceLinkedPaid = (payments || [])
-                      .filter((p: any) =>
-                        (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) ||
-                        (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id))
-                      )
-                      .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
-
-                    const unlinkedPaid = (payments || [])
-                      .filter((p: any) =>
-                        !p.invoice_id && !p.invoiceId &&
-                        String(p.student_id) === String(paymentModalData?.student_id)
-                      )
-                      .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
-
-                    const alreadyPaid = invoiceLinkedPaid + unlinkedPaid;
-                    const balance = parseFloat(paymentModalData?.amount || 0) - alreadyPaid;
-
-                    return (
-                      <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
-                        <div className="flex justify-between items-center text-emerald-600">
-                          <p className="text-[10px] font-bold uppercase tracking-wider">Already Paid</p>
-                          <p className="text-xs font-black font-serif">{currency} {alreadyPaid.toLocaleString()}</p>
-                        </div>
-                        {unlinkedPaid > 0 && (
-                          <p className="text-[9px] text-zinc-400 italic">Includes {currency} {unlinkedPaid.toLocaleString()} unallocated student payments</p>
-                        )}
-                        <div className="flex justify-between items-center text-rose-600">
-                          <p className="text-[10px] font-bold uppercase tracking-wider">Balance Due</p>
-                          <p className="text-xs font-black font-serif">{currency} {balance.toLocaleString()}</p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('amount_paying')} ({currency})</label>
-                  <input type="number" name="amount" defaultValue={paymentModalData?.amount} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" required />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Payment Method</label>
-                  <select name="method" defaultValue="Cash" className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="Cash">Cash</option>
-                    <option value="Bank Transfer">Bank Transfer</option>
-                    <option value="Mobile Money">Mobile Money</option>
-                    <option value="Cheque">Cheque</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</label>
-                  <input type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" required />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Academic Year</label>
-                    <input type="text" name="academic_year" defaultValue={paymentModalData?.academic_year || organization?.academic_year} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Term</label>
-                    <input type="text" name="term" defaultValue={paymentModalData?.term || organization?.current_term} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Transaction ID (Optional)</label>
-                  <input type="text" name="transaction_id" placeholder="Optional" className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
-                </div>
-                <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setPaymentModalData(null)} className="px-4 py-2 text-sm font-bold text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors">{t('cancel')}</button>
-                  <button type="submit" className="px-6 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-lg shadow-emerald-200 dark:shadow-none">{t('record_payment')}</button>
-                </div>
-              </form>
-            </Modal>
           </div>
         </div>
       );
@@ -1838,9 +1729,10 @@ export const FinanceModules = {
       </>
     );
   },
-  InvoicesPayments: ({ role, students, wards, data, feeStructures, organization, onSave, onDelete }: { role?: UserRole, students?: Student[], wards?: any[], data?: any[], feeStructures?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
+  InvoicesPayments: ({ role, students, wards, data, payments, feeStructures, organization, onSave, onDelete, onRecordPayment }: { role?: UserRole, students?: Student[], wards?: any[], data?: any[], payments?: any[], feeStructures?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void }) => {
     const { t, currency } = useLanguage();
     const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
+    const [paymentModalData, setPaymentModalData] = useState<any>(null);
     const filteredData = role === 'PARENT' ? (data || []).filter(d => d.wardId === selectedWardId) : (data || []);
 
     const handlePrintReceipt = (item: any) => {
@@ -2397,7 +2289,26 @@ export const FinanceModules = {
           columns={[
             { header: 'Client/Student', accessor: 'student_name', className: 'font-bold' },
             { header: 'Item / Description', accessor: 'invoice_description' },
-            { header: `Amount (${currency})`, accessor: 'amount' },
+            { header: `Total Billed`, accessor: (item: any) => `${currency} ${parseFloat(item.amount || 0).toLocaleString()}` },
+            {
+              header: `Amount Paid`,
+              accessor: (item: any) => {
+                const invoiceLinkedPaid = (payments || [])
+                  .filter((p: any) => (p.invoice_id && String(p.invoice_id) === String(item?.id)) || (p.invoiceId && String(p.invoiceId) === String(item?.id)))
+                  .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+                return `${currency} ${invoiceLinkedPaid.toLocaleString()}`;
+              }
+            },
+            {
+              header: `Balance Owing`,
+              accessor: (item: any) => {
+                const invoiceLinkedPaid = (payments || [])
+                  .filter((p: any) => (p.invoice_id && String(p.invoice_id) === String(item?.id)) || (p.invoiceId && String(p.invoiceId) === String(item?.id)))
+                  .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+                const bal = parseFloat(item.amount || 0) - invoiceLinkedPaid;
+                return <span className={bal > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}>{currency} {bal.toLocaleString()}</span>;
+              }
+            },
             {
               header: 'Status',
               accessor: (item: any) => (
@@ -2413,18 +2324,130 @@ export const FinanceModules = {
           onAdd={onSave ? () => { } : undefined}
           renderForm={renderInvoiceForm}
           extraActions={(item) => (
-            (item.status === 'Paid' || item.status === 'Completed') && (
+            <div className="flex gap-2">
+              {item.status !== 'Paid' && item.status !== 'Completed' && onRecordPayment && (
+                <button
+                  onClick={() => setPaymentModalData(item)}
+                  className="flex items-center gap-1.5 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 rounded-lg transition-colors"
+                  title="Record Payment"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span className="hidden sm:inline">Pay</span>
+                </button>
+              )}
               <button
                 onClick={() => handlePrintReceipt(item)}
-                className="flex items-center w-full gap-3 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg transition-colors"
-                title="Print Receipt"
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg transition-colors"
+                title={(item.status === 'Paid' || item.status === 'Completed') ? "Print Receipt" : "Print Invoice"}
               >
                 <FileText className="w-4 h-4" />
-                Print Receipt
+                <span className="hidden sm:inline">{(item.status === 'Paid' || item.status === 'Completed') ? "Receipt" : "Invoice"}</span>
               </button>
-            )
+            </div>
           )}
         />
+
+        <Modal
+          isOpen={!!paymentModalData}
+          onClose={() => setPaymentModalData(null)}
+          title={t('record_payment')}
+        >
+          <form className="space-y-4 p-6" onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            if (onRecordPayment) {
+              onRecordPayment({
+                student_id: paymentModalData?.student_id,
+                invoice_id: paymentModalData?.id,
+                amount: formData.get('amount'),
+                method: formData.get('method'),
+                date: formData.get('date'),
+                transaction_id: formData.get('transaction_id'),
+                description: paymentModalData?.invoice_description || 'Fees Payment',
+                term: formData.get('term'),
+                academic_year: formData.get('academic_year')
+              });
+              setPaymentModalData(null);
+            }
+          }}>
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700 mb-2">
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Paying For</p>
+              <p className="text-sm font-bold text-zinc-900 dark:text-white mt-1">{paymentModalData?.invoice_description || 'Invoice Payment'}</p>
+              <p className="text-xs font-bold text-zinc-500 mt-1 uppercase">Client: {paymentModalData?.student_name}</p>
+
+              <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
+                {(() => {
+                  const invoiceLinkedPaid = (payments || [])
+                    .filter((p: any) =>
+                      (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) ||
+                      (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id))
+                    )
+                    .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+
+                  const balance = parseFloat(paymentModalData?.amount || 0) - invoiceLinkedPaid;
+
+                  return (
+                    <>
+                      <div className="flex justify-between items-center text-zinc-600">
+                        <p className="text-[10px] font-bold uppercase tracking-wider">Total Billed</p>
+                        <p className="text-xs font-black font-serif">{currency} {parseFloat(paymentModalData?.amount || 0).toLocaleString()}</p>
+                      </div>
+                      <div className="flex justify-between items-center text-emerald-600">
+                        <p className="text-[10px] font-bold uppercase tracking-wider">Already Paid</p>
+                        <p className="text-xs font-black font-serif">{currency} {invoiceLinkedPaid.toLocaleString()}</p>
+                      </div>
+                      <div className="flex justify-between items-center text-rose-600 mt-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wider">Balance Due</p>
+                        <p className="text-xs font-black font-serif">{currency} {balance.toLocaleString()}</p>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Amount Paying ({currency})</label>
+              <input type="number" name="amount" defaultValue={(() => {
+                const invoiceLinkedPaid = (payments || [])
+                  .filter((p: any) => (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) || (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id)))
+                  .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+                const bal = parseFloat(paymentModalData?.amount || 0) - invoiceLinkedPaid;
+                return bal > 0 ? bal : 0;
+              })()} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" required />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Payment Method</label>
+              <select name="method" defaultValue="Cash" className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="Cash">Cash</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Mobile Money">Mobile Money</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</label>
+              <input type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" required />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Academic Year</label>
+                <input type="text" name="academic_year" defaultValue={paymentModalData?.academic_year || organization?.academic_year} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Term</label>
+                <input type="text" name="term" defaultValue={paymentModalData?.term || organization?.current_term} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Transaction ID (Optional)</label>
+              <input type="text" name="transaction_id" placeholder="Optional" className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div className="pt-4 flex justify-end gap-3">
+              <button type="button" onClick={() => setPaymentModalData(null)} className="px-4 py-2 text-sm font-bold text-zinc-600 hover:bg-zinc-100 rounded-xl transition-colors">Cancel</button>
+              <button type="submit" className="px-6 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-lg shadow-emerald-200 dark:shadow-none">Record Payment</button>
+            </div>
+          </form>
+        </Modal>
       </div>
     );
   },
