@@ -685,7 +685,7 @@ export const AdmissionsModules = {
               <div className="relative p-8 rounded-[2.5rem] overflow-hidden group border border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-500/10 dark:via-purple-500/10" />
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-colors duration-700 pointer-events-none" />
-                
+
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
                     {item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
@@ -695,10 +695,10 @@ export const AdmissionsModules = {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  
+
                   <div className="space-y-4 flex-1 text-center md:text-left w-full">
                     <h3 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{item.name}</h3>
-                    
+
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                       <span className="px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm text-[10px] font-black text-zinc-500 uppercase tracking-widest border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm flex items-center gap-2">
                         <GraduationCap className="w-3 h-3 text-indigo-500" />
@@ -744,7 +744,7 @@ export const AdmissionsModules = {
                         <p className="font-black text-zinc-900 dark:text-white text-sm pl-11">{item.contact || 'N/A'}</p>
                       </div>
                     </div>
-                    
+
                     <div className="p-6 rounded-[2rem] bg-indigo-50/10 dark:bg-indigo-900/10 border border-indigo-100/30 dark:border-indigo-800/30 flex justify-between items-center group hover:border-indigo-200 transition-all duration-300">
                       <div className="space-y-2 w-full">
                         <p className="text-[10px] font-bold uppercase text-indigo-600 tracking-widest flex items-center gap-2">
@@ -760,7 +760,7 @@ export const AdmissionsModules = {
                     <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mt-4">
                       <Users className="w-3.5 h-3.5" /> {t('secondary_parent_details')}
                     </h4>
-                    
+
                     <div className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex justify-between items-center group hover:border-indigo-200 dark:hover:border-indigo-900 transition-all duration-300">
                       <div className="space-y-2 w-full">
                         <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
@@ -1186,7 +1186,7 @@ export const AdmissionsModules = {
               <div className="relative p-8 rounded-[2.5rem] overflow-hidden group border border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-500/10 dark:via-purple-500/10" />
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-colors duration-700 pointer-events-none" />
-                
+
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
                     {item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
@@ -1196,10 +1196,10 @@ export const AdmissionsModules = {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  
+
                   <div className="space-y-4 flex-1 text-center md:text-left w-full">
                     <h3 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{item.name}</h3>
-                    
+
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                       <span className="px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm text-[10px] font-black text-zinc-500 uppercase tracking-widest border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm flex items-center gap-2">
                         <GraduationCap className="w-3 h-3 text-indigo-500" />
@@ -1233,7 +1233,7 @@ export const AdmissionsModules = {
                       <div className="p-6 rounded-[2rem] bg-indigo-50/30 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-800/50 flex justify-between items-center hover:border-indigo-200 transition-all shadow-sm group">
                         <div className="space-y-1 w-full">
                           <p className="text-[10px] font-bold uppercase text-indigo-600 tracking-widest flex items-center gap-2">
-                             <Zap className="w-3 h-3" /> Religion
+                            <Zap className="w-3 h-3" /> Religion
                           </p>
                           <p className="font-black text-indigo-900 dark:text-white uppercase tracking-wider pl-5">{item.religion || 'N/A'}</p>
                         </div>
@@ -1266,7 +1266,7 @@ export const AdmissionsModules = {
                         <span className="text-3xl font-black">{item.entrance_exam_score || 'TBD'}</span>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       {['math_score', 'english_score', 'science_score', 'interview_score'].map(f => (
                         (item as any)[f] && (
@@ -1398,7 +1398,7 @@ export const AdmissionsModules = {
                       setViewItem(null);
                       onConvert(item);
                     }}
-                     className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-indigo-700 hover:scale-[1.01] transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl shadow-indigo-200 dark:shadow-none"
+                    className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-indigo-700 hover:scale-[1.01] transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl shadow-indigo-200 dark:shadow-none"
                   >
                     <ArrowRightCircle className="w-4 h-4" /> Finalize & Convert to Acceptance
                   </button>
@@ -1760,7 +1760,7 @@ export const AdmissionsModules = {
 
     const confirmBulkEnrollment = async () => {
       if (!onSave) return;
-      
+
       const studentsToEnroll = importPreviewItems.filter(s => s.name && s.class_id);
       if (studentsToEnroll.length === 0) {
         (window as any).showToast?.('No valid students found to enroll.', 'warning');
@@ -1810,7 +1810,7 @@ export const AdmissionsModules = {
                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Enroll multiple students at once via Excel</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <button
                 onClick={() => downloadStudentTemplate(classes)}
@@ -1819,7 +1819,7 @@ export const AdmissionsModules = {
                 <Download className="w-4 h-4" />
                 Download Template
               </button>
-              
+
               <label className="relative cursor-pointer group">
                 <input
                   type="file"
@@ -1852,7 +1852,7 @@ export const AdmissionsModules = {
               <div className="relative p-8 rounded-[2.5rem] overflow-hidden group border border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-500/10 dark:via-purple-500/10" />
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-colors duration-700 pointer-events-none" />
-                
+
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
                     {item.profile_pic || item.previous_school_profile_pic || (item as any)?.previousSchoolProfilePic ? (
@@ -1863,10 +1863,10 @@ export const AdmissionsModules = {
 
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  
+
                   <div className="space-y-4 flex-1 text-center md:text-left w-full">
                     <h3 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{item.name}</h3>
-                    
+
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                       <span className="px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm text-[10px] font-black text-zinc-500 uppercase tracking-widest border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm flex items-center gap-2">
                         <GraduationCap className="w-3 h-3 text-indigo-500" />
@@ -1902,11 +1902,11 @@ export const AdmissionsModules = {
                           <span className="text-3xl font-black text-white">{currency} {item.fee_amount || (item as any)?.feeAmount || '0.00'}</span>
                         </div>
                         <div className="pt-4 border-t border-zinc-800 flex justify-between items-center">
-                           <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Enrollment Status</span>
-                           <span className={cn(
-                             "px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest",
-                             item.decision === 'Enrolled' ? "bg-emerald-500/20 text-emerald-400" : "bg-indigo-500/20 text-indigo-400"
-                           )}>{item.decision || 'Accepted'}</span>
+                          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Enrollment Status</span>
+                          <span className={cn(
+                            "px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest",
+                            item.decision === 'Enrolled' ? "bg-emerald-500/20 text-emerald-400" : "bg-indigo-500/20 text-indigo-400"
+                          )}>{item.decision || 'Accepted'}</span>
                         </div>
                       </div>
                     </div>
@@ -1920,22 +1920,22 @@ export const AdmissionsModules = {
                       <div className="p-6 rounded-[2rem] bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 flex justify-between items-center hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors">
                         <div className="space-y-1 w-full">
                           <p className="text-[10px] font-bold uppercase text-indigo-600/70 dark:text-indigo-400 tracking-widest flex items-center gap-2">
-                             <Layers className="w-3 h-3" /> Assigned Class
+                            <Layers className="w-3 h-3" /> Assigned Class
                           </p>
                           <p className="font-black text-indigo-900 dark:text-indigo-100 text-lg">
                             {classes.find(c => c.id === item.class_id || c.id === (item as any)?.class)?.name || 'Needs Assignment'}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         <div className="p-5 rounded-[1.5rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex flex-col justify-center items-center shadow-sm hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors gap-2">
                           <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-center">Entrance Score</span>
                           <span className="text-xl font-black text-zinc-900 dark:text-white">{item.entrance_exam_score || 'N/A'}</span>
                         </div>
                         <div className="p-5 rounded-[1.5rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex flex-col justify-center items-center shadow-sm hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors gap-2">
-                           <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-center">Gender</span>
-                           <span className="text-xl font-black text-zinc-900 dark:text-white">{item.gender || 'N/A'}</span>
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-center">Gender</span>
+                          <span className="text-xl font-black text-zinc-900 dark:text-white">{item.gender || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -1994,22 +1994,22 @@ export const AdmissionsModules = {
                       </div>
                       <div className="p-6 rounded-[2rem] bg-indigo-50/10 dark:bg-indigo-900/10 border border-indigo-100/30 flex justify-between items-center group transition-all duration-300">
                         <div className="space-y-2 w-full">
-                            <p className="text-[10px] font-bold uppercase text-indigo-600 tracking-widest flex items-center gap-2">
-                              <span className="p-2 rounded-xl bg-white dark:bg-zinc-800 group-hover:bg-indigo-50 transition-colors">
-                                <Zap className="w-3 h-3" />
-                              </span>
-                              {t('religion')}
-                            </p>
-                            <p className="font-black text-zinc-900 dark:text-white text-sm pl-11 uppercase tracking-wider">{item.religion || 'N/A'}</p>
-                          </div>
+                          <p className="text-[10px] font-bold uppercase text-indigo-600 tracking-widest flex items-center gap-2">
+                            <span className="p-2 rounded-xl bg-white dark:bg-zinc-800 group-hover:bg-indigo-50 transition-colors">
+                              <Zap className="w-3 h-3" />
+                            </span>
+                            {t('religion')}
+                          </p>
+                          <p className="font-black text-zinc-900 dark:text-white text-sm pl-11 uppercase tracking-wider">{item.religion || 'N/A'}</p>
                         </div>
                       </div>
+                    </div>
 
-                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mt-6">
-                        <Users className="w-3.5 h-3.5" /> {t('secondary_parent_details')}
-                      </h4>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex justify-between items-center group hover:border-indigo-200 transition-all duration-300">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mt-6">
+                      <Users className="w-3.5 h-3.5" /> {t('secondary_parent_details')}
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex justify-between items-center group hover:border-indigo-200 transition-all duration-300">
                         <div className="space-y-2 w-full">
                           <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-indigo-50 transition-colors">
@@ -2060,14 +2060,14 @@ export const AdmissionsModules = {
                   )}
 
                   {item.custom_scores && Object.keys(item.custom_scores).length > 0 && (
-                     <div className="grid grid-cols-2 gap-4">
-                        {Object.entries(item.custom_scores).map(([subject, score]) => (
-                          <div key={subject} className="p-4 rounded-[1.5rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex justify-between items-center shadow-sm">
-                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{subject}</span>
-                            <span className="text-sm font-black text-zinc-900 dark:text-white">{score as string}</span>
-                          </div>
-                        ))}
-                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      {Object.entries(item.custom_scores).map(([subject, score]) => (
+                        <div key={subject} className="p-4 rounded-[1.5rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex justify-between items-center shadow-sm">
+                          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{subject}</span>
+                          <span className="text-sm font-black text-zinc-900 dark:text-white">{score as string}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -2298,12 +2298,12 @@ export const AdmissionsModules = {
           columns={[
             { header: 'Student Name', accessor: 'name', className: 'font-bold' },
             { header: 'Grade', accessor: 'grade' },
-            { 
-              header: 'Assigned Class', 
+            {
+              header: 'Assigned Class',
               accessor: (item) => {
                 const cls = classes.find(c => c.id === item.class_id || c.id === (item as any)?.class);
                 return cls ? `${cls.name} ${cls.section || ''}`.trim() : 'Not Assigned';
-              } 
+              }
             },
             { header: 'Admission Total', accessor: (item) => `${currency} ${item.fee_amount || (item as any)?.feeAmount || '0.00'}` },
           ]}
@@ -2350,7 +2350,7 @@ export const AdmissionsModules = {
               <div className="relative p-8 rounded-[2.5rem] overflow-hidden group border border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-500/10 dark:via-purple-500/10" />
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none" />
-                
+
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
                     {(viewItem as any).profile_pic || (viewItem as any).previous_school_profile_pic || (viewItem as any).previousSchoolProfilePic ? (
@@ -2359,10 +2359,10 @@ export const AdmissionsModules = {
                       viewItem.name.charAt(0)
                     )}
                   </div>
-                  
+
                   <div className="space-y-4 flex-1 text-center md:text-left w-full">
                     <h3 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{viewItem.name}</h3>
-                    
+
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                       <span className="px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm text-[10px] font-black text-zinc-500 uppercase tracking-widest border border-zinc-200/50 dark:border-zinc-700/50 shadow-sm flex items-center gap-2">
                         <GraduationCap className="w-3 h-3 text-indigo-500" />
@@ -2561,15 +2561,17 @@ export const AdmitStudentView = ({
   feeStructures = [],
   students = [],
   inquiries = [],
+  onNavigate,
   onAdmit,
   onSaveEnquiry,
 }: {
-  classes?: any[],
-  feeStructures?: any[],
-  students?: any[],
-  inquiries?: any[],
-  onAdmit: (data: any) => void,
-  onSaveEnquiry?: (data: any) => void,
+  classes?: any[];
+  feeStructures?: any[];
+  students?: any[];
+  inquiries?: any[];
+  onNavigate?: (view: string) => void;
+  onAdmit: (data: any) => void;
+  onSaveEnquiry?: (data: any) => void;
 }) => {
   const { t, currency } = useLanguage();
   const [activeTab, setActiveTab] = useState<'admit' | 'bulk'>('admit');
@@ -2601,7 +2603,7 @@ export const AdmitStudentView = ({
       const fee = feeStructures.find(f => f.id === id);
       return sum + (fee ? parseFloat(fee.amount) : 0);
     }, 0).toFixed(2);
-    
+
     setIsSubmitting(true);
     try {
       await onAdmit({
@@ -2614,7 +2616,7 @@ export const AdmitStudentView = ({
       });
       (window as any).showToast?.('Student enrolled successfully!', 'success');
       setEnrollModalItem(null);
-    } catch(err: any) {
+    } catch (err: any) {
       (window as any).showToast?.(err?.message || 'Enrollment failed', 'error');
     } finally {
       setIsSubmitting(false);
@@ -2838,7 +2840,7 @@ export const AdmitStudentView = ({
                   )}
                 </div>
                 {profilePic && (
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setProfilePic(null)}
                     className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-xl shadow-lg hover:bg-red-600 transition-all opacity-0 group-hover:opacity-100"
@@ -2858,9 +2860,9 @@ export const AdmitStudentView = ({
                     <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                   </label>
                   {profilePic && (
-                    <button 
-                      type="button" 
-                      onClick={() => setProfilePic(null)} 
+                    <button
+                      type="button"
+                      onClick={() => setProfilePic(null)}
                       className="px-5 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-600 transition-all"
                     >
                       Clear
@@ -2903,6 +2905,16 @@ export const AdmitStudentView = ({
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Student Email</label>
                 <input type="email" name="email" defaultValue={editingInquiry?.email || editingInquiry?.student_email || ''} placeholder="student@email.com" className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
+              {purpose === 'enquiry' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Target Grade / Class</label>
+                  <select name="grade" defaultValue={editingInquiry?.grade || ''} className="w-full px-5 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                    <option value="">Select grade...</option>
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section || ''}</option>)}
+                    {!classes.some(c => c.id === editingInquiry?.grade) && editingInquiry?.grade && <option value={editingInquiry.grade}>{editingInquiry.grade}</option>}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
@@ -3051,8 +3063,8 @@ export const AdmitStudentView = ({
             <h3 className="text-2xl font-black text-zinc-900 dark:text-white">Bulk Student Import</h3>
             <p className="text-zinc-500 font-medium max-w-md mx-auto">Upload an Excel file with student data. Make sure columns include: Name, Class, Parent Name, Contact.</p>
             <div className="flex justify-center gap-4">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => downloadStudentTemplate(classes)}
                 className="inline-flex items-center gap-2 px-6 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all"
               >
@@ -3115,7 +3127,10 @@ export const AdmitStudentView = ({
         <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-black text-zinc-900 dark:text-white">Recent Enquiries</h3>
-            <button className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-800 flex items-center gap-2">
+            <button
+              onClick={() => onNavigate?.('Student Inquiries')}
+              className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-800 flex items-center gap-2"
+            >
               <List className="w-3.5 h-3.5" /> View All
             </button>
           </div>
@@ -3144,7 +3159,7 @@ export const AdmitStudentView = ({
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button 
+                          <button
                             onClick={() => {
                               setEditingInquiry(inquiry);
                               setPurpose('enquiry');
@@ -3155,7 +3170,7 @@ export const AdmitStudentView = ({
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button 
+                          <button
                             onClick={() => setEnrollModalItem({ ...inquiry, source_inquiry_id: inquiry.id })}
                             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md transition-all active:scale-95 flex items-center gap-2"
                           >
@@ -3241,50 +3256,50 @@ export const AdmitStudentView = ({
               </select>
             </div>
           </div>
-          
+
           <div className="space-y-4">
-             <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em]">Admission Fees</h4>
-             {feeStructures.length > 0 ? (
-               <div className="grid grid-cols-1 gap-2 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 max-h-48 overflow-y-auto custom-scrollbar">
-                 {feeStructures.map((fee: any) => (
-                   <label key={fee.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white dark:hover:bg-zinc-800 cursor-pointer transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/50">
-                     <div className="flex items-center gap-3">
-                       <input
-                         type="checkbox"
-                         checked={enrollFeeIds.includes(fee.id)}
-                         onChange={(e) => {
-                           if (e.target.checked) setEnrollFeeIds(prev => [...prev, fee.id]);
-                           else setEnrollFeeIds(prev => prev.filter(id => id !== fee.id));
-                         }}
-                         className="w-4 h-4 rounded text-indigo-600 border-zinc-300 focus:ring-indigo-500 cursor-pointer"
-                       />
-                       <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">{fee.name}</span>
-                     </div>
-                     <span className="text-xs font-black text-zinc-900 dark:text-white">{currency} {parseFloat(fee.amount).toFixed(2)}</span>
-                   </label>
-                 ))}
-               </div>
-             ) : (
-               <p className="text-xs text-zinc-500 italic">No fee structures defined.</p>
-             )}
+            <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em]">Admission Fees</h4>
+            {feeStructures.length > 0 ? (
+              <div className="grid grid-cols-1 gap-2 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 max-h-48 overflow-y-auto custom-scrollbar">
+                {feeStructures.map((fee: any) => (
+                  <label key={fee.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white dark:hover:bg-zinc-800 cursor-pointer transition-colors border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/50">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={enrollFeeIds.includes(fee.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setEnrollFeeIds(prev => [...prev, fee.id]);
+                          else setEnrollFeeIds(prev => prev.filter(id => id !== fee.id));
+                        }}
+                        className="w-4 h-4 rounded text-indigo-600 border-zinc-300 focus:ring-indigo-500 cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">{fee.name}</span>
+                    </div>
+                    <span className="text-xs font-black text-zinc-900 dark:text-white">{currency} {parseFloat(fee.amount).toFixed(2)}</span>
+                  </label>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-500 italic">No fee structures defined.</p>
+            )}
           </div>
 
           <div className="pt-4 flex gap-3">
-             <button
-               onClick={() => setEnrollModalItem(null)}
-               className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
-               disabled={isSubmitting}
-             >
-               Cancel
-             </button>
-             <button
-               onClick={handleEnrollModalSubmit}
-               disabled={!enrollClassId || isSubmitting}
-               className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 shadow-xl shadow-indigo-200 dark:shadow-none transition-all flex justify-center items-center gap-2 disabled:opacity-50"
-             >
-               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-               Admit & Keep Student
-             </button>
+            <button
+              onClick={() => setEnrollModalItem(null)}
+              className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleEnrollModalSubmit}
+              disabled={!enrollClassId || isSubmitting}
+              className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 shadow-xl shadow-indigo-200 dark:shadow-none transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              Admit & Keep Student
+            </button>
           </div>
         </div>
       </Modal>
@@ -3382,8 +3397,8 @@ export const AcademicModules = {
           columns={[
             { header: 'Student Name', accessor: 'name', className: 'font-bold text-zinc-900 dark:text-white' },
             { header: 'Admission No.', accessor: 'admission_no', className: 'text-zinc-500 font-medium' },
-            { 
-              header: 'Class/Grade', 
+            {
+              header: 'Class/Grade',
               accessor: (item: any) => {
                 const cls = classes?.find((c: any) => c.id === item.class_id);
                 if (cls) {
@@ -3391,8 +3406,8 @@ export const AcademicModules = {
                 }
                 const className = item.class || item.grade || 'N/A';
                 return item.section ? `${className} - ${item.section}` : className;
-              }, 
-              className: 'font-bold text-zinc-900 dark:text-white' 
+              },
+              className: 'font-bold text-zinc-900 dark:text-white'
             },
             {
               header: 'Enrolled On',
@@ -3410,7 +3425,7 @@ export const AcademicModules = {
               <div className="relative p-8 rounded-[2.5rem] overflow-hidden group border border-zinc-200/50 dark:border-zinc-800/50 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent dark:from-indigo-500/10 dark:via-purple-500/10" />
                 <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-colors duration-700 pointer-events-none" />
-                
+
                 <div className="relative flex flex-col md:flex-row items-center md:items-start gap-8 z-10">
                   <div className="w-32 h-32 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-5xl font-black shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0 relative group-hover:scale-105 transition-transform duration-500">
                     {item.profile_pic || item.previous_school_profile_pic || (item as any).previousSchoolProfilePic ? (
@@ -3424,7 +3439,7 @@ export const AcademicModules = {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  
+
                   <div className="space-y-4 flex-1 text-center md:text-left w-full">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                       <h3 className="text-4xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{item.name}</h3>
@@ -3437,13 +3452,13 @@ export const AcademicModules = {
                         </button>
                       )}
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                       <div className="px-4 py-2 rounded-xl bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] shadow-sm flex items-center gap-2 border border-zinc-200/50 dark:border-zinc-700/50">
                         <Fingerprint className="w-3 h-3 text-indigo-500" />
                         ID: {item.id.slice(0, 8)}
                       </div>
-                      
+
                       <div className="px-4 py-2 rounded-xl bg-indigo-50/80 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-200/50 dark:border-indigo-800/50 backdrop-blur-sm shadow-sm flex items-center gap-2">
                         <GraduationCap className="w-3 h-3" />
                         {(() => {
@@ -3488,8 +3503,8 @@ export const AcademicModules = {
               {activeDetailTab === 'overview' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mb-4"> 
-                      <User className="w-3.5 h-3.5" /> Personal Profile 
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mb-4">
+                      <User className="w-3.5 h-3.5" /> Personal Profile
                     </h4>
                     <div className="grid grid-cols-1 gap-4">
                       <div className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex justify-between items-center group hover:border-indigo-200 dark:hover:border-indigo-900 hover:shadow-xl hover:shadow-indigo-100 dark:hover:shadow-none transition-all duration-300">
@@ -3497,7 +3512,7 @@ export const AcademicModules = {
                           <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 transition-colors">
                               <Calendar className="w-3 h-3" />
-                            </span> 
+                            </span>
                             Date of Birth
                           </p>
                           <p className="font-black text-zinc-900 dark:text-white text-sm pl-11">
@@ -3510,7 +3525,7 @@ export const AcademicModules = {
                           <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-indigo-50 transition-colors">
                               <Users className="w-3 h-3" />
-                            </span> 
+                            </span>
                             Primary Parent
                           </p>
                           <p className="font-black text-zinc-900 dark:text-white text-sm pl-11">{item.parent_name || 'N/A'}</p>
@@ -3521,7 +3536,7 @@ export const AcademicModules = {
                           <p className="text-[10px] font-bold uppercase text-indigo-600 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-white dark:bg-zinc-800 group-hover:bg-indigo-50 transition-colors">
                               <Zap className="w-3 h-3" />
-                            </span> 
+                            </span>
                             {t('religion')}
                           </p>
                           <p className="font-black text-zinc-900 dark:text-white text-sm pl-11 uppercase tracking-wider">{item.religion || 'N/A'}</p>
@@ -3532,7 +3547,7 @@ export const AcademicModules = {
                           <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 transition-colors">
                               <Layers className="w-3 h-3" />
-                            </span> 
+                            </span>
                             Current Section
                           </p>
                           <p className="font-black text-zinc-900 dark:text-white text-sm pl-11">
@@ -3545,7 +3560,7 @@ export const AcademicModules = {
                           <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 transition-colors">
                               <Phone className="w-3 h-3" />
-                            </span> 
+                            </span>
                             Parent Contact
                           </p>
                           <p className="font-black text-zinc-900 dark:text-white text-sm pl-11">
@@ -3557,7 +3572,7 @@ export const AcademicModules = {
                   </div>
 
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mb-4"> 
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mb-4">
                       <Users className="w-3.5 h-3.5" /> {t('secondary_parent_details')}
                     </h4>
                     <div className="grid grid-cols-1 gap-4">
@@ -3566,7 +3581,7 @@ export const AcademicModules = {
                           <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-indigo-50 transition-colors">
                               <Users className="w-3" />
-                            </span> 
+                            </span>
                             {t('secondary_parent_name')}
                           </p>
                           <p className="font-black text-zinc-900 dark:text-white text-sm pl-11">{item.secondary_parent_name || 'N/A'}</p>
@@ -3577,7 +3592,7 @@ export const AcademicModules = {
                           <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-indigo-50 transition-colors">
                               <Phone className="w-3" />
-                            </span> 
+                            </span>
                             {t('secondary_parent_contact')}
                           </p>
                           <p className="font-black text-zinc-900 dark:text-white text-sm pl-11">{item.secondary_parent_contact || 'N/A'}</p>
@@ -3585,8 +3600,8 @@ export const AcademicModules = {
                       </div>
                     </div>
 
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mb-4"> 
-                      <School className="w-3.5 h-3.5" /> Academic Background 
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-2 mb-4">
+                      <School className="w-3.5 h-3.5" /> Academic Background
                     </h4>
                     <div className="grid grid-cols-1 gap-4">
                       <div className="relative p-6 rounded-[2rem] border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-900/10 space-y-3 group hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all duration-300 overflow-hidden">
@@ -3603,7 +3618,7 @@ export const AcademicModules = {
                           <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest flex items-center gap-2">
                             <span className="p-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/30 group-hover:text-emerald-600 transition-colors">
                               <ShieldCheck className="w-3 h-3" />
-                            </span> 
+                            </span>
                             Enrollment Date
                           </p>
                           <p className="font-black text-zinc-900 dark:text-white text-sm pl-11">
@@ -3628,7 +3643,7 @@ export const AcademicModules = {
                       </div>
                     </div>
                     <div className="group relative p-8 rounded-[2.5rem] bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/30 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:scale-105 transition-all duration-300 overflow-hidden cursor-default shadow-sm hover:shadow-xl hover:shadow-emerald-100 dark:hover:shadow-none">
-                       <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors scale-150" />
+                      <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors scale-150" />
                       <div className="relative z-10 space-y-2 text-center md:text-left">
                         <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-[0.2em] drop-shadow-sm">Exams Taken</p>
                         <h4 className="text-4xl font-black text-emerald-700 dark:text-emerald-300 drop-shadow-sm">
@@ -3637,7 +3652,7 @@ export const AcademicModules = {
                       </div>
                     </div>
                     <div className="group relative p-8 rounded-[2.5rem] bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:scale-105 transition-all duration-300 overflow-hidden cursor-default shadow-sm hover:shadow-xl hover:shadow-amber-100 dark:hover:shadow-none">
-                       <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors scale-150" />
+                      <div className="absolute right-0 top-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors scale-150" />
                       <div className="relative z-10 space-y-2 text-center md:text-left">
                         <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-[0.2em] drop-shadow-sm">Performance</p>
                         <h4 className="text-3xl font-black text-amber-700 dark:text-amber-400 uppercase tracking-tighter drop-shadow-sm">
@@ -3654,8 +3669,8 @@ export const AcademicModules = {
                     {Object.keys(getGroupedResults(item.id, item.class_id)).length > 0 ? (
                       Object.entries(getGroupedResults(item.id, item.class_id)).map(([groupKey, groupResults]) => (
                         <div key={groupKey} className="space-y-4">
-                          <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] flex items-center gap-2 mb-2 px-2"> 
-                            {groupKey} 
+                          <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] flex items-center gap-2 mb-2 px-2">
+                            {groupKey}
                           </h4>
                           <div className="rounded-[2.5rem] border border-zinc-200/50 dark:border-zinc-800/50 overflow-hidden shadow-sm bg-white dark:bg-zinc-900 transition-all hover:shadow-md">
                             <table className="w-full text-left text-sm">
@@ -4466,10 +4481,10 @@ export const AcademicModules = {
                   return (
                     <div className="relative">
                       <input type="hidden" name="department_id" value={displayDeptId} />
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={deptName} 
+                      <input
+                        type="text"
+                        readOnly
+                        value={deptName}
                         className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold text-zinc-500 dark:text-zinc-400 cursor-not-allowed"
                       />
                     </div>
@@ -4669,8 +4684,8 @@ export const AcademicModules = {
       // Teacher Conflict Check
       if (entryData.teacher_id && entryData.type === 'Lesson') {
         const teacher = staff.find(s => String(s.id).toLowerCase() === String(entryData.teacher_id).toLowerCase());
-        const conflict = (data || []).find(e => 
-          String(e.teacher_id).toLowerCase() === String(entryData.teacher_id).toLowerCase() && 
+        const conflict = (data || []).find(e =>
+          String(e.teacher_id).toLowerCase() === String(entryData.teacher_id).toLowerCase() &&
           e.day_of_week === entryData.day_of_week &&
           e.id !== editingItem?.id &&
           (
@@ -5239,16 +5254,16 @@ export const AcademicModules = {
 
                 {/* Accent Footer */}
                 <div className="absolute bottom-0 right-0 left-0 h-1.5 bg-indigo-600"></div>
-                
+
                 {/* Front Side QR Code */}
                 <div className="absolute top-4 right-4 w-12 h-12 bg-white p-1 border border-zinc-100 shadow-sm rounded-lg overflow-hidden z-10">
-                  <img 
+                  <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.admission_no || student.id)}`}
                     alt="Student QR Code"
                     className="w-full h-full object-contain"
                   />
                 </div>
-                
+
                 <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-600/5 rounded-full -translate-y-12 translate-x-12 -z-10"></div>
               </div>
 
@@ -5268,7 +5283,7 @@ export const AcademicModules = {
                 {/* Barcode / QR Code Section */}
                 <div className="flex flex-col items-center gap-2 mb-6">
                   <div className="w-16 h-16 bg-white p-1 border border-zinc-100 shadow-sm rounded-lg overflow-hidden">
-                    <img 
+                    <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(student.admission_no || student.id)}`}
                       alt="Student QR Code"
                       className="w-full h-full object-contain"
@@ -5895,8 +5910,8 @@ export const AcademicModules = {
 const ExamScheduleForm = ({ item, subjects, classes }: any) => {
   const [selectedSubjectId, setSelectedSubjectId] = useState(item?.subject_id || "");
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>(
-    item?.class_id 
-      ? [String(item.class_id)] 
+    item?.class_id
+      ? [String(item.class_id)]
       : (item?.class_ids ? item.class_ids.map(String) : [])
   );
 
@@ -5912,7 +5927,7 @@ const ExamScheduleForm = ({ item, subjects, classes }: any) => {
     if (selectedSubject?.name) {
       const targetName = selectedSubject.name.toLowerCase().trim();
       const allClassIdsForSubject: string[] = [];
-      
+
       subjects
         .filter((s: any) => s.name?.toLowerCase().trim() === targetName)
         .forEach((s: any) => {
@@ -5922,7 +5937,7 @@ const ExamScheduleForm = ({ item, subjects, classes }: any) => {
             allClassIdsForSubject.push(String(s.class_id));
           }
         });
-      
+
       const uniqueClassIds = Array.from(new Set(allClassIdsForSubject));
       if (uniqueClassIds.length > 0) {
         setSelectedClassIds(uniqueClassIds);
@@ -6029,9 +6044,9 @@ const ExamScheduleForm = ({ item, subjects, classes }: any) => {
         </div>
         <div className="space-y-2">
           <label className="text-xs font-semibold text-zinc-500 uppercase">Time</label>
-          <input 
-            type="time" 
-            name="time" 
+          <input
+            type="time"
+            name="time"
             defaultValue={(() => {
               if (!item?.time) return '';
               // Handle format '09:00 AM' -> '09:00', '02:00 PM' -> '14:00'
@@ -6043,9 +6058,9 @@ const ExamScheduleForm = ({ item, subjects, classes }: any) => {
                 return `${hours.padStart(2, '0')}:${mins}`;
               }
               return item.time;
-            })()} 
-            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" 
-            required 
+            })()}
+            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            required
           />
         </div>
       </div>
@@ -6057,17 +6072,17 @@ const ExamDetailView = ({ item, subjects, classes, onEdit, onNavigate }: any) =>
   const selectedSubjectId = item.subject_id || (subjects.find((s: any) => s.name === (item.subject || item.subject_name))?.id);
   const selectedSubject = subjects.find((s: any) => String(s.id) === String(selectedSubjectId)) || { name: item.subject_name || item.subject };
   const teacherName = selectedSubject?.teacher_name || 'Not assigned';
-  
+
   // Format Date and Time Status
   const getStatusInfo = () => {
     if (!item.date) return { status: 'Not Scheduled', color: 'bg-zinc-100 text-zinc-500', icon: <Loader2 className="w-3.5 h-3.5" /> };
-    
+
     const now = new Date();
     const examDate = new Date(`${item.date.split('T')[0]}T${item.time || "00:00"}`);
-    
+
     // Check if it's today
     const isToday = now.toDateString() === examDate.toDateString();
-    
+
     if (examDate < now && !isToday) {
       return { status: 'Completed', color: 'bg-stone-100 dark:bg-stone-900/50 text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-800', icon: <CheckCircle2 className="w-3.5 h-3.5" />, pulse: false };
     } else if (isToday) {
@@ -6083,14 +6098,14 @@ const ExamDetailView = ({ item, subjects, classes, onEdit, onNavigate }: any) =>
     const dateObj = new Date(item.date);
     formattedDate = dateObj.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
-  
+
   return (
     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
       {/* Dynamic Glassmorphism Header Section */}
       <div className="relative p-8 rounded-[2.5rem] overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/5 via-purple-500/5 to-transparent dark:from-indigo-600/10 dark:via-purple-500/10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-bl-[10rem] -mr-32 -mt-32 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
-        
+
         <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
@@ -6112,12 +6127,12 @@ const ExamDetailView = ({ item, subjects, classes, onEdit, onNavigate }: any) =>
               </p>
             </div>
           </div>
-          
+
           <div className="hidden md:flex flex-col items-center justify-center p-6 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl rounded-[2rem] border border-white/40 dark:border-white/5 shadow-xl shadow-zinc-200/20 dark:shadow-none hover:scale-105 transition-transform duration-500">
-             <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 mb-3 group-hover:rotate-12 transition-transform">
-               <Calendar className="w-8 h-8" />
-             </div>
-             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">{item.time || '--:--'}</p>
+            <div className="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 mb-3 group-hover:rotate-12 transition-transform">
+              <Calendar className="w-8 h-8" />
+            </div>
+            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">{item.time || '--:--'}</p>
           </div>
         </div>
       </div>
@@ -6161,12 +6176,12 @@ const ExamDetailView = ({ item, subjects, classes, onEdit, onNavigate }: any) =>
       <div className="p-6 bg-zinc-50/50 dark:bg-zinc-800/30 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 relative overflow-hidden group mx-2">
         <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-zinc-50 dark:from-zinc-800 to-transparent pointer-events-none" />
         <div className="flex items-center gap-3 mb-5">
-           <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600">
-             <Users className="w-4 h-4" />
-           </div>
-           <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Participating Classes</label>
+          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600">
+            <Users className="w-4 h-4" />
+          </div>
+          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Participating Classes</label>
         </div>
-        
+
         <div className="flex flex-nowrap overflow-x-auto gap-3 pb-2 scrollbar-hide">
           {(item.class_ids || []).map((cid: string) => {
             const cls = classes.find((c: any) => String(c.id) === String(cid));
@@ -6327,10 +6342,10 @@ export const ExamModules = {
             <div class="footer">
               <div class="stamp-placeholder">School Stamp</div>
               <div class="signature-block">
-                ${signatureUrl 
-                  ? `<img src="${signatureUrl}" class="signature-img" alt="Principal Signature" />`
-                  : `<div class="principal-sig">${principalName}</div>`
-                }
+                ${signatureUrl
+          ? `<img src="${signatureUrl}" class="signature-img" alt="Principal Signature" />`
+          : `<div class="principal-sig">${principalName}</div>`
+        }
                 <div class="signature-line">Principal's Signature</div>
               </div>
             </div>
@@ -6462,7 +6477,7 @@ export const ExamModules = {
                           </div>
 
                           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0">
-                            <button 
+                            <button
                               onClick={() => {
                                 setEditingItem(exam);
                                 setIsEditingModal(false);
@@ -6471,7 +6486,7 @@ export const ExamModules = {
                             >
                               <Eye className="w-5 h-5" />
                             </button>
-                            <button 
+                            <button
                               onClick={() => {
                                 if (onNavigate) {
                                   onNavigate("Results Management");
@@ -6637,10 +6652,10 @@ export const ExamModules = {
                 </div>
 
                 <div className="flex items-center gap-2 pt-4 border-t border-zinc-100 dark:border-zinc-800 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
-                      setEditingItem(exam); 
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingItem(exam);
                       setIsEditingModal(false);
                     }}
                     className="flex-1 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
@@ -6648,9 +6663,9 @@ export const ExamModules = {
                     <Eye className="w-3.5 h-3.5" />
                     Details
                   </button>
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation(); 
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (onNavigate) {
                         onNavigate("Results Management");
                       } else {
@@ -6814,18 +6829,18 @@ export const ExamModules = {
               role === "STUDENT" || role === "STAFF"
                 ? undefined
                 : async (formData) => {
-                    const classIdsJson = formData.class_ids;
-                    const classIds = classIdsJson ? (typeof classIdsJson === 'string' ? JSON.parse(classIdsJson) : classIdsJson) : [];
-                    if (classIds.length === 0) {
-                      alert("Please select at least one class.");
-                      return;
-                    }
-                    const payload = {
-                      ...formData,
-                      class_ids: classIds,
-                    };
-                    await onSave?.(payload);
+                  const classIdsJson = formData.class_ids;
+                  const classIds = classIdsJson ? (typeof classIdsJson === 'string' ? JSON.parse(classIdsJson) : classIdsJson) : [];
+                  if (classIds.length === 0) {
+                    alert("Please select at least one class.");
+                    return;
                   }
+                  const payload = {
+                    ...formData,
+                    class_ids: classIds,
+                  };
+                  await onSave?.(payload);
+                }
             }
             onDelete={
               role === "STUDENT" || role === "STAFF" ? undefined : onDelete
@@ -6877,7 +6892,7 @@ export const ExamModules = {
                           const formData = new FormData(form);
                           const data = Object.fromEntries(formData.entries());
                           const classIds = Array.from(form.querySelectorAll('input[name="class_ids"]:checked')).map(cb => (cb as HTMLInputElement).value);
-                          
+
                           await onSave?.({
                             ...editingItem,
                             ...data,
@@ -6894,10 +6909,10 @@ export const ExamModules = {
                   </div>
                 </>
               ) : (
-                <ExamDetailView 
-                  item={editingItem} 
-                  subjects={subjects} 
-                  classes={classes} 
+                <ExamDetailView
+                  item={editingItem}
+                  subjects={subjects}
+                  classes={classes}
                   onEdit={() => setIsEditingModal(true)}
                   onNavigate={onNavigate}
                 />
@@ -6932,7 +6947,7 @@ export const ExamModules = {
                           values[key] = value;
                         }
                       });
-                      
+
                       const classIdsJson = formData.get('class_ids') as string;
                       const classIds = classIdsJson ? JSON.parse(classIdsJson) : [];
 
@@ -6977,9 +6992,9 @@ export const ExamModules = {
     const [selectedTerm, setSelectedTerm] = useState((organization as any)?.current_term || "");
 
     const hodDeptId = useMemo(() => {
-        if (role !== 'HOD') return null;
-        const hod = (staffList || []).find(s => String(s.email).toLowerCase().trim() === String(currentUser?.email).toLowerCase().trim());
-        return hod?.department_id ? String(hod.department_id).toLowerCase() : null;
+      if (role !== 'HOD') return null;
+      const hod = (staffList || []).find(s => String(s.email).toLowerCase().trim() === String(currentUser?.email).toLowerCase().trim());
+      return hod?.department_id ? String(hod.department_id).toLowerCase() : null;
     }, [role, staffList, currentUser]);
 
     const results = data || [];
@@ -7112,7 +7127,7 @@ export const ExamModules = {
     // FILTERED version for actual table display
     const summarizedResults = useMemo(() => {
       let filtered = fullSummarizedResults;
-      
+
       if (role === 'HOD' && hodDeptId) {
         const deptSubjectIds = new Set(
           (subjects || [])
@@ -7306,30 +7321,30 @@ export const ExamModules = {
                 const uEmail = String(currentUser?.email || '').toLowerCase().trim();
                 const uName = String(currentUser?.name || '').toLowerCase().trim();
                 const tcName = String(c.class_teacher || c.teacher_name || '').toLowerCase().trim();
-                
+
                 return tcId && (
-                  tcId === uId || 
-                  tcId === uStaffId || 
-                  tcId === uUid || 
-                  tcId === uUserId || 
+                  tcId === uId ||
+                  tcId === uStaffId ||
+                  tcId === uUid ||
+                  tcId === uUserId ||
                   tcId === uEmail ||
                   (uName && tcName && tcName.includes(uName)) ||
                   (uName && tcId === uName)
                 );
               }) && (
-                <button
-                  onClick={() => {
-                    setShowClassRemarks(true);
-                    setShowTopPerformers(false);
-                  }}
-                  className={cn(
-                    "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                    (showClassRemarks && !showTopPerformers) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
-                  )}
-                >
-                  Class Remarks
-                </button>
-              )}
+                  <button
+                    onClick={() => {
+                      setShowClassRemarks(true);
+                      setShowTopPerformers(false);
+                    }}
+                    className={cn(
+                      "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                      (showClassRemarks && !showTopPerformers) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
+                    )}
+                  >
+                    Class Remarks
+                  </button>
+                )}
             </div>
           </div>
         </div>
@@ -7468,7 +7483,7 @@ export const ExamModules = {
           <div className="space-y-6">
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest block mb-2">Select Your Assigned Class</label>
-              <select 
+              <select
                 value={selectedClassRemarksId}
                 onChange={(e) => setSelectedClassRemarksId(e.target.value)}
                 className="w-full max-w-xl px-4 py-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl font-medium outline-none focus:ring-2 focus:ring-indigo-500"
@@ -7483,12 +7498,12 @@ export const ExamModules = {
                   const uEmail = String(currentUser?.email || '').toLowerCase().trim();
                   const uName = String(currentUser?.name || '').toLowerCase().trim();
                   const tcName = String(c.class_teacher || c.teacher_name || '').toLowerCase().trim();
-                  
+
                   return tcId && (
-                    tcId === uId || 
-                    tcId === uStaffId || 
-                    tcId === uUid || 
-                    tcId === uUserId || 
+                    tcId === uId ||
+                    tcId === uStaffId ||
+                    tcId === uUid ||
+                    tcId === uUserId ||
                     tcId === uEmail ||
                     (uName && tcName && tcName.includes(uName)) ||
                     (uName && tcId === uName)
@@ -7533,15 +7548,15 @@ export const ExamModules = {
                           >
                             <option value="">-- Choose Template --</option>
                             {remarkTemplates?.map((rt: any) => {
-                                const remarkText = rt.remark || rt.description || rt.title || rt.name || rt.text;
-                                return (
-                                  <option key={rt.id} value={remarkText}>
-                                    {remarkText}
-                                  </option>
-                                );
+                              const remarkText = rt.remark || rt.description || rt.title || rt.name || rt.text;
+                              return (
+                                <option key={rt.id} value={remarkText}>
+                                  {remarkText}
+                                </option>
+                              );
                             })}
                           </select>
-                          <textarea 
+                          <textarea
                             value={terminalRemarks[student.id]?.teacher_remark || ''}
                             onChange={(e) => setTerminalRemarks(prev => ({
                               ...prev,
@@ -7552,7 +7567,7 @@ export const ExamModules = {
                           />
                         </td>
                         <td className="p-4 border-b border-zinc-100 dark:border-zinc-800">
-                          <textarea 
+                          <textarea
                             value={terminalRemarks[student.id]?.principal_remark || ''}
                             onChange={(e) => setTerminalRemarks(prev => ({
                               ...prev,
@@ -7567,7 +7582,7 @@ export const ExamModules = {
                   </tbody>
                 </table>
                 <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
-                   <button 
+                  <button
                     onClick={async () => {
                       const resultsToSave = students
                         .filter((s: any) => String(s.class_id) === String(selectedClassRemarksId))
@@ -7587,17 +7602,17 @@ export const ExamModules = {
 
                       try {
                         if (onSaveResults) {
-                           await onSaveResults({ type: 'terminal_remarks', results: resultsToSave });
-                           (window as any).showToast?.('Remarks saved successfully!', 'success');
+                          await onSaveResults({ type: 'terminal_remarks', results: resultsToSave });
+                          (window as any).showToast?.('Remarks saved successfully!', 'success');
                         }
                       } catch (err: any) {
                         (window as any).showToast?.(err.message || 'Error saving remarks', 'error');
                       }
                     }}
                     className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
-                   >
-                     Submit Terminal Remarks
-                   </button>
+                  >
+                    Submit Terminal Remarks
+                  </button>
                 </div>
               </div>
             )}
@@ -7796,7 +7811,7 @@ export const ExamModules = {
                                 class_id: r.class_id,
                                 term: r.term,
                                 academicYear: r.academic_year,
-                                classPosition: rankData ? `${rankData.rank}${['st','nd','rd'][rankData.rank-1] || 'th'} / ${rankData.count}` : '—',
+                                classPosition: rankData ? `${rankData.rank}${['st', 'nd', 'rd'][rankData.rank - 1] || 'th'} / ${rankData.count}` : '—',
                                 rankPercentile: rankData?.percentile || '—',
                                 attendance: '—',
                                 teacherRemark: terminalRemarkData?.teacher_remark || '',
@@ -7807,7 +7822,7 @@ export const ExamModules = {
                                   examScore: sr.examScore,
                                   score: sr.totalScore,
                                   grade: sr.grade,
-                                  rank: `${sr.rank}${['st','nd','rd'][sr.rank-1] || 'th'}`,
+                                  rank: `${sr.rank}${['st', 'nd', 'rd'][sr.rank - 1] || 'th'}`,
                                   remark: '—'
                                 }))
                               });
@@ -7828,7 +7843,7 @@ export const ExamModules = {
         )}
 
         {showReportCard && (() => {
-          const cls = showReportCard.class_id 
+          const cls = showReportCard.class_id
             ? classes.find((c: any) => String(c.id) === String(showReportCard.class_id))
             : classes.find((c: any) => showReportCard.grade && (showReportCard.grade.startsWith(c.name) || c.name === showReportCard.grade));
           const tmpl = cls ? reportCardTemplates.find((t: any) => String(t.id) === String(cls.report_card_template_id)) : null;

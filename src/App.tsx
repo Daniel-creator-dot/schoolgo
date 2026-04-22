@@ -514,25 +514,25 @@ export default function App() {
       assignIfFulfilled(20, setScholarshipTypes);
       assignIfFulfilled(21, setUniforms);
       assignIfFulfilled(22, setInventorySales);
-      
+
       const subRes = resultsArr[23];
       if (subRes && subRes.status === "fulfilled") {
-          setSubscriptions(subRes.value);
-          setDidSubscriptionFetchFail(false);
+        setSubscriptions(subRes.value);
+        setDidSubscriptionFetchFail(false);
       } else if (subRes && subRes.status === "rejected") {
-          setDidSubscriptionFetchFail(true);
+        setDidSubscriptionFetchFail(true);
       }
 
       assignIfFulfilled(24, setReceipts);
       assignIfFulfilled(25, setClubs);
-      
+
       const adminPlatformUsersRes = resultsArr[26];
       if (adminPlatformUsersRes && adminPlatformUsersRes.status === "fulfilled") {
-          if (currentRole === "SUPER_ADMIN" && adminPlatformUsersRes.value && adminPlatformUsersRes.value.length > 0) {
-             setPlatformUsers(adminPlatformUsersRes.value);
-          }
+        if (currentRole === "SUPER_ADMIN" && adminPlatformUsersRes.value && adminPlatformUsersRes.value.length > 0) {
+          setPlatformUsers(adminPlatformUsersRes.value);
+        }
       }
-      
+
       assignIfFulfilled(27, setAuditLogs);
       assignIfFulfilled(28, setSystemModules);
       assignIfFulfilled(29, setPlanTemplates);
@@ -553,7 +553,7 @@ export default function App() {
       assignIfFulfilled(44, setHealthRecords);
       assignIfFulfilled(45, setInventory);
       assignIfFulfilled(46, setDocumentTemplates);
-      
+
       const currentOrgInfo = resultsArr[47];
       if (currentOrgInfo && currentOrgInfo.status === "fulfilled" && currentOrgInfo.value) {
         if (currentOrgInfo.value.currency && currentRole !== 'SUPER_ADMIN') {
@@ -563,7 +563,7 @@ export default function App() {
           setLanguage(currentOrgInfo.value.language);
         }
       }
-      
+
       assignIfFulfilled(48, setHodStats);
     } catch (err) {
       console.error("Failed to load data from backend:", err);
@@ -585,9 +585,9 @@ export default function App() {
 
     if (!activeSub) {
       const definitivelyExpired = !isInitialLoading && !didSubscriptionFetchFail;
-      return { 
-        status: 'None', 
-        daysRemaining: null, 
+      return {
+        status: 'None',
+        daysRemaining: null,
         isExpired: definitivelyExpired,
         loading: isInitialLoading,
         error: didSubscriptionFetchFail
@@ -702,23 +702,23 @@ export default function App() {
 
     const managedDepts = isHOD
       ? (departments || []).filter((d: any) => {
-          const hodRef = d.hod_id ? String(d.hod_id).toLowerCase() : null;
-          const staffDeptId = staffRecord?.department_id
-            ? String(staffRecord.department_id).toLowerCase()
-            : null;
-          const dName = d.name ? String(d.name).toLowerCase().trim() : "";
+        const hodRef = d.hod_id ? String(d.hod_id).toLowerCase() : null;
+        const staffDeptId = staffRecord?.department_id
+          ? String(staffRecord.department_id).toLowerCase()
+          : null;
+        const dName = d.name ? String(d.name).toLowerCase().trim() : "";
 
-          return (
-            (hodRef &&
-              (hodRef === staffId ||
-                hodRef === userId ||
-                hodRef === userEmail)) ||
-            (d.id &&
-              staffDeptId &&
-              String(d.id).toLowerCase() === staffDeptId) ||
-            (hodDeptName && dName === hodDeptName)
-          );
-        })
+        return (
+          (hodRef &&
+            (hodRef === staffId ||
+              hodRef === userId ||
+              hodRef === userEmail)) ||
+          (d.id &&
+            staffDeptId &&
+            String(d.id).toLowerCase() === staffDeptId) ||
+          (hodDeptName && dName === hodDeptName)
+        );
+      })
       : [];
 
     const managedDeptIds = new Set(
@@ -734,36 +734,36 @@ export default function App() {
     // 4. Identify Subjects
     const teacherSubjects = isHOD
       ? subjectList.filter((s) => {
-          const sDeptId = s.department_id
-            ? String(s.department_id).toLowerCase()
+        const sDeptId = s.department_id
+          ? String(s.department_id).toLowerCase()
+          : null;
+        const sDeptName = s.department_name
+          ? String(s.department_name).toLowerCase().trim()
+          : sDeptId
+            ? deptIdToName.get(sDeptId)
             : null;
-          const sDeptName = s.department_name
-            ? String(s.department_name).toLowerCase().trim()
-            : sDeptId
-              ? deptIdToName.get(sDeptId)
-              : null;
-          const teacherId = s.teacher_id
-            ? String(s.teacher_id).toLowerCase()
-            : null;
+        const teacherId = s.teacher_id
+          ? String(s.teacher_id).toLowerCase()
+          : null;
 
-          return (
-            (sDeptId && managedDeptIds.has(sDeptId)) ||
-            (sDeptName && managedDeptNames.has(sDeptName)) ||
-            (sDeptId && hodDeptId && sDeptId === hodDeptId) ||
-            (hodDeptName && sDeptName === hodDeptName) ||
-            (teacherId && staffId && teacherId === staffId) ||
-            (teacherId && teacherId === userEmail)
-          );
-        })
+        return (
+          (sDeptId && managedDeptIds.has(sDeptId)) ||
+          (sDeptName && managedDeptNames.has(sDeptName)) ||
+          (sDeptId && hodDeptId && sDeptId === hodDeptId) ||
+          (hodDeptName && sDeptName === hodDeptName) ||
+          (teacherId && staffId && teacherId === staffId) ||
+          (teacherId && teacherId === userEmail)
+        );
+      })
       : subjectList.filter((s) => {
-          const teacherId = s.teacher_id
-            ? String(s.teacher_id).toLowerCase()
-            : null;
-          return (
-            (teacherId && staffId && teacherId === staffId) ||
-            (teacherId && teacherId === userEmail)
-          );
-        });
+        const teacherId = s.teacher_id
+          ? String(s.teacher_id).toLowerCase()
+          : null;
+        return (
+          (teacherId && staffId && teacherId === staffId) ||
+          (teacherId && teacherId === userEmail)
+        );
+      });
 
     const subjectIds = new Set(
       teacherSubjects.map((s) => String(s.id).toLowerCase()),
@@ -1500,7 +1500,7 @@ export default function App() {
                     activeSubscriptions: organizations
                       .filter((o) => o.status === "Active")
                       .length.toString(),
-                    totalUsers: "45.2k", 
+                    totalUsers: "45.2k",
                     annualRevenue: `${currency} 1,494,000`,
                   }}
                 />
@@ -1660,10 +1660,10 @@ export default function App() {
 
       "Create Organization": <CreateOrganization onRefresh={loadData} />,
       "Edit Organization": (
-        <EditOrganization 
-          organization={editingOrganization} 
-          onRefresh={loadData} 
-          onBack={() => setCurrentView("Organizations")} 
+        <EditOrganization
+          organization={editingOrganization}
+          onRefresh={loadData}
+          onBack={() => setCurrentView("Organizations")}
         />
       ),
       "Subscription Plan": <ChoosePlan />,
@@ -1675,6 +1675,7 @@ export default function App() {
           inquiries={inquiries}
           feeStructures={feeStructures}
           students={studentList.filter(s => s.status !== 'Alumni')}
+          onNavigate={setCurrentView}
           onAdmit={async (data) => {
             try {
               const email = data.email || `${(data.name || '').toLowerCase().replace(/ /g, '.')}@school.com`;
@@ -1725,6 +1726,19 @@ export default function App() {
             await handleEntitySave('inquiry', { ...data, status: 'New', date: new Date().toISOString().split('T')[0] });
             await loadData();
           }}
+        />
+      ),
+
+      'Student Inquiries': (
+        <AdmissionsModules.Inquiries
+          data={inquiries}
+          onConvert={(item) => {
+            // Logic to transition from inquiry to admit view
+            showToast(`Converting enquiry for ${item.name}...`, 'info');
+            setCurrentView('Admit Student');
+          }}
+          onSave={(data) => handleEntitySave('inquiry', data)}
+          onDelete={(item) => handleEntityDelete('inquiry', item)}
         />
       ),
 
@@ -1900,10 +1914,10 @@ export default function App() {
               (s) =>
                 (s.user_id &&
                   String(s.user_id).toLowerCase() ===
-                    String(currentUser?.id).toLowerCase()) ||
+                  String(currentUser?.id).toLowerCase()) ||
                 (s.email &&
                   String(s.email).toLowerCase() ===
-                    String(currentUser?.email).toLowerCase()),
+                  String(currentUser?.email).toLowerCase()),
             )}
             role={currentRole}
             onSave={
@@ -1932,7 +1946,7 @@ export default function App() {
               currentRole === "PARENT"
                 ? studentList.find((s) => s.id === selectedWardId)?.class_id
                 : studentList.find((st) => st.email === currentUser?.email)
-                    ?.class_id
+                  ?.class_id
             }
           />
         ) : currentRole === "STAFF" ? (
@@ -1948,10 +1962,10 @@ export default function App() {
               (s) =>
                 (s.user_id &&
                   String(s.user_id).toLowerCase() ===
-                    String(currentUser?.id).toLowerCase()) ||
+                  String(currentUser?.id).toLowerCase()) ||
                 (s.email &&
                   String(s.email).toLowerCase() ===
-                    String(currentUser?.email).toLowerCase()),
+                  String(currentUser?.email).toLowerCase()),
             )}
             role={currentRole}
             onSave={
@@ -1990,8 +2004,8 @@ export default function App() {
             data={
               currentRole === "PARENT"
                 ? studentAttendance.filter(
-                    (a) => a.student_id === selectedWardId,
-                  )
+                  (a) => a.student_id === selectedWardId,
+                )
                 : currentRole === "SCHOOL_ADMIN"
                   ? studentAttendance
                   : staffData
@@ -2002,20 +2016,20 @@ export default function App() {
               currentRole === "PARENT"
                 ? undefined
                 : async (data: any) => {
-                    const type = data.staff_id
-                      ? "staff-attendance"
-                      : "student-attendance";
-                    await handleEntitySave(type, data);
-                  }
+                  const type = data.staff_id
+                    ? "staff-attendance"
+                    : "student-attendance";
+                  await handleEntitySave(type, data);
+                }
             }
             onDelete={
               currentRole === "PARENT"
                 ? undefined
                 : (item: any) =>
-                    handleEntityDelete(
-                      item.staff_id ? "staff-attendance" : "student-attendance",
-                      item,
-                    )
+                  handleEntityDelete(
+                    item.staff_id ? "staff-attendance" : "student-attendance",
+                    item,
+                  )
             }
           />
         ),
@@ -2061,10 +2075,10 @@ export default function App() {
           data={
             currentRole === "STUDENT"
               ? results.filter(
-                  (r) =>
-                    r.student_id ===
-                    studentList.find((s) => s.email === currentUser?.email)?.id,
-                )
+                (r) =>
+                  r.student_id ===
+                  studentList.find((s) => s.email === currentUser?.email)?.id,
+              )
               : currentRole === "PARENT"
                 ? results.filter((r) => r.student_id === selectedWardId)
                 : results
@@ -2144,7 +2158,7 @@ export default function App() {
                       : null;
                   throw new Error(
                     errData?.error ||
-                      `Server error (${res.status}): Failed to upload marks`,
+                    `Server error (${res.status}): Failed to upload marks`,
                   );
                 }
                 (window as any).showToast?.(
@@ -2209,7 +2223,7 @@ export default function App() {
                       : null;
                   throw new Error(
                     errData?.error ||
-                      `Server error (${res.status}): Failed to record results`,
+                    `Server error (${res.status}): Failed to record results`,
                   );
                 }
                 (window as any).showToast?.(
@@ -2262,7 +2276,7 @@ export default function App() {
                       : null;
                   throw new Error(
                     errData?.error ||
-                      `Server error (${res.status}): Failed to record results`,
+                    `Server error (${res.status}): Failed to record results`,
                   );
                 }
                 (window as any).showToast?.(
@@ -2318,10 +2332,10 @@ export default function App() {
           data={
             currentRole === "STUDENT" || currentRole === "PARENT"
               ? feeStructures.filter((f) =>
-                  f.assigned_classes?.some(
-                    (c: any) => String(c.id) === String(activeStudentClassId),
-                  ),
-                )
+                f.assigned_classes?.some(
+                  (c: any) => String(c.id) === String(activeStudentClassId),
+                ),
+              )
               : feeStructures
           }
           onSave={
@@ -2491,13 +2505,13 @@ export default function App() {
           data={
             currentRole === "STUDENT"
               ? invoices.filter(
-                  (i) =>
-                    String(i.student_id) ===
-                    String(
-                      studentList.find((s) => s.email === currentUser?.email)
-                        ?.id || currentUser?.id,
-                    ),
-                )
+                (i) =>
+                  String(i.student_id) ===
+                  String(
+                    studentList.find((s) => s.email === currentUser?.email)
+                      ?.id || currentUser?.id,
+                  ),
+              )
               : currentRole === "PARENT"
                 ? invoices.filter((i) => i.student_id === selectedWardId)
                 : invoices
@@ -2758,13 +2772,13 @@ export default function App() {
           data={
             currentRole === "STUDENT"
               ? bookLoans.filter(
-                  (b) =>
-                    String(b.student_id) ===
-                    String(
-                      studentList.find((s) => s.email === currentUser?.email)
-                        ?.id || currentUser?.id,
-                    ),
-                )
+                (b) =>
+                  String(b.student_id) ===
+                  String(
+                    studentList.find((s) => s.email === currentUser?.email)
+                      ?.id || currentUser?.id,
+                  ),
+              )
               : currentRole === "PARENT"
                 ? bookLoans.filter((b) => b.student_id === selectedWardId)
                 : bookLoans
@@ -2855,7 +2869,7 @@ export default function App() {
             currentRole === "PARENT"
               ? selectedWardId || undefined
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
-                currentUser?.id
+              currentUser?.id
           }
           data={transportRoutes}
           students={studentList}
@@ -2880,7 +2894,7 @@ export default function App() {
             currentRole === "PARENT"
               ? selectedWardId || undefined
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
-                currentUser?.id
+              currentUser?.id
           }
           data={hostels}
           students={studentList}
@@ -2905,7 +2919,7 @@ export default function App() {
             currentRole === "PARENT"
               ? selectedWardId || undefined
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
-                currentUser?.id
+              currentUser?.id
           }
           data={clubs}
           students={studentList}
@@ -2931,19 +2945,19 @@ export default function App() {
             currentRole === "PARENT"
               ? selectedWardId || undefined
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
-                currentUser?.id
+              currentUser?.id
           }
           wards={wards}
           data={
             currentRole === "STUDENT"
               ? healthRecords.filter(
-                  (h) =>
-                    String(h.student_id) ===
-                    String(
-                      studentList.find((s) => s.email === currentUser?.email)
-                        ?.id || currentUser?.id,
-                    ),
-                )
+                (h) =>
+                  String(h.student_id) ===
+                  String(
+                    studentList.find((s) => s.email === currentUser?.email)
+                      ?.id || currentUser?.id,
+                  ),
+              )
               : currentRole === "PARENT"
                 ? healthRecords.filter((h) => h.student_id === selectedWardId)
                 : healthRecords
@@ -2970,22 +2984,22 @@ export default function App() {
             currentRole === "PARENT"
               ? selectedWardId || undefined
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
-                currentUser?.id
+              currentUser?.id
           }
           data={
             currentRole === "STUDENT"
               ? behaviorIncidents.filter(
-                  (b) =>
-                    String(b.student_id) ===
-                    String(
-                      studentList.find((s) => s.email === currentUser?.email)
-                        ?.id || currentUser?.id,
-                    ),
-                )
+                (b) =>
+                  String(b.student_id) ===
+                  String(
+                    studentList.find((s) => s.email === currentUser?.email)
+                      ?.id || currentUser?.id,
+                  ),
+              )
               : currentRole === "PARENT"
                 ? behaviorIncidents.filter(
-                    (b) => b.student_id === selectedWardId,
-                  )
+                  (b) => b.student_id === selectedWardId,
+                )
                 : behaviorIncidents
           }
           students={studentList}

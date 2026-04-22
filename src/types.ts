@@ -66,6 +66,8 @@ export interface Inquiry {
   secondary_parent_name?: string;
   secondary_parent_email?: string;
   secondary_parent_contact?: string;
+  gender?: string;
+  date_of_birth?: string;
   religion?: string;
 }export interface Application {
   id: string;
