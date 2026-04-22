@@ -774,18 +774,21 @@ export const FinanceModules = {
                   </div>
                   {(() => {
                     const alreadyPaid = (payments || [])
-                      .filter((p: any) => p.invoice_id === paymentModalData?.id)
+                      .filter((p: any) =>
+                        (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) ||
+                        (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id))
+                      )
                       .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
                     const balance = parseFloat(paymentModalData?.amount || 0) - alreadyPaid;
                     return (
                       <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
                         <div className="flex justify-between items-center">
                           <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Already Paid</p>
-                          <p className="text-xs font-black text-emerald-600">{currency} {alreadyPaid.toLocaleString()}</p>
+                          <p className="text-xs font-black text-emerald-600 font-serif">{currency} {alreadyPaid.toLocaleString()}</p>
                         </div>
                         <div className="flex justify-between items-center">
                           <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Balance Due</p>
-                          <p className="text-xs font-black text-rose-600">{currency} {balance.toLocaleString()}</p>
+                          <p className="text-xs font-black text-rose-600 font-serif">{currency} {balance.toLocaleString()}</p>
                         </div>
                       </div>
                     );
@@ -1022,18 +1025,21 @@ export const FinanceModules = {
               </div>
               {(() => {
                 const alreadyPaid = (payments || [])
-                  .filter((p: any) => p.invoice_id === paymentModalData?.id)
+                  .filter((p: any) =>
+                    (p.invoice_id && String(p.invoice_id) === String(paymentModalData?.id)) ||
+                    (p.invoiceId && String(p.invoiceId) === String(paymentModalData?.id))
+                  )
                   .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
                 const balance = parseFloat(paymentModalData?.amount || 0) - alreadyPaid;
                 return (
                   <div className="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-700 space-y-1">
                     <div className="flex justify-between items-center">
                       <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Already Paid</p>
-                      <p className="text-xs font-black text-emerald-600">{currency} {alreadyPaid.toLocaleString()}</p>
+                      <p className="text-xs font-black text-emerald-600 font-serif">{currency} {alreadyPaid.toLocaleString()}</p>
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Balance Due</p>
-                      <p className="text-xs font-black text-rose-600">{currency} {balance.toLocaleString()}</p>
+                      <p className="text-xs font-black text-rose-600 font-serif">{currency} {balance.toLocaleString()}</p>
                     </div>
                   </div>
                 );
