@@ -644,3 +644,105 @@ export const distributeSMS = async (req: AuthRequest, res: Response) => {
     client.release();
   }
 };
+
+// SMS PURCHASE VIA PAYSTACK
+export const verifySMSPurchase = async (req: AuthRequest, res: Response) => {
+  const { reference } = req.body;
+  const orgId = req.user.org_id;
+  const userId = req.user.id;
+
+  if (!reference) {
+    return res.status(400).json({ error: 'No transaction reference provided' });
+  }
+
+  const client = await pool.connect();
+  try {
+    // 1. Verify with Paystack API
+    const paystackSecret = process.env.PAYSTACK_SECRET_KEY;
+    const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+      headers: {
+        Authorization: `Bearer ${paystackSecret}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!data.status || data.data.status !== 'success') {
+      return res.status(400).json({ error: 'Paystack verification failed', details: data.message });
+    }
+
+    const paymentData = data.data;
+    const paidAmount = paymentData.amount / 100; // Paystack sends in pesewas/subunits
+
+    // 2. Begin Database Transaction
+    await client.query('BEGIN');
+
+    // 3. Get org's current SMS balance and unit price
+    const orgRes = await client.query('SELECT sms_balance, sms_unit_price FROM organizations WHERE id = $1', [orgId]);
+    if (orgRes.rows.length === 0) throw new Error('Organization not found');
+
+    const prevBalance = orgRes.rows[0].sms_balance || 0;
+    const unitPrice = parseFloat(orgRes.rows[0].sms_unit_price) || 0;
+
+    if (unitPrice <= 0) {
+      throw new Error('SMS unit price not configured. Please contact your administrator.');
+    }
+
+    const smsUnits = Math.floor(paidAmount / unitPrice);
+    if (smsUnits <= 0) {
+      throw new Error('Payment amount is too small to purchase any SMS units.');
+    }
+
+    const newBalance = prevBalance + smsUnits;
+
+    // 4. Credit SMS balance
+    await client.query('UPDATE organizations SET sms_balance = $1 WHERE id = $2', [newBalance, orgId]);
+
+    // 5. Record transaction
+    await client.query(
+      'INSERT INTO sms_transactions (org_id, type, amount, previous_balance, new_balance, description) VALUES ($1, $2, $3, $4, $5, $6)',
+      [orgId, 'Purchase', smsUnits, prevBalance, newBalance, `Purchased ${smsUnits} SMS units via Paystack. Ref: ${reference}. Paid: ${paidAmount}`]
+    );
+
+    await client.query('COMMIT');
+    await recordAuditLog(userId, 'SMS_PURCHASE', `Purchased ${smsUnits} SMS units via Paystack. Ref: ${reference}`, orgId, req.ip || '');
+
+    res.json({
+      success: true,
+      message: `Successfully purchased ${smsUnits} SMS units!`,
+      sms_units: smsUnits,
+      new_balance: newBalance,
+      amount_paid: paidAmount
+    });
+
+  } catch (err: any) {
+    await client.query('ROLLBACK');
+    console.error('[SMS Purchase Verification Error]:', err);
+    res.status(500).json({ error: 'Failed to verify SMS purchase', details: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+// SMS TRANSACTION HISTORY
+export const getSMSTransactions = async (req: AuthRequest, res: Response) => {
+  try {
+    const orgId = req.user.org_id;
+    const role = req.user.role;
+
+    let query = 'SELECT * FROM sms_transactions';
+    let params: any[] = [];
+
+    if (role !== 'SUPER_ADMIN') {
+      params.push(orgId);
+      query += ` WHERE org_id = $${params.length}`;
+    }
+
+    query += ' ORDER BY created_at DESC';
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

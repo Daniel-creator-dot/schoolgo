@@ -1254,3 +1254,13 @@ export const distributeSMS = async (data: { org_id: string, amount: number, pric
   const response = await api.post('/sms/distribute', data);
   return response.data;
 };
+
+export const verifySMSPurchase = async (reference: string) => {
+  const response = await api.post('/sms/verify-purchase', { reference });
+  return response.data;
+};
+
+export const fetchSMSTransactions = async () => {
+  const response = await api.get('/sms/transactions');
+  return response.data;
+};

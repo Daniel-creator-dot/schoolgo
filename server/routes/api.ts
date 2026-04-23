@@ -92,6 +92,8 @@ router.delete('/platform/users/:id', checkRole(['SUPER_ADMIN']), OrganizationCon
 router.get('/sms/settings', checkRole(['SUPER_ADMIN']), OrganizationController.getSMSSettings);
 router.post('/sms/settings', checkRole(['SUPER_ADMIN']), OrganizationController.updateSMSSettings);
 router.post('/sms/distribute', checkRole(['SUPER_ADMIN']), OrganizationController.distributeSMS);
+router.post('/sms/verify-purchase', checkRole(['SCHOOL_ADMIN']), OrganizationController.verifySMSPurchase);
+router.get('/sms/transactions', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getSMSTransactions);
 
 // ACADEMIC
 router.get('/academic/departments', HRController.getDepartments);

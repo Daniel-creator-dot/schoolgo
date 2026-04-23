@@ -21,6 +21,7 @@ import {
   Clock,
   Truck,
   Zap,
+  Check,
   CheckCircle,
   User,
   UserPlus,
@@ -30,11 +31,16 @@ import {
   Gift,
   Download,
   MessageSquare,
-  Send
+  Send,
+  History,
+  ShoppingCart,
+  Plus
 } from 'lucide-react';
 import { useLanguage } from '../lib/LanguageContext';
 import { Modal } from './UI';
 import { DataTable } from './DataTable';
+import { verifySMSPurchase, fetchSMSTransactions } from '../lib/api';
+import { API_BASE_URL } from '../constants';
 import {
   BarChart,
   Bar,
@@ -78,11 +84,18 @@ interface StatCardProps {
   trend: 'up' | 'down';
   icon: any;
   color: string;
+  onClick?: () => void;
 }
 
-function StatCard({ title, value, change, trend, icon: Icon, color }: StatCardProps) {
+function StatCard({ title, value, change, trend, icon: Icon, color, onClick }: StatCardProps) {
   return (
-    <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+    <div
+      onClick={onClick}
+      className={cn(
+        "p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300",
+        onClick && "cursor-pointer hover:border-indigo-500/50 hover:bg-indigo-50/5 dark:hover:bg-indigo-900/5 scale-100 hover:scale-[1.02] active:scale-[0.98]"
+      )}
+    >
       <div className="flex items-center justify-between mb-4">
         <div className={cn("p-2 rounded-xl", color)}>
           <Icon className="w-6 h-6 text-white" />
@@ -97,7 +110,7 @@ function StatCard({ title, value, change, trend, icon: Icon, color }: StatCardPr
       </div>
       <div>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">{title}</p>
-        <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mt-1">{value}</h3>
+        <h3 className="text-2xl font-bold text-zinc-900 dark:text-white mt-1 uppercase tracking-tight">{value}</h3>
       </div>
     </div>
   );
@@ -253,10 +266,233 @@ export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate
   );
 }
 
+function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRefresh?: () => void }) {
+  const { currency } = useLanguage();
+  const [units, setUnits] = useState(100);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    loadTransactions();
+  }, []);
+
+  const loadTransactions = async () => {
+    try {
+      const data = await fetchSMSTransactions();
+      setTransactions(data);
+    } catch (err) {
+      console.error('Failed to load SMS transactions:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePaystackPayment = () => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      (window as any).showToast?.('Authentication required.', 'error');
+      return;
+    }
+    const user = JSON.parse(userStr);
+    const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+
+    if (!publicKey || !(window as any).PaystackPop) {
+      (window as any).showToast?.('Payment system not ready. Please refresh.', 'error');
+      return;
+    }
+
+    const unitPrice = parseFloat(organization?.sms_unit_price) || 1;
+    const totalAmount = Math.round(units * unitPrice * 100); // in pesewas/subunits
+
+    setIsProcessing(true);
+
+    const handler = (window as any).PaystackPop.setup({
+      key: publicKey,
+      email: user.email,
+      amount: totalAmount,
+      currency: organization?.currency || 'GHS',
+      ref: `SMS-${Math.floor(Math.random() * 1000000000 + 1)}`,
+      metadata: {
+        custom_fields: [
+          { display_name: "Units", variable_name: "sms_units", value: units },
+          { display_name: "Org ID", variable_name: "org_id", value: organization?.id }
+        ]
+      },
+      callback: async (response: any) => {
+        try {
+          (window as any).showToast?.('Verifying payment...', 'info');
+          await verifySMSPurchase(response.reference);
+          (window as any).showToast?.('SMS units purchased successfully!', 'success');
+          onRefresh?.();
+          loadTransactions();
+        } catch (err: any) {
+          console.error('SMS verify error:', err);
+          (window as any).showToast?.(err.response?.data?.error || 'Verification failed', 'error');
+        } finally {
+          setIsProcessing(false);
+        }
+      },
+      onClose: () => {
+        setIsProcessing(false);
+        (window as any).showToast?.('Payment cancelled.', 'info');
+      }
+    });
+
+    handler.openIframe();
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+      <div className="lg:col-span-1 space-y-6">
+        <div className="p-8 bg-zinc-900 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <ShoppingCart className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Buy SMS Units</h3>
+                <p className="text-zinc-400 text-xs">Instantly refill your balance</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Quantity</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[100, 500, 1000, 5000].map(val => (
+                    <button
+                      key={val}
+                      onClick={() => setUnits(val)}
+                      className={cn(
+                        "py-3 rounded-xl font-bold text-sm transition-all border",
+                        units === val
+                          ? "bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-600/20"
+                          : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-600"
+                      )}
+                    >
+                      {val.toLocaleString()}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  value={units}
+                  onChange={(e) => setUnits(parseInt(e.target.value) || 0)}
+                  className="w-full mt-2 bg-zinc-800 border-zinc-700 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-amber-600 transition-colors"
+                  placeholder="Custom amount..."
+                />
+              </div>
+
+              <div className="p-4 bg-zinc-800/50 rounded-2xl border border-zinc-700/30">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-zinc-500 font-medium">Subtotal ({units} units)</span>
+                  <span className="text-xs font-bold text-zinc-300">{organization?.currency || 'GH₵'} {(units * (parseFloat(organization?.sms_unit_price) || 0)).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center text-lg">
+                  <span className="font-bold text-zinc-400">Total Price</span>
+                  <span className="font-black text-amber-500">{organization?.currency || 'GH₵'} {(units * (parseFloat(organization?.sms_unit_price) || 0)).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handlePaystackPayment}
+                disabled={isProcessing || units <= 0}
+                className="w-full py-4 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-amber-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                {isProcessing ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    Pay with Paystack
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+          <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-amber-600/10 rounded-full blur-[60px]" />
+        </div>
+      </div>
+
+      <div className="lg:col-span-2 p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center">
+              <History className="w-6 h-6 text-zinc-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Transaction History</h3>
+              <p className="text-sm text-zinc-500">Record of SMS distributions and purchases</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-zinc-100 dark:border-zinc-800">
+                <th className="px-4 py-4 text-left text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Date</th>
+                <th className="px-4 py-4 text-left text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Type</th>
+                <th className="px-4 py-4 text-right text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Units</th>
+                <th className="px-4 py-4 text-right text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Balance</th>
+                <th className="px-4 py-4 text-left text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+              {isLoading ? (
+                Array(3).fill(0).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td colSpan={5} className="px-4 py-4 h-12 bg-zinc-50/50 dark:bg-zinc-800/30 rounded-xl" />
+                  </tr>
+                ))
+              ) : transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-12 text-center text-zinc-400 font-medium">No transactions found</td>
+                </tr>
+              ) : (
+                transactions.map((tx) => (
+                  <tr key={tx.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                    <td className="px-4 py-4 text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                      {new Date(tx.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className={cn(
+                        "px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest",
+                        tx.type === 'Purchase' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                      )}>
+                        {tx.type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-right text-xs font-black text-zinc-900 dark:text-white">
+                      +{tx.amount?.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-4 text-right text-xs font-bold text-zinc-500">
+                      {tx.new_balance?.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="text-[10px] font-bold text-emerald-600 uppercase">Completed</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SchoolAdminDashboard({ stats, invoices = [], payments = [], students = [], classes = [], organization, attendanceHistory = [], activities = [], unreadMessagesCount = 0, onNavigate, onUpdateOrganization, staffList = [], departments = [] }: { stats?: { totalStudents: string; totalStaff: string; attendanceRate: string; feesCollected: string }, invoices?: any[], payments?: any[], students?: any[], classes?: any[], organization?: any, attendanceHistory?: any[], activities?: any[], unreadMessagesCount?: number, onNavigate?: (view: string) => void, onUpdateOrganization?: (data: any) => void, staffList?: any[], departments?: any[] }) {
   const { currency, t } = useLanguage();
   const [showOwingModal, setShowOwingModal] = useState(false);
   const [modalType, setModalType] = useState<'paid' | 'owing'>('owing');
+  const [showSMSPanel, setShowSMSPanel] = useState(false);
 
   // Calculate Attendance Trends from real history
   const attendanceTrendData = useMemo(() => {
@@ -385,8 +621,18 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
           trend="up"
           icon={MessageSquare}
           color="bg-amber-600"
+          onClick={() => setShowSMSPanel(!showSMSPanel)}
         />
       </div>
+
+      {showSMSPanel && (
+        <div className="mt-8">
+          <SMSPurchasePanel
+            organization={organization}
+            onRefresh={() => onUpdateOrganization?.({ ...organization })}
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-sm">
