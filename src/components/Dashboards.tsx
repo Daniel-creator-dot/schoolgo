@@ -346,11 +346,24 @@ function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRe
 
     setIsProcessing(true);
 
+    const paystackCurrency = (organization?.currency === 'GH₵' || organization?.currency === 'GHS') ? 'GHS' :
+      (organization?.currency === '₦' || organization?.currency === 'NGN') ? 'NGN' :
+        (organization?.currency === '$' || organization?.currency === 'USD') ? 'USD' :
+          organization?.currency || 'GHS';
+
+    console.log('>>> [Paystack] Final Setup Config:', {
+      hasKey: !!publicKey,
+      email: user.email,
+      amount: totalAmount,
+      currency: paystackCurrency,
+      ref: `SMS-${Math.floor(Math.random() * 1000000000 + 1)}`
+    });
+
     const handler = (window as any).PaystackPop.setup({
       key: publicKey,
       email: user.email,
       amount: totalAmount,
-      currency: organization?.currency || 'GHS',
+      currency: paystackCurrency,
       ref: `SMS-${Math.floor(Math.random() * 1000000000 + 1)}`,
       metadata: {
         custom_fields: [
