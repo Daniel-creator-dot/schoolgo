@@ -1075,16 +1075,6 @@ export default function App() {
           result = isUpdate
             ? await updateStaff(sanitizedStaffData.id, sanitizedStaffData)
             : await createStaff(sanitizedStaffData);
-          if (!isUpdate && result) {
-            // Also create a platform user for the new staff member
-            await registerPlatformUser({
-              name: sanitizedStaffData.name,
-              email: sanitizedStaffData.email,
-              password: sanitizedStaffData.password || "zxcv123$$",
-              role: sanitizedStaffData.role || "STAFF",
-              org_id: currentUser?.org_id,
-            });
-          }
           break;
         case "department":
           result = isUpdate
@@ -1118,16 +1108,6 @@ export default function App() {
           break;
         case "recruitment-hire":
           result = await hireCandidate(data.id, data);
-          if (result && result.staff) {
-            // Also create a platform user for the newly hired staff member
-            await registerPlatformUser({
-              name: result.staff.name || data.name,
-              email: result.staff.email || data.email,
-              password: "zxcv123$$",
-              role: "STAFF",
-              org_id: currentUser?.org_id,
-            });
-          }
           break;
         case "lesson-note":
           result = isUpdate
