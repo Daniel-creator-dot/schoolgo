@@ -74,7 +74,7 @@ import {
   fetchPartnerRewards,
   deletePartnerReward
 } from '../lib/api';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, PAYSTACK_PUBLIC_KEY } from '../constants';
 
 export function UsersManagement({ data, onRefresh, organizations = [] }: { data?: any[], onRefresh?: () => void, organizations?: any[] }) {
   const { t } = useLanguage();
@@ -1049,7 +1049,7 @@ export function SchoolBilling({
       return;
     }
     const user = JSON.parse(userStr);
-    const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    const publicKey = PAYSTACK_PUBLIC_KEY;
 
     if (!publicKey) {
       console.error('>>> [Paystack] Public Key missing (VITE_PAYSTACK_PUBLIC_KEY)');

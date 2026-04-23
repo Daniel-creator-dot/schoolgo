@@ -40,7 +40,7 @@ import { useLanguage } from '../lib/LanguageContext';
 import { Modal } from './UI';
 import { DataTable } from './DataTable';
 import { verifySMSPurchase, fetchSMSTransactions } from '../lib/api';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL, PAYSTACK_PUBLIC_KEY } from '../constants';
 import {
   BarChart,
   Bar,
@@ -299,19 +299,42 @@ function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRe
     }
   };
 
-  const handlePaystackPayment = () => {
+  const handlePaystackPayment = async () => {
     const userStr = localStorage.getItem('user');
     if (!userStr) {
       (window as any).showToast?.('Authentication required.', 'error');
       return;
     }
     const user = JSON.parse(userStr);
-    const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+
+    // Attempt to load Paystack script if not present
+    if (!(window as any).PaystackPop) {
+      try {
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.async = true;
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      } catch (err) {
+        console.error('Failed to load Paystack script:', err);
+        (window as any).showToast?.('Could not load payment system. Check your internet connection.', 'error');
+        return;
+      }
+    }
+
+    const publicKey = PAYSTACK_PUBLIC_KEY;
     const PaystackPop = (window as any).PaystackPop;
 
     if (!publicKey || !PaystackPop) {
-      console.error('Paystack readiness check failed:', { hasPublicKey: !!publicKey, hasPaystackPop: !!PaystackPop });
-      (window as any).showToast?.('Payment system is still initializing. Please wait a moment or refresh.', 'error');
+      console.error('Paystack initialization check failed:', {
+        hasPublicKey: !!publicKey,
+        hasPaystackPop: !!PaystackPop,
+        envKeys: Object.keys(import.meta.env).filter(k => k.startsWith('VITE_'))
+      });
+      (window as any).showToast?.(`Payment configuration error. Please contact support.`, 'error');
       return;
     }
 
