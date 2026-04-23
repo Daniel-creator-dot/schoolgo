@@ -75,6 +75,7 @@ import LandingPage from "./components/LandingPage";
 import Login from "./components/Login";
 import PartnerLogin from "./components/PartnerLogin";
 import { API_BASE_URL } from "./constants";
+import QRAttendanceScanner from "./components/QRAttendanceScanner";
 import { cn } from "./lib/utils";
 import {
   fetchStudentFeesSummary,
@@ -2056,6 +2057,13 @@ export default function App() {
             }
           />
         ),
+
+      "QR Attendance": (
+        <QRAttendanceScanner
+          classes={staffData ? staffData.classes : classList}
+          onNavigate={setCurrentView}
+        />
+      ),
 
       "Promotion & Graduation": (
         <AcademicModules.PromotionGraduation onRefresh={loadData} />

@@ -113,6 +113,7 @@ router.patch('/academic/subjects/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']
 router.delete('/academic/subjects/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), AcademicController.deleteSubject);
 router.get('/academic/attendance', AcademicController.getAttendance);
 router.post('/academic/attendance', checkRole(['STAFF', 'SCHOOL_ADMIN', 'HOD']), AcademicController.markAttendance);
+router.post('/academic/attendance/qr-scan', checkRole(['STAFF', 'SCHOOL_ADMIN', 'HOD']), AcademicController.markAttendanceByQR);
 router.get('/academic/timetables', AcademicController.getTimetables);
 router.post('/academic/timetables', checkRole(['SCHOOL_ADMIN', 'HOD']), AcademicController.createTimetableEntry);
 router.patch('/academic/timetables/:id', checkRole(['SCHOOL_ADMIN', 'HOD']), AcademicController.updateTimetableEntry);

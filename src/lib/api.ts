@@ -1280,3 +1280,9 @@ export const deletePartnerReward = async (rewardId: string) => {
   const response = await api.delete(`/rewards/${rewardId}`);
   return response.data;
 };
+
+// QR ATTENDANCE
+export const markAttendanceByQR = async (data: { qr_data: string; status?: string; class_id?: string }) => {
+  const response = await api.post('/academic/attendance/qr-scan', data);
+  return response.data;
+};

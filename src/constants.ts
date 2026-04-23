@@ -41,7 +41,8 @@ import {
   Shirt,
   ShoppingCart,
   Ruler,
-  Layout
+  Layout,
+  QrCode
 } from 'lucide-react';
 
 import { UserRole, NavItem } from './types';
@@ -102,6 +103,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
       { title: 'Teacher List', href: 'Teacher List', roles: ['STUDENT', 'PARENT'], icon: Users },
       { title: 'Academic Calendar', href: 'Academic Calendar', roles: ['SCHOOL_ADMIN', 'STAFF', 'STUDENT'], icon: Calendar },
       { title: 'Attendance', href: 'Attendance', roles: ['SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT'], icon: ClipboardCheck },
+      { title: 'QR Attendance', href: 'QR Attendance', roles: ['SCHOOL_ADMIN', 'HOD', 'STAFF'], icon: QrCode },
       { title: 'Academic Profile', href: 'Academic Information', roles: ['STUDENT'], icon: GraduationCap },
       { title: 'Promotion & Graduation', href: 'Promotion & Graduation', roles: ['SCHOOL_ADMIN'], icon: TrendingUp },
       { title: 'Alumni Management', href: 'Alumni Management', roles: ['SCHOOL_ADMIN'], icon: GraduationCap },

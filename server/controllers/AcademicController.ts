@@ -9,8 +9,8 @@ export const getClasses = async (req: AuthRequest, res: Response) => {
   try {
     const { org_id, role } = req.user;
     let result;
-    
-      const query = `
+
+    const query = `
       SELECT 
         c.*, 
         nc.name as next_class_name,
@@ -21,13 +21,13 @@ export const getClasses = async (req: AuthRequest, res: Response) => {
       LEFT JOIN staff s ON c.class_teacher_id = s.id
       LEFT JOIN grading_scales gs ON c.grading_scale_id = gs.id
     `;
-    
+
     if (role === 'SUPER_ADMIN') {
       result = await pool.query(query);
     } else {
       result = await pool.query(query + ' WHERE c.org_id = $1', [org_id]);
     }
-    
+
     res.json(result.rows);
   } catch (err: any) {
     console.error('getClasses error:', err);
@@ -42,12 +42,12 @@ export const createClass = async (req: AuthRequest, res: Response) => {
     const result = await pool.query(
       'INSERT INTO classes (org_id, name, section, capacity, rank, next_class_id, class_teacher_id, grading_scale_id, report_card_template_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
       [
-        orgId, 
-        name, 
-        section, 
-        capacity, 
-        rank || 0, 
-        next_class_id || null, 
+        orgId,
+        name,
+        section,
+        capacity,
+        rank || 0,
+        next_class_id || null,
         class_teacher_id || null,
         grading_scale_id || null,
         report_card_template_id || null
@@ -108,7 +108,7 @@ export const createSubject = async (req: AuthRequest, res: Response) => {
   try {
     await client.query('BEGIN');
     const orgId = req.user.org_id;
-    
+
     // Auto-generate code if not provided
     const subjectCode = code || name.slice(0, 3).toUpperCase() + '-' + Math.floor(100 + Math.random() * 900);
 
@@ -147,7 +147,7 @@ export const updateSubject = async (req: AuthRequest, res: Response) => {
   try {
     await client.query('BEGIN');
     const orgId = req.user.org_id;
-    
+
     // Maintain or update code
     const subjectCode = code || name.slice(0, 3).toUpperCase() + '-' + Math.floor(100 + Math.random() * 900);
 
@@ -210,15 +210,15 @@ export const updateClass = async (req: AuthRequest, res: Response) => {
     const result = await pool.query(
       'UPDATE classes SET name = $1, section = $2, capacity = $3, rank = $4, next_class_id = $5, class_teacher_id = $6, grading_scale_id = $7, report_card_template_id = $8 WHERE id = $9 AND org_id = $10 RETURNING *',
       [
-        name, 
-        section, 
-        capacity, 
-        rank || 0, 
-        next_class_id || null, 
-        class_teacher_id || null, 
+        name,
+        section,
+        capacity,
+        rank || 0,
+        next_class_id || null,
+        class_teacher_id || null,
         grading_scale_id || null,
         report_card_template_id || null,
-        id, 
+        id,
         orgId
       ]
     );
@@ -259,6 +259,67 @@ export const markAttendance = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// QR-BASED ATTENDANCE
+export const markAttendanceByQR = async (req: AuthRequest, res: Response) => {
+  const { qr_data, status = 'Present', class_id } = req.body;
+  try {
+    const orgId = req.user.org_id;
+    if (!qr_data) return res.status(400).json({ error: 'QR data is required' });
+
+    // Look up student by admission_no or id
+    const studentResult = await pool.query(
+      `SELECT id, name, admission_no, class_id FROM students 
+       WHERE org_id = $1 AND (admission_no = $2 OR CAST(id AS TEXT) = $2)
+       LIMIT 1`,
+      [orgId, qr_data.trim()]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Student not found. QR code may be invalid.' });
+    }
+
+    const student = studentResult.rows[0];
+
+    // Optional class filter
+    if (class_id && String(student.class_id) !== String(class_id)) {
+      return res.status(400).json({ error: `Student "${student.name}" is not in the selected class.` });
+    }
+
+    // Check for duplicate attendance today
+    const today = new Date().toISOString().split('T')[0];
+    const existingResult = await pool.query(
+      `SELECT id FROM student_attendance 
+       WHERE org_id = $1 AND student_id = $2 AND date = $3`,
+      [orgId, student.id, today]
+    );
+
+    if (existingResult.rows.length > 0) {
+      return res.status(409).json({
+        error: `${student.name} already marked present today.`,
+        student_name: student.name,
+        already_marked: true
+      });
+    }
+
+    // Create attendance record
+    const result = await pool.query(
+      'INSERT INTO student_attendance (org_id, student_id, status, remarks) VALUES ($1, $2, $3, $4) RETURNING *',
+      [orgId, student.id, status, 'Marked via QR scan']
+    );
+
+    await recordAuditLog(req.user.id, 'QR_ATTENDANCE', `Marked ${student.name} (${student.admission_no}) as ${status} via QR scan`, orgId, req.ip || '');
+
+    res.status(201).json({
+      ...result.rows[0],
+      student_name: student.name,
+      admission_no: student.admission_no
+    });
+  } catch (err: any) {
+    console.error('QR attendance error:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
 export const getAttendance = async (req: AuthRequest, res: Response) => {
   const { studentId, date } = req.query;
   try {
@@ -266,12 +327,12 @@ export const getAttendance = async (req: AuthRequest, res: Response) => {
     const role = req.user.role;
     let query = 'SELECT * FROM student_attendance WHERE 1=1';
     const params: any[] = [];
-    
+
     if (role !== 'SUPER_ADMIN') {
       params.push(orgId);
       query += ` AND org_id = $${params.length}`;
     }
-    
+
     if (studentId) {
       params.push(studentId);
       query += ` AND student_id = $${params.length}`;
@@ -280,7 +341,7 @@ export const getAttendance = async (req: AuthRequest, res: Response) => {
       params.push(date);
       query += ` AND date = $${params.length}`;
     }
-    
+
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err: any) {
@@ -294,7 +355,7 @@ export const getTimetables = async (req: AuthRequest, res: Response) => {
     const { classId } = req.query;
     const orgId = req.user.org_id;
     const role = req.user.role;
-    
+
     let query = `
       SELECT t.*, s.name as subject_name, st.name as teacher_name, c.name as class_name, c.section as class_section
       FROM timetables t 
@@ -332,20 +393,20 @@ export const createTimetableEntry = async (req: AuthRequest, res: Response) => {
         const hodStaffId = hodStaffInfo.rows[0]?.id;
         const hodStaffEmail = req.user.email;
         const hodStaffDept = hodStaffInfo.rows[0]?.department_id;
-        
+
         const managedDepts = await pool.query('SELECT id FROM departments WHERE (hod_id = $1 OR hod_id = $2) AND org_id = $3', [hodStaffId, hodStaffEmail, orgId]);
         const managedDeptIds = managedDepts.rows.map(r => r.id);
 
         const teacherStaff = await pool.query('SELECT department_id, reports_to FROM staff WHERE id = $1 AND org_id = $2', [teacher_id, orgId]);
         const teacherDept = teacherStaff.rows[0]?.department_id;
         const reportsTo = teacherStaff.rows[0]?.reports_to;
-        
+
         const isManagedDept = hodStaffDept === teacherDept || managedDeptIds.includes(teacherDept);
         const isReporting = reportsTo && (
           (hodStaffId && String(reportsTo).toLowerCase() === String(hodStaffId).toLowerCase()) ||
           (hodStaffEmail && String(reportsTo).toLowerCase() === String(hodStaffEmail).toLowerCase())
         );
-        
+
         if (!isManagedDept && !isReporting) {
           return res.status(403).json({ error: 'You can only assign teachers from your own department or those reporting to you.' });
         }
@@ -368,8 +429,8 @@ export const createTimetableEntry = async (req: AuthRequest, res: Response) => {
 
       if (conflict.rows.length > 0) {
         const c = conflict.rows[0];
-        return res.status(409).json({ 
-          error: `Teacher is already assigned to ${c.class_name} ${c.class_section} during this time (${c.start_time.slice(0,5)} - ${c.end_time.slice(0,5)}).` 
+        return res.status(409).json({
+          error: `Teacher is already assigned to ${c.class_name} ${c.class_section} during this time (${c.start_time.slice(0, 5)} - ${c.end_time.slice(0, 5)}).`
         });
       }
     }
@@ -397,20 +458,20 @@ export const updateTimetableEntry = async (req: AuthRequest, res: Response) => {
         const hodStaffId = hodStaffInfo.rows[0]?.id;
         const hodStaffEmail = req.user.email;
         const hodStaffDept = hodStaffInfo.rows[0]?.department_id;
-        
+
         const managedDepts = await pool.query('SELECT id FROM departments WHERE (hod_id = $1 OR hod_id = $2) AND org_id = $3', [hodStaffId, hodStaffEmail, orgId]);
         const managedDeptIds = managedDepts.rows.map(r => r.id);
 
         const teacherStaff = await pool.query('SELECT department_id, reports_to FROM staff WHERE id = $1 AND org_id = $2', [teacher_id, orgId]);
         const teacherDept = teacherStaff.rows[0]?.department_id;
         const reportsTo = teacherStaff.rows[0]?.reports_to;
-        
+
         const isManagedDept = hodStaffDept === teacherDept || managedDeptIds.includes(teacherDept);
         const isReporting = reportsTo && (
           (hodStaffId && String(reportsTo).toLowerCase() === String(hodStaffId).toLowerCase()) ||
           (hodStaffEmail && String(reportsTo).toLowerCase() === String(hodStaffEmail).toLowerCase())
         );
-        
+
         if (!isManagedDept && !isReporting) {
           return res.status(403).json({ error: 'You can only assign teachers from your own department or those reporting to you.' });
         }
@@ -434,8 +495,8 @@ export const updateTimetableEntry = async (req: AuthRequest, res: Response) => {
 
       if (conflict.rows.length > 0) {
         const c = conflict.rows[0];
-        return res.status(409).json({ 
-          error: `Teacher is already assigned to ${c.class_name} ${c.class_section} during this time (${c.start_time.slice(0,5)} - ${c.end_time.slice(0,5)}).` 
+        return res.status(409).json({
+          error: `Teacher is already assigned to ${c.class_name} ${c.class_section} during this time (${c.start_time.slice(0, 5)} - ${c.end_time.slice(0, 5)}).`
         });
       }
     }
@@ -501,7 +562,7 @@ export const createLessonNote = async (req: AuthRequest, res: Response) => {
   const { teacher_id, subject, topic, content, class_id } = req.body;
   try {
     const orgId = req.user.org_id;
-    
+
     // Support multiple classes selection
     const classIds = Array.isArray(class_id) ? class_id : [class_id];
     const results = [];
@@ -516,8 +577,8 @@ export const createLessonNote = async (req: AuthRequest, res: Response) => {
     }
 
     if (results.length === 0 && !class_id) {
-       // Support case where class_id is not provided at all
-       const result = await pool.query(
+      // Support case where class_id is not provided at all
+      const result = await pool.query(
         'INSERT INTO lesson_notes (org_id, teacher_id, subject, topic, content, class_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
         [orgId, teacher_id, subject, topic, content, null]
       );
@@ -525,7 +586,7 @@ export const createLessonNote = async (req: AuthRequest, res: Response) => {
     }
 
     await recordAuditLog(req.user.id, 'CREATE_LESSON_NOTE', `Created lesson note(s) for subject: ${subject}, topic: ${topic} across ${results.length} class(es)`, orgId, req.ip || '');
-    
+
     // Return the first one for backward compatibility or a generic success
     res.status(201).json(results[0]);
   } catch (err: any) {
