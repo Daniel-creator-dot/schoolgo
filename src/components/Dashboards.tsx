@@ -266,6 +266,17 @@ export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate
   );
 }
 
+const EXCHANGE_RATES: Record<string, number> = {
+  'GH₵': 1.0,
+  'GHS': 1.0,
+  'USD': 0.075,
+  'NGN': 110.0,
+  'EUR': 0.07,
+  'GBP': 0.06,
+  'CFA': 45.0,
+  'ZAR': 1.4
+};
+
 function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRefresh?: () => void }) {
   const { currency } = useLanguage();
   const [units, setUnits] = useState(100);
@@ -296,14 +307,19 @@ function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRe
     }
     const user = JSON.parse(userStr);
     const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    const PaystackPop = (window as any).PaystackPop;
 
-    if (!publicKey || !(window as any).PaystackPop) {
-      (window as any).showToast?.('Payment system not ready. Please refresh.', 'error');
+    if (!publicKey || !PaystackPop) {
+      console.error('Paystack readiness check failed:', { hasPublicKey: !!publicKey, hasPaystackPop: !!PaystackPop });
+      (window as any).showToast?.('Payment system is still initializing. Please wait a moment or refresh.', 'error');
       return;
     }
 
-    const unitPrice = parseFloat(organization?.sms_unit_price) || 1;
-    const totalAmount = Math.round(units * unitPrice * 100); // in pesewas/subunits
+    const orgCurrency = organization?.currency || 'GH₵';
+    const rate = EXCHANGE_RATES[orgCurrency] || 1.0;
+    const unitPriceBase = parseFloat(organization?.sms_unit_price) || 0.1;
+    const unitPriceConverted = unitPriceBase * rate;
+    const totalAmount = Math.round(units * unitPriceConverted * 100); // in subunits
 
     setIsProcessing(true);
 
@@ -390,9 +406,13 @@ function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRe
                   <span className="text-xs text-zinc-500 font-medium">Subtotal ({units} units)</span>
                   <span className="text-xs font-bold text-zinc-300">{organization?.currency || 'GH₵'} {(units * (parseFloat(organization?.sms_unit_price) || 0)).toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between items-center text-lg">
-                  <span className="font-bold text-zinc-400">Total Price</span>
-                  <span className="font-black text-amber-500">{organization?.currency || 'GH₵'} {(units * (parseFloat(organization?.sms_unit_price) || 0)).toLocaleString()}</span>
+                <div className="flex flex-col items-end">
+                  <span className="text-xs font-bold text-zinc-300">
+                    {organization?.currency || 'GH₵'} {(units * ((parseFloat(organization?.sms_unit_price) || 0) * (EXCHANGE_RATES[organization?.currency || 'GH₵'] || 1.0))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="font-black text-amber-500">
+                    {organization?.currency || 'GH₵'} {(units * ((parseFloat(organization?.sms_unit_price) || 0) * (EXCHANGE_RATES[organization?.currency || 'GH₵'] || 1.0))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
               </div>
 
@@ -615,12 +635,12 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
         <StatCard title={t('total_staff')} value={stats?.totalStaff || "0"} change="Verified" trend="up" icon={Briefcase} color="bg-purple-600" />
         <StatCard title={t('fees_collected')} value={stats?.feesCollected || `${currency} 0`} change="Target" trend="up" icon={Wallet} color="bg-emerald-600" />
         <StatCard
-          title="SMS Balance"
+          title="SMS Credits"
           value={(organization?.sms_balance || 0).toLocaleString()}
-          change={`Price: ${currency}${organization?.sms_unit_price || 0}/unit`}
-          trend="up"
+          change={`Price: ${organization?.currency || 'GH₵'}${((parseFloat(organization?.sms_unit_price) || 0) * (EXCHANGE_RATES[organization?.currency || 'GH₵'] || 1.0)).toFixed(4)}/unit`}
           icon={MessageSquare}
           color="bg-amber-600"
+          trend="up"
           onClick={() => setShowSMSPanel(!showSMSPanel)}
         />
       </div>

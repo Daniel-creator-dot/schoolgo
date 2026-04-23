@@ -253,7 +253,10 @@ export const SuperAdminModules = {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Unit Price (per SMS)</label>
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>Unit Price (per SMS)</span>
+                  <span className="text-[10px] bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded text-zinc-400">GHS Base</span>
+                </label>
                 <input
                   type="number"
                   name="price"

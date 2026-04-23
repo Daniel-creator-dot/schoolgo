@@ -4,6 +4,17 @@ import pool from '../db.ts';
 import { AuthRequest } from '../middleware/auth.ts';
 import { recordAuditLog } from '../lib/audit.ts';
 
+const EXCHANGE_RATES: Record<string, number> = {
+  'GH₵': 1.0,
+  'GHS': 1.0,
+  'USD': 0.075,
+  'NGN': 110.0,
+  'EUR': 0.07,
+  'GBP': 0.06,
+  'CFA': 45.0,
+  'ZAR': 1.4
+};
+
 // DEMO REQUESTS
 export const requestDemo = async (req: Request, res: Response) => {
   const { school_name, contact_email } = req.body;
@@ -688,7 +699,11 @@ export const verifySMSPurchase = async (req: AuthRequest, res: Response) => {
       throw new Error('SMS unit price not configured. Please contact your administrator.');
     }
 
-    const smsUnits = Math.floor(paidAmount / unitPrice);
+    const currency = paymentData.currency || 'GHS';
+    const rate = EXCHANGE_RATES[currency] || 1.0;
+    const paidAmountGHS = paidAmount / rate;
+
+    const smsUnits = Math.floor(paidAmountGHS / unitPrice);
     if (smsUnits <= 0) {
       throw new Error('Payment amount is too small to purchase any SMS units.');
     }
