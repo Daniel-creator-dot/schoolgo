@@ -325,7 +325,7 @@ function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRe
       }
     }
 
-    const publicKey = PAYSTACK_PUBLIC_KEY;
+    const publicKey = PAYSTACK_PUBLIC_KEY || import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
     const PaystackPop = (window as any).PaystackPop;
 
     if (!publicKey || !PaystackPop) {
@@ -358,19 +358,21 @@ function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRe
           { display_name: "Org ID", variable_name: "org_id", value: organization?.id }
         ]
       },
-      callback: async (response: any) => {
-        try {
-          (window as any).showToast?.('Verifying payment...', 'info');
-          await verifySMSPurchase(response.reference);
-          (window as any).showToast?.('SMS units purchased successfully!', 'success');
-          onRefresh?.();
-          loadTransactions();
-        } catch (err: any) {
-          console.error('SMS verify error:', err);
-          (window as any).showToast?.(err.response?.data?.error || 'Verification failed', 'error');
-        } finally {
-          setIsProcessing(false);
-        }
+      callback: function (response: any) {
+        (async () => {
+          try {
+            (window as any).showToast?.('Verifying payment...', 'info');
+            await verifySMSPurchase(response.reference);
+            (window as any).showToast?.('SMS units purchased successfully!', 'success');
+            onRefresh?.();
+            loadTransactions();
+          } catch (err: any) {
+            console.error('SMS verify error:', err);
+            (window as any).showToast?.(err.response?.data?.error || 'Verification failed', 'error');
+          } finally {
+            setIsProcessing(false);
+          }
+        })();
       },
       onClose: () => {
         setIsProcessing(false);
