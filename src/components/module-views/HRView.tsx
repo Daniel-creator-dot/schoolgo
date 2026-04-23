@@ -213,12 +213,12 @@ export const HRModules = {
             <div className="flex items-center gap-2 px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
               <Users className="w-4 h-4 text-zinc-500" />
               <span className="font-bold text-zinc-700 dark:text-zinc-300">{staff.length}</span>
-              <span className="text-zinc-500">Staff</span>
+              <span className="text-zinc-500">{t('staff_label')}</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
               <Layers className="w-4 h-4 text-indigo-500" />
               <span className="font-bold text-indigo-700 dark:text-indigo-300">{departments.length}</span>
-              <span className="text-indigo-500">Depts</span>
+              <span className="text-indigo-500">{t('depts')}</span>
             </div>
           </div>
         </div>
@@ -325,7 +325,7 @@ export const HRModules = {
 
                         {/* Department Node */}
                         <div className="p-3 sm:p-4 rounded-2xl shadow-lg w-40 sm:w-52 text-center bg-indigo-600 text-white relative z-10 transition-transform hover:scale-105">
-                          <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest opacity-60 mb-0.5">Department</p>
+                          <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest opacity-60 mb-0.5">{t('department_name')}</p>
                           <p className="font-bold text-xs sm:text-sm leading-tight">{dept.name}</p>
                         </div>
 
@@ -337,7 +337,7 @@ export const HRModules = {
                               className="p-3 sm:p-3.5 rounded-xl w-36 sm:w-48 text-center bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 cursor-pointer hover:shadow-md transition-all hover:border-indigo-400 group"
                               onClick={() => !isReadOnly && setEditingStaff(hod)}
                             >
-                              <span className="inline-block px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-black uppercase tracking-widest mb-1.5 group-hover:bg-indigo-600 group-hover:text-white transition-colors">HOD</span>
+                              <span className="inline-block px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-black uppercase tracking-widest mb-1.5 group-hover:bg-indigo-600 group-hover:text-white transition-colors">{t('hod')}</span>
                               <p className="font-bold text-[10px] sm:text-xs text-zinc-900 dark:text-white truncate">{hod.name}</p>
                               <p className="text-[8px] sm:text-[9px] text-zinc-400 mt-0.5">{hod.role}</p>
                             </div>
@@ -346,7 +346,7 @@ export const HRModules = {
                           <>
                             <div className="w-px h-6 bg-zinc-300 dark:bg-zinc-700" />
                             <div className="p-2 sm:p-3 rounded-xl w-36 sm:w-48 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-                              <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400">No HOD</p>
+                              <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400">{t('no_hod')}</p>
                             </div>
                           </>
                         )}
@@ -382,7 +382,7 @@ export const HRModules = {
                                         {s.name?.charAt(0) || '?'}
                                       </div>
                                       <p className="font-bold text-[10px] sm:text-[11px] text-zinc-900 dark:text-white truncate">{s.name}</p>
-                                      <p className="text-[7px] sm:text-[8px] text-zinc-400 mt-0.5 truncate">{s.role || 'Staff'}</p>
+                                      <p className="text-[7px] sm:text-[8px] text-zinc-400 mt-0.5 truncate">{s.role || t('staff')}</p>
                                       {reportsTo && (
                                         <p className="text-[6px] sm:text-[7px] text-indigo-500 dark:text-indigo-400 mt-1 font-bold truncate">
                                           → {reportsTo.name.split(' ')[0]}
@@ -403,7 +403,7 @@ export const HRModules = {
                 {/* Unassigned Staff at the bottom */}
                 {unassignedStaff.length > 0 && !scopedDeptId && (
                   <div className="mt-12 pt-8 border-t border-dashed border-zinc-200 dark:border-zinc-700 w-full">
-                    <p className="text-center text-[10px] font-black text-amber-500 uppercase tracking-widest mb-4">Unassigned Staff</p>
+                    <p className="text-center text-[10px] font-black text-amber-500 uppercase tracking-widest mb-4">{t('unassigned_staff')}</p>
                     <div className="flex justify-center gap-4 flex-wrap">
                       {unassignedStaff.map((s) => (
                         <div

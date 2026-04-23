@@ -1199,9 +1199,9 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
         <StatCard title={t('total_students')} value={stats.students.toString()} change="0" trend="up" icon={Users} color="bg-blue-600" />
         <StatCard title={t('avg_attendance')} value={stats.attendance} change="0" trend="up" icon={ClipboardCheck} color="bg-emerald-600" />
         <StatCard
-          title="Appraisal Score"
+          title={t('appraisal_score')}
           value={appraisalScore !== null ? `${appraisalScore}%` : '—'}
-          change={latestReview ? (latestReview.review_date || latestReview.created_at || '').split('T')[0] : 'No review'}
+          change={latestReview ? (latestReview.review_date || latestReview.created_at || '').split('T')[0] : t('no_review')}
           trend="up"
           icon={Star}
           color="bg-amber-600"
@@ -1218,15 +1218,15 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
                 <Star className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Appraisal Score</h3>
-                <p className="text-xs text-zinc-500">Latest performance review breakdown</p>
+                <h3 className="text-lg font-bold text-zinc-900 dark:text-white">{t('appraisal_score')}</h3>
+                <p className="text-xs text-zinc-500">{t('appraisal_score_desc')}</p>
               </div>
             </div>
             <button
               onClick={() => onNavigate?.('Performance')}
               className="text-xs font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-widest flex items-center gap-1 transition-colors"
             >
-              View All <ChevronRight className="w-4 h-4" />
+              {t('view')} {t('all')} <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
@@ -1234,7 +1234,7 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
             {/* Overall Score */}
             <div className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl">
               <p className="text-5xl font-black text-amber-600">{appraisalScore !== null ? appraisalScore : 0}<span className="text-2xl">%</span></p>
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-2">Overall Score</p>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-2">{t('overall_score')}</p>
               <p className="text-[10px] text-zinc-400 mt-1">
                 {latestReview.review_period || latestReview.period || (latestReview.review_date || latestReview.created_at || '').split('T')[0]}
               </p>
@@ -1243,11 +1243,11 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
             {/* Score Breakdown */}
             <div className="space-y-4">
               {[
-                { label: 'Teaching Quality', key: 'teaching_quality', fallback: 'quality_score' },
-                { label: 'Communication', key: 'communication', fallback: 'communication_score' },
-                { label: 'Punctuality', key: 'punctuality', fallback: 'punctuality_score' },
-                { label: 'Teamwork', key: 'teamwork', fallback: 'teamwork_score' },
-                { label: 'Initiative', key: 'initiative', fallback: 'initiative_score' },
+                { label: t('teaching_quality'), key: 'teaching_quality', fallback: 'quality_score' },
+                { label: t('communication_quality'), key: 'communication', fallback: 'communication_score' },
+                { label: t('punctuality'), key: 'punctuality', fallback: 'punctuality_score' },
+                { label: t('teamwork'), key: 'teamwork', fallback: 'teamwork_score' },
+                { label: t('initiative'), key: 'initiative', fallback: 'initiative_score' },
               ].map(({ label, key, fallback }) => {
                 const val = parseFloat(latestReview[key] || latestReview[fallback] || 0);
                 return (
@@ -1270,10 +1270,11 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
 
           {latestReview.comments && (
             <div className="mt-6 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-              <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest mb-1">Reviewer Comments</p>
+              <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest mb-1">{t('reviewer_comments')}</p>
               <p className="text-sm text-zinc-700 dark:text-zinc-300">{latestReview.comments}</p>
             </div>
           )}
+
         </div>
       )}
 
