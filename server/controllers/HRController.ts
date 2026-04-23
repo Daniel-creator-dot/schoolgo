@@ -233,15 +233,16 @@ export const createStaff = async (req: AuthRequest, res: Response) => {
       ]
     );
 
-    // 2. Create User account if it doesn't exist
+    // 2. Create User account if it doesn't exist globally
     if (email) {
-      const userCheck = await client.query('SELECT id FROM users WHERE email = $1 AND org_id = $2', [email, orgId]);
+      const normalizedEmail = email.toLowerCase().trim();
+      const userCheck = await client.query('SELECT id FROM users WHERE LOWER(email) = $1', [normalizedEmail]);
       if (userCheck.rows.length === 0) {
         const defaultPassword = 'zxcv123$$';
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
         await client.query(
           'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5)',
-          [email, hashedPassword, name, 'STAFF', orgId]
+          [normalizedEmail, hashedPassword, name, 'STAFF', orgId]
         );
       }
     }
@@ -920,15 +921,16 @@ export const hireCandidate = async (req: AuthRequest, res: Response) => {
       [id]
     );
 
-    // 4. Create User account if it doesn't exist
+    // 4. Create User account if it doesn't exist globally
     if (applicant.email) {
-      const userCheck = await client.query('SELECT id FROM users WHERE email = $1 AND org_id = $2', [applicant.email, orgId]);
+      const normalizedEmail = applicant.email.toLowerCase().trim();
+      const userCheck = await client.query('SELECT id FROM users WHERE LOWER(email) = $1', [normalizedEmail]);
       if (userCheck.rows.length === 0) {
         const defaultPassword = 'zxcv123$$';
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
         await client.query(
           'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5)',
-          [applicant.email, hashedPassword, applicant.applicant_name, 'STAFF', orgId]
+          [normalizedEmail, hashedPassword, applicant.applicant_name, 'STAFF', orgId]
         );
       }
     }
