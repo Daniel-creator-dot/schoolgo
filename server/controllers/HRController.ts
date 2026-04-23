@@ -207,6 +207,14 @@ export const createStaff = async (req: AuthRequest, res: Response) => {
 
     await client.query('BEGIN');
 
+    // 0. Check if staff with this email already exists in this organization
+    if (email) {
+      const existingStaff = await client.query('SELECT id FROM staff WHERE LOWER(email) = $1 AND org_id = $2', [email.toLowerCase().trim(), orgId]);
+      if (existingStaff.rows.length > 0) {
+        throw new Error(`Staff member with email ${email} already exists in this institution.`);
+      }
+    }
+
     // 1. Insert into staff table
     const result = await client.query(
       `INSERT INTO staff (name, email, role, status, department_id, phone, reports_to, additional_roles, salary, allowances, deductions, annual_leave_limit, leave_balance, carried_over_balance, leave_limit_unit, org_id, date_of_birth)
@@ -241,7 +249,7 @@ export const createStaff = async (req: AuthRequest, res: Response) => {
         const defaultPassword = 'zxcv123$$';
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
         await client.query(
-          'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5)',
+          'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO NOTHING',
           [normalizedEmail, hashedPassword, name, 'STAFF', orgId]
         );
       }
@@ -889,6 +897,15 @@ export const hireCandidate = async (req: AuthRequest, res: Response) => {
 
     const applicant = applicantRes.rows[0];
 
+    // Check if staff member with this email already exists
+    if (applicant.applicant_email) {
+      const existingStaff = await client.query('SELECT id FROM staff WHERE LOWER(email) = $1 AND org_id = $2', [applicant.applicant_email.toLowerCase().trim(), orgId]);
+      if (existingStaff.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: `This candidate has already been hired or a staff member with email ${applicant.applicant_email} already exists.` });
+      }
+    }
+
     // Fetch organization defaults
     const orgRes = await client.query('SELECT default_leave_limit, default_leave_limit_unit FROM organizations WHERE id = $1', [orgId]);
     const orgDefaults = orgRes.rows[0] || { default_leave_limit: 20, default_leave_limit_unit: 'Days' };
@@ -929,7 +946,7 @@ export const hireCandidate = async (req: AuthRequest, res: Response) => {
         const defaultPassword = 'zxcv123$$';
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
         await client.query(
-          'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5)',
+          'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (email) DO NOTHING',
           [normalizedEmail, hashedPassword, applicant.applicant_name, 'STAFF', orgId]
         );
       }

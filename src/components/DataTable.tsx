@@ -138,6 +138,8 @@ export function DataTable<T extends { id: string | number }>({
     if (onEdit) onEdit(item);
   };
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const defaultForm = (item?: T) => (
     <div className="space-y-4">
       <p className="text-sm text-zinc-500">
@@ -149,13 +151,13 @@ export function DataTable<T extends { id: string | number }>({
           return (
             <div key={i} className="space-y-1.5">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{col.header}</label>
-                <input
-                  type="text"
-                  name={col.accessor as string}
-                  defaultValue={item ? (item[col.accessor as keyof T] as any) : ''}
-                  placeholder={`Enter ${col.header.toLowerCase()}...`}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+              <input
+                type="text"
+                name={col.accessor as string}
+                defaultValue={item ? (item[col.accessor as keyof T] as any) : ''}
+                placeholder={`Enter ${col.header.toLowerCase()}...`}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
             </div>
           );
         })}
@@ -240,8 +242,8 @@ export function DataTable<T extends { id: string | number }>({
                   </td>
                 </tr>
               ) : paginatedData.map((item) => (
-                <tr 
-                  key={item.id} 
+                <tr
+                  key={item.id}
                   className={cn(
                     "hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors group relative",
                     activeDropdown === item.id ? "z-50" : "z-0"
@@ -276,10 +278,10 @@ export function DataTable<T extends { id: string | number }>({
                         </button>
 
                         {activeDropdown === item.id && dropdownPosition && createPortal(
-                          <div 
+                          <div
                             className="fixed z-[9999] w-48 origin-top-right rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 focus:outline-none"
-                            style={{ 
-                              top: dropdownPosition.top, 
+                            style={{
+                              top: dropdownPosition.top,
                               left: dropdownPosition.left,
                               marginTop: '8px'
                             }}
@@ -298,7 +300,7 @@ export function DataTable<T extends { id: string | number }>({
                                   {t('view')}
                                 </button>
                               )}
-                              
+
                               {extraActions && (
                                 <div className="px-1 py-1 border-y border-zinc-100 dark:border-zinc-800 my-1">
                                   {extraActions(item)}
@@ -357,7 +359,7 @@ export function DataTable<T extends { id: string | number }>({
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            
+
             {(() => {
               const pages = [];
               const maxVisiblePages = 5;
@@ -414,10 +416,10 @@ export function DataTable<T extends { id: string | number }>({
       {autoModal && (
         <Modal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => !isSaving && setIsModalOpen(false)}
           title={
-            editingItem 
-              ? (isViewOnly ? t('view_record_title').replace('{title}', title) : t('edit_record_title').replace('{title}', title)) 
+            editingItem
+              ? (isViewOnly ? t('view_record_title').replace('{title}', title) : t('edit_record_title').replace('{title}', title))
               : ((props as any).modalTitle || t('add_new_record_title').replace('{title}', title))
           }
           maxWidth={isViewOnly && detailsMaxWidth ? detailsMaxWidth : undefined}
@@ -426,82 +428,98 @@ export function DataTable<T extends { id: string | number }>({
             <>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+                disabled={isSaving}
+                className="px-4 py-2 text-sm font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors disabled:opacity-50"
               >
                 {isViewOnly ? t('close') : t('cancel')}
               </button>
               {!isViewOnly && (
                 <button
+                  disabled={isSaving}
                   onClick={async () => {
                     const form = document.getElementById('datatable-form') as HTMLFormElement;
                     if (form) {
-                      const formData = new FormData(form);
-                      const values: any = {};
-                      
-                      // Helper to convert File to base64
-                      const fileToBase64 = (file: File): Promise<string> => {
-                        return new Promise((resolve, reject) => {
-                          const reader = new FileReader();
-                          reader.readAsDataURL(file);
-                          reader.onload = () => resolve(reader.result as string);
-                          reader.onerror = error => reject(error);
-                        });
-                      };
+                      setIsSaving(true);
+                      try {
+                        const formData = new FormData(form);
+                        const values: any = {};
 
-                      const entries = Array.from((formData as any).entries());
-                      const processedKeys = new Set<string>();
-                      
-                      for (const [key, value] of entries as any[]) {
-                        if (processedKeys.has(key)) continue;
-                        
-                        const element = form.elements.namedItem(key) as any;
-                        const isMultiple = element && (element.multiple || (element instanceof NodeList && (element[0] as any).type === 'checkbox'));
+                        // Helper to convert File to base64
+                        const fileToBase64 = (file: File): Promise<string> => {
+                          return new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(file);
+                            reader.onload = () => resolve(reader.result as string);
+                            reader.onerror = error => reject(error);
+                          });
+                        };
 
-                        if (isMultiple) {
-                          values[key] = formData.getAll(key);
-                          processedKeys.add(key);
-                        } else if (value instanceof File && value.size > 0) {
-                          try {
-                            values[key] = await fileToBase64(value);
-                          } catch (err) {
-                            console.error('Error converting file:', err);
+                        const entries = Array.from((formData as any).entries());
+                        const processedKeys = new Set<string>();
+
+                        for (const [key, value] of entries as any[]) {
+                          if (processedKeys.has(key)) continue;
+
+                          const element = form.elements.namedItem(key) as any;
+                          const isMultiple = element && (element.multiple || (element instanceof NodeList && (element[0] as any).type === 'checkbox'));
+
+                          if (isMultiple) {
+                            values[key] = formData.getAll(key);
+                            processedKeys.add(key);
+                          } else if (value instanceof File && value.size > 0) {
+                            try {
+                              values[key] = await fileToBase64(value);
+                            } catch (err) {
+                              console.error('Error converting file:', err);
+                            }
+                            processedKeys.add(key);
+                          } else if (!(value instanceof File)) {
+                            values[key] = value;
+                            processedKeys.add(key);
                           }
-                          processedKeys.add(key);
-                        } else if (!(value instanceof File)) {
-                          values[key] = value;
-                          processedKeys.add(key);
                         }
-                      }
 
-                      // Add false for unchecked checkboxes
-                      const checkboxes = form.querySelectorAll('input[type="checkbox"]');
-                      checkboxes.forEach((cb: any) => {
-                        if (cb.name && !formData.has(cb.name)) {
-                          values[cb.name] = false;
+                        // Add false for unchecked checkboxes
+                        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+                        checkboxes.forEach((cb: any) => {
+                          if (cb.name && !formData.has(cb.name)) {
+                            values[cb.name] = false;
+                          }
+                        });
+
+                        if (onSave) {
+                          await onSave(editingItem ? { ...editingItem, ...values } : values);
                         }
-                      });
-                      
-                      if (onSave) {
-                        await onSave(editingItem ? { ...editingItem, ...values } : values);
+                        setIsModalOpen(false);
+                      } catch (err) {
+                        console.error('Error saving:', err);
+                      } finally {
+                        setIsSaving(false);
                       }
                     }
-                    setIsModalOpen(false);
                   }}
-                  className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors"
+                  className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingItem ? t('save_changes') : t('add_record')}
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      {t('saving') || 'Saving...'}
+                    </>
+                  ) : (
+                    editingItem ? t('save_changes') : t('add_record')
+                  )}
                 </button>
               )}
             </>
           }
         >
           <form id="datatable-form" onSubmit={(e) => e.preventDefault()}>
-            {isViewOnly && renderDetails && editingItem 
-              ? renderDetails(editingItem) 
+            {isViewOnly && renderDetails && editingItem
+              ? renderDetails(editingItem)
               : (renderForm ? renderForm(editingItem, isViewOnly, (item) => {
-                  setEditingItem(item);
-                  setIsViewOnly(false);
-                }) : defaultForm(editingItem))}
+                setEditingItem(item);
+                setIsViewOnly(false);
+              }) : defaultForm(editingItem))}
           </form>
         </Modal>
       )}
