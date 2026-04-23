@@ -1069,19 +1069,21 @@ export function SchoolBilling({
       return;
     }
 
+    const orgCurrency = organization?.currency || 'GH₵';
+    const paystackCurrency = (orgCurrency === 'GH₵' || orgCurrency === 'GHS') ? 'GHS' :
+      (orgCurrency === '₦' || orgCurrency === 'NGN') ? 'NGN' :
+        (orgCurrency === '$' || orgCurrency === 'USD') ? 'USD' :
+          orgCurrency || 'GHS';
+
     try {
       console.log('>>> [Paystack] Initializing PaystackPop for:', user.email);
       console.log('>>> [Paystack] Public Key:', publicKey);
 
-      if (typeof (window as any).PaystackPop === 'undefined') {
-        throw new Error('Paystack library (PaystackPop) is not defined. Please check your internet connection or disable ad-blockers.');
-      }
-
-      const handler = (window as any).PaystackPop.setup({
+      const setupConfig = {
         key: publicKey,
         email: user.email,
-        amount: Math.round(parseFloat(plan.price) * 100), // Amount in pesewas
-        currency: 'GHS',
+        amount: Math.round(parseFloat(plan.price) * 100), // Amount in subunits
+        currency: paystackCurrency,
         ref: `SUB-${Math.floor(Math.random() * 1000000000 + 1)}`,
         metadata: {
           custom_fields: [
@@ -1133,8 +1135,15 @@ export function SchoolBilling({
           console.log('>>> [Paystack] User closed checkout modal');
           (window as any).showToast?.('Payment cancelled.', 'info');
         }
-      });
+      };
 
+      console.log('>>> [Paystack] Final Setup Config:', setupConfig);
+
+      if (typeof (window as any).PaystackPop === 'undefined') {
+        throw new Error('Paystack library (PaystackPop) is not defined. Please check your internet connection or disable ad-blockers.');
+      }
+
+      const handler = (window as any).PaystackPop.setup(setupConfig);
       handler.openIframe();
     } catch (err: any) {
       console.error('>>> [Paystack] Fatal error opening modal:', err);

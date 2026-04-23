@@ -1,5 +1,6 @@
 import express from 'express';
 import { Response } from 'express';
+import bcrypt from 'bcryptjs';
 import pool from '../db.ts';
 import { AuthRequest } from '../middleware/auth.ts';
 import { recordAuditLog } from '../lib/audit.ts';
@@ -16,10 +17,10 @@ const syncStaffHodRole = async (staffId: string) => {
     const staffRes = await pool.query('SELECT additional_roles FROM staff WHERE id = $1', [staffId]);
     if (staffRes.rows.length === 0) return;
 
-    let roles = Array.isArray(staffRes.rows[0].additional_roles) 
-      ? staffRes.rows[0].additional_roles 
+    let roles = Array.isArray(staffRes.rows[0].additional_roles)
+      ? staffRes.rows[0].additional_roles
       : (staffRes.rows[0].additional_roles || []);
-    
+
     const hasHod = roles.includes('HOD');
 
     if (isHod && !hasHod) {
@@ -51,7 +52,7 @@ export const getDepartments = async (req: AuthRequest, res: Response) => {
       params.push(orgId);
       query += ` AND d.org_id = $${params.length}`;
     }
-    
+
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err: any) {
@@ -83,7 +84,7 @@ export const updateDepartment = async (req: AuthRequest, res: Response) => {
   const { name, hod_id, description } = req.body;
   try {
     const orgId = req.user.org_id;
-    
+
     // Get old HOD info first
     const oldRes = await pool.query('SELECT hod_id FROM departments WHERE id = $1 AND org_id = $2', [id, orgId]);
     const oldHodId = oldRes.rows[0]?.hod_id;
@@ -135,7 +136,7 @@ export const getStaffMembers = async (req: AuthRequest, res: Response) => {
     const orgId = req.user.org_id;
     const role = req.user.role;
     const isStudentOrParent = ['STUDENT', 'PARENT'].includes(role);
-    
+
     let selectClause = 's.*, d.name as department_name, rs.name as reports_to_name, u.id as user_id';
     if (isStudentOrParent) {
       // Restricted columns for students/parents to protect privacy/security
@@ -181,7 +182,7 @@ export const getStaffMembers = async (req: AuthRequest, res: Response) => {
       params.push(req.user.email);
       query += ` AND s.email = $${params.length}`;
     }
-    
+
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err: any) {
@@ -190,47 +191,69 @@ export const getStaffMembers = async (req: AuthRequest, res: Response) => {
 };
 
 export const createStaff = async (req: AuthRequest, res: Response) => {
-  const { 
-    name, email, role, status, department_id, phone, reports_to, 
-    additional_roles, salary, allowances, deductions, 
-    annual_leave_limit, leave_balance, carried_over_balance, 
-    leave_limit_unit, date_of_birth 
+  const {
+    name, email, role, status, department_id, phone, reports_to,
+    additional_roles, salary, allowances, deductions,
+    annual_leave_limit, leave_balance, carried_over_balance,
+    leave_limit_unit, date_of_birth
   } = req.body;
+  const client = await pool.connect();
   try {
     const orgId = req.user.org_id;
-    
+
     // Fetch organization defaults
-    const orgRes = await pool.query('SELECT default_leave_limit, default_leave_limit_unit FROM organizations WHERE id = $1', [orgId]);
+    const orgRes = await client.query('SELECT default_leave_limit, default_leave_limit_unit FROM organizations WHERE id = $1', [orgId]);
     const orgDefaults = orgRes.rows[0] || { default_leave_limit: 20, default_leave_limit_unit: 'Days' };
 
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    // 1. Insert into staff table
+    const result = await client.query(
       `INSERT INTO staff (name, email, role, status, department_id, phone, reports_to, additional_roles, salary, allowances, deductions, annual_leave_limit, leave_balance, carried_over_balance, leave_limit_unit, org_id, date_of_birth)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING *`,
       [
-        name, 
-        email, 
-        role, 
-        status || 'Active', 
-        department_id || null, 
-        phone || null, 
-        reports_to || null, 
-        additional_roles ? (Array.isArray(additional_roles) ? additional_roles : [additional_roles]) : '{}', 
-        salary || 0, 
-        allowances || 0, 
-        deductions || 0, 
-        annual_leave_limit || orgDefaults.default_leave_limit, 
-        leave_balance ?? (annual_leave_limit || orgDefaults.default_leave_limit), 
-        req.body.carried_over_balance || 0, 
-        leave_limit_unit || orgDefaults.default_leave_limit_unit, 
+        name,
+        email,
+        role,
+        status || 'Active',
+        department_id || null,
+        phone || null,
+        reports_to || null,
+        additional_roles ? (Array.isArray(additional_roles) ? additional_roles : [additional_roles]) : '{}',
+        salary || 0,
+        allowances || 0,
+        deductions || 0,
+        annual_leave_limit || orgDefaults.default_leave_limit,
+        leave_balance ?? (annual_leave_limit || orgDefaults.default_leave_limit),
+        req.body.carried_over_balance || 0,
+        leave_limit_unit || orgDefaults.default_leave_limit_unit,
         orgId,
         date_of_birth || null
       ]
     );
+
+    // 2. Create User account if it doesn't exist
+    if (email) {
+      const userCheck = await client.query('SELECT id FROM users WHERE email = $1 AND org_id = $2', [email, orgId]);
+      if (userCheck.rows.length === 0) {
+        const defaultPassword = 'zxcv123$$';
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        await client.query(
+          'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5)',
+          [email, hashedPassword, name, 'STAFF', orgId]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'CREATE_STAFF', `Created staff member: ${name} (${email})`, req.user.org_id);
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
+    await client.query('ROLLBACK');
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
@@ -240,7 +263,7 @@ export const getPayroll = async (req: AuthRequest, res: Response) => {
     const orgId = req.user.org_id;
     const role = req.user.role;
     const { staffId, monthYear } = req.query;
-    
+
     let query = `
       SELECT 
         p.*,
@@ -344,9 +367,9 @@ export const runPayroll = async (req: AuthRequest, res: Response) => {
     }
 
     await recordAuditLog(req.user.id, 'RUN_PAYROLL', `Ran payroll for ${month_year}`, req.user.org_id);
-    res.status(201).json({ 
-      message: `Payroll processed: ${inserted.length} generated, ${updated.length} updated.`, 
-      data: [...inserted, ...updated] 
+    res.status(201).json({
+      message: `Payroll processed: ${inserted.length} generated, ${updated.length} updated.`,
+      data: [...inserted, ...updated]
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
@@ -359,7 +382,7 @@ export const getLeaveRequests = async (req: AuthRequest, res: Response) => {
     const orgId = req.user.org_id;
     const role = req.user.role;
     const { userId } = req.query;
-    
+
     let query = `
       SELECT 
         lr.*,
@@ -398,11 +421,11 @@ export const createLeaveRequest = async (req: AuthRequest, res: Response) => {
   try {
     const start = new Date(start_date);
     const end = new Date(end_date);
-    
+
     // Set to midnight to calculate full days accurately
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
-    
+
     const diffTime = end.getTime() - start.getTime();
     const leaveDays = Math.max(0, Math.round(diffTime / (1000 * 60 * 60 * 24))) + 1;
 
@@ -434,23 +457,23 @@ export const updateLeaveStatus = async (req: AuthRequest, res: Response) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    
+
     // Get the request details
     const leaveRes = await client.query('SELECT * FROM leave_requests WHERE id = $1', [id]);
     if (leaveRes.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Leave request not found' });
     }
-    
+
     const leave = leaveRes.rows[0];
     const oldStatus = leave.status;
-    
+
     // Update the status
     const result = await client.query(
       'UPDATE leave_requests SET status = $1 WHERE id = $2 RETURNING *',
       [status, id]
     );
-    
+
     // If approved and was not previously approved, deduct from balance
     if (status === 'Approved' && oldStatus !== 'Approved' && leave.leave_type === 'Annual Leave') {
       await client.query(
@@ -465,7 +488,7 @@ export const updateLeaveStatus = async (req: AuthRequest, res: Response) => {
         [leave.leave_days, leave.user_id]
       );
     }
-    
+
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'UPDATE_LEAVE_STATUS', `Updated leave request ID: ${id} to ${status}`, req.user.org_id);
     res.json(result.rows[0]);
@@ -535,16 +558,16 @@ export const getRecruitment = async (req: AuthRequest, res: Response) => {
 };
 
 export const createApplicant = async (req: AuthRequest, res: Response) => {
-  const { 
-    position, applicant_name, email, interview_date, 
-    phone, salary, allowances, deductions, department_id, score 
+  const {
+    position, applicant_name, email, interview_date,
+    phone, salary, allowances, deductions, department_id, score
   } = req.body;
   try {
     const orgId = req.user.org_id;
     const result = await pool.query(
       'INSERT INTO recruitment (org_id, position, applicant_name, email, interview_date, phone, salary, allowances, deductions, department_id, score) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
       [
-        orgId, position, applicant_name, email, interview_date || null, 
+        orgId, position, applicant_name, email, interview_date || null,
         phone || null, salary || 0, allowances || 0, deductions || 0, department_id || null, score || 0
       ]
     );
@@ -618,11 +641,11 @@ export const updateStaff = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    const { 
-      name, email, role, status, department_id, phone, reports_to, 
-      additional_roles, salary, allowances, deductions, 
-      annual_leave_limit, leave_balance, carried_over_balance, 
-      leave_limit_unit, date_of_birth 
+    const {
+      name, email, role, status, department_id, phone, reports_to,
+      additional_roles, salary, allowances, deductions,
+      annual_leave_limit, leave_balance, carried_over_balance,
+      leave_limit_unit, date_of_birth
     } = req.body;
 
     // For STAFF, we restrict which fields can be updated to prevent tampering
@@ -663,23 +686,23 @@ export const updateStaff = async (req: AuthRequest, res: Response) => {
         date_of_birth = COALESCE($16, date_of_birth)
       WHERE id = $17 AND org_id = $18 RETURNING *`,
       [
-        finalName, 
-        email, 
-        finalRole, 
-        finalStatus, 
-        finalDept, 
-        phone || null, 
-        finalReportsTo, 
-        finalAddRoles, 
-        finalSalary, 
-        finalAllowances, 
-        finalDeductions, 
-        finalLeaveLimit, 
-        finalLeaveBal, 
-        finalCarryBal, 
-        finalLeaveUnit, 
-        date_of_birth || null, 
-        id, 
+        finalName,
+        email,
+        finalRole,
+        finalStatus,
+        finalDept,
+        phone || null,
+        finalReportsTo,
+        finalAddRoles,
+        finalSalary,
+        finalAllowances,
+        finalDeductions,
+        finalLeaveLimit,
+        finalLeaveBal,
+        finalCarryBal,
+        finalLeaveUnit,
+        date_of_birth || null,
+        id,
         orgId
       ]
     );
@@ -687,6 +710,24 @@ export const updateStaff = async (req: AuthRequest, res: Response) => {
     if (result.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Staff member not found' });
+    }
+
+    // Update user account if it exists
+    if (email || name || role) {
+      // Get the old email to find the user record
+      const oldStaffRes = await client.query('SELECT email FROM staff WHERE id = $1', [id]);
+      const currentEmail = oldStaffRes.rows[0]?.email;
+
+      if (currentEmail) {
+        await client.query(
+          `UPDATE users SET 
+            email = COALESCE($1, email),
+            name = COALESCE($2, name),
+            role = COALESCE($3, role)
+          WHERE email = $4 AND org_id = $5`,
+          [email, name, role, currentEmail, orgId]
+        );
+      }
     }
 
     // If we are reactivating staff, we should also deactivate/void any 'Approved' exit record
@@ -792,16 +833,16 @@ export const deletePayroll = async (req: AuthRequest, res: Response) => {
 
 export const updateApplicant = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { 
-    applicant_name, position, status, interview_date, 
-    score, phone, salary, allowances, deductions, department_id 
+  const {
+    applicant_name, position, status, interview_date,
+    score, phone, salary, allowances, deductions, department_id
   } = req.body;
   try {
     const orgId = req.user.org_id;
     const result = await pool.query(
       'UPDATE recruitment SET applicant_name = $1, position = $2, status = $3, interview_date = $4, score = $5, phone = $6, salary = $7, allowances = $8, deductions = $9, department_id = $10 WHERE id = $11 AND org_id = $12 RETURNING *',
       [
-        applicant_name, position, status, interview_date, 
+        applicant_name, position, status, interview_date,
         score || 0, phone || null, salary || 0, allowances || 0, deductions || 0, department_id || null, id, orgId
       ]
     );
@@ -833,37 +874,37 @@ export const hireCandidate = async (req: AuthRequest, res: Response) => {
   try {
     const orgId = req.user.org_id;
     await client.query('BEGIN');
-    
+
     // 1. Get applicant info
     const applicantRes = await client.query(
       'SELECT * FROM recruitment WHERE id = $1 AND org_id = $2',
       [id, orgId]
     );
-    
+
     if (applicantRes.rows.length === 0) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Applicant not found' });
     }
-    
+
     const applicant = applicantRes.rows[0];
 
     // Fetch organization defaults
     const orgRes = await client.query('SELECT default_leave_limit, default_leave_limit_unit FROM organizations WHERE id = $1', [orgId]);
     const orgDefaults = orgRes.rows[0] || { default_leave_limit: 20, default_leave_limit_unit: 'Days' };
-    
+
     // 2. Create staff member
     const staffRes = await client.query(
       `INSERT INTO staff (name, email, role, status, department_id, phone, salary, allowances, deductions, annual_leave_limit, leave_balance, carried_over_balance, leave_limit_unit, org_id)
        VALUES ($1, $2, $3, 'Active', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        RETURNING *`,
       [
-        applicant.applicant_name, 
-        applicant.email, 
-        applicant.position, 
-        department_id || null, 
-        applicant.phone || null, 
-        salary || applicant.salary || 0, 
-        allowances || applicant.allowances || 0, 
+        applicant.applicant_name,
+        applicant.email,
+        applicant.position,
+        department_id || null,
+        applicant.phone || null,
+        salary || applicant.salary || 0,
+        allowances || applicant.allowances || 0,
         deductions || applicant.deductions || 0,
         orgDefaults.default_leave_limit, // Organization default leave limit
         orgDefaults.default_leave_limit, // Organization default leave balance
@@ -872,13 +913,26 @@ export const hireCandidate = async (req: AuthRequest, res: Response) => {
         orgId
       ]
     );
-    
+
     // 3. Update recruitment status
     await client.query(
       "UPDATE recruitment SET status = 'Hired' WHERE id = $1",
       [id]
     );
-    
+
+    // 4. Create User account if it doesn't exist
+    if (applicant.email) {
+      const userCheck = await client.query('SELECT id FROM users WHERE email = $1 AND org_id = $2', [applicant.email, orgId]);
+      if (userCheck.rows.length === 0) {
+        const defaultPassword = 'zxcv123$$';
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        await client.query(
+          'INSERT INTO users (email, password, name, role, org_id) VALUES ($1, $2, $3, $4, $5)',
+          [applicant.email, hashedPassword, applicant.applicant_name, 'STAFF', orgId]
+        );
+      }
+    }
+
     await client.query('COMMIT');
     await recordAuditLog(req.user.id, 'HIRE_CANDIDATE', `Hired candidate ID: ${id} as staff member`, orgId, req.ip || '');
     res.status(201).json({ staff: staffRes.rows[0], message: 'Candidate hired successfully!' });
@@ -910,7 +964,7 @@ export const generateOfferLetter = async (req: AuthRequest, res: Response) => {
 
     const data = result.rows[0];
     const letterDate = new Date().toLocaleDateString();
-    
+
     const salary = parseFloat(data.salary) || 0;
     const allowances = parseFloat(data.allowances) || 0;
     const netSalary = salary + allowances;
@@ -951,7 +1005,7 @@ For ${data.organization_name}
 Authorized Signatory
     `.trim();
 
-    res.json({ 
+    res.json({
       letter: letterContent,
       data: {
         applicant_name: data.applicant_name,
@@ -1144,7 +1198,7 @@ For ${data.organization_name}
 Authorized Signatory
     `.trim();
 
-    res.json({ 
+    res.json({
       letter: letterContent,
       data: {
         staff_name: data.staff_name,
@@ -1214,7 +1268,7 @@ export const resetLeaveBalances = async (req: AuthRequest, res: Response) => {
       WHERE org_id = $1
       RETURNING *
     `, [orgId]);
-    
+
     await recordAuditLog(req.user.id, 'RESET_LEAVE_BALANCES', `Reset leave balances for ${result.rowCount} staff members`, orgId, req.ip || '');
     res.json({ message: `Successfully reset balances for ${result.rowCount} staff members.`, count: result.rowCount });
   } catch (err: any) {
@@ -1369,23 +1423,23 @@ export const getHODDashboardStats = async (req: AuthRequest, res: Response) => {
 
     const m = metricsRes.rows[0];
     const metrics = [
-      { 
-        label: 'Staff Review Selection', 
-        value: totalStaff > 0 ? Math.round((parseInt(m.staff_reviewed) / totalStaff) * 100) : 0, 
-        target: 100, 
-        color: '#6366f1' 
+      {
+        label: 'Staff Review Selection',
+        value: totalStaff > 0 ? Math.round((parseInt(m.staff_reviewed) / totalStaff) * 100) : 0,
+        target: 100,
+        color: '#6366f1'
       },
-      { 
-        label: 'Lesson Note Compliance', 
-        value: parseInt(m.total_notes) > 0 ? Math.round((parseInt(m.approved_notes) / parseInt(m.total_notes)) * 100) : 0, 
-        target: 90, 
-        color: '#10b981' 
+      {
+        label: 'Lesson Note Compliance',
+        value: parseInt(m.total_notes) > 0 ? Math.round((parseInt(m.approved_notes) / parseInt(m.total_notes)) * 100) : 0,
+        target: 90,
+        color: '#10b981'
       },
-      { 
-        label: 'Avg Attendance', 
+      {
+        label: 'Avg Attendance',
         value: Math.min(100, Math.round(totalStaff > 0 ? (totalStudents > 0 ? 88 : 0) : 0)), // Mocking a stable ratio if no data
-        target: 95, 
-        color: '#f59e0b' 
+        target: 95,
+        color: '#f59e0b'
       }
     ];
 
