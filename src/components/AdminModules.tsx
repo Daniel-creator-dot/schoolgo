@@ -15,6 +15,8 @@ import {
   UserCheck,
   UserX,
   Award,
+  Medal,
+  GraduationCap,
   Camera,
   Brain,
   Zap,
@@ -67,7 +69,10 @@ import {
   deletePartnerAdmin,
   approvePartner,
   resetPartnerPassword,
-  resetUserPassword
+  resetUserPassword,
+  awardPartnerReward,
+  fetchPartnerRewards,
+  deletePartnerReward
 } from '../lib/api';
 import { API_BASE_URL } from '../constants';
 
@@ -197,7 +202,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
             </div>
 
             <div className="flex justify-between items-center pt-2">
-              <button 
+              <button
                 onClick={() => {
                   setResetPasswordUser(viewingUser);
                   setViewingUser(null);
@@ -207,7 +212,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
                 <RotateCw className="w-3.5 h-3.5" />
                 Change Password
               </button>
-              <button 
+              <button
                 onClick={() => setViewingUser(null)}
                 className="px-6 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold rounded-xl text-sm"
               >
@@ -218,18 +223,18 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
         )}
       </Modal>
 
-      <Modal 
-        isOpen={!!resetPasswordUser} 
+      <Modal
+        isOpen={!!resetPasswordUser}
         onClose={() => {
           setResetPasswordUser(null);
           setNewPassword('zxcv123$$');
-        }} 
+        }}
         title="Reset User Password"
       >
         <div className="space-y-4">
           <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
             <p className="text-sm text-amber-800 font-medium">
-              You are resetting the password for <span className="font-bold">{resetPasswordUser?.name}</span> ({resetPasswordUser?.email}). 
+              You are resetting the password for <span className="font-bold">{resetPasswordUser?.name}</span> ({resetPasswordUser?.email}).
               The system default is <span className="font-bold">zxcv123$$</span>.
             </p>
           </div>
@@ -244,7 +249,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
                 placeholder="Enter new secure password"
                 className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none"
               />
-              <button 
+              <button
                 onClick={() => setNewPassword(Math.random().toString(36).slice(-10))}
                 className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-[10px] font-bold text-zinc-500 hover:text-zinc-900"
               >
@@ -254,17 +259,17 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => {
                 setResetPasswordUser(null);
                 setNewPassword('zxcv123$$');
-              }} 
+              }}
               className="px-4 py-2 text-sm font-bold text-zinc-500"
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={async () => {
                 if (!newPassword) return (window as any).showToast?.('Please enter a password', 'error');
                 try {
@@ -456,7 +461,7 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">{isEdit ? t('edit_organization') : t('create_new_organization')}</h2>
           {onBack && (
-            <button 
+            <button
               onClick={onBack}
               className="px-4 py-2 text-sm font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
             >
@@ -632,8 +637,8 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
 
           <div className="pt-4 flex items-center justify-end gap-4">
             {onBack && (
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={onBack}
                 className="px-6 py-2.5 text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
               >
@@ -882,7 +887,7 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
             </div>
 
             <div className="flex justify-end pt-2">
-              <button 
+              <button
                 onClick={() => setViewingPlan(null)}
                 className="px-6 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold rounded-xl text-sm"
               >
@@ -1014,13 +1019,13 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
   );
 }
 
-export function SchoolBilling({ 
-  currentSubscription, 
-  plans = [], 
-  organization 
-}: { 
-  currentSubscription: any; 
-  plans: any[]; 
+export function SchoolBilling({
+  currentSubscription,
+  plans = [],
+  organization
+}: {
+  currentSubscription: any;
+  plans: any[];
   organization: any;
 }) {
   const { t } = useLanguage();
@@ -1067,7 +1072,7 @@ export function SchoolBilling({
     try {
       console.log('>>> [Paystack] Initializing PaystackPop for:', user.email);
       console.log('>>> [Paystack] Public Key:', publicKey);
-      
+
       if (typeof (window as any).PaystackPop === 'undefined') {
         throw new Error('Paystack library (PaystackPop) is not defined. Please check your internet connection or disable ad-blockers.');
       }
@@ -1077,7 +1082,7 @@ export function SchoolBilling({
         email: user.email,
         amount: Math.round(parseFloat(plan.price) * 100), // Amount in pesewas
         currency: 'GHS',
-        ref: `SUB-${Math.floor(Math.random() * 1000000000 + 1)}`, 
+        ref: `SUB-${Math.floor(Math.random() * 1000000000 + 1)}`,
         metadata: {
           custom_fields: [
             {
@@ -1092,11 +1097,11 @@ export function SchoolBilling({
             }
           ]
         },
-        callback: function(response: any) {
+        callback: function (response: any) {
           (async () => {
             console.log('>>> [Paystack] Payment success callback received:', response);
             (window as any).showToast?.('Payment successful! Finalizing renewal...', 'success');
-            
+
             try {
               const token = localStorage.getItem('token');
               const verifyRes = await fetch(`${API_BASE_URL}/subscriptions/verify-paystack`, {
@@ -1124,7 +1129,7 @@ export function SchoolBilling({
             }
           })();
         },
-        onClose: function() {
+        onClose: function () {
           console.log('>>> [Paystack] User closed checkout modal');
           (window as any).showToast?.('Payment cancelled.', 'info');
         }
@@ -1170,7 +1175,7 @@ export function SchoolBilling({
               <div className="flex justify-between items-center text-sm">
                 <span className="text-zinc-500 font-medium">Renewal Date</span>
                 <span className="font-bold text-zinc-200">
-                  {currentSubscription?.expiry_date 
+                  {currentSubscription?.expiry_date
                     ? new Date(currentSubscription.expiry_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
                     : 'N/A'}
                 </span>
@@ -1201,8 +1206,8 @@ export function SchoolBilling({
             return (
               <div key={plan.id} className={cn(
                 "relative p-8 rounded-[2rem] border transition-all duration-500 flex flex-col group",
-                plan.is_popular 
-                  ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 scale-105 shadow-xl shadow-indigo-100 dark:shadow-none" 
+                plan.is_popular
+                  ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800 scale-105 shadow-xl shadow-indigo-100 dark:shadow-none"
                   : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-sm"
               )}>
                 <div className="mb-8">
@@ -1261,8 +1266,8 @@ export function SchoolBilling({
             Subscription management is handled by our platform administrators. Please contact your Super Admin to finalize any changes to your subscription plan.
           </p>
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a 
-              href="mailto:support@omniportal.com" 
+            <a
+              href="mailto:support@omniportal.com"
               className="w-full sm:w-auto px-8 py-4 bg-white text-indigo-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-50 transition-colors"
             >
               Contact Support
@@ -1272,7 +1277,7 @@ export function SchoolBilling({
             </div>
           </div>
         </div>
-        
+
         {/* Decorative circle */}
         <div className="absolute top-[-50%] left-[-20%] w-[500px] h-[500px] bg-white/5 rounded-full" />
       </div>
@@ -1562,7 +1567,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
             </div>
 
             <div className="flex justify-end pt-2">
-              <button 
+              <button
                 onClick={() => setViewingSub(null)}
                 className="px-6 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold rounded-xl text-sm"
               >
@@ -1596,10 +1601,10 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
               value={formData.plan_name}
               onChange={(e) => {
                 const selectedPlan = plans.find((p: any) => p.name === e.target.value);
-                setFormData({ 
-                  ...formData, 
+                setFormData({
+                  ...formData,
                   plan_name: e.target.value,
-                  amount: selectedPlan ? selectedPlan.price.toString() : formData.amount 
+                  amount: selectedPlan ? selectedPlan.price.toString() : formData.amount
                 });
               }}
               className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
@@ -1759,7 +1764,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
 
 export function BillingHistory({ data }: { data?: any[] }) {
   const { t, currency } = useLanguage();
-  
+
   const transactions = (data || []).map(sub => ({
     id: `TX-${sub.id.split('-')[0].toUpperCase()}`,
     org: sub.org_name,
@@ -1865,21 +1870,21 @@ export function AuditLogs({ data }: { data?: any[] }) {
       itemsPerPage={20}
       columns={[
         { header: t('user'), accessor: 'user_name', className: 'font-bold' },
-        { 
-          header: 'Role', 
+        {
+          header: 'Role',
           accessor: (item: any) => (
             <span className="text-[10px] bg-zinc-100 px-1.5 py-0.5 rounded font-bold text-zinc-600 uppercase">
               {item.user_role || 'User'}
             </span>
-          ) 
+          )
         },
         { header: t('action'), accessor: 'action', className: 'text-primary font-semibold' },
         { header: 'Details', accessor: 'details' },
         { header: 'IP Address', accessor: 'ip_address', className: 'text-xs text-zinc-400' },
-        { 
-          header: t('time'), 
+        {
+          header: t('time'),
           accessor: (item: any) => new Date(item.created_at || item.timestamp).toLocaleString(),
-          className: 'text-xs whitespace-nowrap' 
+          className: 'text-xs whitespace-nowrap'
         },
       ]}
     />
@@ -1954,7 +1959,7 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
   const availableContacts = useMemo(() => {
     const contacts: any[] = [];
     const addedIds = new Set<string>();
-    
+
     const addContact = (id: string, name: string, role: string, type: string, email?: string) => {
       const key = type === 'PARENT' ? email || id : id;
       if (!addedIds.has(key)) {
@@ -1980,17 +1985,17 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
           if (ct) addContact(ct.id, ct.name, ct.role, 'STAFF', ct.email);
         }
         subjects.filter((s: any) => String(s.class_id) === String(studentClassId) || (Array.isArray(s.classes) && s.classes.some((c: any) => String(c.id) === String(studentClassId))))
-        .forEach(s => {
-          const st = staff.find(stf => String(stf.id) === String(s.teacher_id));
-          if (st) addContact(st.id, st.name, st.role, 'STAFF', st.email);
-        });
+          .forEach(s => {
+            const st = staff.find(stf => String(stf.id) === String(s.teacher_id));
+            if (st) addContact(st.id, st.name, st.role, 'STAFF', st.email);
+          });
       }
     } else if (userRole === 'PARENT') {
       staff.filter(s => s.role === 'SCHOOL_ADMIN').forEach(s => addContact(s.id, s.name, s.role, 'ADMIN', s.email));
-      
+
       const userE = JSON.parse(localStorage.getItem('user') || '{}')?.email;
       const myWards = students.filter(s => s.parent_email === userE);
-      
+
       myWards.forEach(ward => {
         const studentClassId = ward.class_id;
         const studentClass = classes.find((c: any) => String(c.id) === String(studentClassId));
@@ -2011,23 +2016,23 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
         const classIdsTeach = new Set<string>();
         const myClassRec = classes.find((c: any) => String(c.class_teacher_id) === String(myStaffId));
         if (myClassRec) classIdsTeach.add(String(myClassRec.id));
-        
-        subjects.filter((s:any) => String(s.teacher_id) === String(myStaffId)).forEach(s => {
-           if (s.class_id) classIdsTeach.add(String(s.class_id));
-           if (Array.isArray(s.classes)) s.classes.forEach((c:any) => classIdsTeach.add(String(c.id)));
+
+        subjects.filter((s: any) => String(s.teacher_id) === String(myStaffId)).forEach(s => {
+          if (s.class_id) classIdsTeach.add(String(s.class_id));
+          if (Array.isArray(s.classes)) s.classes.forEach((c: any) => classIdsTeach.add(String(c.id)));
         });
-        
+
         students.filter(s => classIdsTeach.has(String(s.class_id))).forEach(s => {
-           if (s.parent_email) addContact(s.id, s.parent_name || 'Parent of ' + s.name, 'PARENT', 'PARENT', s.parent_email);
+          if (s.parent_email) addContact(s.id, s.parent_name || 'Parent of ' + s.name, 'PARENT', 'PARENT', s.parent_email);
         });
       }
     }
-    
+
     return contacts.filter(c => String(c.id) !== String(userId));
   }, [students, staff, subjects, classes, userRole, userId]);
 
-  const filteredContacts = availableContacts.filter(c => 
-    c.name?.toLowerCase().includes(contactSearch.toLowerCase()) || 
+  const filteredContacts = availableContacts.filter(c =>
+    c.name?.toLowerCase().includes(contactSearch.toLowerCase()) ||
     c.role?.toLowerCase().includes(contactSearch.toLowerCase())
   );
 
@@ -2035,11 +2040,11 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
     if (activeChatId) {
       return groupedConversations.find(c => c.id === activeChatId);
     } else if (draftContact) {
-      return { 
-        id: draftContact.id, 
-        name: draftContact.name, 
-        role: draftContact.role, 
-        msgs: [] 
+      return {
+        id: draftContact.id,
+        name: draftContact.name,
+        role: draftContact.role,
+        msgs: []
       };
     }
     return null;
@@ -2051,7 +2056,7 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
       if (unreadReceived.length > 0) {
         const markAllRead = async () => {
           const token = localStorage.getItem('token');
-          await Promise.all(unreadReceived.map((m: any) => 
+          await Promise.all(unreadReceived.map((m: any) =>
             fetch(`${API_BASE_URL}/messages/${m.id}/read`, {
               method: 'PATCH',
               headers: { 'Authorization': `Bearer ${token}` }
@@ -2088,7 +2093,7 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
         setNewMessage('');
         setDraftContact(null);
         if (!activeChatId) {
-           setActiveChatId(activeChat.id); // Convert draft to active chat
+          setActiveChatId(activeChat.id); // Convert draft to active chat
         }
         loadMessages();
       } else {
@@ -2115,7 +2120,7 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
         const unreadMsgs = chat.msgs.filter(m => m.direction === 'received' && !m.is_read);
         if (unreadMsgs.length > 0) {
           const token = localStorage.getItem('token');
-          Promise.all(unreadMsgs.map(m => 
+          Promise.all(unreadMsgs.map(m =>
             fetch(`${API_BASE_URL}/messages/${m.id}/read`, {
               method: 'PATCH',
               headers: { 'Authorization': `Bearer ${token}` }
@@ -2133,7 +2138,7 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
         <div className="p-4 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-zinc-900 dark:text-white">Messages</h3>
-            <button 
+            <button
               onClick={() => setIsContactsOpen(true)}
               className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
               title="New Message"
@@ -2156,8 +2161,8 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
               const timeString = new Date(latestMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
               return (
-                <div 
-                  key={chat.id} 
+                <div
+                  key={chat.id}
                   onClick={() => setActiveChatId(chat.id)}
                   className={cn(
                     "p-4 border-b border-zinc-50 dark:border-zinc-800/50 cursor-pointer transition-colors relative",
@@ -2198,7 +2203,7 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
                 </div>
               </div>
             </div>
-            
+
             <div ref={scrollRef} className="flex-1 p-6 overflow-y-auto space-y-6">
               {activeChat.msgs.map((msg, i) => {
                 const isSent = msg.direction === 'sent';
@@ -2223,15 +2228,15 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
 
             <div className="p-4 border-t border-zinc-100 dark:border-zinc-800">
               <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder={t('type_your_message')} 
-                  className="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500" 
+                  placeholder={t('type_your_message')}
+                  className="flex-1 px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                 />
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={!newMessage.trim()}
                   className="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -2255,15 +2260,15 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
         <div className="flex flex-col h-[60vh]">
           <div className="relative mb-4">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input 
-              type="text" 
-              placeholder="Search contacts by name or role..." 
+            <input
+              type="text"
+              placeholder="Search contacts by name or role..."
               value={contactSearch}
               onChange={(e) => setContactSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all" 
+              className="w-full pl-10 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
             />
           </div>
-          
+
           <div className="flex-1 overflow-y-auto pr-2 space-y-2">
             {filteredContacts.length === 0 ? (
               <div className="p-8 text-center text-zinc-500 text-sm">No contacts found.</div>
@@ -2538,7 +2543,7 @@ export function Settings({ role }: { role?: UserRole }) {
             });
             // Check if backend AI is configured
             const token = localStorage.getItem('token');
-            
+
             // Diagnostics: Check if AI routes even exist
             const testRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai-test`, {
               headers: { 'Authorization': `Bearer ${token}` }
@@ -2553,9 +2558,9 @@ export function Settings({ role }: { role?: UserRole }) {
 
             const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
               method: 'POST',
-              headers: { 
+              headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` 
+                'Authorization': `Bearer ${token}`
               },
               body: JSON.stringify({ prompt: 'ping' })
             });
@@ -2563,8 +2568,8 @@ export function Settings({ role }: { role?: UserRole }) {
 
             // Fetch Groq Key separately
             const keyRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/gemini-keys`, {
-              headers: { 
-                'Authorization': `Bearer ${token}` 
+              headers: {
+                'Authorization': `Bearer ${token}`
               }
             });
             if (keyRes.ok) {
@@ -2635,14 +2640,14 @@ export function Settings({ role }: { role?: UserRole }) {
         currency,
         language
       });
-      
+
       // Update global context only if this is NOT a Super Admin setting a specific school's details,
       // or if it's the school admin themselves.
       if (role !== 'SUPER_ADMIN') {
         setCurrency(currency);
         setLanguage(language as any);
       }
-      
+
       (window as any).showToast?.(t('save_changes') + ' successful!', 'success');
 
     } catch (err) {
@@ -2673,11 +2678,11 @@ export function Settings({ role }: { role?: UserRole }) {
                   {aiStatus === 'error' && <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-red-500 rounded-full" /><span className="text-[10px] text-red-500 font-bold uppercase">Error</span></div>}
                 </div>
               </div>
-              
+
               {aiStatus === 'outdated' && (
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[11px] text-amber-600 leading-relaxed">
                   <span className="font-bold block mb-1">⚠️ Backend Sync Required</span>
-                  Your frontend is trying to use Groq AI features, but the backend server doesn't have the latest updates yet. 
+                  Your frontend is trying to use Groq AI features, but the backend server doesn't have the latest updates yet.
                   Please <strong>push your changes</strong> and wait for the Render deployment to finish.
                 </div>
               )}
@@ -2702,7 +2707,7 @@ export function Settings({ role }: { role?: UserRole }) {
                         accept="image/*"
                         onChange={(e) => handleFileUpload(e, 'logo')}
                       />
-                      <label 
+                      <label
                         htmlFor="logo-upload"
                         className="px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold text-indigo-600 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
                       >
@@ -2731,7 +2736,7 @@ export function Settings({ role }: { role?: UserRole }) {
                         accept="image/*"
                         onChange={(e) => handleFileUpload(e, 'signature')}
                       />
-                      <label 
+                      <label
                         htmlFor="sig-upload"
                         className="px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-bold text-indigo-600 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
                       >
@@ -2744,74 +2749,74 @@ export function Settings({ role }: { role?: UserRole }) {
             </section>
           )}
 
-            <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                <Brain className="w-4 h-4" />
-                AI Configuration
-              </h3>
-              
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Groq AI API Key</label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <input 
-                        type="password"
-                        value={groqKey}
-                        onChange={(e) => setGroqKey(e.target.value)}
-                        placeholder="Enter your Groq API Key..."
-                        className="w-full pl-4 pr-12 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-sm dark:text-white"
-                      />
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">
-                        <Zap className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleSaveGroqKey}
-                      className="px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors whitespace-nowrap text-sm flex items-center gap-2"
-                    >
-                      <Check className="w-4 h-4" />
-                      Save Key
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-zinc-500 italic mt-1">
-                    Enter your Groq API Key to enable high-speed AI features. Configuration is saved securely in your organization settings.
-                  </p>
-                </div>
-              </div>
+          <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
+            <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+              <Brain className="w-4 h-4" />
+              AI Configuration
+            </h3>
 
-              <div className="p-6 mt-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className={cn(
-                      "w-12 h-12 rounded-xl flex items-center justify-center",
-                      isAiConfigured ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" : "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
-                    )}>
-                      <Bot className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-zinc-900 dark:text-white">AI Engine Status</h4>
-                      <p className="text-xs text-zinc-500">
-                        {isAiConfigured 
-                          ? "OmniAI is powered by Groq and ready." 
-                          : "AI service not configured. Please save your Groq API key above."}
-                      </p>
+            <div className="grid grid-cols-1 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Groq AI API Key</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="password"
+                      value={groqKey}
+                      onChange={(e) => setGroqKey(e.target.value)}
+                      placeholder="Enter your Groq API Key..."
+                      className="w-full pl-4 pr-12 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-sm dark:text-white"
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400">
+                      <Zap className="w-4 h-4" />
                     </div>
                   </div>
-                  {isAiConfigured ? (
-                    <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                      Active
-                  </div>
-                  ) : (
-                    <div className="text-amber-600 font-bold text-xs uppercase tracking-wider">
-                      Offline
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleSaveGroqKey}
+                    className="px-4 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors whitespace-nowrap text-sm flex items-center gap-2"
+                  >
+                    <Check className="w-4 h-4" />
+                    Save Key
+                  </button>
                 </div>
+                <p className="text-[10px] text-zinc-500 italic mt-1">
+                  Enter your Groq API Key to enable high-speed AI features. Configuration is saved securely in your organization settings.
+                </p>
               </div>
-            </section>
+            </div>
+
+            <div className="p-6 mt-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-12 h-12 rounded-xl flex items-center justify-center",
+                    isAiConfigured ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600" : "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
+                  )}>
+                    <Bot className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-zinc-900 dark:text-white">AI Engine Status</h4>
+                    <p className="text-xs text-zinc-500">
+                      {isAiConfigured
+                        ? "OmniAI is powered by Groq and ready."
+                        : "AI service not configured. Please save your Groq API key above."}
+                    </p>
+                  </div>
+                </div>
+                {isAiConfigured ? (
+                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    Active
+                  </div>
+                ) : (
+                  <div className="text-amber-600 font-bold text-xs uppercase tracking-wider">
+                    Offline
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
 
           {role === 'SCHOOL_ADMIN' && (
             <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
@@ -2822,23 +2827,23 @@ export function Settings({ role }: { role?: UserRole }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Device Service URL</label>
-                  <input 
-                    type="url" 
-                    value={organization?.attendance_api_url || ''} 
-                    onChange={(e) => setOrganization({...organization, attendance_api_url: e.target.value})}
+                  <input
+                    type="url"
+                    value={organization?.attendance_api_url || ''}
+                    onChange={(e) => setOrganization({ ...organization, attendance_api_url: e.target.value })}
                     placeholder="https://api.attendance-device.local"
-                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium" 
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                   />
                   <p className="text-[10px] text-zinc-500 italic">Endpoint for the physical attendance terminal synchronization.</p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">API Access Token</label>
-                  <input 
-                    type="password" 
-                    value={organization?.attendance_api_key || ''} 
-                    onChange={(e) => setOrganization({...organization, attendance_api_key: e.target.value})}
+                  <input
+                    type="password"
+                    value={organization?.attendance_api_key || ''}
+                    onChange={(e) => setOrganization({ ...organization, attendance_api_key: e.target.value })}
                     placeholder="Enter security token..."
-                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono" 
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                   />
                   <p className="text-[10px] text-zinc-500 italic">Used to authenticate requests from the portal to your device.</p>
                 </div>
@@ -2855,9 +2860,9 @@ export function Settings({ role }: { role?: UserRole }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Auto-Promotion Trigger Term</label>
-                  <select 
-                    value={organization?.promotion_trigger_term || ''} 
-                    onChange={(e) => setOrganization({...organization, promotion_trigger_term: e.target.value})}
+                  <select
+                    value={organization?.promotion_trigger_term || ''}
+                    onChange={(e) => setOrganization({ ...organization, promotion_trigger_term: e.target.value })}
                     className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="">None (Manual Only)</option>
@@ -2877,9 +2882,9 @@ export function Settings({ role }: { role?: UserRole }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('academic_year')}</label>
-                  <select 
-                    value={organization?.academic_year || '2023/2024'} 
-                    onChange={(e) => setOrganization({...organization, academic_year: e.target.value})}
+                  <select
+                    value={organization?.academic_year || '2023/2024'}
+                    onChange={(e) => setOrganization({ ...organization, academic_year: e.target.value })}
                     className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="2023/2024">2023/2024</option>
@@ -2889,9 +2894,9 @@ export function Settings({ role }: { role?: UserRole }) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('term_semester')}</label>
-                  <select 
-                    value={organization?.current_term || 'Term 1'} 
-                    onChange={(e) => setOrganization({...organization, current_term: e.target.value})}
+                  <select
+                    value={organization?.current_term || 'Term 1'}
+                    onChange={(e) => setOrganization({ ...organization, current_term: e.target.value })}
                     className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="Term 1">{t('term')} 1</option>
@@ -2954,7 +2959,7 @@ export function Settings({ role }: { role?: UserRole }) {
                   <input
                     type="text"
                     value={organization?.admission_no_prefix || ''}
-                    onChange={(e) => setOrganization({...organization, admission_no_prefix: e.target.value})}
+                    onChange={(e) => setOrganization({ ...organization, admission_no_prefix: e.target.value })}
                     placeholder="e.g., ADM-"
                     className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
                   />
@@ -2965,7 +2970,7 @@ export function Settings({ role }: { role?: UserRole }) {
                   <input
                     type="number"
                     value={organization?.admission_no_start_from || ''}
-                    onChange={(e) => setOrganization({...organization, admission_no_start_from: parseInt(e.target.value) || 1})}
+                    onChange={(e) => setOrganization({ ...organization, admission_no_start_from: parseInt(e.target.value) || 1 })}
                     placeholder="e.g., 001"
                     className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
                   />
@@ -2976,7 +2981,7 @@ export function Settings({ role }: { role?: UserRole }) {
                   <input
                     type="text"
                     value={organization?.admission_no_suffix || ''}
-                    onChange={(e) => setOrganization({...organization, admission_no_suffix: e.target.value})}
+                    onChange={(e) => setOrganization({ ...organization, admission_no_suffix: e.target.value })}
                     placeholder="e.g., -24"
                     className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-sm"
                   />
@@ -3087,7 +3092,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
   });
 
   // Filter templates if lockedType is provided
-  const filteredData = lockedType 
+  const filteredData = lockedType
     ? data.filter(item => item.type === lockedType)
     : data;
 
@@ -3207,25 +3212,25 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
   const handleAdd = () => {
     setEditingItem(null);
     const type = lockedType || 'Receipt';
-    setFormData({ 
-      name: '', 
-      type, 
-      layout_config: { 
-        content: PRE_TEXT_TEMPLATES[type] || '', 
-        headerText: organization?.logo ? `<img src="${organization.logo}" style="max-height: 80px;" alt="Logo" />` : '<h1>' + (organization?.name || 'School Header') + '</h1>', 
-        footerText: '<p style="text-align: center;">' + (organization?.address || 'School Footer Address') + '</p>', 
-        styles: '' 
-      } 
+    setFormData({
+      name: '',
+      type,
+      layout_config: {
+        content: PRE_TEXT_TEMPLATES[type] || '',
+        headerText: organization?.logo ? `<img src="${organization.logo}" style="max-height: 80px;" alt="Logo" />` : '<h1>' + (organization?.name || 'School Header') + '</h1>',
+        footerText: '<p style="text-align: center;">' + (organization?.address || 'School Footer Address') + '</p>',
+        styles: ''
+      }
     });
     setIsModalOpen(true);
   };
 
   const handleEdit = (item: any) => {
     setEditingItem(item);
-    setFormData({ 
-      name: item.name || '', 
-      type: item.type || lockedType || 'Receipt', 
-      layout_config: item.layout_config || { content: '', headerText: '', footerText: '', styles: '' } 
+    setFormData({
+      name: item.name || '',
+      type: item.type || lockedType || 'Receipt',
+      layout_config: item.layout_config || { content: '', headerText: '', footerText: '', styles: '' }
     });
     setIsModalOpen(true);
   };
@@ -3269,7 +3274,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
     // Determine which element to sync based on active section
     let elementId = 'template-canvas';
     let field: 'content' | 'headerText' | 'footerText' = 'content';
-    
+
     if (activeSection === 'header') {
       elementId = 'header-canvas';
       field = 'headerText';
@@ -3277,7 +3282,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
       elementId = 'footer-canvas';
       field = 'footerText';
     }
-    
+
     const el = document.getElementById(elementId);
     if (el) {
       setIsSaving(true);
@@ -3297,10 +3302,10 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
     let elementId = 'template-canvas';
     if (activeSection === 'header') elementId = 'header-canvas';
     else if (activeSection === 'footer') elementId = 'footer-canvas';
-    
+
     const el = document.getElementById(elementId);
     if (el) el.focus();
-    
+
     document.execCommand('insertText', false, ' ' + variable + ' ');
     setTimeout(syncActiveSection, 10);
   };
@@ -3310,10 +3315,10 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
     let elementId = 'template-canvas';
     if (activeSection === 'header') elementId = 'header-canvas';
     else if (activeSection === 'footer') elementId = 'footer-canvas';
-    
+
     const el = document.getElementById(elementId);
     if (el) el.focus();
-    
+
     document.execCommand(command, false, value);
     // Sync after a tiny delay to allow execCommand to finish
     setTimeout(syncActiveSection, 10);
@@ -3349,7 +3354,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
 
     const type = formData.type as keyof typeof sampleData;
     const data = sampleData[type] || {};
-    
+
     // Add common organization variables
     data['{{school_name}}'] = organization?.name || 'Your School Name';
     data['{{school_address}}'] = organization?.address || '123 School Street, Accra';
@@ -3428,13 +3433,13 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                   <FileText size={24} />
                 </div>
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={() => handleEdit(item)}
                     className="p-2 text-zinc-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-colors"
                   >
                     <Eye size={18} />
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDeleteClick(item)}
                     className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
                   >
@@ -3463,16 +3468,16 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
           {/* Main Studio Workspace */}
           <div className="flex-1 flex overflow-hidden bg-zinc-950 relative">
             {/* Background Grid Pattern */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ 
-              backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', 
-              backgroundSize: '30px 30px' 
+            <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
+              backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+              backgroundSize: '30px 30px'
             }}></div>
 
             {/* Floating Left Toolbar - Tools & Layers */}
             <div className="absolute left-6 top-1/2 -translate-y-1/2 w-16 flex flex-col gap-4 z-40">
               <div className="p-2 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col gap-2">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setActiveTab('content')}
                   className={cn(
                     "p-3 rounded-xl transition-all group relative",
@@ -3482,8 +3487,8 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                   <FileText size={20} />
                   <span className="absolute left-full ml-4 px-2 py-1 bg-zinc-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Content Tools</span>
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setActiveTab('design')}
                   className={cn(
                     "p-3 rounded-xl transition-all group relative",
@@ -3493,8 +3498,8 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                   <Palette size={20} />
                   <span className="absolute left-full ml-4 px-2 py-1 bg-zinc-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Visual Design</span>
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setActiveTab('layers')}
                   className={cn(
                     "p-3 rounded-xl transition-all group relative",
@@ -3511,7 +3516,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
             <div className="absolute right-6 top-6 bottom-6 w-[340px] flex flex-col bg-zinc-900 border border-white/10 rounded-[32px] shadow-2xl overflow-hidden animate-in fade-in slide-in-from-right-8 duration-500 z-40">
               {/* Header Tabs */}
               <div className="flex border-b border-white/5 p-2">
-                <button 
+                <button
                   type="button"
                   onClick={() => setActiveTab('content')}
                   className={cn(
@@ -3521,7 +3526,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                 >
                   Content
                 </button>
-                <button 
+                <button
                   type="button"
                   onClick={() => setActiveTab('design')}
                   className={cn(
@@ -3537,14 +3542,14 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
               <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8 max-h-[calc(95vh-140px)]">
                 {/* Template Identity */}
                 <div className="space-y-4">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Template Name (e.g. Q1 Invoice)"
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-bold"
                   />
-                  <select 
+                  <select
                     value={formData.type}
                     onChange={e => setFormData({ ...formData, type: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm text-zinc-400 outline-none"
@@ -3583,20 +3588,20 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                           <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Page Padding</label>
                           <span className="text-[10px] text-indigo-400 font-mono">{formData.layout_config.pageSettings?.padding}px</span>
                         </div>
-                        <input 
+                        <input
                           type="range" min="0" max="100" step="5"
                           value={formData.layout_config.pageSettings?.padding || 60}
                           onChange={e => setFormData({ ...formData, layout_config: { ...formData.layout_config, pageSettings: { ...formData.layout_config.pageSettings!, padding: parseInt(e.target.value) } } })}
                           className="w-full accent-indigo-600 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
                         />
                       </div>
-                      
+
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Line Spacing</label>
                           <span className="text-[10px] text-indigo-400 font-mono">{formData.layout_config.pageSettings?.lineHeight}</span>
                         </div>
-                        <input 
+                        <input
                           type="range" min="1" max="2.5" step="0.1"
                           value={formData.layout_config.pageSettings?.lineHeight || 1.6}
                           onChange={e => setFormData({ ...formData, layout_config: { ...formData.layout_config, pageSettings: { ...formData.layout_config.pageSettings!, lineHeight: parseFloat(e.target.value) } } })}
@@ -3604,42 +3609,42 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                         />
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
-                       <div className="space-y-2">
-                         <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Text Style</label>
-                         <div className="flex items-center gap-2 p-2 bg-white/5 rounded-xl border border-white/10">
-                            <input 
-                              type="color" 
-                              value={formData.layout_config.pageSettings?.textColor || '#18181b'}
-                              onChange={e => setFormData({ ...formData, layout_config: { ...formData.layout_config, pageSettings: { ...formData.layout_config.pageSettings!, textColor: e.target.value } } })}
-                              className="w-8 h-8 rounded-lg bg-transparent cursor-pointer" 
-                            />
-                            <span className="text-[10px] text-zinc-400">Color</span>
-                         </div>
-                       </div>
-                       <div className="space-y-2">
-                         <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Font Family</label>
-                         <select 
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Text Style</label>
+                        <div className="flex items-center gap-2 p-2 bg-white/5 rounded-xl border border-white/10">
+                          <input
+                            type="color"
+                            value={formData.layout_config.pageSettings?.textColor || '#18181b'}
+                            onChange={e => setFormData({ ...formData, layout_config: { ...formData.layout_config, pageSettings: { ...formData.layout_config.pageSettings!, textColor: e.target.value } } })}
+                            className="w-8 h-8 rounded-lg bg-transparent cursor-pointer"
+                          />
+                          <span className="text-[10px] text-zinc-400">Color</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Font Family</label>
+                        <select
                           className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
                           value={formData.layout_config.pageSettings?.fontFamily}
                           onChange={e => setFormData({ ...formData, layout_config: { ...formData.layout_config, pageSettings: { ...formData.layout_config.pageSettings!, fontFamily: e.target.value } } })}
-                         >
-                           <option value="serif">Formal (Serif)</option>
-                           <option value="sans-serif">Modern (Sans)</option>
-                           <option value="monospace">Mono</option>
-                         </select>
-                       </div>
+                        >
+                          <option value="serif">Formal (Serif)</option>
+                          <option value="sans-serif">Modern (Sans)</option>
+                          <option value="monospace">Mono</option>
+                        </select>
+                      </div>
                     </div>
 
                     <div className="p-4 bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
-                       <div className="flex items-center gap-2 mb-2">
-                         <div className={cn("w-2 h-2 rounded-full", isSaving ? "bg-amber-500 animate-pulse" : "bg-emerald-500")} />
-                         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                           {isSaving ? "Syncing Workspace..." : "Synced to Cloud"}
-                         </span>
-                       </div>
-                       <p className="text-[10px] text-zinc-500 leading-relaxed italic">Changes are captured instantly.</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={cn("w-2 h-2 rounded-full", isSaving ? "bg-amber-500 animate-pulse" : "bg-emerald-500")} />
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                          {isSaving ? "Syncing Workspace..." : "Synced to Cloud"}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 leading-relaxed italic">Changes are captured instantly.</p>
                     </div>
                   </div>
                 )}
@@ -3678,11 +3683,11 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
               {/* The "Paper" */}
               <div className="relative group/canvas">
                 <div className={cn(
-                   "mx-auto w-[800px] bg-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] rounded-lg min-h-[1100px] flex flex-col overflow-hidden transition-all duration-300 transform",
-                   "ring-1 ring-white/5 ring-inset"
+                  "mx-auto w-[800px] bg-white shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] rounded-lg min-h-[1100px] flex flex-col overflow-hidden transition-all duration-300 transform",
+                  "ring-1 ring-white/5 ring-inset"
                 )}>
                   {/* Header Block */}
-                  <div 
+                  <div
                     onClick={() => setActiveSection('header')}
                     className={cn(
                       "outline-none relative transition-all cursor-text text-center",
@@ -3690,7 +3695,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                     )}
                     style={{ padding: `${formData.layout_config.pageSettings?.padding}px` }}
                   >
-                    <div 
+                    <div
                       id="header-canvas"
                       contentEditable
                       onBlur={syncActiveSection}
@@ -3700,22 +3705,22 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                     />
                     {activeSection === 'header' && <div className="absolute top-2 left-2 px-2 py-0.5 bg-indigo-600 text-white text-[8px] font-bold uppercase rounded rounded-bl-none">Header Section</div>}
                   </div>
-                  
+
                   {/* Body Block */}
-                  <div 
+                  <div
                     onClick={() => setActiveSection('body')}
                     className={cn(
                       "flex-1 outline-none relative transition-all cursor-text",
                       activeSection === 'body' ? "ring-2 ring-indigo-500 ring-inset bg-indigo-50/5" : "hover:bg-zinc-50/50"
                     )}
-                    style={{ 
+                    style={{
                       padding: `${formData.layout_config.pageSettings?.padding}px`,
                       lineHeight: formData.layout_config.pageSettings?.lineHeight,
                       fontFamily: formData.layout_config.pageSettings?.fontFamily,
                       color: formData.layout_config.pageSettings?.textColor
                     }}
                   >
-                    <div 
+                    <div
                       id="template-canvas"
                       contentEditable
                       suppressContentEditableWarning
@@ -3723,7 +3728,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                       onInput={syncActiveSection}
                       dangerouslySetInnerHTML={{ __html: formData.layout_config.content }}
                       className="outline-none min-h-[600px] prose prose-zinc max-w-none prose-p:my-2 prose-h2:text-indigo-600 prose-strong:text-indigo-900"
-                      style={{ 
+                      style={{
                         color: 'inherit',
                         fontFamily: 'inherit'
                       }}
@@ -3732,7 +3737,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                   </div>
 
                   {/* Footer Block */}
-                  <div 
+                  <div
                     onClick={() => setActiveSection('footer')}
                     className={cn(
                       "min-h-[120px] border-t border-zinc-100 outline-none relative transition-all cursor-text text-center text-xs text-zinc-500",
@@ -3740,7 +3745,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                     )}
                     style={{ padding: `${formData.layout_config.pageSettings?.padding}px` }}
                   >
-                    <div 
+                    <div
                       id="footer-canvas"
                       contentEditable
                       onBlur={syncActiveSection}
@@ -3751,10 +3756,10 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
                     {activeSection === 'footer' && <div className="absolute top-2 left-2 px-2 py-0.5 bg-indigo-600 text-white text-[8px] font-bold uppercase rounded rounded-bl-none">Footer Area</div>}
                   </div>
                 </div>
-                
+
                 {/* Visual Rulers */}
                 <div className="absolute -left-12 top-0 bottom-0 w-8 border-r border-white/5 opacity-50 flex flex-col justify-between py-4 text-[8px] text-zinc-600 font-mono">
-                   {[...Array(10)].map((_, i) => <span key={i}>{(i + 1) * 10}cm</span>)}
+                  {[...Array(10)].map((_, i) => <span key={i}>{(i + 1) * 10}cm</span>)}
                 </div>
               </div>
               <style dangerouslySetInnerHTML={{ __html: formData.layout_config.styles }} />
@@ -3786,6 +3791,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
   });
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
   const [resetConfirm, setResetConfirm] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
+  const [rewardModal, setRewardModal] = useState<{ isOpen: boolean, partner: any | null }>({ isOpen: false, partner: null });
 
   const loadPartners = async () => {
     try {
@@ -3890,8 +3896,17 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
           { header: 'Email', accessor: 'email', className: 'text-zinc-500' },
           { header: 'Status', accessor: (item: any) => statusBadge(item.status || 'Pending') },
           { header: 'Referral Code', accessor: 'referral_code', className: 'font-mono text-indigo-600' },
-          { header: 'Earnings', accessor: (item: any) => `${item.currency || 'GH₵'} ${parseFloat(item.converted_total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` }
+          { header: 'Earnings', accessor: (item: any) => `${item.currency || 'GH₵'} ${parseFloat(item.converted_total_earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
         ]}
+        extraActions={(p: any) => (
+          <button
+            onClick={() => setRewardModal({ isOpen: true, partner: p })}
+            className="flex items-center w-full gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-indigo-600 rounded-lg transition-colors"
+          >
+            <Award className="w-4 h-4" />
+            Awards & Rewards
+          </button>
+        )}
       />
 
       {/* View Partner Details */}
@@ -3920,10 +3935,10 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
               <div className="p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-1">
                 <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider">Total Earnings</p>
                 <p className="font-bold text-emerald-600">
-                  GH₵ {parseFloat(viewingPartner.total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                  GH₵ {parseFloat(viewingPartner.total_earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   {viewingPartner.currency && viewingPartner.currency !== 'GH₵' && (
                     <span className="block text-[10px] text-zinc-500 font-medium">
-                      ≈ {viewingPartner.currency} {parseFloat(viewingPartner.converted_total_earnings || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      ≈ {viewingPartner.currency} {parseFloat(viewingPartner.converted_total_earnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   )}
                 </p>
@@ -4033,6 +4048,12 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
         message={`Are you sure you want to delete partner "${deleteConfirm.partner?.name}"? This action cannot be undone.`}
       />
 
+      <PartnerRewardsModal
+        isOpen={rewardModal.isOpen}
+        partner={rewardModal.partner}
+        onClose={() => setRewardModal({ ...rewardModal, isOpen: false })}
+      />
+
       <ConfirmationModal
         isOpen={resetConfirm.isOpen}
         onClose={() => setResetConfirm({ ...resetConfirm, isOpen: false })}
@@ -4041,5 +4062,138 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
         message={`Are you sure you want to reset the password for "${resetConfirm.partner?.name}" back to the default (zxcv123$$)?`}
       />
     </div>
+  );
+}
+
+function PartnerRewardsModal({ partner, isOpen, onClose }: { partner: any, isOpen: boolean, onClose: () => void }) {
+  const [rewards, setRewards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [formData, setFormData] = useState({ type: 'Certificate', title: '', description: '', criteria: '' });
+
+  const loadRewards = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchPartnerRewards(partner.id);
+      setRewards(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { if (isOpen && partner) loadRewards(); }, [isOpen, partner]);
+
+  const handleAward = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await awardPartnerReward(partner.id, formData);
+      (window as any).showToast?.('Reward awarded successfully!', 'success');
+      setIsAdding(false);
+      setFormData({ type: 'Certificate', title: '', description: '', criteria: '' });
+      loadRewards();
+    } catch (err) {
+      (window as any).showToast?.('Failed to award reward', 'error');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deletePartnerReward(id);
+      (window as any).showToast?.('Reward revoked!', 'success');
+      loadRewards();
+    } catch (err) {
+      (window as any).showToast?.('Failed to revoke reward', 'error');
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={`Rewards & Achievements: ${partner?.name}`} maxWidth="max-w-xl">
+      <div className="space-y-6">
+        {isAdding ? (
+          <form onSubmit={handleAward} className="p-5 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 bg-indigo-600 rounded-lg text-white">
+                <Award className="w-4 h-4" />
+              </div>
+              <h4 className="font-bold text-zinc-900 dark:text-white text-sm">Award New Recognition</h4>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider ml-1">Type</label>
+                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                  <option value="Certificate">Certificate</option>
+                  <option value="Badge">Badge</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider ml-1">Title</label>
+                <input type="text" required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Platinum Partner" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider ml-1">Description</label>
+              <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm h-24 resize-none focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Details about this achievement..." />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase text-zinc-400 tracking-wider ml-1">Criteria</label>
+              <input type="text" value={formData.criteria} onChange={e => setFormData({ ...formData, criteria: e.target.value })} className="w-full px-4 py-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Over 50 successful referrals" />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button type="button" onClick={() => setIsAdding(false)} className="px-4 py-2 text-sm font-bold text-zinc-500 hover:text-zinc-700 transition-colors">Cancel</button>
+              <button type="submit" className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all transform hover:-translate-y-0.5">Award Now</button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex justify-between items-center bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+            <div>
+              <h4 className="font-bold text-zinc-900 dark:text-white text-sm">Achievement History</h4>
+              <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-0.5">{rewards.length} AWARDS ISSUED</p>
+            </div>
+            <button onClick={() => setIsAdding(true)} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-100 dark:shadow-none hover:bg-indigo-700 transition-all"><Plus className="w-3.5 h-3.5" /> New Reward</button>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="py-20 flex flex-col items-center justify-center space-y-4">
+            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm text-zinc-500 font-medium">Loading achievements...</p>
+          </div>
+        ) : rewards.length === 0 ? (
+          <div className="py-20 text-center bg-zinc-50 dark:bg-zinc-800/20 rounded-3xl border border-dashed border-zinc-200 dark:border-zinc-700">
+            <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Award className="w-8 h-8 text-zinc-300 dark:text-zinc-500" />
+            </div>
+            <p className="text-zinc-900 dark:text-white font-bold">No Rewards Yet</p>
+            <p className="text-sm text-zinc-500 max-w-[200px] mx-auto mt-1 italic">Recognize this partner's growth with a badge or certificate.</p>
+          </div>
+        ) : (
+          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            {rewards.map(reward => (
+              <div key={reward.id} className="p-4 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl flex items-center justify-between group hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${reward.type === 'Badge' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
+                    {reward.type === 'Badge' ? <Award className="w-6 h-6" /> : <Medal className="w-6 h-6" />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h5 className="font-bold text-zinc-900 dark:text-white text-sm">{reward.title}</h5>
+                      <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded ${reward.type === 'Badge' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{reward.type}</span>
+                    </div>
+                    <p className="text-xs text-zinc-500 mt-0.5">{reward.criteria || 'Standard Performance Achievement'}</p>
+                    <p className="text-[10px] text-zinc-400 mt-1">{new Date(reward.issued_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <button onClick={() => handleDelete(reward.id)} className="p-2.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all opacity-0 group-hover:opacity-100">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Modal>
   );
 }

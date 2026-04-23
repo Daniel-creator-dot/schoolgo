@@ -1264,3 +1264,19 @@ export const fetchSMSTransactions = async () => {
   const response = await api.get('/sms/transactions');
   return response.data;
 };
+
+// PARTNER REWARDS
+export const awardPartnerReward = async (partnerId: string, data: { type: string, title: string, description: string, criteria: string }) => {
+  const response = await api.post(`/partners/${partnerId}/rewards`, data);
+  return response.data;
+};
+
+export const fetchPartnerRewards = async (partnerId: string) => {
+  const response = await api.get(`/partners/${partnerId}/rewards`);
+  return response.data;
+};
+
+export const deletePartnerReward = async (rewardId: string) => {
+  const response = await api.delete(`/rewards/${rewardId}`);
+  return response.data;
+};

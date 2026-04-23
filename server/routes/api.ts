@@ -67,6 +67,9 @@ router.patch('/partners/:id', checkRole(['SUPER_ADMIN']), PartnerController.upda
 router.delete('/partners/:id', checkRole(['SUPER_ADMIN']), PartnerController.deletePartner);
 router.post('/partners/:id/approve', checkRole(['SUPER_ADMIN']), PartnerController.approvePartner);
 router.post('/partners/:id/reset-password', checkRole(['SUPER_ADMIN']), PartnerController.resetPartnerPassword);
+router.post('/partners/:partner_id/rewards', checkRole(['SUPER_ADMIN']), PartnerController.awardReward);
+router.get('/partners/:id/rewards', PartnerController.getPartnerRewards);
+router.delete('/rewards/:id', checkRole(['SUPER_ADMIN']), PartnerController.deleteReward);
 
 router.get('/subscriptions', OrganizationController.getSubscriptions);
 router.post('/subscriptions', checkRole(['SUPER_ADMIN']), OrganizationController.createSubscription);

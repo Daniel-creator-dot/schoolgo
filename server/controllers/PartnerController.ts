@@ -32,7 +32,7 @@ export const register = async (req: express.Request, res: express.Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     // Generate a simple 6-character referral code
     const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    
+
     const result = await pool.query(
       'INSERT INTO partners (name, email, password, contact_number, company_name, registration_number, referral_code, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, name, email, referral_code, company_name, registration_number, status',
       [name, email, hashedPassword, contact_number, company_name, registration_number, referralCode, 'Pending']
@@ -102,8 +102,8 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
     }
 
     const schoolsResult = await pool.query(
-        'SELECT id, name, type, status, plan, email, contact_number, address, custom_domain, language, timezone, created_at FROM organizations WHERE referred_by_partner_id = $1', 
-        [partnerId]
+      'SELECT id, name, type, status, plan, email, contact_number, address, custom_domain, language, timezone, created_at FROM organizations WHERE referred_by_partner_id = $1',
+      [partnerId]
     );
 
     const partner = partnerResult.rows[0];
@@ -145,9 +145,9 @@ export const createSchool = async (req: AuthRequest, res: Response) => {
     // 2. Create Default Admin User
     const fallbackAdminEmail = admin_email || email;
     const fallbackPassword = admin_password || 'zxcv123$$';
-    
+
     if (!fallbackAdminEmail) {
-       throw new Error('An administrator email is required to create a school.');
+      throw new Error('An administrator email is required to create a school.');
     }
 
     const hashedPassword = await bcrypt.hash(fallbackPassword, 10);
@@ -168,7 +168,7 @@ export const createSchool = async (req: AuthRequest, res: Response) => {
 
 export const approveReferral = async (req: AuthRequest, res: Response) => {
   const { org_id } = req.params;
-  
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -177,7 +177,7 @@ export const approveReferral = async (req: AuthRequest, res: Response) => {
       'SELECT referred_by_partner_id, status FROM organizations WHERE id = $1',
       [org_id]
     );
-    
+
     if (orgResult.rows.length === 0) {
       return res.status(404).json({ error: 'Organization not found' });
     }
@@ -193,18 +193,18 @@ export const approveReferral = async (req: AuthRequest, res: Response) => {
     );
 
     if (org.referred_by_partner_id) {
-        // Fetch commission from the plan template
-        const planResult = await client.query(
-            'SELECT commission_amount FROM plan_templates WHERE name = $1',
-            [org.plan]
-        );
-        
-        const commission = planResult.rows[0]?.commission_amount || 0;
-        
-        await client.query(
-            'UPDATE partners SET total_earnings = total_earnings + $1 WHERE id = $2',
-            [commission, org.referred_by_partner_id]
-        );
+      // Fetch commission from the plan template
+      const planResult = await client.query(
+        'SELECT commission_amount FROM plan_templates WHERE name = $1',
+        [org.plan]
+      );
+
+      const commission = planResult.rows[0]?.commission_amount || 0;
+
+      await client.query(
+        'UPDATE partners SET total_earnings = total_earnings + $1 WHERE id = $2',
+        [commission, org.referred_by_partner_id]
+      );
     }
 
     await client.query('COMMIT');
@@ -319,7 +319,7 @@ export const getBanks = async (req: AuthRequest, res: Response) => {
     });
     const data = await response.json();
     const allBanks = data.data || [];
-    
+
     // Deduplicate by name, preferring GHS where possible
     const uniqueBanks = allBanks.reduce((acc: any[], current: any) => {
       const existing = acc.find(b => b.name === current.name);
@@ -390,6 +390,47 @@ export const getPayoutSettings = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Partner not found' });
     }
     res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ===== PARTNER REWARDS (BADGES & CERTIFICATES) =====
+
+export const awardReward = async (req: AuthRequest, res: Response) => {
+  const { partner_id } = req.params;
+  const { type, title, description, criteria } = req.body;
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO partner_rewards (partner_id, type, title, description, criteria) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [partner_id, type, title, description, criteria]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getPartnerRewards = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params; // partner id
+  try {
+    const result = await pool.query(
+      'SELECT * FROM partner_rewards WHERE partner_id = $1 ORDER BY issued_at DESC',
+      [id]
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteReward = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params; // reward id
+  try {
+    const result = await pool.query('DELETE FROM partner_rewards WHERE id = $1 RETURNING id', [id]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Reward not found' });
+    res.json({ message: 'Reward revoked successfully' });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
