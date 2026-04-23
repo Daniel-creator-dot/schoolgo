@@ -1049,7 +1049,7 @@ export function SchoolBilling({
       return;
     }
     const user = JSON.parse(userStr);
-    const publicKey = PAYSTACK_PUBLIC_KEY;
+    const publicKey = PAYSTACK_PUBLIC_KEY || import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
 
     if (!publicKey) {
       console.error('>>> [Paystack] Public Key missing (VITE_PAYSTACK_PUBLIC_KEY)');
