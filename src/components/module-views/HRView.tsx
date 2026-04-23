@@ -247,7 +247,7 @@ export const HRModules = {
           };
 
           return (
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-10 overflow-x-auto custom-scrollbar">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-10 overflow-x-auto custom-scrollbar">
               <div className="min-w-max flex flex-col items-center">
                 {/* School Admin / Root Node - HIDDEN IN SCOPED VIEW */}
                 {!scopedDeptId && (
@@ -295,85 +295,97 @@ export const HRModules = {
 
                     {/* Vertical line down from School Admin */}
                     {filteredDepartments.length > 0 && (
-                      <>
-                        <div className="w-px h-10 bg-zinc-300 dark:bg-zinc-700" />
-                        {/* Horizontal line spanning all departments */}
-                        <div className={cn(
-                          "h-px bg-zinc-300 dark:bg-zinc-700",
-                          filteredDepartments.length === 1 ? "w-0" : filteredDepartments.length <= 3 ? "w-[400px]" : "w-[700px]"
-                        )} />
-                      </>
+                      <div className="w-px h-10 bg-zinc-300 dark:bg-zinc-700" />
                     )}
                   </>
                 )}
 
                 {/* Department + Staff Branches */}
-                <div className="flex justify-center gap-10 mt-0">
-                  {filteredDepartments.map((dept) => {
+                <div className="flex justify-center flex-nowrap gap-x-4 sm:gap-x-10 mt-0">
+                  {filteredDepartments.map((dept, idx) => {
                     const hod = dept.hod_id ? staffMap.get(dept.hod_id) : null;
                     const deptStaff = (staffByDept.get(dept.id) || []).filter(s => s.id !== dept.hod_id);
 
                     return (
-                      <div key={dept.id} className="flex flex-col items-center">
+                      <div key={dept.id} className="flex flex-col items-center relative">
+                        {/* Horizontal Connector Line (Top) */}
+                        {filteredDepartments.length > 1 && (
+                          <div className="absolute top-0 left-0 right-0 h-px">
+                            <div className={cn(
+                              "absolute top-0 h-full bg-zinc-300 dark:bg-zinc-700",
+                              idx === 0 ? "left-1/2 right-0" :
+                                idx === filteredDepartments.length - 1 ? "left-0 right-1/2" :
+                                  "left-0 right-0"
+                            )} />
+                          </div>
+                        )}
+
                         {/* Vertical connector to department */}
-                        <div className="w-px h-8 bg-zinc-300 dark:bg-zinc-700" />
+                        <div className="w-px h-8 bg-zinc-300 dark:bg-zinc-700 relative z-10" />
 
                         {/* Department Node */}
-                        <div className="p-4 rounded-2xl shadow-lg w-52 text-center bg-indigo-600 text-white">
-                          <p className="text-[8px] font-black uppercase tracking-widest opacity-60 mb-0.5">Department</p>
-                          <p className="font-bold text-sm">{dept.name}</p>
+                        <div className="p-3 sm:p-4 rounded-2xl shadow-lg w-40 sm:w-52 text-center bg-indigo-600 text-white relative z-10 transition-transform hover:scale-105">
+                          <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest opacity-60 mb-0.5">Department</p>
+                          <p className="font-bold text-xs sm:text-sm leading-tight">{dept.name}</p>
                         </div>
 
                         {/* HOD Node */}
-                        {hod && (
+                        {hod ? (
                           <>
                             <div className="w-px h-6 bg-zinc-300 dark:bg-zinc-700" />
                             <div
-                              className="p-3.5 rounded-xl w-48 text-center bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 cursor-pointer hover:shadow-md transition-all"
+                              className="p-3 sm:p-3.5 rounded-xl w-36 sm:w-48 text-center bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 cursor-pointer hover:shadow-md transition-all hover:border-indigo-400 group"
                               onClick={() => !isReadOnly && setEditingStaff(hod)}
                             >
-                              <span className="inline-block px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-black uppercase tracking-widest mb-1.5">HOD</span>
-                              <p className="font-bold text-xs text-zinc-900 dark:text-white">{hod.name}</p>
-                              <p className="text-[9px] text-zinc-400 mt-0.5">{hod.role}</p>
+                              <span className="inline-block px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-[8px] font-black uppercase tracking-widest mb-1.5 group-hover:bg-indigo-600 group-hover:text-white transition-colors">HOD</span>
+                              <p className="font-bold text-[10px] sm:text-xs text-zinc-900 dark:text-white truncate">{hod.name}</p>
+                              <p className="text-[8px] sm:text-[9px] text-zinc-400 mt-0.5">{hod.role}</p>
                             </div>
                           </>
-                        )}
-
-                        {!hod && (
+                        ) : (
                           <>
                             <div className="w-px h-6 bg-zinc-300 dark:bg-zinc-700" />
-                            <div className="p-3 rounded-xl w-48 text-center border-2 border-dashed border-amber-300 dark:border-amber-700">
-                              <p className="text-[8px] font-black uppercase tracking-widest text-amber-500">No HOD</p>
+                            <div className="p-2 sm:p-3 rounded-xl w-36 sm:w-48 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                              <p className="text-[8px] font-black uppercase tracking-widest text-zinc-400">No HOD</p>
                             </div>
                           </>
                         )}
 
                         {/* Staff under this department */}
                         {deptStaff.length > 0 && (
-                          <>
+                          <div className="flex flex-col items-center w-full mt-0">
                             <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700" />
-                            <div className={cn(
-                              "h-px bg-zinc-200 dark:bg-zinc-700",
-                              deptStaff.length === 1 ? "w-0" : deptStaff.length <= 2 ? "w-32" : "w-56"
-                            )} />
-                            <div className="flex justify-center gap-4 mt-0">
-                              {deptStaff.map((s) => {
+
+                            <div className="flex justify-center gap-2 sm:gap-4 mt-0">
+                              {deptStaff.map((s, sIdx) => {
                                 const reportsTo = s.reports_to ? staffMap.get(s.reports_to) : null;
                                 return (
-                                  <div key={s.id} className="flex flex-col items-center">
-                                    <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-700" />
+                                  <div key={s.id} className="flex flex-col items-center relative">
+                                    {/* Sub-Horizontal Connector Line */}
+                                    {deptStaff.length > 1 && (
+                                      <div className="absolute top-0 left-0 right-0 h-px">
+                                        <div className={cn(
+                                          "absolute top-0 h-full bg-zinc-200 dark:bg-zinc-700",
+                                          sIdx === 0 ? "left-1/2 right-0" :
+                                            sIdx === deptStaff.length - 1 ? "left-0 right-1/2" :
+                                              "left-0 right-0"
+                                        )} />
+                                      </div>
+                                    )}
+
+                                    <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-700 relative z-10" />
                                     <div
-                                      className="p-3 rounded-xl w-36 text-center bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all"
+                                      className="p-2.5 sm:p-3 rounded-xl w-28 sm:w-36 text-center bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-md transition-all relative z-10"
                                       onClick={() => !isReadOnly && setEditingStaff(s)}
                                     >
-                                      <div className="w-8 h-8 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-[10px] font-black text-zinc-500 mx-auto mb-1.5">
+                                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-[9px] sm:text-[10px] font-black text-zinc-500 mx-auto mb-1.5 shadow-sm">
                                         {s.name?.charAt(0) || '?'}
                                       </div>
-                                      <p className="font-bold text-[11px] text-zinc-900 dark:text-white truncate">{s.name}</p>
-                                      <p className="text-[8px] text-zinc-400 mt-0.5">{s.role || 'Staff'}</p>
+                                      <p className="font-bold text-[10px] sm:text-[11px] text-zinc-900 dark:text-white truncate">{s.name}</p>
+                                      <p className="text-[7px] sm:text-[8px] text-zinc-400 mt-0.5 truncate">{s.role || 'Staff'}</p>
                                       {reportsTo && (
-                                        <p className="text-[7px] text-indigo-500 dark:text-indigo-400 mt-1 font-bold">
-                                          → {reportsTo.name}
+                                        <p className="text-[6px] sm:text-[7px] text-indigo-500 dark:text-indigo-400 mt-1 font-bold truncate">
+                                          → {reportsTo.name.split(' ')[0]}
                                         </p>
                                       )}
                                     </div>
@@ -381,7 +393,7 @@ export const HRModules = {
                                 );
                               })}
                             </div>
-                          </>
+                          </div>
                         )}
                       </div>
                     );
