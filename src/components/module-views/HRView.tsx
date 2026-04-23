@@ -229,13 +229,13 @@ export const HRModules = {
           const schoolAdmin = staff.find(s => {
             const role = s.role?.toUpperCase() || '';
             const name = s.name?.toUpperCase() || '';
-            return role === 'SCHOOL_ADMIN' || 
-                   role === 'SUPER_ADMIN' ||
-                   role === 'CEO' ||
-                   role === 'PRINCIPAL' ||
-                   role === 'DIRECTOR' ||
-                   role.includes('ADMIN') ||
-                   role.includes('HEAD');
+            return role === 'SCHOOL_ADMIN' ||
+              role === 'SUPER_ADMIN' ||
+              role === 'CEO' ||
+              role === 'PRINCIPAL' ||
+              role === 'DIRECTOR' ||
+              role.includes('ADMIN') ||
+              role.includes('HEAD');
           });
 
           const handleSaveTitle = () => {
@@ -273,7 +273,7 @@ export const HRModules = {
                             <div className="flex items-center justify-center gap-2 mb-1">
                               <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{rootTitle}</p>
                               {!isReadOnly && (
-                                <button 
+                                <button
                                   onClick={(e) => { e.stopPropagation(); setIsEditingTitle(true); }}
                                   className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 dark:hover:bg-zinc-100 rounded"
                                 >
@@ -413,90 +413,90 @@ export const HRModules = {
           /* ====== LIST VIEW (Department Cards) ====== */
           <>
 
-        {/* Department Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredDepartments.map((dept) => {
-            const hod = dept.hod_id ? staffMap.get(dept.hod_id) : null;
-            const deptStaff = (staffByDept.get(dept.id) || []).filter(s => s.id !== dept.hod_id);
+            {/* Department Cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {filteredDepartments.map((dept) => {
+                const hod = dept.hod_id ? staffMap.get(dept.hod_id) : null;
+                const deptStaff = (staffByDept.get(dept.id) || []).filter(s => s.id !== dept.hod_id);
 
-            return (
-              <div
-                key={dept.id}
-                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
-              >
-                {/* Department Header */}
-                <div className="p-5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/30">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-200 dark:shadow-none">
-                        {dept.name?.charAt(0) || 'D'}
-                      </div>
-                      <div>
-                        <h3 className="font-black text-zinc-900 dark:text-white tracking-tight">{dept.name}</h3>
-                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
-                          {(deptStaff.length + (hod ? 1 : 0))} members
-                        </p>
+                return (
+                  <div
+                    key={dept.id}
+                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    {/* Department Header */}
+                    <div className="p-5 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/30">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-200 dark:shadow-none">
+                            {dept.name?.charAt(0) || 'D'}
+                          </div>
+                          <div>
+                            <h3 className="font-black text-zinc-900 dark:text-white tracking-tight">{dept.name}</h3>
+                            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
+                              {(deptStaff.length + (hod ? 1 : 0))} members
+                            </p>
+                          </div>
+                        </div>
+                        {!hod && (
+                          <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest border border-amber-100 dark:border-amber-800/30">
+                            No HOD
+                          </span>
+                        )}
                       </div>
                     </div>
-                    {!hod && (
-                      <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-black uppercase tracking-widest border border-amber-100 dark:border-amber-800/30">
-                        No HOD
-                      </span>
-                    )}
+
+                    {/* Staff List */}
+                    <div className="p-4 space-y-2.5">
+                      {hod && <StaffRow member={hod} isHod={true} />}
+
+                      {deptStaff.length > 0 ? (
+                        deptStaff.map((s) => (
+                          <div key={s.id}><StaffRow member={s} /></div>
+                        ))
+                      ) : !hod ? (
+                        <div className="py-8 text-center">
+                          <Users className="w-7 h-7 text-zinc-200 dark:text-zinc-700 mx-auto mb-2" />
+                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">No Staff Assigned</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Unassigned Staff */}
+            {unassignedStaff.length > 0 && !scopedDeptId && (
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-zinc-100 dark:border-zinc-800 bg-amber-50/50 dark:bg-amber-950/20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-amber-200 dark:shadow-none">
+                      ?
+                    </div>
+                    <div>
+                      <h3 className="font-black text-zinc-900 dark:text-white tracking-tight">Unassigned Staff</h3>
+                      <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
+                        {unassignedStaff.length} members without a department
+                      </p>
+                    </div>
                   </div>
                 </div>
-
-                {/* Staff List */}
                 <div className="p-4 space-y-2.5">
-                  {hod && <StaffRow member={hod} isHod={true} />}
-                  
-                  {deptStaff.length > 0 ? (
-                    deptStaff.map((s) => (
-                      <div key={s.id}><StaffRow member={s} /></div>
-                    ))
-                  ) : !hod ? (
-                    <div className="py-8 text-center">
-                      <Users className="w-7 h-7 text-zinc-200 dark:text-zinc-700 mx-auto mb-2" />
-                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">No Staff Assigned</p>
-                    </div>
-                  ) : null}
+                  {unassignedStaff.map((s) => (
+                    <div key={s.id}><StaffRow member={s} /></div>
+                  ))}
                 </div>
               </div>
-            );
-          })}
-        </div>
+            )}
 
-        {/* Unassigned Staff */}
-        {unassignedStaff.length > 0 && !scopedDeptId && (
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
-            <div className="p-5 border-b border-zinc-100 dark:border-zinc-800 bg-amber-50/50 dark:bg-amber-950/20">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-amber-200 dark:shadow-none">
-                  ?
-                </div>
-                <div>
-                  <h3 className="font-black text-zinc-900 dark:text-white tracking-tight">Unassigned Staff</h3>
-                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">
-                    {unassignedStaff.length} members without a department
-                  </p>
-                </div>
+            {staff.length === 0 && (
+              <div className="p-16 text-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl">
+                <Users className="w-12 h-12 text-zinc-200 dark:text-zinc-700 mx-auto mb-3" />
+                <p className="font-bold text-zinc-400">No staff members found.</p>
+                <p className="text-sm text-zinc-400 mt-1">Add staff in Staff Management to see the organogram.</p>
               </div>
-            </div>
-            <div className="p-4 space-y-2.5">
-              {unassignedStaff.map((s) => (
-                <div key={s.id}><StaffRow member={s} /></div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {staff.length === 0 && (
-          <div className="p-16 text-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl">
-            <Users className="w-12 h-12 text-zinc-200 dark:text-zinc-700 mx-auto mb-3" />
-            <p className="font-bold text-zinc-400">No staff members found.</p>
-            <p className="text-sm text-zinc-400 mt-1">Add staff in Staff Management to see the organogram.</p>
-          </div>
-        )}
+            )}
           </>
         )}
 
@@ -706,8 +706,8 @@ export const HRModules = {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl max-h-48 overflow-y-auto">
                   {filteredClasses.length > 0 ? (
                     filteredClasses.map((c) => (
-                      <label 
-                        key={c.id} 
+                      <label
+                        key={c.id}
                         className="flex items-center gap-2 p-2.5 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl cursor-pointer hover:border-indigo-200 dark:hover:border-indigo-900/30 transition-all group"
                       >
                         <input
@@ -780,18 +780,18 @@ export const HRModules = {
     const groupedData = React.useMemo(() => {
       const groups = new Map();
       (data || []).forEach(note => {
-         const key = `${note.teacher_id}_${note.subject}_${note.topic}_${note.status}_${note.created_at ? note.created_at.slice(0, 10) : ''}`;
-         if (!groups.has(key)) {
-            groups.set(key, { 
-              ...note, 
-              grouped_ids: [note.id], 
-              classes: [{ id: note.class_id, name: note.class_name, section: note.class_section }] 
-            });
-         } else {
-            const existing = groups.get(key);
-            existing.grouped_ids.push(note.id);
-            existing.classes.push({ id: note.class_id, name: note.class_name, section: note.class_section });
-         }
+        const key = `${note.teacher_id}_${note.subject}_${note.topic}_${note.status}_${note.created_at ? note.created_at.slice(0, 10) : ''}`;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            ...note,
+            grouped_ids: [note.id],
+            classes: [{ id: note.class_id, name: note.class_name, section: note.class_section }]
+          });
+        } else {
+          const existing = groups.get(key);
+          existing.grouped_ids.push(note.id);
+          existing.classes.push({ id: note.class_id, name: note.class_name, section: note.class_section });
+        }
       });
       return Array.from(groups.values());
     }, [data]);
@@ -811,30 +811,30 @@ export const HRModules = {
             }
           }}
           onDelete={role === "STAFF" ? undefined : onDelete}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           onView={(item) => setViewingNote(item)}
           autoModal={true}
           columns={[
             ...(isApprover
               ? [
-                  {
-                    header: "Teacher",
-                    accessor: (item: any) => item.teacher_name,
-                    className: "font-bold",
-                  },
-                ]
+                {
+                  header: "Teacher",
+                  accessor: (item: any) => item.teacher_name,
+                  className: "font-bold",
+                },
+              ]
               : []),
             {
               header: "Class",
               accessor: (item: any) =>
                 item.classes && item.classes.length > 0
                   ? item.classes
-                      .map((c: any) => `${c.name} ${c.section || ""}`.trim())
-                      .filter((n: string) => n !== "N/A" && n !== "")
-                      .join(", ") || "N/A"
+                    .map((c: any) => `${c.name} ${c.section || ""}`.trim())
+                    .filter((n: string) => n !== "N/A" && n !== "")
+                    .join(", ") || "N/A"
                   : item.class_name
-                  ? `${item.class_name} ${item.class_section || ""}`
-                  : "N/A",
+                    ? `${item.class_name} ${item.class_section || ""}`
+                    : "N/A",
             },
             { header: "Subject", accessor: (item: any) => item.subject },
             { header: "Topic", accessor: (item: any) => item.topic },
@@ -1013,10 +1013,10 @@ export const HRModules = {
                 </h3>
                 <button
                   onClick={() => {
-                    const printClasses = viewingNote?.classes && viewingNote.classes.length > 0 
-                      ? viewingNote.classes.map((c: any) => `${c.name} ${c.section || ''}`).join(', ') 
-                      : viewingNote?.class_name 
-                        ? `${viewingNote.class_name} ${viewingNote.class_section || ''}` 
+                    const printClasses = viewingNote?.classes && viewingNote.classes.length > 0
+                      ? viewingNote.classes.map((c: any) => `${c.name} ${c.section || ''}`).join(', ')
+                      : viewingNote?.class_name
+                        ? `${viewingNote.class_name} ${viewingNote.class_section || ''}`
                         : 'N/A';
 
                     const printWindow = window.open("", "_blank");
@@ -1240,7 +1240,7 @@ export const HRModules = {
                 accessor: (item: any) => (
                   <div className="flex flex-wrap gap-1">
                     {item.additional_roles &&
-                    item.additional_roles.length > 0 ? (
+                      item.additional_roles.length > 0 ? (
                       item.additional_roles.map((role: string) => (
                         <span
                           key={role}
@@ -1575,9 +1575,9 @@ export const HRModules = {
                         <p className="text-sm font-bold text-zinc-900 dark:text-white">
                           {item.date_of_birth
                             ? new Date(item.date_of_birth).toLocaleDateString(
-                                undefined,
-                                { dateStyle: "long" },
-                              )
+                              undefined,
+                              { dateStyle: "long" },
+                            )
                             : "Not Set"}
                         </p>
                       </div>
@@ -1666,7 +1666,7 @@ export const HRModules = {
                     </h4>
                     <div className="flex flex-wrap gap-3">
                       {item.additional_roles &&
-                      item.additional_roles.length > 0 ? (
+                        item.additional_roles.length > 0 ? (
                         item.additional_roles.map((r: string) => (
                           <span
                             key={r}
@@ -1891,212 +1891,219 @@ export const HRModules = {
       </div>
     );
 
-    const renderStaffForm = (item: any, isViewOnly: boolean) => (
-      <div key={item?.id || 'new'} className="space-y-8 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* PERSONAL INFORMATION SECTION */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
-            <User className="w-4 h-4 text-indigo-600" />
-            <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('personal_information')}</h4>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('full_name')}</label>
-              <input
-                type="text"
-                name="name"
-                defaultValue={item?.name}
-                disabled={isViewOnly}
-                required
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('email_address')}</label>
-              <input
-                type="email"
-                name="email"
-                defaultValue={item?.email}
-                disabled={isViewOnly}
-                required
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('phone_number')}</label>
-              <input
-                type="text"
-                name="phone"
-                defaultValue={item?.phone}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('date_of_birth')}</label>
-              <input
-                type="date"
-                name="date_of_birth"
-                defaultValue={formatDateForInput(item?.date_of_birth)}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              />
-            </div>
-          </div>
-        </div>
+    const StaffForm = ({ item, isViewOnly, t, departments, data, currency, formatDateForInput }: any) => {
+      const [currentRole, setCurrentRole] = useState(item?.role || "STAFF");
 
-        {/* EMPLOYMENT INFORMATION SECTION */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
-            <Briefcase className="w-4 h-4 text-indigo-600" />
-            <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('employment_details')}</h4>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('department')}</label>
-              <select
-                name="department_id"
-                defaultValue={item?.department_id || ""}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              >
-                <option value="">Select Department...</option>
-                {departments.map((d: any) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
+      return (
+        <div key={item?.id || 'new'} className="space-y-8 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* PERSONAL INFORMATION SECTION */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+              <User className="w-4 h-4 text-indigo-600" />
+              <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('personal_information')}</h4>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('reporting_to')}</label>
-              <select
-                name="reports_to"
-                defaultValue={item?.reports_to || ""}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              >
-                <option value="">Select Supervisor...</option>
-                {data.filter(s => s.id !== item?.id).map((s: any) => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('designation')}</label>
-              <select
-                name="role"
-                defaultValue={item?.role || "STAFF"}
-                disabled={isViewOnly}
-                required
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              >
-                <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
-                <option value="STAFF">STAFF</option>
-                <option value="HOD">HOD</option>
-                <option value="FINANCE">FINANCE</option>
-                <option value="LIBRARIAN">LIBRARIAN</option>
-                <option value="NON_STAFF">NON_STAFF</option>
-              </select>
-            </div>
-          </div>
-          <div className="space-y-3 pt-2">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('additional_roles')}</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700">
-              {['SCHOOL_ADMIN', 'STAFF', 'HOD', 'FINANCE', 'LIBRARIAN', 'NON_STAFF'].map(roleOption => (
-                <label key={roleOption} className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    name="additional_roles"
-                    value={roleOption}
-                    defaultChecked={item?.additional_roles?.includes(roleOption)}
-                    disabled={isViewOnly}
-                    className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-zinc-900 transition-all cursor-pointer disabled:opacity-50"
-                  />
-                  <span className={cn(
-                    "text-[10px] font-black uppercase tracking-tighter transition-colors",
-                    isViewOnly ? "text-zinc-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-indigo-600"
-                  )}>
-                    {roleOption.replace('_', ' ')}
-                  </span>
-                </label>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('full_name')}</label>
+                <input
+                  type="text"
+                  name="name"
+                  defaultValue={item?.name}
+                  disabled={isViewOnly}
+                  required
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('email_address')}</label>
+                <input
+                  type="email"
+                  name="email"
+                  defaultValue={item?.email}
+                  disabled={isViewOnly}
+                  required
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('phone_number')}</label>
+                <input
+                  type="text"
+                  name="phone"
+                  defaultValue={item?.phone}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('date_of_birth')}</label>
+                <input
+                  type="date"
+                  name="date_of_birth"
+                  defaultValue={formatDateForInput(item?.date_of_birth)}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* FINANCIAL INFORMATION SECTION */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
-            <Wallet className="w-4 h-4 text-indigo-600" />
-            <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('financial_info')}</h4>
+          {/* EMPLOYMENT INFORMATION SECTION */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+              <Briefcase className="w-4 h-4 text-indigo-600" />
+              <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('employment_details')}</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('department')}</label>
+                <select
+                  name="department_id"
+                  defaultValue={item?.department_id || ""}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                >
+                  <option value="">Select Department...</option>
+                  {departments.map((d: any) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('reporting_to')}</label>
+                <select
+                  name="reports_to"
+                  defaultValue={item?.reports_to || ""}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                >
+                  <option value="">Select Supervisor...</option>
+                  {data.filter((s: any) => s.id !== item?.id).map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('designation')}</label>
+                <select
+                  name="role"
+                  value={currentRole}
+                  onChange={(e) => setCurrentRole(e.target.value)}
+                  disabled={isViewOnly}
+                  required
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                >
+                  <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
+                  <option value="STAFF">STAFF</option>
+                  <option value="HOD">HOD</option>
+                  <option value="FINANCE">FINANCE</option>
+                  <option value="LIBRARIAN">LIBRARIAN</option>
+                  <option value="NON_STAFF">NON_STAFF</option>
+                </select>
+              </div>
+            </div>
+            <div className="space-y-3 pt-2">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('additional_roles')}</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+                {['SCHOOL_ADMIN', 'STAFF', 'HOD', 'FINANCE', 'LIBRARIAN', 'NON_STAFF']
+                  .filter(roleOption => roleOption !== currentRole)
+                  .map(roleOption => (
+                    <label key={roleOption} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        name="additional_roles"
+                        value={roleOption}
+                        defaultChecked={item?.additional_roles?.includes(roleOption)}
+                        disabled={isViewOnly}
+                        className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-zinc-900 transition-all cursor-pointer disabled:opacity-50"
+                      />
+                      <span className={cn(
+                        "text-[10px] font-black uppercase tracking-tighter transition-colors",
+                        isViewOnly ? "text-zinc-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-indigo-600"
+                      )}>
+                        {roleOption.replace('_', ' ')}
+                      </span>
+                    </label>
+                  ))}
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('basic_salary')} ({currency})</label>
-              <input
-                type="number"
-                name="salary"
-                defaultValue={item?.salary || 0}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('allowances')} ({currency})</label>
-              <input
-                type="number"
-                name="allowances"
-                defaultValue={item?.allowances || 0}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('deductions')} ({currency})</label>
-              <input
-                type="number"
-                name="deductions"
-                defaultValue={item?.deductions || 0}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-red-600 outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          </div>
-        </div>
 
-        {/* HR & LEAVE SECTION */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
-            <Calendar className="w-4 h-4 text-indigo-600" />
-            <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('hr_leave_settings')}</h4>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('annual_leave_limit')}</label>
-              <input
-                type="number"
-                name="annual_leave_limit"
-                defaultValue={item?.annual_leave_limit || 20}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-              />
+          {/* FINANCIAL INFORMATION SECTION */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+              <Wallet className="w-4 h-4 text-indigo-600" />
+              <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('financial_info')}</h4>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('leave_unit')}</label>
-              <select
-                name="leave_limit_unit"
-                defaultValue={item?.leave_limit_unit || "Days"}
-                disabled={isViewOnly}
-                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-              >
-                <option value="Days">Days</option>
-                <option value="Weeks">Weeks</option>
-                <option value="Months">Months</option>
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('basic_salary')} ({currency})</label>
+                <input
+                  type="number"
+                  name="salary"
+                  defaultValue={item?.salary || 0}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('allowances')} ({currency})</label>
+                <input
+                  type="number"
+                  name="allowances"
+                  defaultValue={item?.allowances || 0}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('deductions')} ({currency})</label>
+                <input
+                  type="number"
+                  name="deductions"
+                  defaultValue={item?.deductions || 0}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-red-600 outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* HR & LEAVE SECTION */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+              <Calendar className="w-4 h-4 text-indigo-600" />
+              <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('hr_leave_settings')}</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('annual_leave_limit')}</label>
+                <input
+                  type="number"
+                  name="annual_leave_limit"
+                  defaultValue={item?.annual_leave_limit || 20}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('leave_unit')}</label>
+                <select
+                  name="leave_limit_unit"
+                  defaultValue={item?.leave_limit_unit || "Days"}
+                  disabled={isViewOnly}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                >
+                  <option value="Days">Days</option>
+                  <option value="Weeks">Weeks</option>
+                  <option value="Months">Months</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    };
 
     if (viewMode === "grid" && !isStaff) {
       return (
@@ -2236,7 +2243,7 @@ export const HRModules = {
             <div className="p-4">
               {isEditingInModal ? (
                 <form id="grid-staff-edit-form" onSubmit={(e) => e.preventDefault()}>
-                  {renderStaffForm(editingStaff, false)}
+                  <StaffForm item={editingStaff} isViewOnly={false} t={t} departments={departments} data={data} currency={currency} formatDateForInput={formatDateForInput} />
                 </form>
               ) : (
                 renderStaffProfile(editingStaff, () => setIsEditingInModal(true))
@@ -2257,7 +2264,7 @@ export const HRModules = {
           onSave={onSave}
           onEdit={onSave}
           onDelete={onDelete}
-          onAdd={isStaff ? undefined : () => {}}
+          onAdd={isStaff ? undefined : () => { }}
           detailsMaxWidth="max-w-4xl"
           renderDetails={(item) => renderStaffProfile(item)}
           initialViewItem={isStaff && data.length === 1 ? data[0] : undefined}
@@ -2265,62 +2272,62 @@ export const HRModules = {
             if (isViewOnly && item) {
               return renderStaffProfile(item, (s) => onEdit?.(s));
             }
-            return renderStaffForm(item, !!isViewOnly);
+            return <StaffForm item={item} isViewOnly={!!isViewOnly} t={t} departments={departments} data={data} currency={currency} formatDateForInput={formatDateForInput} />;
           }}
-        columns={[
-          { header: t('name'), accessor: "name", className: "font-bold" },
-          { header: t('role'), accessor: "role" },
-          { header: t('department'), accessor: "department_name" },
-          {
-            header: t('salary'),
-            accessor: (item: any) =>
-              item.salary ? (
-                <span className="font-bold text-emerald-600">
-                  {currency}{Number(item.salary).toLocaleString()}
+          columns={[
+            { header: t('name'), accessor: "name", className: "font-bold" },
+            { header: t('role'), accessor: "role" },
+            { header: t('department'), accessor: "department_name" },
+            {
+              header: t('salary'),
+              accessor: (item: any) =>
+                item.salary ? (
+                  <span className="font-bold text-emerald-600">
+                    {currency}{Number(item.salary).toLocaleString()}
+                  </span>
+                ) : (
+                  <span className="text-zinc-300">—</span>
+                ),
+            },
+            {
+              header: t('status'),
+              accessor: (item: any) => (
+                <span
+                  className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                    item.status === "Active"
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-red-50 text-red-600",
+                  )}
+                >
+                  {t(item.status?.toLowerCase() || 'active')}
                 </span>
-              ) : (
-                <span className="text-zinc-300">—</span>
               ),
-          },
-          {
-            header: t('status'),
-            accessor: (item: any) => (
-              <span
-                className={cn(
-                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                  item.status === "Active"
-                    ? "bg-emerald-50 text-emerald-600"
-                    : "bg-red-50 text-red-600",
-                )}
-              >
-                {t(item.status?.toLowerCase() || 'active')}
-              </span>
-            ),
-          },
-        ]}
-        extraActions={(item) => (
-          <>
-            {item.status === "Active" ? (
-              <button
-                onClick={() => onSave?.({ ...item, status: "Inactive" })}
-                className="flex items-center w-full gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
-              >
-                <UserMinus className="w-4 h-4" />
-                Deactivate Account
-              </button>
-            ) : (
-              <button
-                onClick={() => onSave?.({ ...item, status: "Active" })}
-                className="flex items-center w-full gap-3 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 rounded-lg transition-colors"
-              >
-                <UserCheck className="w-4 h-4" />
-                Activate Account
-              </button>
-            )}
-          </>
-        )}
-      />
-    </div>
+            },
+          ]}
+          extraActions={(item) => (
+            <>
+              {item.status === "Active" ? (
+                <button
+                  onClick={() => onSave?.({ ...item, status: "Inactive" })}
+                  className="flex items-center w-full gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
+                >
+                  <UserMinus className="w-4 h-4" />
+                  Deactivate Account
+                </button>
+              ) : (
+                <button
+                  onClick={() => onSave?.({ ...item, status: "Active" })}
+                  className="flex items-center w-full gap-3 px-3 py-2 text-sm text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 rounded-lg transition-colors"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Activate Account
+                </button>
+              )}
+            </>
+          )}
+        />
+      </div>
     );
   },
   StaffAttendance: ({
@@ -2337,37 +2344,37 @@ export const HRModules = {
     const { currency, t } = useLanguage();
     return (
       <DataTable
-      title={`Staff Attendance`}
-      data={data}
-      onSave={onSave}
-      onDelete={onDelete}
-      columns={[
-        {
-          header: "Staff Name",
-          accessor: (item: any) => item.staff_name,
-          className: "font-bold",
-        },
-        { header: t('date'), accessor: (item: any) => item.date },
-        { header: "In", accessor: (item: any) => item.check_in },
-        { header: "Out", accessor: (item: any) => item.check_out },
-        {
-          header: t('status'),
-          accessor: (item: any) => (
-            <span
-              className={cn(
-                "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                item.status === "Present"
-                  ? "bg-emerald-50 text-emerald-600"
-                  : "bg-amber-50 text-amber-600",
-              )}
-            >
-              {item.status}
-            </span>
-          ),
-        },
-      ]}
-      onAdd={onSave ? () => {} : undefined}
-    />
+        title={`Staff Attendance`}
+        data={data}
+        onSave={onSave}
+        onDelete={onDelete}
+        columns={[
+          {
+            header: "Staff Name",
+            accessor: (item: any) => item.staff_name,
+            className: "font-bold",
+          },
+          { header: t('date'), accessor: (item: any) => item.date },
+          { header: "In", accessor: (item: any) => item.check_in },
+          { header: "Out", accessor: (item: any) => item.check_out },
+          {
+            header: t('status'),
+            accessor: (item: any) => (
+              <span
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                  item.status === "Present"
+                    ? "bg-emerald-50 text-emerald-600"
+                    : "bg-amber-50 text-amber-600",
+                )}
+              >
+                {item.status}
+              </span>
+            ),
+          },
+        ]}
+        onAdd={onSave ? () => { } : undefined}
+      />
     );
   },
   Recruitment: ({
@@ -2432,7 +2439,7 @@ export const HRModules = {
           onSave={onSave}
           onEdit={onSave}
           onDelete={onDelete}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           autoViewModal={true}
           renderDetails={(item) => (
             <div className="p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -2450,8 +2457,8 @@ export const HRModules = {
                   <span className={cn(
                     "px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border",
                     item.status === "Hired" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                    item.status === "Qualified" ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
-                    "bg-zinc-50 text-zinc-600 border-zinc-100"
+                      item.status === "Qualified" ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
+                        "bg-zinc-50 text-zinc-600 border-zinc-100"
                   )}>
                     {item.status}
                   </span>
@@ -2515,9 +2522,9 @@ export const HRModules = {
           columns={[
             { header: t('applicant'), accessor: "name", className: "font-bold" },
             { header: t('position'), accessor: "position" },
-            { 
-              header: t('department'), 
-              accessor: (item: any) => item.department_name || t('no_department') 
+            {
+              header: t('department'),
+              accessor: (item: any) => item.department_name || t('no_department')
             },
             {
               header: "Status",
@@ -2677,18 +2684,18 @@ export const HRModules = {
                       name="department_id"
                       defaultValue={item?.department_id || ""}
                       disabled={isViewOnly}
-                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="">Select Dept...</option>
-                    {departments.map((dept: any) => (
-                      <option key={dept.id} value={dept.id}>{dept.name}</option>
-                    ))}
-                  </select>
+                      className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm outline-none focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="">Select Dept...</option>
+                      {departments.map((dept: any) => (
+                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
           extraActions={(item) => (
             <>
               {item.status !== "Qualified" && item.status !== "Hired" && (
@@ -2971,7 +2978,7 @@ export const HRModules = {
                 Tip: Manually edit any part of the letter above before printing.
               </p>
             </div>
-            
+
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => {
@@ -3061,9 +3068,9 @@ export const HRModules = {
                 }}
                 className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all"
               >
-                  <Download className="w-4 h-4" />
-                  {t('print_download_pdf')}
-                </button>
+                <Download className="w-4 h-4" />
+                {t('print_download_pdf')}
+              </button>
             </div>
           </div>
         </Modal>
@@ -3125,23 +3132,23 @@ export const HRModules = {
     const filteredData =
       isStaff && !canApprove
         ? (data || []).filter(
-            (item) =>
-              String(item.user_id) === String(currentUser?.id) ||
-              String(item.staff_id) === String(currentUser?.id) ||
-              String(item.email) === String(currentUser?.email),
-          )
+          (item) =>
+            String(item.user_id) === String(currentUser?.id) ||
+            String(item.staff_id) === String(currentUser?.id) ||
+            String(item.email) === String(currentUser?.email),
+        )
         : role === "HOD"
           ? (data || []).filter((item) => {
-              // HOD sees their own requests + requests from their department staff
-              const isOwn =
-                String(item.user_id) === String(currentUser?.id) ||
-                String(item.staff_id) === String(currentUser?.id) ||
-                String(item.email) === String(currentUser?.email);
-              const isFromDept =
-                item.staff_id &&
-                hodDeptStaffIds.has(String(item.staff_id).toLowerCase());
-              return isOwn || isFromDept;
-            })
+            // HOD sees their own requests + requests from their department staff
+            const isOwn =
+              String(item.user_id) === String(currentUser?.id) ||
+              String(item.staff_id) === String(currentUser?.id) ||
+              String(item.email) === String(currentUser?.email);
+            const isFromDept =
+              item.staff_id &&
+              hodDeptStaffIds.has(String(item.staff_id).toLowerCase());
+            return isOwn || isFromDept;
+          })
           : data || [];
 
     const staffMember = (staffList || []).find(
@@ -3268,7 +3275,7 @@ export const HRModules = {
               data={filteredData}
               onSave={onSave}
               onDelete={isStaff ? undefined : onDelete}
-              onEdit={isStaff ? undefined : () => {}}
+              onEdit={isStaff ? undefined : () => { }}
               columns={[
                 {
                   header: t('requester'),
@@ -3359,7 +3366,7 @@ export const HRModules = {
                   )}
                 </div>
               )}
-              onAdd={onSave ? () => {} : undefined}
+              onAdd={onSave ? () => { } : undefined}
               renderForm={(item: any, isViewOnly) => (
                 <div className="space-y-4">
                   {!isStaff || canApprove ? (
@@ -3439,7 +3446,7 @@ export const HRModules = {
                           // Show staff from the same department, excluding the requester
                           return (
                             String(s.department_id) ===
-                              String(requester.department_id) &&
+                            String(requester.department_id) &&
                             String(s.id) !== String(requester.id)
                           );
                         })
@@ -3500,8 +3507,8 @@ export const HRModules = {
                         defaultValue={
                           item?.start_date
                             ? new Date(item.start_date)
-                                .toISOString()
-                                .split("T")[0]
+                              .toISOString()
+                              .split("T")[0]
                             : ""
                         }
                         required
@@ -3519,8 +3526,8 @@ export const HRModules = {
                         defaultValue={
                           item?.end_date
                             ? new Date(item.end_date)
-                                .toISOString()
-                                .split("T")[0]
+                              .toISOString()
+                              .split("T")[0]
                             : ""
                         }
                         required
@@ -3775,15 +3782,15 @@ export const HRModules = {
     const mappedData = (
       data && data.length > 0
         ? data.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            salary: item.basic_salary,
-            allowance: item.allowances,
-            deductions: item.deductions,
-            net: item.net_salary,
-            status: item.status,
-            month: item.month_year,
-          }))
+          id: item.id,
+          name: item.name,
+          salary: item.basic_salary,
+          allowance: item.allowances,
+          deductions: item.deductions,
+          net: item.net_salary,
+          status: item.status,
+          month: item.month_year,
+        }))
         : []
     ) as any[];
 
@@ -4179,10 +4186,10 @@ export const HRModules = {
     const stats = useMemo(() => {
       const records = data || [];
       if (records.length === 0) return null;
-      
+
       const avgAppraisal = records.reduce((acc, r) => acc + (Number(r.appraisal_score) || 0), 0) / records.length;
       const avgLessonNote = records.reduce((acc, r) => acc + (Number(r.lesson_note_avg) || 0), 0) / records.length;
-      
+
       const deptScores: Record<string, { total: number, count: number }> = {};
       records.forEach(r => {
         if (!r.department_name) return;
@@ -4190,7 +4197,7 @@ export const HRModules = {
         deptScores[r.department_name].total += (Number(r.appraisal_score) || 0);
         deptScores[r.department_name].count++;
       });
-      
+
       let topDept = "N/A";
       let topScore = -1;
       Object.entries(deptScores).forEach(([name, s]) => {
@@ -4266,7 +4273,7 @@ export const HRModules = {
           data={data || []}
           onSave={onSave}
           onDelete={onDelete}
-          onView={() => {}}
+          onView={() => { }}
           onAdd={() => setIsAddingReview(true)}
           renderForm={(item, isViewOnly) => (
             <div className="space-y-4">
@@ -4587,9 +4594,9 @@ export const HRModules = {
                 {view === "week"
                   ? `Week of ${getWeekDays(currentDate)[0].toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
                   : currentDate.toLocaleDateString(undefined, {
-                      month: "long",
-                      year: "numeric",
-                    })}
+                    month: "long",
+                    year: "numeric",
+                  })}
               </h3>
               <button
                 onClick={handleNext}
@@ -4611,17 +4618,17 @@ export const HRModules = {
             }
             onSave={onSave}
             onDelete={isStaff ? undefined : onDelete}
-            onEdit={canManage ? () => {} : undefined}
-            onView={() => {}}
+            onEdit={canManage ? () => { } : undefined}
+            onView={() => { }}
             columns={[
               ...(!isStaff
                 ? [
-                    {
-                      header: "Teacher",
-                      accessor: (item: any) => item.teacher_name,
-                      className: "font-bold",
-                    },
-                  ]
+                  {
+                    header: "Teacher",
+                    accessor: (item: any) => item.teacher_name,
+                    className: "font-bold",
+                  },
+                ]
                 : []),
               {
                 header: "Date",
@@ -4630,69 +4637,69 @@ export const HRModules = {
               },
               { header: "Shift", accessor: (item: any) => item.shift },
             ]}
-            onAdd={canManage ? () => {} : undefined}
+            onAdd={canManage ? () => { } : undefined}
             renderForm={
               canManage
                 ? (item, isViewOnly) => (
-                    <div className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase">
+                        Teacher
+                      </label>
+                      <select
+                        name="teacher_id"
+                        defaultValue={item?.teacher_id || ""}
+                        required
+                        disabled={isViewOnly}
+                        className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                      >
+                        <option value="">Select Teacher...</option>
+                        {(staffList || []).map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-zinc-500 uppercase">
-                          Teacher
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          name="date"
+                          defaultValue={
+                            item?.date
+                              ? new Date(item.date)
+                                .toISOString()
+                                .split("T")[0]
+                              : ""
+                          }
+                          required
+                          disabled={isViewOnly}
+                          className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm disabled:opacity-50"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-zinc-500 uppercase">
+                          Shift
                         </label>
                         <select
-                          name="teacher_id"
-                          defaultValue={item?.teacher_id || ""}
-                          required
+                          name="shift"
+                          defaultValue={item?.shift || "Morning"}
                           disabled={isViewOnly}
                           className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                         >
-                          <option value="">Select Teacher...</option>
-                          {(staffList || []).map((s) => (
-                            <option key={s.id} value={s.id}>
-                              {s.name}
-                            </option>
-                          ))}
+                          <option value="Morning">{t('morning')}</option>
+                          <option value="Afternoon">{t('afternoon')}</option>
+                          <option value="Evening">{t('evening')}</option>
+                          <option value="Full Day">{t('full_day')}</option>
                         </select>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-500 uppercase">
-                            Date
-                          </label>
-                          <input
-                            type="date"
-                            name="date"
-                            defaultValue={
-                              item?.date
-                                ? new Date(item.date)
-                                    .toISOString()
-                                    .split("T")[0]
-                                : ""
-                            }
-                            required
-                            disabled={isViewOnly}
-                            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm disabled:opacity-50"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-zinc-500 uppercase">
-                            Shift
-                          </label>
-                          <select
-                            name="shift"
-                            defaultValue={item?.shift || "Morning"}
-                            disabled={isViewOnly}
-                            className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                          >
-                            <option value="Morning">{t('morning')}</option>
-                            <option value="Afternoon">{t('afternoon')}</option>
-                            <option value="Evening">{t('evening')}</option>
-                            <option value="Full Day">{t('full_day')}</option>
-                          </select>
-                        </div>
-                      </div>
                     </div>
-                  )
+                  </div>
+                )
                 : undefined
             }
           />
@@ -4960,8 +4967,8 @@ export const HRModules = {
           data={data || []}
           onSave={onSave}
           onDelete={onDelete}
-          onView={() => {}}
-          onEdit={() => {}}
+          onView={() => { }}
+          onEdit={() => { }}
           columns={[
             {
               header: "Staff Name",
@@ -5017,7 +5024,7 @@ export const HRModules = {
               ),
             },
           ]}
-          onAdd={onSave ? () => {} : undefined}
+          onAdd={onSave ? () => { } : undefined}
           renderForm={(item, isViewOnly) => (
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -5165,8 +5172,8 @@ export const HRModules = {
           columns={[
             { header: t('student'), accessor: "name", className: "font-bold" },
             { header: t('class'), accessor: (item: any) => `${item.class || 'N/A'} ${item.section || ''}` },
-            { 
-              header: t('primary_parent'), 
+            {
+              header: t('primary_parent'),
               accessor: (item: any) => (
                 <div className="flex flex-col">
                   <span className="font-bold text-xs">{item.parent_name || 'N/A'}</span>
@@ -5174,8 +5181,8 @@ export const HRModules = {
                 </div>
               )
             },
-            { 
-              header: t('secondary_parent'), 
+            {
+              header: t('secondary_parent'),
               accessor: (item: any) => (
                 <div className="flex flex-col">
                   <span className="font-bold text-xs">{item.secondary_parent_name || 'N/A'}</span>
