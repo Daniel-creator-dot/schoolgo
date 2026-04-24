@@ -1631,15 +1631,27 @@ export default function App() {
               />
             );
           case "FINANCE":
-            return <FinanceDashboard />;
+            return (
+              <FinanceDashboard
+                invoices={invoices}
+                payments={receipts}
+                expenses={expenses}
+              />
+            );
           case "BUS_DRIVER":
-            return <BusDriverDashboard />;
+            return <BusDriverDashboard routes={transportRoutes} />;
           case "LIBRARIAN":
-            return <LibrarianDashboard />;
+            return <LibrarianDashboard books={books} bookLoans={bookLoans} />;
           case "NON_STAFF":
-            return <NonStaffDashboard />;
+            return <NonStaffDashboard tasks={[]} />;
           case "HR":
-            return <HRDashboard />;
+            return (
+              <HRDashboard
+                staff={staffList}
+                attendance={staffAttendance}
+                leaveRequests={leaveRequests}
+              />
+            );
           case "PARTNER":
             return <PartnerDashboard />;
           default:

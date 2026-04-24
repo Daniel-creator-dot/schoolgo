@@ -38,10 +38,13 @@ import {
   Plus
 } from 'lucide-react';
 import { useLanguage } from '../lib/LanguageContext';
+import { cn } from '../lib/utils';
 import { Modal } from './UI';
 import { DataTable } from './DataTable';
 import { verifySMSPurchase, fetchSMSTransactions } from '../lib/api';
 import { API_BASE_URL, PAYSTACK_PUBLIC_KEY } from '../constants';
+import { motion } from 'motion/react';
+import { UserRole, Student, Inquiry, Ward, Book, BorrowRecord } from '../types';
 import {
   BarChart,
   Bar,
@@ -57,9 +60,6 @@ import {
   Cell,
   Legend
 } from 'recharts';
-import { cn } from '../lib/utils';
-import { motion } from 'motion/react';
-import { Ward } from '../types';
 
 const data = [
   { name: 'Jan', value: 4000 },
@@ -1477,8 +1477,52 @@ export function ParentDashboard({
   );
 }
 
-export function FinanceDashboard() {
+export function FinanceDashboard({ 
+  invoices = [], 
+  payments = [], 
+  expenses = [] 
+}: { 
+  invoices?: any[], 
+  payments?: any[], 
+  expenses?: any[] 
+}) {
   const { currency, t } = useLanguage();
+  
+  const totalRevenue = payments.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+  const pendingFees = invoices
+    .filter(inv => inv.status === 'Pending' || inv.status === 'Overdue' || inv.status === 'Partial')
+    .reduce((sum, inv) => {
+      const amount = parseFloat(inv.amount) || 0;
+      // This is a simplification; ideally we'd subtract payments linked to this invoice
+      return sum + amount;
+    }, 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+
+  const chartData = useMemo(() => {
+    // Basic aggregation by month for the last 6 months
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const now = new Date();
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      return {
+        name: months[d.getMonth()],
+        value: 0,
+        month: d.getMonth(),
+        year: d.getFullYear()
+      };
+    }).reverse();
+
+    payments.forEach(p => {
+      const pDate = new Date(p.created_at || p.date);
+      const mIdx = last6Months.findIndex(m => m.month === pDate.getMonth() && m.year === pDate.getFullYear());
+      if (mIdx !== -1) {
+        last6Months[mIdx].value += (parseFloat(p.amount) || 0);
+      }
+    });
+
+    return last6Months;
+  }, [payments]);
+
   return (
     <div className="space-y-8">
       <div>
@@ -1487,47 +1531,58 @@ export function FinanceDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title={t('total_revenue')} value={`${currency} 425,000`} change="+8.2%" trend="up" icon={Wallet} color="bg-emerald-600" />
-        <StatCard title={t('pending_fees')} value={`${currency} 12,400`} change="-2.1%" trend="up" icon={CreditCard} color="bg-amber-600" />
-        <StatCard title={t('annual_expenses')} value={`${currency} 84,000`} change="+4.5%" trend="down" icon={TrendingUp} color="bg-rose-600" />
-        <StatCard title={t('scholarships')} value="45" change="+5" trend="up" icon={GraduationCap} color="bg-indigo-600" />
+        <StatCard title={t('total_revenue')} value={`${currency} ${totalRevenue.toLocaleString()}`} change="0%" trend="up" icon={Wallet} color="bg-emerald-600" />
+        <StatCard title={t('pending_fees')} value={`${currency} ${pendingFees.toLocaleString()}`} change="0%" trend="up" icon={CreditCard} color="bg-amber-600" />
+        <StatCard title={t('annual_expenses')} value={`${currency} ${totalExpenses.toLocaleString()}`} change="0%" trend="down" icon={TrendingUp} color="bg-rose-600" />
+        <StatCard title={t('scholarships')} value="0" change="0" trend="up" icon={GraduationCap} color="bg-indigo-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">{t('revenue_overview')}</h3>
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="value" stroke="#10b981" fill="#10b981" fillOpacity={0.1} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {chartData.some(d => d.value > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="value" stroke="#10b981" fill="#10b981" fillOpacity={0.1} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-zinc-400 italic text-sm">
+                No revenue data available for the last 6 months.
+              </div>
+            )}
           </div>
         </div>
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">Recent Transactions</h3>
           <div className="space-y-4">
-            {[
-              { desc: 'Term 2 Tuition - Grade 10', amount: `+${currency} 1,200`, date: 'Today', type: 'income' },
-              { desc: 'Electricity Bill - Feb', amount: `-${currency} 850`, date: 'Yesterday', type: 'expense' },
-              { desc: 'Stationery Supplies', amount: `-${currency} 320`, date: '2 days ago', type: 'expense' },
-              { desc: 'Late Fee Payment', amount: `+${currency} 50`, date: '2 days ago', type: 'income' },
-            ].map((tx, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                <div>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{tx.desc}</p>
-                  <p className="text-xs text-zinc-500">{tx.date}</p>
-                </div>
-                <span className={cn(
-                  "text-sm font-bold",
-                  tx.type === 'income' ? "text-emerald-600" : "text-rose-600"
-                )}>{tx.amount}</span>
+            {payments.length > 0 || expenses.length > 0 ? (
+              [...payments.map(p => ({ ...p, type: 'income', desc: p.description || 'Payment Received' })), 
+               ...expenses.map(e => ({ ...e, type: 'expense', desc: e.description || e.category }))]
+                .sort((a, b) => new Date(b.created_at || b.date).getTime() - new Date(a.created_at || a.date).getTime())
+                .slice(0, 4)
+                .map((tx, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
+                    <div>
+                      <p className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[200px]">{tx.desc}</p>
+                      <p className="text-xs text-zinc-500">{new Date(tx.created_at || tx.date).toLocaleDateString()}</p>
+                    </div>
+                    <span className={cn(
+                      "text-sm font-bold",
+                      tx.type === 'income' ? "text-emerald-600" : "text-rose-600"
+                    )}>{tx.type === 'income' ? '+' : '-'}{currency} {(parseFloat(tx.amount) || 0).toLocaleString()}</span>
+                  </div>
+                ))
+            ) : (
+              <div className="py-12 text-center text-zinc-400 italic text-sm">
+                No recent transactions found.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -1535,56 +1590,48 @@ export function FinanceDashboard() {
   );
 }
 
-export function BusDriverDashboard() {
+
+export function BusDriverDashboard({ routes = [] }: { routes?: any[] }) {
   const { t } = useLanguage();
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{t('transport_portal')}</h1>
-        <p className="text-zinc-500 mt-1">{t('route_north_sector')}</p>
+        <p className="text-zinc-500 mt-1">{t('route_overview')}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title={t('total_students')} value="45" change="0" trend="up" icon={Users} color="bg-blue-600" />
-        <StatCard title={t('next_stop')} value="Oak Ridge" change="2.4km" trend="up" icon={MapPin} color="bg-amber-600" />
-        <StatCard title={t('fuel_level')} value="85%" change="-5%" trend="down" icon={Zap} color="bg-emerald-600" />
+        <StatCard title={t('total_routes')} value={routes.length.toString()} change="0" trend="up" icon={Users} color="bg-blue-600" />
+        <StatCard title={t('next_stop')} value="—" change="0km" trend="up" icon={MapPin} color="bg-amber-600" />
+        <StatCard title={t('fuel_level')} value="—" change="0%" trend="down" icon={Zap} color="bg-emerald-600" />
         <StatCard title={t('schedule')} value="On Time" change="0" trend="up" icon={Clock} color="bg-indigo-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">{t('morning_route_stops')}</h3>
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">{t('assigned_routes')}</h3>
           <div className="space-y-4">
-            {[
-              { stop: 'School Gate', time: '07:00 AM', status: 'Completed' },
-              { stop: 'Central Park', time: '07:15 AM', status: 'Completed' },
-              { stop: 'Oak Ridge', time: '07:30 AM', status: 'Next' },
-              { stop: 'Sunset Blvd', time: '07:45 AM', status: 'Pending' },
-            ].map((stop, i) => (
+            {routes.length > 0 ? routes.map((route, i) => (
               <div key={i} className="flex items-center gap-4">
-                <div className={cn(
-                  "w-3 h-3 rounded-full",
-                  stop.status === 'Completed' ? "bg-emerald-500" : stop.status === 'Next' ? "bg-amber-500 animate-pulse" : "bg-zinc-300"
-                )}></div>
+                <div className="w-3 h-3 rounded-full bg-zinc-300"></div>
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{stop.stop}</p>
-                  <p className="text-xs text-zinc-500">{stop.time}</p>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{route.route_name}</p>
+                  <p className="text-xs text-zinc-500">{route.vehicle_no}</p>
                 </div>
-                <span className="text-xs font-medium text-zinc-400">{stop.status}</span>
+                <span className="text-xs font-medium text-zinc-400">Active</span>
               </div>
-            ))}
+            )) : (
+              <div className="py-8 text-center text-zinc-400 italic text-sm">
+                No routes assigned.
+              </div>
+            )}
           </div>
         </div>
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">Bus Notifications</h3>
           <div className="space-y-4">
-            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-xl">
-              <p className="text-sm font-bold text-amber-900 dark:text-amber-100">Maintenance Alert</p>
-              <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">Oil change due in 200km. Please schedule with the workshop.</p>
-            </div>
-            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-xl">
-              <p className="text-sm font-bold text-indigo-900 dark:text-indigo-100">Route Update</p>
-              <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1">Road closure on Main St. Use alternate route via 5th Ave.</p>
+            <div className="flex flex-col items-center justify-center py-8 text-zinc-400 italic text-sm">
+              No new notifications.
             </div>
           </div>
         </div>
@@ -1593,8 +1640,15 @@ export function BusDriverDashboard() {
   );
 }
 
-export function LibrarianDashboard() {
+
+export function LibrarianDashboard({ books = [], bookLoans = [] }: { books?: any[], bookLoans?: BorrowRecord[] }) {
   const { t } = useLanguage();
+  
+  const totalBooks = books.reduce((sum, b) => sum + (b.total_copies || 0), 0);
+  const booksIssued = bookLoans.filter(l => l.status === 'Issued' || l.status === 'Overdue').length;
+  const overdueBooks = bookLoans.filter(l => l.status === 'Overdue').length;
+  const activeMembers = new Set(bookLoans.map(l => l.student_id || l.user_id)).size;
+
   return (
     <div className="space-y-8">
       <div>
@@ -1603,53 +1657,62 @@ export function LibrarianDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title={t('total_books')} value="12,450" change="+120" trend="up" icon={Library} color="bg-indigo-600" />
-        <StatCard title={t('books_issued')} value="482" change="+12%" trend="up" icon={BookOpen} color="bg-emerald-600" />
-        <StatCard title={t('overdue_books')} value="24" change="-5" trend="up" icon={Clock} color="bg-rose-600" />
-        <StatCard title={t('active_members')} value="1,840" change="+45" trend="up" icon={Users} color="bg-blue-600" />
+        <StatCard title={t('total_books')} value={totalBooks.toLocaleString()} change="0" trend="up" icon={Library} color="bg-indigo-600" />
+        <StatCard title={t('books_issued')} value={booksIssued.toString()} change="0%" trend="up" icon={BookOpen} color="bg-emerald-600" />
+        <StatCard title={t('overdue_books')} value={overdueBooks.toString()} change="0" trend="up" icon={Clock} color="bg-rose-600" />
+        <StatCard title={t('active_members')} value={activeMembers.toString()} change="0" trend="up" icon={Users} color="bg-blue-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">{t('recent_issues')}</h3>
           <div className="space-y-4">
-            {[
-              { book: 'The Great Gatsby', user: 'Alice Johnson', date: 'Today', status: 'Issued' },
-              { book: 'Advanced Physics', user: 'Bob Smith', date: 'Yesterday', status: 'Returned' },
-              { book: 'World History', user: 'Charlie Brown', date: 'Yesterday', status: 'Issued' },
-              { book: 'Calculus Vol 1', user: 'David Lee', date: '2 days ago', status: 'Overdue' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
-                <div>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{item.book}</p>
-                  <p className="text-xs text-zinc-500">{item.user}</p>
-                </div>
-                <span className={cn(
-                  "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
-                  item.status === 'Returned' ? "bg-emerald-50 text-emerald-600" : item.status === 'Overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
-                )}>{item.status}</span>
+            {bookLoans.length > 0 ? (
+              bookLoans
+                .sort((a, b) => new Date(b.loan_date || '').getTime() - new Date(a.loan_date || '').getTime())
+                .slice(0, 4)
+                .map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50">
+                    <div>
+                      <p className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[200px]">{item.book_title || 'Unknown Book'}</p>
+                      <p className="text-xs text-zinc-500">{item.user_name || 'Unknown User'}</p>
+                    </div>
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-[10px] font-bold uppercase",
+                      item.status === 'Returned' ? "bg-emerald-50 text-emerald-600" : item.status === 'Overdue' ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                    )}>{item.status}</span>
+                  </div>
+                ))
+            ) : (
+              <div className="py-12 text-center text-zinc-400 italic text-sm">
+                No recent book issues.
               </div>
-            ))}
+            )}
           </div>
         </div>
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">New Acquisitions</h3>
           <div className="space-y-4">
-            {[
-              { title: 'Machine Learning Basics', author: 'A. Ng', category: 'Technology' },
-              { title: 'Modern Architecture', author: 'Z. Hadid', category: 'Arts' },
-              { title: 'Economics 101', author: 'P. Krugman', category: 'Social Science' },
-            ].map((book, i) => (
-              <div key={i} className="flex items-center gap-4 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-                <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center text-indigo-600">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{book.title}</p>
-                  <p className="text-xs text-zinc-500">{book.author} • {book.category}</p>
-                </div>
+            {books.length > 0 ? (
+              books
+                .sort((a: any, b: any) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+                .slice(0, 3)
+                .map((book, i) => (
+                  <div key={i} className="flex items-center gap-4 p-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+                    <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center text-indigo-600">
+                      <BookOpen className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-zinc-900 dark:text-white truncate max-w-[200px]">{book.title}</p>
+                      <p className="text-xs text-zinc-500">{book.author} • {book.category}</p>
+                    </div>
+                  </div>
+                ))
+            ) : (
+              <div className="py-12 text-center text-zinc-400 italic text-sm">
+                No books in the catalog.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -1657,15 +1720,15 @@ export function LibrarianDashboard() {
   );
 }
 
-export function HRDashboard() {
+
+export function HRDashboard({ staff = [], attendance = [], leaveRequests = [] }: { staff?: any[], attendance?: any[], leaveRequests?: any[] }) {
   const { t } = useLanguage();
 
-  const staffStats = [
-    { label: 'Total Staff', value: '128', trend: '+2' },
-    { label: 'On Leave', value: '5', trend: '0' },
-    { label: 'Attendance', value: '96%', trend: '+1.5%' },
-    { label: 'Pending Reviews', value: '12', trend: '+3' },
-  ];
+  const totalStaff = staff.length;
+  const onLeave = leaveRequests.filter(r => r.status === 'Approved' && new Date(r.start_date) <= new Date() && new Date(r.end_date) >= new Date()).length;
+  const todayAttendance = attendance.filter(a => a.date?.split('T')[0] === new Date().toISOString().split('T')[0]);
+  const attendanceRate = totalStaff > 0 ? Math.round((todayAttendance.filter(a => a.status === 'Present').length / totalStaff) * 100) : 0;
+  const pendingLeave = leaveRequests.filter(r => r.status === 'Pending').length;
 
   return (
     <div className="space-y-8">
@@ -1675,54 +1738,64 @@ export function HRDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Staff" value="128" change="+2" trend="up" icon={Users} color="bg-blue-600" />
-        <StatCard title="Attendance Rate" value="96%" change="+1.5%" trend="up" icon={ClipboardCheck} color="bg-emerald-600" />
-        <StatCard title="Pending Leave" value="5" change="0" trend="up" icon={Calendar} color="bg-amber-600" />
-        <StatCard title="Open Positions" value="3" change="+1" trend="up" icon={Briefcase} color="bg-purple-600" />
+        <StatCard title="Total Staff" value={totalStaff.toString()} change="0" trend="up" icon={Users} color="bg-blue-600" />
+        <StatCard title="Attendance Rate" value={`${attendanceRate}%`} change="0%" trend="up" icon={ClipboardCheck} color="bg-emerald-600" />
+        <StatCard title="On Leave" value={onLeave.toString()} change="0" trend="up" icon={Calendar} color="bg-amber-600" />
+        <StatCard title="Pending Leave" value={pendingLeave.toString()} change="0" trend="up" icon={Briefcase} color="bg-purple-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">Staff Distribution</h3>
           <div className="space-y-4">
-            {[
-              { label: 'Teaching Staff', value: 85, color: 'bg-indigo-600' },
-              { label: 'Administrative', value: 25, color: 'bg-emerald-600' },
-              { label: 'Support Staff', value: 18, color: 'bg-amber-600' },
-            ].map((dept) => (
-              <div key={dept.label} className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium text-zinc-700 dark:text-zinc-300">{dept.label}</span>
-                  <span className="font-bold text-zinc-900 dark:text-white">{dept.value}</span>
+            {staff.length > 0 ? (
+              Object.entries(staff.reduce((acc: any, s: any) => {
+                acc[s.department_name || 'Other'] = (acc[s.department_name || 'Other'] || 0) + 1;
+                return acc;
+              }, {})).map(([dept, count]: [string, any]) => (
+                <div key={dept} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-zinc-700 dark:text-zinc-300">{dept}</span>
+                    <span className="font-bold text-zinc-900 dark:text-white">{count}</span>
+                  </div>
+                  <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-2">
+                    <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${(count / totalStaff) * 100}%` }}></div>
+                  </div>
                 </div>
-                <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-2">
-                  <div className={cn("h-2 rounded-full", dept.color)} style={{ width: `${(dept.value / 128) * 100}%` }}></div>
-                </div>
+              ))
+            ) : (
+              <div className="py-12 text-center text-zinc-400 italic text-sm">
+                No staff records found.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">Recent Activities</h3>
           <div className="space-y-6">
-            {[
-              { user: 'John Doe', action: 'applied for leave', time: '10 mins ago', icon: Calendar, color: 'text-amber-500' },
-              { user: 'Admin', action: 'updated payroll for March', time: '1 hour ago', icon: Wallet, color: 'text-emerald-500' },
-              { user: 'System', action: 'new applicant for Math Teacher', time: '3 hours ago', icon: UserPlus, color: 'text-blue-500' },
-            ].map((activity, i) => (
-              <div key={i} className="flex items-start gap-4">
-                <div className={cn("mt-1", activity.color)}>
-                  <activity.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-sm text-zinc-900 dark:text-white">
-                    <span className="font-bold">{activity.user}</span> {activity.action}
-                  </p>
-                  <p className="text-xs text-zinc-500 mt-0.5">{activity.time}</p>
-                </div>
+            {leaveRequests.length > 0 ? (
+              leaveRequests
+                .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
+                .slice(0, 3)
+                .map((request, i) => (
+                  <div key={i} className="flex items-start gap-4">
+                    <div className="mt-1 text-amber-500">
+                      <Calendar className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-zinc-900 dark:text-white">
+                        <span className="font-bold">{request.staff_name || 'Staff'}</span> requested leave: {request.leave_type}
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-0.5">{new Date(request.created_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))
+            ) : (
+              <div className="py-12 text-center text-zinc-400 italic text-sm">
+                No recent activities.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -1730,7 +1803,8 @@ export function HRDashboard() {
   );
 }
 
-export function NonStaffDashboard() {
+
+export function NonStaffDashboard({ tasks = [] }: { tasks?: any[] }) {
   const { t } = useLanguage();
   return (
     <div className="space-y-8">
@@ -1740,22 +1814,17 @@ export function NonStaffDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title={t('assigned_tasks')} value="8" change="+2" trend="up" icon={ClipboardCheck} color="bg-indigo-600" />
-        <StatCard title={t('completed')} value="5" change="+1" trend="up" icon={TrendingUp} color="bg-emerald-600" />
-        <StatCard title={t('shift_hours')} value="08:00 - 16:00" change="On Time" trend="up" icon={Clock} color="bg-blue-600" />
-        <StatCard title={t('notifications')} value="12" change="+3" trend="up" icon={Bell} color="bg-amber-600" />
+        <StatCard title={t('assigned_tasks')} value={tasks.length.toString()} change="0" trend="up" icon={ClipboardCheck} color="bg-indigo-600" />
+        <StatCard title={t('completed')} value="0" change="0" trend="up" icon={TrendingUp} color="bg-emerald-600" />
+        <StatCard title={t('shift_hours')} value="—" change="—" trend="up" icon={Clock} color="bg-blue-600" />
+        <StatCard title={t('notifications')} value="0" change="0" trend="up" icon={Bell} color="bg-amber-600" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">{t('today_tasks')}</h3>
           <div className="space-y-4">
-            {[
-              { task: 'Check Inventory - Lab 1', time: '09:00 AM', priority: 'High' },
-              { task: 'Setup Conference Room', time: '11:00 AM', priority: 'Medium' },
-              { task: 'Deliver Mail to Admin', time: '02:00 PM', priority: 'Low' },
-              { task: 'Inspect Playground Equipment', time: '03:30 PM', priority: 'Medium' },
-            ].map((item, i) => (
+            {tasks.length > 0 ? tasks.map((item, i) => (
               <div key={i} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                 <div>
                   <p className="font-bold text-zinc-900 dark:text-white">{item.task}</p>
@@ -1766,29 +1835,18 @@ export function NonStaffDashboard() {
                   item.priority === 'High' ? "bg-red-50 text-red-600" : item.priority === 'Medium' ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
                 )}>{item.priority}</span>
               </div>
-            ))}
+            )) : (
+              <div className="py-12 text-center text-zinc-400 italic text-sm">
+                No tasks assigned for today.
+              </div>
+            )}
           </div>
         </div>
         <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">Staff Announcements</h3>
           <div className="space-y-4">
-            <div className="flex items-start gap-4 p-4 border border-zinc-100 dark:border-zinc-800 rounded-xl">
-              <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600">
-                <Bell className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-zinc-900 dark:text-white">Monthly Staff Meeting</p>
-                <p className="text-xs text-zinc-500 mt-1">Friday, March 6th at 3:00 PM in the Main Hall.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4 p-4 border border-zinc-100 dark:border-zinc-800 rounded-xl">
-              <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-emerald-600">
-                <Users className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-zinc-900 dark:text-white">New Uniform Distribution</p>
-                <p className="text-xs text-zinc-500 mt-1">Collect your new uniforms from HR office this week.</p>
-              </div>
+            <div className="flex flex-col items-center justify-center py-12 text-zinc-400 italic text-sm">
+              No new announcements.
             </div>
           </div>
         </div>
@@ -1796,6 +1854,7 @@ export function NonStaffDashboard() {
     </div>
   );
 }
+
 
 export function StudentDashboard({
   onNavigate,
