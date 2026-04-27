@@ -39,10 +39,12 @@ router.post('/demo-request', OrganizationController.requestDemo);
 router.use(verifyToken);
 
 // AI & DIAGNOSTICS
-router.get('/ai-test', (req, res) => res.json({ status: 'OK', message: 'AI Routes are active', time: new Date() }));
+router.get('/ai/test', (req, res) => res.json({ status: 'OK', message: 'AI Routes are active', time: new Date() }));
 router.post('/ai/generate', AIController.generateResponse);
-router.get('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getGeminiKeys);
-router.post('/gemini-keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.saveGeminiKey);
+router.get('/ai/keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getGeminiKeys);
+router.post('/ai/keys', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.saveGeminiKey);
+router.get('/ai/insights', AIController.getStoredInsights);
+router.post('/ai/insights', AIController.saveInsights);
 
 // ORGANIZATIONS
 router.get('/organizations', OrganizationController.getOrganizations);

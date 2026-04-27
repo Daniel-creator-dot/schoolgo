@@ -2554,7 +2554,7 @@ export function Settings({ role }: { role?: UserRole }) {
             const token = localStorage.getItem('token');
 
             // Diagnostics: Check if AI routes even exist
-            const testRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai-test`, {
+            const testRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/test`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
             if (testRes.status === 404) {
@@ -2576,7 +2576,7 @@ export function Settings({ role }: { role?: UserRole }) {
             setIsAiConfigured(res.status !== 503);
 
             // Fetch Groq Key separately
-            const keyRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/gemini-keys`, {
+            const keyRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/keys`, {
               headers: {
                 'Authorization': `Bearer ${token}`
               }
@@ -2616,7 +2616,7 @@ export function Settings({ role }: { role?: UserRole }) {
     }
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/gemini-keys`, {
+      const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/keys`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ api_key: trimmedKey })

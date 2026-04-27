@@ -35,7 +35,50 @@ export const AIModules = {
   }) => {
     const [isAnalyzing, setIsAnalyzing] = React.useState(false);
     const [aiInsights, setAiInsights] = React.useState<any[]>([]);
-    const [studentPredictions, setStudentPredictions] = React.useState<Record<string, string>>({});
+    const [studentPredictions, setStudentPredictions] = React.useState<Record<string, any>>({});
+    const [lastUpdated, setLastUpdated] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+      fetchStoredInsights();
+    }, []);
+
+    const fetchStoredInsights = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_BASE_URL}/ai/insights?type=performance`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.insights) setAiInsights(data.insights);
+          if (data.predictions) setStudentPredictions(data.predictions);
+          if (data.last_updated) setLastUpdated(data.last_updated);
+        }
+      } catch (err) {
+        console.error('Failed to fetch stored insights:', err);
+      }
+    };
+
+    const saveGeneratedInsights = async (insights: any[], predictions: any) => {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${API_BASE_URL}/ai/insights`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            type: 'performance',
+            insights,
+            predictions
+          })
+        });
+        setLastUpdated(new Date().toISOString());
+      } catch (err) {
+        console.error('Failed to save insights:', err);
+      }
+    };
 
     const handleAnalysis = async () => {
       setIsAnalyzing(true);
@@ -109,6 +152,9 @@ export const AIModules = {
         if (parsed.insights) setAiInsights(parsed.insights);
         if (parsed.predictions) setStudentPredictions(parsed.predictions);
         
+        // Persist to DB
+        await saveGeneratedInsights(parsed.insights || [], parsed.predictions || {});
+        
         (window as any).showToast?.('AI Forecast successfully generated!', 'success');
       } catch (err: any) {
         console.error('AI Analysis Error:', err);
@@ -143,7 +189,14 @@ export const AIModules = {
             </div>
             <div>
               <h2 className="text-xl font-bold text-zinc-900 dark:text-white uppercase tracking-tight">Performance Insights</h2>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">AI-driven academic predictions and student performance tracking</p>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">AI-driven academic predictions and student performance tracking</p>
+                {lastUpdated && (
+                  <span className="text-[10px] text-indigo-400 font-black uppercase tracking-tighter">
+                    • Last Analysis: {new Date(lastUpdated).toLocaleDateString()} {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <button

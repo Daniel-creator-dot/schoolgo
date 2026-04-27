@@ -62,6 +62,18 @@ export async function init() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ai_insights (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+        type VARCHAR(50) NOT NULL, -- e.g., 'performance'
+        insights JSONB DEFAULT '[]',
+        predictions JSONB DEFAULT '{}',
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(org_id, type)
+      )
+    `);
+
     // Ensure columns exist on organizations
     await client.query(`
       DO $$

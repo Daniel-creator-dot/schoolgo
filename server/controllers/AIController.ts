@@ -78,3 +78,38 @@ export const generateResponse = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'AI processing failed', message: err.message });
   }
 };
+
+export const getStoredInsights = async (req: AuthRequest, res: Response) => {
+  const { type = 'performance' } = req.query;
+  try {
+    const orgId = req.user.org_id;
+    const result = await pool.query(
+      'SELECT insights, predictions, last_updated FROM ai_insights WHERE org_id = $1 AND type = $2',
+      [orgId, type]
+    );
+    res.json(result.rows[0] || { insights: [], predictions: {} });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const saveInsights = async (req: AuthRequest, res: Response) => {
+  const { type = 'performance', insights, predictions } = req.body;
+  try {
+    const orgId = req.user.org_id;
+    const result = await pool.query(
+      `INSERT INTO ai_insights (org_id, type, insights, predictions, last_updated)
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+       ON CONFLICT (org_id, type)
+       DO UPDATE SET 
+          insights = EXCLUDED.insights,
+          predictions = EXCLUDED.predictions,
+          last_updated = CURRENT_TIMESTAMP
+       RETURNING *`,
+      [orgId, type, JSON.stringify(insights || []), JSON.stringify(predictions || {})]
+    );
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
