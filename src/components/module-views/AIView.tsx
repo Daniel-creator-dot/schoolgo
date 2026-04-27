@@ -195,7 +195,7 @@ export const AIModules = {
               <h2 className="text-xl font-bold text-zinc-900 dark:text-white uppercase tracking-tight">Performance Insights</h2>
               <div className="flex items-center gap-2">
                 <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">AI-driven academic predictions and student performance tracking</p>
-                {lastUpdated && (
+                {lastUpdated && isStaff && (
                   <span className="text-[10px] text-indigo-400 font-black uppercase tracking-tighter">
                     • Last Analysis: {new Date(lastUpdated).toLocaleDateString()} {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -219,36 +219,38 @@ export const AIModules = {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {displayInsights.map((stat, i) => {
-            const Icon = getIcon(stat.icon_name);
-            return (
-              <div key={i} className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group hover:border-indigo-500 transition-colors">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center",
-                    stat.status === 'success' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
-                      stat.status === 'warning' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
-                        "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600"
-                  )}>
-                    <Icon className="w-6 h-6" />
+        {isStaff && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {displayInsights.map((stat, i) => {
+              const Icon = getIcon(stat.icon_name);
+              return (
+                <div key={i} className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group hover:border-indigo-500 transition-colors">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-2xl flex items-center justify-center",
+                      stat.status === 'success' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
+                        stat.status === 'warning' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
+                          "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600"
+                    )}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <div className={cn(
+                      "flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest",
+                      stat.trend === 'up' ? "bg-emerald-50 text-emerald-600" :
+                        stat.trend === 'down' ? "bg-amber-50 text-amber-600" :
+                          "bg-zinc-100 text-zinc-600"
+                    )}>
+                      {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : stat.trend === 'down' ? <ArrowDownRight className="w-3 h-3" /> : null}
+                      {stat.trend}
+                    </div>
                   </div>
-                  <div className={cn(
-                    "flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest",
-                    stat.trend === 'up' ? "bg-emerald-50 text-emerald-600" :
-                      stat.trend === 'down' ? "bg-amber-50 text-amber-600" :
-                        "bg-zinc-100 text-zinc-600"
-                  )}>
-                    {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : stat.trend === 'down' ? <ArrowDownRight className="w-3 h-3" /> : null}
-                    {stat.trend}
-                  </div>
+                  <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{stat.title}</h3>
+                  <p className="text-2xl font-black text-zinc-900 dark:text-white mt-1">{stat.value}</p>
                 </div>
-                <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{stat.title}</h3>
-                <p className="text-2xl font-black text-zinc-900 dark:text-white mt-1">{stat.value}</p>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
           <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/20">

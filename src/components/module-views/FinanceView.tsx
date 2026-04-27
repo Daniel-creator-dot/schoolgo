@@ -1772,13 +1772,21 @@ export const FinanceModules = {
       </>
     );
   },
-  InvoicesPayments: ({ role, students, wards, data, payments, feeStructures, organization, onSave, onDelete, onRecordPayment }: { role?: UserRole, students?: Student[], wards?: any[], data?: any[], payments?: any[], feeStructures?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void }) => {
+  InvoicesPayments: ({ role, students, wards, selectedWardId: propSelectedWardId, data, payments, feeStructures, organization, onSave, onDelete, onRecordPayment }: { role?: UserRole, students?: Student[], wards?: any[], selectedWardId?: string, data?: any[], payments?: any[], feeStructures?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void }) => {
     const { t, currency } = useLanguage();
-    const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
+    const [localSelectedWardId, setLocalSelectedWardId] = useState("");
+    
+    // Sync with prop if provided
+    useEffect(() => {
+      if (propSelectedWardId) setLocalSelectedWardId(propSelectedWardId);
+      else if (wards && wards.length > 0) setLocalSelectedWardId(wards[0].id);
+    }, [propSelectedWardId, wards]);
+
+    const selectedWardId = propSelectedWardId || localSelectedWardId;
     const [paymentModalData, setPaymentModalData] = useState<any>(null);
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("");
 
-    const filteredData = role === 'PARENT' ? (data || []).filter(d => d.wardId === selectedWardId) : (data || []);
+    const filteredData = role === 'PARENT' ? (data || []).filter(d => (d.student_id || d.studentId) === selectedWardId) : (data || []);
 
     const groupedByStudent = useMemo(() => {
       const map = new Map();
@@ -2308,7 +2316,7 @@ export const FinanceModules = {
             <span className="text-xs font-bold text-zinc-500 ml-2 uppercase tracking-wider">Ward:</span>
             <select
               value={selectedWardId}
-              onChange={(e) => setSelectedWardId(e.target.value)}
+              onChange={(e) => setLocalSelectedWardId(e.target.value)}
               className="bg-transparent text-sm font-bold outline-none pr-4"
             >
               {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}

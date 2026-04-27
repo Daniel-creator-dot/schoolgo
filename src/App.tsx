@@ -2549,6 +2549,7 @@ export default function App() {
         <FinanceModules.InvoicesPayments
           role={currentRole}
           students={studentList}
+          selectedWardId={selectedWardId}
           payments={receipts}
           onRecordPayment={async (data) => {
             await handleEntitySave("receipt", data);
