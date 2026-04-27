@@ -111,18 +111,17 @@ export const AIModules = {
         
         DATA: ${JSON.stringify(dataSummary)}
         
-        INSTRUCTIONS:
-        1. Identify 3 high-level 'insights' for the school (title, value, trend, status, icon_name).
-        2. Predict the performance 'trend' for each student in the sample (Improving, At Risk, Stable, Exceptional).
-        3. Provide a 'forecast' summary for each student (e.g., "Likely to score 85%+ in finals").
-        
-        Respond ONLY with a JSON object:
+        REQUIRED JSON STRUCTURE:
         {
-          "insights": [{"title": "...", "value": "...", "trend": "up/down", "status": "success/warning/info", "icon_name": "TrendingUp/Users/AlertCircle"}],
+          "insights": [
+            {"title": "Predicted Pass Rate", "value": "85%", "trend": "up", "status": "success", "icon_name": "TrendingUp"}
+          ],
           "predictions": {
-            "Student Name": { "trend": "Improving", "forecast": "..." }
+            "Student Name": { "trend": "Improving", "forecast": "Likely to score 90%+" }
           }
-        }`;
+        }
+        
+        Respond ONLY with the JSON object. No conversational text. No preamble.`;
 
         const token = localStorage.getItem('token');
         const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {

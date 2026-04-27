@@ -44,20 +44,55 @@ export async function safeAiFetch(url: string, options: RequestInit): Promise<{ 
 export function extractJsonFromAiResponse(aiText: string): any {
   if (!aiText) return null;
   
+  // Clean up any extra whitespace
+  const text = aiText.trim();
+  
   try {
     // Try clean parse first
-    return JSON.parse(aiText);
+    return JSON.parse(text);
   } catch (e) {
-    // Try to find JSON block
-    const jsonMatch = aiText.match(/```json\s*([\s\S]*?)\s*```/) || aiText.match(/\[\s*\{[\s\S]*\}\s*\]/);
-    if (jsonMatch) {
+    // 1. Try to extract from Markdown blocks
+    const markdownMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (markdownMatch) {
       try {
-        const potentialJson = jsonMatch[1] || jsonMatch[0];
-        return JSON.parse(potentialJson.trim());
+        return JSON.parse(markdownMatch[1].trim());
       } catch (e2) {
-        return null;
+        // Fall through to heuristic if markdown block itself is slightly broken
       }
     }
+
+    // 2. Try to find the first '{' and last '}' or '[' and ']'
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
+    const firstBracket = text.indexOf('[');
+    const lastBracket = text.lastIndexOf(']');
+
+    let start = -1;
+    let end = -1;
+
+    if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+      start = firstBrace;
+      end = lastBrace;
+    } else if (firstBracket !== -1) {
+      start = firstBracket;
+      end = lastBracket;
+    }
+
+    if (start !== -1 && end !== -1 && end > start) {
+      try {
+        const potentialJson = text.substring(start, end + 1);
+        // Basic cleaning of trailing commas before closing braces/brackets
+        const cleaned = potentialJson
+          .replace(/,\s*([\}\]])/g, '$1')
+          // Remove potential AI comments if any (simple // version)
+          .replace(/\/\/.*$/gm, '');
+          
+        return JSON.parse(cleaned.trim());
+      } catch (e3) {
+        console.error('Failed to parse heuristic JSON match:', e3);
+      }
+    }
+    
     return null;
   }
 }
