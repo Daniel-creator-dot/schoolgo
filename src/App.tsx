@@ -3110,9 +3110,26 @@ export default function App() {
 
       "Performance Insights": (
         <AIModules.PerformancePrediction
+          role={currentRole}
           organization={organizations.find((o) => o.id === currentUser?.org_id)}
-          results={results}
-          students={studentList}
+          results={
+            currentRole === "STUDENT"
+              ? results.filter(
+                (r) =>
+                  r.student_id ===
+                  studentList.find((s) => s.email === currentUser?.email)?.id,
+              )
+              : currentRole === "PARENT"
+                ? results.filter((r) => r.student_id === selectedWardId)
+                : results
+          }
+          students={
+            currentRole === "STUDENT"
+              ? studentList.filter((s) => s.email === currentUser?.email)
+              : currentRole === "PARENT"
+                ? studentList.filter((s) => s.id === selectedWardId)
+                : studentList
+          }
         />
       ),
 

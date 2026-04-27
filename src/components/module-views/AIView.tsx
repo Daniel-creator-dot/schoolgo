@@ -21,12 +21,14 @@ import { API_BASE_URL } from '../../constants';
 
 export const AIModules = {
   PerformancePrediction: ({
+    role,
     organization,
     results,
     students,
     onSave,
     onDelete
   }: {
+    role?: string,
     organization?: any,
     results?: any[],
     students?: any[],
@@ -37,6 +39,8 @@ export const AIModules = {
     const [aiInsights, setAiInsights] = React.useState<any[]>([]);
     const [studentPredictions, setStudentPredictions] = React.useState<Record<string, any>>({});
     const [lastUpdated, setLastUpdated] = React.useState<string | null>(null);
+
+    const isStaff = role === 'SUPER_ADMIN' || role === 'SCHOOL_ADMIN' || role === 'STAFF' || role === 'HOD';
 
     React.useEffect(() => {
       fetchStoredInsights();
@@ -81,6 +85,7 @@ export const AIModules = {
     };
 
     const handleAnalysis = async () => {
+      if (!isStaff) return;
       setIsAnalyzing(true);
       try {
         // Sample students for detailed analysis (avoiding token limits)
@@ -198,18 +203,20 @@ export const AIModules = {
               </div>
             </div>
           </div>
-          <button
-            onClick={handleAnalysis}
-            disabled={isAnalyzing}
-            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-105 active:scale-95"
-          >
-            {isAnalyzing ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Brain className="w-4 h-4" />
-            )}
-            {isAnalyzing ? 'Analyzing Data...' : 'Run Prediction Engine'}
-          </button>
+          {isStaff && (
+            <button
+              onClick={handleAnalysis}
+              disabled={isAnalyzing}
+              className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-105 active:scale-95"
+            >
+              {isAnalyzing ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Brain className="w-4 h-4" />
+              )}
+              {isAnalyzing ? 'Analyzing Data...' : 'Run Prediction Engine'}
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
