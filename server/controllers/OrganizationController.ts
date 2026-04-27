@@ -153,6 +153,17 @@ export const updateOrganization = async (req: AuthRequest, res: Response) => {
       values
     );
 
+    // Sync gemini_api_key to gemini_api_keys table for redundancy and AI module compatibility
+    if (req.body.gemini_api_key !== undefined) {
+      await client.query(
+        `INSERT INTO gemini_api_keys (org_id, api_key) 
+         VALUES ($1, $2)
+         ON CONFLICT (org_id) 
+         DO UPDATE SET api_key = EXCLUDED.api_key`,
+        [id, req.body.gemini_api_key]
+      );
+    }
+
     if (req.body.plan) {
       await client.query(
         "UPDATE subscriptions SET plan = $1 WHERE org_id = $2 AND status = 'Active'",

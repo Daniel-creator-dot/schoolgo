@@ -2623,6 +2623,9 @@ export function Settings({ role }: { role?: UserRole }) {
       });
       if (res.ok) {
         setGroqKey(trimmedKey);
+        if (organization) {
+          setOrganization({ ...organization, gemini_api_key: trimmedKey });
+        }
         (window as any).showToast?.('Groq API Key saved successfully!', 'success');
         // Refresh AI configuration status
         const configRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
@@ -2646,6 +2649,7 @@ export function Settings({ role }: { role?: UserRole }) {
       await updateOrganization(organization.id, {
         ...organization,
         ...branding,
+        gemini_api_key: groqKey,
         currency,
         language
       });
