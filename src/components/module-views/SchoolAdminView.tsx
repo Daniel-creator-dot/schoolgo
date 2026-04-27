@@ -5225,6 +5225,8 @@ export const AcademicModules = {
           onSave={onSave}
           onDelete={onDelete}
           columns={mainColumns}
+          autoModal={role !== 'PARENT' && role !== 'STUDENT'}
+          autoViewModal={role !== 'PARENT' && role !== 'STUDENT'}
           extraActions={(item) => (role === 'SCHOOL_ADMIN' || role === 'HOD') ? (
             <button
               onClick={() => setViewingStudent(item)}

@@ -41,6 +41,7 @@ export interface Student {
   secondary_parent_email?: string;
   secondary_parent_contact?: string;
   religion?: string;
+  fee_status?: string;
 }
 
 export interface InquiryComment {

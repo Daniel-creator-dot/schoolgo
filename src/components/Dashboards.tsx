@@ -1462,7 +1462,7 @@ export function ParentDashboard({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title={t('attendance')} value={selectedWard.attendance} change="+1%" trend="up" icon={ClipboardCheck} color="bg-emerald-600" />
         <StatCard title={t('avg_grade')} value={selectedWard.avgGrade} change="0" trend="up" icon={TrendingUp} color="bg-indigo-600" />
-        <StatCard title={t('fees_paid')} value={`${currency} ${selectedWard.feesPaid}`} change="0" trend="up" icon={Wallet} color="bg-blue-600" />
+        <StatCard title={t('fees_paid')} value={selectedWard.feesPaid} change="0" trend="up" icon={Wallet} color="bg-blue-600" />
         <StatCard title={t('notices')} value="3" change="+1" trend="up" icon={Bell} color="bg-amber-600" />
       </div>
 
