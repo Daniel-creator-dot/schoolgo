@@ -35,22 +35,51 @@ export const AIModules = {
   }) => {
     const [isAnalyzing, setIsAnalyzing] = React.useState(false);
     const [aiInsights, setAiInsights] = React.useState<any[]>([]);
+    const [studentPredictions, setStudentPredictions] = React.useState<Record<string, string>>({});
 
     const handleAnalysis = async () => {
       setIsAnalyzing(true);
       try {
+        // Sample students for detailed analysis (avoiding token limits)
+        const studentSample = (students || []).slice(0, 30).map(s => {
+          const studentResults = (results || []).filter(r => String(r.student_id) === String(s.id));
+          
+          // Calculate an actual average from their results to help the AI
+          const avgScore = studentResults.length > 0 
+            ? studentResults.reduce((acc, r) => acc + (Number(r.score) || 0), 0) / studentResults.length
+            : 0;
+
+          return {
+            name: s.name,
+            currentGpa: s.gpa && s.gpa !== '0.0' ? s.gpa : avgScore.toFixed(2),
+            scores: studentResults.slice(-5).map(r => ({ subject: r.subject || r.subject_name, score: r.score })),
+            attendance: s.attendance || '90%'
+          };
+        });
+
         const dataSummary = {
-          studentCount: students?.length || 0,
-          resultsCount: results?.length || 0,
-          averageScore: results && results.length > 0
-            ? results.reduce((acc, curr) => acc + (Number(curr.score) || 0), 0) / results.length
+          schoolAverage: results && results.length > 0
+            ? (results.reduce((acc, curr) => acc + (Number(curr.score) || 0), 0) / results.length).toFixed(2)
             : 0,
+          sample: studentSample
         };
 
-        const prompt = `Analyze this school performance data and provide 3 key insights. 
-        Data Summary: ${JSON.stringify(dataSummary)}.
-        Format your response as a JSON array of objects with 'title', 'value', 'trend', 'status', and 'icon_name' (choice of: TrendingUp, Users, AlertCircle).
-        Example: [{"title": "Academic Growth", "value": "+12%", "trend": "up", "status": "success", "icon_name": "TrendingUp"}]`;
+        const prompt = `Analyze this school's academic data and provide student performance predictions.
+        
+        DATA: ${JSON.stringify(dataSummary)}
+        
+        INSTRUCTIONS:
+        1. Identify 3 high-level 'insights' for the school (title, value, trend, status, icon_name).
+        2. Predict the performance 'trend' for each student in the sample (Improving, At Risk, Stable, Exceptional).
+        3. Provide a 'forecast' summary for each student (e.g., "Likely to score 85%+ in finals").
+        
+        Respond ONLY with a JSON object:
+        {
+          "insights": [{"title": "...", "value": "...", "trend": "up/down", "status": "success/warning/info", "icon_name": "TrendingUp/Users/AlertCircle"}],
+          "predictions": {
+            "Student Name": { "trend": "Improving", "forecast": "..." }
+          }
+        }`;
 
         const token = localStorage.getItem('token');
         const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
@@ -59,22 +88,28 @@ export const AIModules = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify({ prompt, systemPrompt: "You are a data analyst for a school management system. Respond only with valid JSON." })
+          body: JSON.stringify({ 
+            prompt, 
+            systemPrompt: "You are a senior education consultant. Analyze student scores and predict their final outcomes. Respond only with JSON.",
+            model: 'llama-3.3-70b-versatile'
+          })
         });
 
         if (!result.success) {
           throw new Error(result.error);
         }
 
-        const aiText = result.data?.text || "[]";
-        const insights = extractJsonFromAiResponse(aiText);
+        const aiText = result.data?.text || "{}";
+        const parsed = extractJsonFromAiResponse(aiText);
 
-        if (!insights || !Array.isArray(insights)) {
+        if (!parsed || (!parsed.insights && !parsed.predictions)) {
           throw new Error('AI analysis produced invalid data format. Please try again.');
         }
 
-        setAiInsights(insights);
-        (window as any).showToast?.('AI Analysis complete!', 'success');
+        if (parsed.insights) setAiInsights(parsed.insights);
+        if (parsed.predictions) setStudentPredictions(parsed.predictions);
+        
+        (window as any).showToast?.('AI Forecast successfully generated!', 'success');
       } catch (err: any) {
         console.error('AI Analysis Error:', err);
         (window as any).showToast?.(err.message || 'Failed to run AI analysis.', 'error');
@@ -86,7 +121,7 @@ export const AIModules = {
     const displayInsights = aiInsights.length > 0 ? aiInsights : [
       { title: 'Predicted Pass Rate', value: '--', trend: 'stable', status: 'info', icon_name: 'TrendingUp' },
       { title: 'Academic Trends', value: 'Pending', trend: 'stable', status: 'info', icon_name: 'AlertCircle' },
-      { title: 'AI Analysis', value: 'Ready', trend: 'stable', status: 'info', icon_name: 'Users' },
+      { title: 'AI Forecast', value: 'Ready', trend: 'stable', status: 'info', icon_name: 'Zap' },
     ];
 
     const getIcon = (name: string) => {
@@ -94,6 +129,7 @@ export const AIModules = {
         case 'TrendingUp': return TrendingUp;
         case 'AlertCircle': return AlertCircle;
         case 'Users': return Users;
+        case 'Zap': return Zap;
         default: return Info;
       }
     };
@@ -101,21 +137,26 @@ export const AIModules = {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Performance Insights</h2>
-            <p className="text-sm text-zinc-500">AI-driven academic predictions and student performance tracking</p>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-white uppercase tracking-tight">Performance Insights</h2>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">AI-driven academic predictions and student performance tracking</p>
+            </div>
           </div>
           <button
             onClick={handleAnalysis}
             disabled={isAnalyzing}
-            className="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center gap-2"
+            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-100 dark:shadow-none hover:scale-105 active:scale-95"
           >
             {isAnalyzing ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <Sparkles className="w-4 h-4" />
+              <Brain className="w-4 h-4" />
             )}
-            Run AI Analysis
+            {isAnalyzing ? 'Analyzing Data...' : 'Run Prediction Engine'}
           </button>
         </div>
 
@@ -123,58 +164,105 @@ export const AIModules = {
           {displayInsights.map((stat, i) => {
             const Icon = getIcon(stat.icon_name);
             return (
-              <div key={i} className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+              <div key={i} className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group hover:border-indigo-500 transition-colors">
                 <div className="flex items-center justify-between mb-4">
                   <div className={cn(
                     "w-12 h-12 rounded-2xl flex items-center justify-center",
                     stat.status === 'success' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" :
                       stat.status === 'warning' ? "bg-amber-50 dark:bg-amber-900/20 text-amber-600" :
-                        "bg-blue-50 dark:bg-blue-900/20 text-blue-600"
+                        "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600"
                   )}>
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className={cn(
-                    "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full",
+                    "flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest",
                     stat.trend === 'up' ? "bg-emerald-50 text-emerald-600" :
                       stat.trend === 'down' ? "bg-amber-50 text-amber-600" :
                         "bg-zinc-100 text-zinc-600"
                   )}>
                     {stat.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : stat.trend === 'down' ? <ArrowDownRight className="w-3 h-3" /> : null}
-                    {stat.trend.toUpperCase()}
+                    {stat.trend}
                   </div>
                 </div>
-                <h3 className="text-zinc-500 text-sm font-medium">{stat.title}</h3>
-                <p className="text-2xl font-bold text-zinc-900 dark:text-white mt-1">{stat.value}</p>
+                <h3 className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">{stat.title}</h3>
+                <p className="text-2xl font-black text-zinc-900 dark:text-white mt-1">{stat.value}</p>
               </div>
             );
           })}
         </div>
 
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-            <h3 className="font-bold text-zinc-900 dark:text-white">Student Academic Rankings</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+          <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/20">
+            <div>
+              <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                Student Academic Predictions
+              </h3>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">AI-analyzed growth potential and risk assessment</p>
+            </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-500">Updated: Today</span>
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Prediction Status:</span>
+              {Object.keys(studentPredictions).length > 0 ? (
+                <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /><span className="text-[10px] text-emerald-500 font-bold uppercase">Generated</span></div>
+              ) : (
+                <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-amber-500 rounded-full" /><span className="text-[10px] text-amber-500 font-bold uppercase">Pending Analysis</span></div>
+              )}
             </div>
           </div>
           <DataTable
-            title="Student Academic Rankings"
+            title="Student Academic Predictions"
             data={students || []}
             columns={[
-              { header: 'Student Name', accessor: (item: any) => <span className="font-bold">{item.name}</span> },
-              { header: 'ID Number', accessor: (item: any) => item.admission_no || item.id },
-              { header: 'Class/Grade', accessor: (item: any) => item.class },
-              { header: 'Current GPA', accessor: (item: any) => <span className="text-indigo-600 font-bold">{item.gpa || 'N/A'}</span> },
+              { header: 'Student Name', accessor: (item: any) => <span className="font-bold text-zinc-900 dark:text-white">{item.name}</span> },
+              { header: 'Admission No', accessor: (item: any) => <span className="font-mono text-zinc-500">{item.admission_no || item.id?.substring(0, 8)}</span> },
+              { header: 'Current GPA', accessor: (item: any) => <span className="text-indigo-600 font-black">{item.gpa || '0.00'}</span> },
               {
-                header: 'Attendance', accessor: (item: any) => (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 w-16 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500" style={{ width: item.attendance }} />
+                header: 'AI Prediction', 
+                accessor: (item: any) => {
+                  const predictionData = studentPredictions[item.name] as any;
+                  if (!predictionData) return <span className="text-zinc-400 italic text-[10px]">Run engine to predict</span>;
+                  
+                  const trend = (predictionData.trend || '').toLowerCase();
+                  const forecast = predictionData.forecast || '';
+                  
+                  const isHighRisk = trend.includes('risk') || trend.includes('drop') || trend.includes('concern');
+                  const isImproving = trend.includes('impro') || trend.includes('grow') || trend.includes('excep');
+                  
+                  return (
+                    <div className="space-y-1">
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest",
+                        isHighRisk ? "bg-rose-50 text-rose-600 border border-rose-100" :
+                        isImproving ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
+                        "bg-blue-50 text-blue-600 border border-blue-100"
+                      )}>
+                        {isImproving ? <Sparkles className="w-3 h-3" /> : isHighRisk ? <AlertCircle className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                        {trend}
+                      </div>
+                      <p className="text-[9px] text-zinc-500 font-medium leading-tight max-w-[150px]">{forecast}</p>
                     </div>
-                    <span className="text-[10px] font-bold text-zinc-500">{item.attendance}</span>
-                  </div>
-                )
+                  );
+                }
+              },
+              {
+                header: 'Growth Potential', 
+                accessor: (item: any) => {
+                  const predictionData = studentPredictions[item.name] as any;
+                  const trend = (predictionData?.trend || '').toLowerCase();
+                  const isImproving = trend.includes('impro') || trend.includes('grow') || trend.includes('excep');
+                  const isRisk = trend.includes('risk') || trend.includes('drop');
+                  
+                  return (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 w-20 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div className={cn(
+                          "h-full transition-all duration-1000",
+                          isImproving ? "bg-emerald-500" : isRisk ? "bg-rose-500" : "bg-indigo-500"
+                        )} style={{ width: isImproving ? '90%' : isRisk ? '30%' : '65%' }} />
+                      </div>
+                    </div>
+                  );
+                }
               },
             ]}
           />
