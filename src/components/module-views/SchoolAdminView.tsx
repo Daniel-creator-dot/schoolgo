@@ -5051,6 +5051,8 @@ export const AcademicModules = {
     );
   },
   Attendance: ({ role, wards, data = [], onSave, onDelete, students = [], staffList = [] }: { role?: UserRole, wards?: any[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[] }) => {
+    const [viewingStudent, setViewingStudent] = useState<any>(null);
+
     const availableMonths = useMemo(() => {
       if (!data || data.length === 0) {
         return [new Date().toLocaleString('default', { month: 'long', year: 'numeric' })];
@@ -5082,6 +5084,29 @@ export const AcademicModules = {
       });
     }, [data, selectedMonth]);
 
+    const aggregatedData = useMemo(() => {
+      if (role !== 'SCHOOL_ADMIN' && role !== 'HOD') return filteredData;
+
+      return students.map(student => {
+        const studentRecords = (data || []).filter(r => 
+          String(r.student_id) === String(student.id) &&
+          (!selectedMonth || new Date(r.date).toLocaleString('default', { month: 'long', year: 'numeric' }) === selectedMonth)
+        );
+        const present = studentRecords.filter(r => r.status === 'Present').length;
+        const total = studentRecords.length;
+        const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+        
+        return {
+          ...student,
+          student_name: student.name,
+          presentCount: present,
+          absentCount: total - present,
+          attendancePercentage: percentage,
+          totalRecords: total
+        };
+      });
+    }, [students, data, selectedMonth, role, filteredData]);
+
     const stats = useMemo(() => {
       if (filteredData.length === 0) return { present: 0, absent: 0, percentage: 0 };
       const present = filteredData.filter(a => a.status === 'Present').length;
@@ -5092,6 +5117,63 @@ export const AcademicModules = {
         percentage 
       };
     }, [filteredData]);
+
+    const mainColumns = useMemo(() => {
+      if (role === 'SCHOOL_ADMIN' || role === 'HOD') {
+        return [
+          { header: 'Student', accessor: 'name', className: 'font-bold' },
+          { header: 'Admission No', accessor: 'admission_no' },
+          { 
+            header: 'Attendance', 
+            accessor: (item: any) => (
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden w-24">
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all duration-500",
+                      item.attendancePercentage >= 80 ? "bg-emerald-500" :
+                      item.attendancePercentage >= 60 ? "bg-amber-500" : "bg-rose-500"
+                    )}
+                    style={{ width: `${item.attendancePercentage}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-black text-zinc-900 dark:text-white w-8">{item.attendancePercentage}%</span>
+              </div>
+            )
+          },
+          { 
+            header: 'Records', 
+            accessor: (item: any) => (
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-lg text-[10px] font-bold">
+                  {item.presentCount}P
+                </span>
+                <span className="px-2 py-0.5 bg-rose-50 dark:bg-rose-900/20 text-rose-600 rounded-lg text-[10px] font-bold">
+                  {item.absentCount}A
+                </span>
+              </div>
+            )
+          }
+        ];
+      }
+
+      return [
+        { header: 'Date', accessor: 'date', className: 'font-bold' },
+        {
+          header: 'Status',
+          accessor: (item: any) => (
+            <span className={cn(
+              "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+              item.status === 'Present' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+            )}>
+              {item.status}
+            </span>
+          )
+        },
+        { header: 'Check In', accessor: (item: any) => item.checkIn || item.check_in || '—' },
+        { header: 'Remarks', accessor: (item: any) => item.remark || item.remarks || '—', className: 'text-zinc-500 italic' },
+      ];
+    }, [role]);
 
     return (
       <div className="space-y-6">
@@ -5139,35 +5221,58 @@ export const AcademicModules = {
 
         <DataTable
           title={role === 'STAFF' ? "My Attendance Log" : "Attendance Log"}
-          data={filteredData}
+          data={aggregatedData}
           onSave={onSave}
           onDelete={onDelete}
-          columns={[
-            { 
-              header: 'Student', 
-              accessor: (item: any) => item.student_name || students.find((s: any) => String(s.id) === String(item.student_id))?.name || '—',
-              className: 'font-bold' 
-            },
-            { header: 'Date', accessor: 'date' },
-            {
-              header: 'Status',
-              accessor: (item) => (
-                <span className={cn(
-                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                  item.status === 'Present' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
-                )}>
-                  {item.status}
-                </span>
-              )
-            },
-            { header: 'Check In', accessor: (item) => item.checkIn || item.check_in || '—' },
-            { header: 'Remarks', accessor: (item) => item.remark || item.remarks || '—', className: 'text-zinc-500 italic' },
-          ]}
+          columns={mainColumns}
+          extraActions={(item) => (role === 'SCHOOL_ADMIN' || role === 'HOD') ? (
+            <button
+              onClick={() => setViewingStudent(item)}
+              className="flex items-center w-full gap-3 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg transition-colors"
+            >
+              <Eye className="w-4 h-4" />
+              View History
+            </button>
+          ) : null}
           onAdd={onSave && (role === 'SCHOOL_ADMIN' || role === 'STAFF') ? () => { } : undefined}
         />
+
+        <Modal
+          isOpen={!!viewingStudent}
+          onClose={() => setViewingStudent(null)}
+          title={`Attendance History: ${viewingStudent?.name}`}
+          maxWidth="max-w-4xl"
+        >
+          <div className="p-6">
+            <DataTable
+              title={`${viewingStudent?.name}'s Records`}
+              data={(data || []).filter((r: any) => 
+                String(r.student_id) === String(viewingStudent?.id) && 
+                (!selectedMonth || new Date(r.date).toLocaleString('default', { month: 'long', year: 'numeric' }) === selectedMonth)
+              )}
+              columns={[
+                { header: 'Date', accessor: 'date', className: 'font-bold' },
+                {
+                  header: 'Status',
+                  accessor: (item: any) => (
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                      item.status === 'Present' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                    )}>
+                      {item.status}
+                    </span>
+                  )
+                },
+                { header: 'Check In', accessor: (item: any) => item.checkIn || item.check_in || '—' },
+                { header: 'Remarks', accessor: (item: any) => item.remark || item.remarks || '—', className: 'text-zinc-500 italic' },
+              ]}
+            />
+          </div>
+        </Modal>
       </div>
     );
   },
+
 
   StudentIDCards: ({ students = [], classes = [], organization }: { students?: any[], classes?: any[], organization?: any }) => {
     const [selectedClassId, setSelectedClassId] = useState<string>('');
