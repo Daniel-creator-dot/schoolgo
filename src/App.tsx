@@ -1534,9 +1534,13 @@ export default function App() {
               </div>
             );
           case "SCHOOL_ADMIN": {
+            const activeStudentsCount = studentList.filter(s => s.status !== 'Alumni').length || 1;
+            const uniqueDatesCount = new Set(studentAttendance.map(a => new Date(a.date).toDateString())).size || 1;
+            const expectedTotalRecords = activeStudentsCount * uniqueDatesCount;
+            
             const attendanceRate =
               studentAttendance.length > 0
-                ? `${Math.round((studentAttendance.filter((a) => a.status === "Present").length / studentAttendance.length) * 100)}%`
+                ? `${Math.round((studentAttendance.filter((a) => a.status === "Present").length / expectedTotalRecords) * 100)}%`
                 : "0%";
             const totalFees = invoices.reduce((sum, inv) => {
               const amount = parseFloat(

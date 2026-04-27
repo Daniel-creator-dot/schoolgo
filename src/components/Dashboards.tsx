@@ -557,22 +557,29 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
   const attendanceTrendData = useMemo(() => {
     if (!attendanceHistory || attendanceHistory.length === 0) return [];
 
+    const totalStudentsCount = students.filter(s => s.status !== 'Alumni').length || 1;
+
     // Group by date
-    const groups: Record<string, { total: number, present: number }> = {};
+    const groups: Record<string, { presentStudentIds: Set<string>, rawDate: number }> = {};
     attendanceHistory.forEach(record => {
-      const date = new Date(record.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      if (!groups[date]) groups[date] = { total: 0, present: 0 };
-      groups[date].total++;
-      if (record.status === 'Present') groups[date].present++;
+      const d = new Date(record.date);
+      const dateKey = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (!groups[dateKey]) groups[dateKey] = { presentStudentIds: new Set(), rawDate: d.setHours(0, 0, 0, 0) };
+
+      if (record.status === 'Present') {
+        groups[dateKey].presentStudentIds.add(String(record.student_id));
+      }
     });
 
     return Object.entries(groups)
       .map(([name, vals]) => ({
         name,
-        value: Math.round((vals.present / vals.total) * 100)
+        value: Math.round((vals.presentStudentIds.size / totalStudentsCount) * 100),
+        rawDate: vals.rawDate
       }))
+      .sort((a, b) => a.rawDate - b.rawDate)
       .slice(-7); // Last 7 unique days
-  }, [attendanceHistory]);
+  }, [attendanceHistory, students]);
 
   const downloadReport = (title: string, reportData: any[]) => {
     if (reportData.length === 0) return;
@@ -669,9 +676,10 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard title={t('total_students')} value={stats?.totalStudents || "0"} change="Active" trend="up" icon={GraduationCap} color="bg-blue-600" />
         <StatCard title={t('total_staff')} value={stats?.totalStaff || "0"} change="Verified" trend="up" icon={Briefcase} color="bg-purple-600" />
+        <StatCard title={t('avg_attendance')} value={stats?.attendanceRate || "0%"} change="School-wide" trend="up" icon={ClipboardCheck} color="bg-teal-600" />
         <StatCard title={t('fees_collected')} value={stats?.feesCollected || `${currency} 0`} change="Target" trend="up" icon={Wallet} color="bg-emerald-600" />
         <StatCard
           title="SMS Credits"

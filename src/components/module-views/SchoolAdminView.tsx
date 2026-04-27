@@ -5234,7 +5234,6 @@ export const AcademicModules = {
               View History
             </button>
           ) : null}
-          onAdd={onSave && (role === 'SCHOOL_ADMIN' || role === 'STAFF') ? () => { } : undefined}
         />
 
         <Modal
