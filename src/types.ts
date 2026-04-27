@@ -1,4 +1,4 @@
-export type UserRole = 'SUPER_ADMIN' | 'SCHOOL_ADMIN' | 'HOD' | 'STAFF' | 'STUDENT' | 'PARENT' | 'FINANCE' | 'BUS_DRIVER' | 'LIBRARIAN' | 'NON_STAFF' | 'HR' | 'PARTNER';
+export type UserRole = 'SUPER_ADMIN' | 'SCHOOL_ADMIN' | 'HOD' | 'STAFF' | 'STUDENT' | 'PARENT' | 'FINANCE' | 'BUS_DRIVER' | 'LIBRARIAN' | 'NON_STAFF' | 'HR' | 'PARTNER' | 'HOSTEL' | 'STUDENT_CLUBS' | 'ASSETS_EQUIPMENT' | 'HEALTH' | 'DISCIPLINE';
 
 export interface NavItem {
   title: string;

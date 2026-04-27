@@ -266,9 +266,9 @@ router.post('/ops/book-loans', checkRole(['LIBRARIAN', 'SCHOOL_ADMIN']), Library
 router.post('/ops/book-loans/:id/return', checkRole(['LIBRARIAN', 'SCHOOL_ADMIN']), LibraryController.returnBook);
 router.post('/ops/book-loans/:id/lost', checkRole(['LIBRARIAN', 'SCHOOL_ADMIN']), LibraryController.markBookAsLost);
 router.get('/ops/inventory', OperationsController.getInventory);
-router.post('/ops/inventory', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'NON_STAFF']), OperationsController.createInventoryItem);
-router.patch('/ops/inventory/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'NON_STAFF']), OperationsController.updateInventoryItem);
-router.delete('/ops/inventory/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'NON_STAFF']), OperationsController.deleteInventoryItem);
+router.post('/ops/inventory', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'NON_STAFF', 'ASSETS_EQUIPMENT']), OperationsController.createInventoryItem);
+router.patch('/ops/inventory/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'NON_STAFF', 'ASSETS_EQUIPMENT']), OperationsController.updateInventoryItem);
+router.delete('/ops/inventory/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'NON_STAFF', 'ASSETS_EQUIPMENT']), OperationsController.deleteInventoryItem);
 router.get('/ops/uniforms', OperationsController.getUniforms);
 router.post('/ops/uniforms', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'FINANCE']), OperationsController.createUniformItem);
 router.patch('/ops/uniforms/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'FINANCE']), OperationsController.updateUniformItem);

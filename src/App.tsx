@@ -1647,6 +1647,11 @@ export default function App() {
           case "LIBRARIAN":
             return <LibrarianDashboard books={books} bookLoans={bookLoans} />;
           case "NON_STAFF":
+          case "HOSTEL":
+          case "STUDENT_CLUBS":
+          case "ASSETS_EQUIPMENT":
+          case "HEALTH":
+          case "DISCIPLINE":
             return <NonStaffDashboard tasks={[]} />;
           case "HR":
             return (

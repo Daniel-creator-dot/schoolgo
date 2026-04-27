@@ -56,7 +56,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   {
     title: 'Dashboard',
     icon: LayoutDashboard,
-    roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HR', 'PARTNER'],
+    roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HR', 'PARTNER', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'],
     href: 'Dashboard'
   },
   {
@@ -174,11 +174,11 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   {
     title: 'Communication',
     icon: MessageSquare,
-    roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'],
+    roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'],
     children: [
-      { title: 'Announcements', href: 'Announcements', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: Bell },
-      { title: 'Messages', href: 'Messages', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: MessageSquare },
-      { title: 'Notifications', href: 'Notifications', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF'], icon: Bell },
+      { title: 'Announcements', href: 'Announcements', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
+      { title: 'Messages', href: 'Messages', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: MessageSquare },
+      { title: 'Notifications', href: 'Notifications', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
     ]
   },
 
@@ -211,14 +211,14 @@ export const NAVIGATION_CONFIG: NavItem[] = [
   {
     title: 'Logistics & Services',
     icon: Settings,
-    roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT', 'BUS_DRIVER', 'NON_STAFF'],
+    roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT', 'BUS_DRIVER', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'],
     children: [
       { title: 'Transport', href: 'Transport', roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT', 'BUS_DRIVER', 'NON_STAFF'], icon: Globe },
-      { title: 'Hostel', href: 'Hostel', roles: ['SCHOOL_ADMIN', 'STUDENT', 'NON_STAFF'], icon: Building2 },
-      { title: 'Student Clubs', href: 'Student Clubs', roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT'], icon: Users },
-      { title: 'Assets & Equipment', href: 'Assets', roles: ['SCHOOL_ADMIN', 'NON_STAFF'], icon: Layers },
-      { title: 'Health / Medical', href: 'Health / Medical', roles: ['SCHOOL_ADMIN', 'PARENT', 'NON_STAFF', 'STUDENT'], icon: Heart },
-      { title: 'Behavior & Discipline', href: 'Behavior & Discipline', roles: ['SCHOOL_ADMIN', 'STUDENT'], icon: ShieldCheck },
+      { title: 'Hostel', href: 'Hostel', roles: ['SCHOOL_ADMIN', 'STUDENT', 'NON_STAFF', 'HOSTEL'], icon: Building2 },
+      { title: 'Student Clubs', href: 'Student Clubs', roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT', 'STUDENT_CLUBS'], icon: Users },
+      { title: 'Assets & Equipment', href: 'Assets', roles: ['SCHOOL_ADMIN', 'NON_STAFF', 'ASSETS_EQUIPMENT'], icon: Layers },
+      { title: 'Health / Medical', href: 'Health / Medical', roles: ['SCHOOL_ADMIN', 'PARENT', 'NON_STAFF', 'STUDENT', 'HEALTH'], icon: Heart },
+      { title: 'Behavior & Discipline', href: 'Behavior & Discipline', roles: ['SCHOOL_ADMIN', 'STUDENT', 'DISCIPLINE'], icon: ShieldCheck },
     ]
   },
 
