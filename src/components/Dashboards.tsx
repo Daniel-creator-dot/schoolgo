@@ -676,10 +676,9 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title={t('total_students')} value={stats?.totalStudents || "0"} change="Active" trend="up" icon={GraduationCap} color="bg-blue-600" />
         <StatCard title={t('total_staff')} value={stats?.totalStaff || "0"} change="Verified" trend="up" icon={Briefcase} color="bg-purple-600" />
-        <StatCard title={t('avg_attendance')} value={stats?.attendanceRate || "0%"} change="School-wide" trend="up" icon={ClipboardCheck} color="bg-teal-600" />
         <StatCard title={t('fees_collected')} value={stats?.feesCollected || `${currency} 0`} change="Target" trend="up" icon={Wallet} color="bg-emerald-600" />
         <StatCard
           title="SMS Credits"
