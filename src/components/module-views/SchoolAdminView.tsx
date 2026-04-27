@@ -5050,9 +5050,48 @@ export const AcademicModules = {
       </div>
     );
   },
-  Attendance: ({ role, wards, data, onSave, onDelete, students = [], staffList = [] }: { role?: UserRole, wards?: any[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[] }) => {
-    const [selectedMonth, setSelectedMonth] = useState('March 2024');
+  Attendance: ({ role, wards, data = [], onSave, onDelete, students = [], staffList = [] }: { role?: UserRole, wards?: any[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[] }) => {
+    const availableMonths = useMemo(() => {
+      if (!data || data.length === 0) {
+        return [new Date().toLocaleString('default', { month: 'long', year: 'numeric' })];
+      }
+      const monthsSet = new Set<string>();
+      data.forEach(item => {
+        if (item.date) {
+          const d = new Date(item.date);
+          monthsSet.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+        }
+      });
+      return Array.from(monthsSet).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    }, [data]);
+
+    const [selectedMonth, setSelectedMonth] = useState(availableMonths[0]);
     const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
+
+    useEffect(() => {
+      if (availableMonths.length > 0 && !availableMonths.includes(selectedMonth)) {
+        setSelectedMonth(availableMonths[0]);
+      }
+    }, [availableMonths, selectedMonth]);
+
+    const filteredData = useMemo(() => {
+      return (data || []).filter(item => {
+        if (!item.date) return false;
+        const d = new Date(item.date);
+        return d.toLocaleString('default', { month: 'long', year: 'numeric' }) === selectedMonth;
+      });
+    }, [data, selectedMonth]);
+
+    const stats = useMemo(() => {
+      if (filteredData.length === 0) return { present: 0, absent: 0, percentage: 0 };
+      const present = filteredData.filter(a => a.status === 'Present').length;
+      const percentage = Math.round((present / filteredData.length) * 100);
+      return { 
+        present, 
+        absent: filteredData.length - present, 
+        percentage 
+      };
+    }, [filteredData]);
 
     return (
       <div className="space-y-6">
@@ -5077,13 +5116,13 @@ export const AcademicModules = {
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="flex items-center gap-2 mr-4">
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-xl text-center min-w-[80px]">
+              <div className="p-3 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 dark:border-emerald-800/30 rounded-xl text-center min-w-[80px]">
                 <p className="text-[9px] font-bold text-emerald-600 uppercase">Present</p>
-                <p className="text-sm font-black text-emerald-700 dark:text-emerald-400">92%</p>
+                <p className="text-sm font-black text-emerald-700 dark:text-emerald-400">{stats.percentage}%</p>
               </div>
-              <div className="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50 rounded-xl text-center min-w-[80px]">
+              <div className="p-3 bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100/50 dark:border-rose-800/30 rounded-xl text-center min-w-[80px]">
                 <p className="text-[9px] font-bold text-rose-600 uppercase">Absent</p>
-                <p className="text-sm font-black text-rose-700 dark:text-rose-400">8%</p>
+                <p className="text-sm font-black text-rose-700 dark:text-rose-400">{100 - stats.percentage}%</p>
               </div>
             </div>
             <select
@@ -5091,15 +5130,16 @@ export const AcademicModules = {
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10"
             >
-              <option>March 2024</option>
-              <option>February 2024</option>
+              {availableMonths.map(month => (
+                <option key={month} value={month}>{month}</option>
+              ))}
             </select>
           </div>
         </div>
 
         <DataTable
           title={role === 'STAFF' ? "My Attendance Log" : "Attendance Log"}
-          data={data || []}
+          data={filteredData}
           onSave={onSave}
           onDelete={onDelete}
           columns={[
@@ -5123,6 +5163,7 @@ export const AcademicModules = {
       </div>
     );
   },
+
   StudentIDCards: ({ students = [], classes = [], organization }: { students?: any[], classes?: any[], organization?: any }) => {
     const [selectedClassId, setSelectedClassId] = useState<string>('');
     const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
