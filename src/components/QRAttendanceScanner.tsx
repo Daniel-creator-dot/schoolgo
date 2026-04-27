@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { markAttendanceByQR } from '../lib/api';
+import { markAttendanceByQR, fetchStudents } from '../lib/api';
 import { useLanguage } from '../lib/LanguageContext';
 import {
-    Camera, CameraOff, CheckCircle, XCircle, AlertTriangle, Users, ChevronRight, QrCode, Loader2
+    Camera, CameraOff, CheckCircle, XCircle, AlertTriangle, Users, ChevronRight, QrCode, Loader2, Search, UserPlus
 } from 'lucide-react';
 
 interface ScannedStudent {
@@ -22,9 +22,27 @@ export default function QRAttendanceScanner({ classes = [], onNavigate }: { clas
     const [scannedList, setScannedList] = useState<ScannedStudent[]>([]);
     const [lastResult, setLastResult] = useState<{ type: 'success' | 'error' | 'duplicate'; message: string } | null>(null);
     const [processing, setProcessing] = useState(false);
+    
+    // Manual search state
+    const [allStudents, setAllStudents] = useState<any[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const lastScannedRef = useRef<string>('');
     const cooldownRef = useRef<boolean>(false);
+
+    // Fetch students for manual fallback
+    useEffect(() => {
+        const loadStudents = async () => {
+            try {
+                const data = await fetchStudents();
+                setAllStudents(data);
+            } catch (err) {
+                console.error('Failed to load students:', err);
+            }
+        };
+        loadStudents();
+    }, []);
 
     const handleScan = useCallback(async (decodedText: string) => {
         // Debounce: skip if same code scanned within 3 seconds
@@ -74,6 +92,12 @@ export default function QRAttendanceScanner({ classes = [], onNavigate }: { clas
         }
     }, [selectedClass, t]);
 
+    const handleManualMark = async (student: any) => {
+        // Reuse the same logic but pass student admission no (fallback to ID)
+        await handleScan(student.admission_no || student.id);
+        setSearchQuery(''); // Reset search
+    };
+
     const startScanner = async () => {
         try {
             const scanner = new Html5Qrcode('qr-reader');
@@ -112,7 +136,6 @@ export default function QRAttendanceScanner({ classes = [], onNavigate }: { clas
 
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-zinc-900 dark:text-white flex items-center gap-3">
@@ -135,6 +158,64 @@ export default function QRAttendanceScanner({ classes = [], onNavigate }: { clas
                         ))}
                     </select>
                 </div>
+            </div>
+
+            {/* Manual Search Fallback */}
+            <div className="relative">
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                    <input
+                        type="text"
+                        placeholder={t('manual_search')}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+                    />
+                </div>
+
+                {/* Search Results Dropdown */}
+                {searchQuery.length > 1 && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="p-2 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 px-2">{t('search_results')}</p>
+                        </div>
+                        <div className="divide-y divide-zinc-100 dark:divide-zinc-800 max-h-[300px] overflow-y-auto">
+                            {(() => {
+                                const filtered = allStudents.filter(s => {
+                                    const matchesQuery = 
+                                        s.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                        s.admission_no?.toLowerCase().includes(searchQuery.toLowerCase());
+                                    
+                                    const matchesClass = selectedClass 
+                                        ? String(s.class_id) === String(selectedClass)
+                                        : true;
+
+                                    return matchesQuery && matchesClass;
+                                }).slice(0, 10);
+
+                                return filtered.length > 0 ? filtered.map((s) => (
+                                    <div key={s.id} className="p-3 flex items-center justify-between hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-colors">
+                                        <div className="min-w-0 flex-1 pr-4">
+                                            <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">{s.name}</p>
+                                            <p className="text-xs text-zinc-500 truncate">{s.admission_no} • {s.class_name || t('no_class')} {s.class_section || ''}</p>
+                                        </div>
+                                        <button
+                                            onClick={() => handleManualMark(s)}
+                                            className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 flex items-center gap-1.5 shrink-0 transition-colors shadow-sm"
+                                        >
+                                            <UserPlus className="w-3.5 h-3.5" />
+                                            {t('mark_manual')}
+                                        </button>
+                                    </div>
+                                )) : (
+                                    <div className="p-8 text-center">
+                                        <p className="text-sm text-zinc-500 italic">{t('no_results_found')}</p>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Stats Bar */}

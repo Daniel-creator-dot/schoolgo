@@ -639,7 +639,11 @@ const translations: Record<Language, Record<string, string>> = {
     all_classes: 'All Classes',
     depts: 'Depts',
     no_hod: 'No HOD',
-    unassigned_staff: 'Unassigned Staff'
+    unassigned_staff: 'Unassigned Staff',
+    manual_search: 'Search student name or ID...',
+    mark_manual: 'Mark Manually',
+    search_results: 'Search Results',
+    no_class: 'No Class'
   },
   fr: {
     dashboard: 'Tableau de bord',
