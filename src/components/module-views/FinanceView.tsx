@@ -2376,14 +2376,14 @@ export const FinanceModules = {
               </div>
             </div>
           )}
-          onEdit={role === 'STUDENT' ? undefined : (item) => { }}
+          onEdit={(role === 'PARENT' || role === 'STUDENT') ? undefined : (item) => { }}
           columns={[
             { header: 'Student Name', accessor: 'student_name', className: 'font-bold' },
-            { header: `Total Billed`, accessor: (item: any) => `${currency} ${item.totalBilled.toLocaleString()}` },
-            { header: `Total Paid`, accessor: (item: any) => `${currency} ${item.totalPaid.toLocaleString()}` },
+            { header: `Total Billed`, accessor: (item: any) => role === 'PARENT' ? (item.balanceOwing <= 0 ? 'Full' : 'Partial') : `${currency} ${item.totalBilled.toLocaleString()}` },
+            { header: `Total Paid`, accessor: (item: any) => role === 'PARENT' ? (item.balanceOwing <= 0 ? 'Full' : 'Partial') : `${currency} ${item.totalPaid.toLocaleString()}` },
             {
               header: `Balance Owing`,
-              accessor: (item: any) => <span className={item.balanceOwing > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}>{currency} {item.balanceOwing.toLocaleString()}</span>
+              accessor: (item: any) => role === 'PARENT' ? (item.balanceOwing <= 0 ? 'Full' : 'Partial') : <span className={item.balanceOwing > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}>{currency} {item.balanceOwing.toLocaleString()}</span>
             },
             {
               header: 'Status',
@@ -2392,14 +2392,14 @@ export const FinanceModules = {
                   "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
                   item.balanceOwing <= 0 ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
                 )}>
-                  {item.balanceOwing <= 0 ? 'Full Paid' : 'Pending'}
+                  {role === 'PARENT' ? (item.balanceOwing <= 0 ? 'Full' : 'Partial') : (item.balanceOwing <= 0 ? 'Full Paid' : 'Pending')}
                 </span>
               )
             },
           ]}
           onAdd={onSave ? () => { } : undefined}
           renderForm={renderInvoiceForm}
-          extraActions={(item) => (
+          extraActions={role !== 'PARENT' ? (item) => (
             <div className="flex gap-2">
               {item.balanceOwing > 0 && onRecordPayment && (
                 <button
@@ -2415,7 +2415,7 @@ export const FinanceModules = {
                 </button>
               )}
             </div>
-          )}
+          ) : undefined}
         />
 
         <Modal

@@ -5227,7 +5227,7 @@ export const AcademicModules = {
           columns={mainColumns}
           autoModal={role !== 'PARENT' && role !== 'STUDENT'}
           autoViewModal={role !== 'PARENT' && role !== 'STUDENT'}
-          extraActions={(item) => (role === 'SCHOOL_ADMIN' || role === 'HOD') ? (
+          extraActions={(role === 'SCHOOL_ADMIN' || role === 'HOD') ? (item) => (
             <button
               onClick={() => setViewingStudent(item)}
               className="flex items-center w-full gap-3 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 rounded-lg transition-colors"
@@ -5235,7 +5235,7 @@ export const AcademicModules = {
               <Eye className="w-4 h-4" />
               View History
             </button>
-          ) : null}
+          ) : undefined}
         />
 
         <Modal

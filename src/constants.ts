@@ -142,7 +142,6 @@ export const NAVIGATION_CONFIG: NavItem[] = [
       { title: 'Scholarships', href: 'Scholarships', roles: ['SCHOOL_ADMIN', 'FINANCE'], icon: GraduationCap },
       { title: 'Expenses & Budget', href: 'Expenses & Budget', roles: ['SCHOOL_ADMIN', 'FINANCE'], icon: TrendingUp },
       { title: 'Financial Reports', href: 'Financial Reports', roles: ['SCHOOL_ADMIN', 'FINANCE'], icon: History },
-      { title: 'Make Payment', href: 'Make Payment', roles: ['PARENT'], icon: CreditCard },
       { title: 'Inventory Request', href: 'Inventory Request', roles: ['STUDENT', 'PARENT'], icon: Shirt },
     ]
   },
