@@ -5143,7 +5143,12 @@ export const AcademicModules = {
           onSave={onSave}
           onDelete={onDelete}
           columns={[
-            { header: 'Date', accessor: 'date', className: 'font-bold' },
+            { 
+              header: 'Student', 
+              accessor: (item: any) => item.student_name || students.find((s: any) => String(s.id) === String(item.student_id))?.name || '—',
+              className: 'font-bold' 
+            },
+            { header: 'Date', accessor: 'date' },
             {
               header: 'Status',
               accessor: (item) => (
