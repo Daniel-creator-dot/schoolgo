@@ -265,6 +265,7 @@ export const AIModules = {
           <DataTable
             title="Student Academic Predictions"
             data={students || []}
+            autoModal={false}
             columns={[
               { header: 'Student Name', accessor: (item: any) => <span className="font-bold text-zinc-900 dark:text-white">{item.name}</span> },
               { header: 'Admission No', accessor: (item: any) => <span className="font-mono text-zinc-500">{item.admission_no || item.id?.substring(0, 8)}</span> },
