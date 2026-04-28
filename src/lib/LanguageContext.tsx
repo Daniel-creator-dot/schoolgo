@@ -110,6 +110,8 @@ const translations: Record<Language, Record<string, string>> = {
     transport: 'Transport',
     hostel: 'Hostel',
     inventory: 'Inventory',
+    sellable_items_stocks: 'Sellable Items (Stocks)',
+    assets_equipment: 'Assets & Equipment',
     health_medical: 'Health / Medical',
     behavior_discipline: 'Behavior & Discipline',
     personal_information: 'Personal Information',

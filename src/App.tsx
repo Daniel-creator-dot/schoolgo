@@ -2506,27 +2506,11 @@ export default function App() {
       ),
 
       Stock: (
-        <FinanceModules.Inventory
+        <FinanceModules.Stocks
           students={studentList}
-          data={combinedInventory}
-          onSave={(data) => {
-            const type =
-              data._source ||
-              (data.id
-                ? combinedInventory.find((i) => i.id === data.id)?._source
-                : "inventory");
-            return handleEntitySave(
-              type === "uniform" ? "uniform" : "inventory",
-              data,
-            );
-          }}
-          onDelete={(item) => {
-            const type = item._source || "inventory";
-            return handleEntityDelete(
-              type === "uniform" ? "uniform" : "inventory",
-              item,
-            );
-          }}
+          data={uniforms}
+          onSave={(data) => handleEntitySave("uniform", data)}
+          onDelete={(item) => handleEntityDelete("uniform", item)}
         />
       ),
 

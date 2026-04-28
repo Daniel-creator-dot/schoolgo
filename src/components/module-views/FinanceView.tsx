@@ -1418,7 +1418,7 @@ export const FinanceModules = {
       </div>
     );
   },
-  Inventory: ({ students, data, onSave, onDelete }: { students: Student[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
+  Stocks: ({ students, data, onSave, onDelete }: { students: Student[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
     const { t, currency } = useLanguage();
     const [viewItem, setViewItem] = useState<any | null>(null);
 
