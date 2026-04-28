@@ -177,7 +177,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
     children: [
       { title: 'Announcements', href: 'Announcements', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
       { title: 'Messages', href: 'Messages', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: MessageSquare },
-      { title: 'Notifications', href: 'Notifications', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
+      { title: 'Notifications', href: 'Notifications', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
     ]
   },
 
@@ -216,7 +216,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
       { title: 'Hostel', href: 'Hostel', roles: ['SCHOOL_ADMIN', 'STUDENT', 'NON_STAFF', 'HOSTEL'], icon: Building2 },
       { title: 'Student Clubs', href: 'Student Clubs', roles: ['SCHOOL_ADMIN', 'STUDENT', 'PARENT', 'STUDENT_CLUBS'], icon: Users },
       { title: 'Assets & Equipment', href: 'Assets', roles: ['SCHOOL_ADMIN', 'NON_STAFF', 'ASSETS_EQUIPMENT'], icon: Layers },
-      { title: 'Health / Medical', href: 'Health / Medical', roles: ['SCHOOL_ADMIN', 'PARENT', 'NON_STAFF', 'STUDENT', 'HEALTH'], icon: Heart },
+      { title: 'Health / Medical', href: 'Health / Medical', roles: ['SCHOOL_ADMIN', 'NON_STAFF', 'STUDENT', 'HEALTH'], icon: Heart },
       { title: 'Behavior & Discipline', href: 'Behavior & Discipline', roles: ['SCHOOL_ADMIN', 'STUDENT', 'DISCIPLINE'], icon: ShieldCheck },
     ]
   },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
+  CheckCircle,
   Plus,
   Wallet,
   CreditCard,
@@ -2309,9 +2310,181 @@ export const FinanceModules = {
 
     const renderInvoiceForm = (item?: any, isViewOnly?: boolean) => <InvoiceFormContent item={item} isViewOnly={isViewOnly} />;
 
+    if (role === 'PARENT') {
+      const ward = groupedByStudent.find(s => String(s.id) === String(selectedWardId)) || groupedByStudent[0];
+      const wardPayments = (payments || []).filter(p => {
+        const invId = p.invoice_id || p.invoiceId;
+        return invId && (filteredData || []).some(inv => String(inv.id) === String(invId));
+      });
+
+      return (
+        <div className="space-y-8">
+          {wards && wards.length > 1 && (
+            <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-3 rounded-[1.5rem] border border-zinc-200 dark:border-zinc-800 w-fit shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+                <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Select Ward</span>
+                <select
+                  value={selectedWardId}
+                  onChange={(e) => setLocalSelectedWardId(e.target.value)}
+                  className="bg-transparent text-sm font-bold outline-none pr-6 cursor-pointer text-zinc-900 dark:text-white"
+                >
+                  {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {ward ? (
+            <div className="space-y-8">
+              {/* Financial Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 mb-4">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Total Amount Billed</p>
+                  <p className="text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{currency} {ward.totalBilled.toLocaleString()}</p>
+                </div>
+                <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 mb-4">
+                    <CheckCircle className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Total Amount Paid</p>
+                  <p className="text-3xl font-black text-emerald-600 tracking-tight">{currency} {ward.totalPaid.toLocaleString()}</p>
+                </div>
+                <div className="p-6 bg-zinc-900 rounded-[2rem] shadow-xl text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-rose-600/20 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+                  <div className="relative z-10">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-rose-400 mb-4">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Remaining Balance</p>
+                    <p className="text-3xl font-black text-white tracking-tight">{currency} {ward.balanceOwing.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoices List */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                  <div className="w-2 h-8 bg-indigo-600 rounded-full"></div>
+                  Outstanding Invoices
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {ward.invoices.map((inv: any) => {
+                    const paid = (payments || []).filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id)).reduce((s: number, p: any) => s + parseFloat(p.amount || 0), 0);
+                    const bal = parseFloat(inv.amount || 0) - paid;
+                    const isFullyPaid = bal <= 0;
+
+                    return (
+                      <div key={inv.id} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-md transition-shadow group">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <span className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-full text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 inline-block">
+                              ID: {String(inv.id).substring(0, 8).toUpperCase()}
+                            </span>
+                            <h4 className="text-lg font-black text-zinc-900 dark:text-white group-hover:text-indigo-600 transition-colors">
+                              {inv.invoice_description || 'General Fees'}
+                            </h4>
+                          </div>
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                            isFullyPaid ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                          )}>
+                            {isFullyPaid ? 'Paid' : 'Pending'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mt-6">
+                          <div>
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Total Amount</p>
+                            <p className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{currency}{parseFloat(inv.amount || 0).toLocaleString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Due Date</p>
+                            <p className="text-sm font-bold text-zinc-600 dark:text-zinc-400">{inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</p>
+                          </div>
+                        </div>
+                        {!isFullyPaid && (
+                          <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                            <div>
+                              <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Balance Due</p>
+                              <p className="text-lg font-black text-rose-600">{currency}{bal.toLocaleString()}</p>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setPaymentModalData(ward);
+                                setSelectedInvoiceId(inv.id);
+                              }}
+                              className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
+                            >
+                              Pay Now
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Recent Payments */}
+              <div className="space-y-4">
+                <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight flex items-center gap-3">
+                  <div className="w-2 h-8 bg-emerald-600 rounded-full"></div>
+                  Payment History
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {wardPayments.length > 0 ? wardPayments.map((p: any, i: number) => (
+                    <div key={i} className="p-5 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-2xl flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600">
+                        <DollarSign className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <p className="font-bold text-zinc-900 dark:text-white">{currency}{parseFloat(p.amount || 0).toLocaleString()}</p>
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase">{new Date(p.payment_date || p.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-xs text-zinc-500 mt-0.5 truncate">{p.description || 'Fees Payment'}</p>
+                        <p className="text-[10px] text-emerald-600 font-bold uppercase mt-1 tracking-widest">{p.payment_method || 'Payment'}</p>
+                      </div>
+                      <button 
+                        onClick={() => handlePrintReceipt(p)}
+                        className="p-2 hover:bg-white dark:hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-zinc-600 transition-colors"
+                        title="Download Receipt"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )) : (
+                    <div className="col-span-full py-12 text-center bg-zinc-50 dark:bg-zinc-900/50 rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                      <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-4 text-zinc-300">
+                        <DollarSign className="w-8 h-8" />
+                      </div>
+                      <p className="text-zinc-500 font-medium">No payment history found yet.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="py-20 text-center">
+              <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800 rounded-3xl flex items-center justify-center mx-auto mb-6 text-zinc-400">
+                <CreditCard className="w-10 h-10" />
+              </div>
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-white">No Billing Records</h3>
+              <p className="text-zinc-500 mt-2">We couldn't find any invoice or payment history for this student.</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4">
-        {role === 'PARENT' && wards && wards.length > 1 && (
+        {wards && wards.length > 1 && (
           <div className="flex items-center gap-2 mb-4 bg-white dark:bg-zinc-900 p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 w-fit">
             <span className="text-xs font-bold text-zinc-500 ml-2 uppercase tracking-wider">Ward:</span>
             <select
@@ -2384,14 +2557,14 @@ export const FinanceModules = {
               </div>
             </div>
           )}
-          onEdit={(role === 'PARENT' || role === 'STUDENT') ? undefined : (item) => { }}
+          onEdit={(role === 'STUDENT') ? undefined : (item) => { }}
           columns={[
             { header: 'Student Name', accessor: 'student_name', className: 'font-bold' },
-            { header: `Total Billed`, accessor: (item: any) => role === 'PARENT' ? (item.balanceOwing <= 0 ? 'Full' : 'Partial') : `${currency} ${item.totalBilled.toLocaleString()}` },
-            { header: `Total Paid`, accessor: (item: any) => role === 'PARENT' ? (item.balanceOwing <= 0 ? 'Full' : 'Partial') : `${currency} ${item.totalPaid.toLocaleString()}` },
+            { header: `Total Billed`, accessor: (item: any) => `${currency} ${item.totalBilled.toLocaleString()}` },
+            { header: `Total Paid`, accessor: (item: any) => `${currency} ${item.totalPaid.toLocaleString()}` },
             {
               header: `Balance Owing`,
-              accessor: (item: any) => role === 'PARENT' ? (item.balanceOwing <= 0 ? 'Full' : 'Partial') : <span className={item.balanceOwing > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}>{currency} {item.balanceOwing.toLocaleString()}</span>
+              accessor: (item: any) => <span className={item.balanceOwing > 0 ? "text-rose-600 font-bold" : "text-emerald-600 font-bold"}>{currency} {item.balanceOwing.toLocaleString()}</span>
             },
             {
               header: 'Status',
@@ -2400,14 +2573,14 @@ export const FinanceModules = {
                   "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
                   item.balanceOwing <= 0 ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
                 )}>
-                  {role === 'PARENT' ? (item.balanceOwing <= 0 ? 'Full' : 'Partial') : (item.balanceOwing <= 0 ? 'Full Paid' : 'Pending')}
+                  {item.balanceOwing <= 0 ? 'Full Paid' : 'Pending'}
                 </span>
               )
             },
           ]}
           onAdd={onSave ? () => { } : undefined}
           renderForm={renderInvoiceForm}
-          extraActions={role !== 'PARENT' ? (item) => (
+          extraActions={(item) => (
             <div className="flex gap-2">
               {item.balanceOwing > 0 && onRecordPayment && (
                 <button
@@ -2423,7 +2596,7 @@ export const FinanceModules = {
                 </button>
               )}
             </div>
-          ) : undefined}
+          )}
         />
 
         <Modal
