@@ -55,6 +55,156 @@ import { SearchableSelect, Modal } from '../UI';
 import { DocumentBuilder } from '../AdminModules';
 
 
+const getInvoiceHtml = (invoice: any, student: any, organization: any, currency: string, payments: any[]) => {
+  const invoiceAmount = parseFloat(invoice.amount || 0);
+  const studentPays = (payments || []);
+  const paidForThis = studentPays
+    .filter((p: any) => String(p.invoice_id) === String(invoice.id) || String(p.invoiceId) === String(invoice.id))
+    .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+  const balanceDue = invoiceAmount - paidForThis;
+  const isPaid = paidForThis >= invoiceAmount;
+  const isPartial = paidForThis > 0 && !isPaid;
+  const docTitle = isPaid ? 'RECEIPT' : 'INVOICE';
+  const statusLabel = isPaid ? 'PAID IN FULL' : isPartial ? 'PARTIAL PAYMENT' : 'PAYMENT DUE';
+  const accentGradient = isPaid ? 'linear-gradient(90deg, #10b981, #3b82f6)' : isPartial ? 'linear-gradient(90deg, #f59e0b, #3b82f6)' : 'linear-gradient(90deg, #f59e0b, #ef4444)';
+  const statusBadgeBg = isPaid ? '#dcfce7' : isPartial ? '#fef3c7' : '#fef3c7';
+  const statusBadgeColor = isPaid ? '#10b981' : '#b45309';
+  const statusBadgeBorder = isPaid ? '#bbf7d0' : '#fde68a';
+
+  return `
+    <div class="invoice-page">
+      <div class="receipt-container">
+        <div class="header">
+          <div class="school-info">
+            ${organization?.logo ? `<img src="${organization.logo}" style="max-height: 48px; margin-bottom: 12px;" />` : ''}
+            <h2>${organization?.name || 'School Name'}</h2>
+            <p>${organization?.address || 'School Address'}</p>
+          </div>
+          <div class="receipt-title">
+            <h1>${docTitle}</h1>
+            <p>#${invoice.id.split('-')[0].toUpperCase()}</p>
+            <div class="status-badge" style="background: ${statusBadgeBg}; color: ${statusBadgeColor}; border: 1px solid ${statusBadgeBorder}; font-size: 10px; padding: 4px 12px; border-radius: 999px; font-weight: 800;">${statusLabel}</div>
+          </div>
+        </div>
+        <div class="info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+          <div class="info-block">
+            <label style="display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Billed To</label>
+            <p style="margin: 0; font-weight: 700; color: #1e293b;">${student?.name}</p>
+            <p style="font-size: 12px; color: #64748b; margin-top: 2px;">Class: ${student?.class_name || 'N/A'}</p>
+          </div>
+          <div class="info-block" style="text-align: right;">
+            <label style="display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">${isPaid ? 'Payment Date' : 'Due Date'}</label>
+            <p style="margin: 0; font-weight: 700; color: #1e293b;">${new Date(isPaid ? (invoice.paid_at || new Date()) : invoice.due_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 24px;">
+          <thead>
+            <tr>
+              <th style="text-align: left; padding: 12px; background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e2e8f0;">Description</th>
+              <th style="text-align: right; padding: 12px; background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e2e8f0;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 16px 12px; border-bottom: 1px solid #f1f5f9;">
+                <div style="font-weight: 700; color: #1e293b;">${invoice.description || 'School Fees'}</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">${invoice.academic_year || ''} - ${invoice.term || ''}</div>
+              </td>
+              <td style="padding: 16px 12px; text-align: right; font-weight: 700; color: #1e293b; border-bottom: 1px solid #f1f5f9;">
+                ${currency} ${invoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top: 32px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+            <span style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Billed</span>
+            <span style="font-size: 16px; font-weight: 800; color: #1e293b;">${currency} ${invoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 16px 24px; background: #fff; border-bottom: 1px solid #e2e8f0;">
+            <span style="font-size: 12px; color: #059669; font-weight: 700; text-transform: uppercase;">Amount Paid</span>
+            <span style="font-size: 16px; font-weight: 800; color: #059669;">${currency} ${paidForThis.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 16px 24px; background: ${isPaid ? '#f0fdf4' : '#fef2f2'};">
+            <span style="font-size: 12px; color: ${isPaid ? '#059669' : '#dc2626'}; font-weight: 800; text-transform: uppercase;">${isPaid ? 'Fully Settled' : 'Balance Due'}</span>
+            <span style="font-size: 20px; font-weight: 800; color: ${isPaid ? '#059669' : '#dc2626'};">${currency} ${balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          </div>
+        </div>
+        <div class="footer" style="margin-top: 48px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div class="thank-you" style="font-size: 14px; color: #64748b; font-style: italic;">${isPaid ? 'Thank you for your payment!' : 'Please pay by the due date. Thank you!'}</div>
+          <div class="signature-box" style="text-align: center;">
+            ${organization?.signature ? `<img src="${organization.signature}" style="max-height: 48px; margin-bottom: 8px;" />` : '<div style="height: 48px;"></div>'}
+            <div style="width: 200px; height: 1px; background: #cbd5e1; margin-bottom: 8px;"></div>
+            <div style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Authorized Signatory</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+const getReceiptHtml = (receipt: any, student: any, organization: any, currency: string) => {
+  return `
+    <div class="receipt-container">
+      <div class="header">
+        <div class="school-info">
+          ${organization?.logo ? `<img src="${organization.logo}" style="max-height: 48px; margin-bottom: 12px;" />` : ''}
+          <h2>${organization?.name || 'School Name'}</h2>
+          <p>${organization?.address || 'School Address'}</p>
+        </div>
+        <div class="receipt-title">
+          <h1>RECEIPT</h1>
+          <p>#${(receipt.transaction_id || receipt.id || '').split('-')[0].toUpperCase()}</p>
+          <div class="status-badge" style="display: inline-block; padding: 6px 12px; background: #dcfce7; color: #166534; border-radius: 9999px; font-size: 10px; font-weight: 800; border: 1px solid #bbf7d0;">PAID IN FULL</div>
+        </div>
+      </div>
+      <div class="info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+        <div class="info-block">
+          <label style="display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Paid By</label>
+          <p style="margin: 0; font-weight: 700; color: #1e293b;">${receipt.student_name || student?.name || 'N/A'}</p>
+          <p style="font-size: 12px; color: #64748b; margin-top: 2px;">Class: ${receipt.class_name || student?.class_name || 'N/A'}</p>
+        </div>
+        <div class="info-block" style="text-align: right;">
+          <label style="display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Payment Date</label>
+          <p style="margin: 0; font-weight: 700; color: #1e293b;">${new Date(receipt.date || receipt.created_at || receipt.payment_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+      </div>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 24px;">
+        <thead>
+          <tr>
+            <th style="text-align: left; padding: 12px; background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e2e8f0;">Description</th>
+            <th style="text-align: right; padding: 12px; background: #f8fafc; font-size: 10px; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e2e8f0;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 16px 12px; border-bottom: 1px solid #f1f5f9;">
+              <strong style="color: #1e293b;">${receipt.description || 'School Fees Payment'}</strong>
+              <div style="font-size: 12px; color: #64748b; margin-top: 4px;">${receipt.payment_method || 'General Payment'}</div>
+            </td>
+            <td style="padding: 16px 12px; text-align: right; font-weight: 700; color: #1e293b; border-bottom: 1px solid #f1f5f9;">
+              ${currency} ${parseFloat(receipt.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; background: #f0fdf4; border-radius: 12px; margin-top: 32px; border: 1px solid #bbf7d0;">
+        <span style="font-size: 12px; color: #166534; font-weight: 700; text-transform: uppercase;">Total Paid</span>
+        <span style="font-size: 28px; font-weight: 800; color: #10b981;">${currency} ${parseFloat(receipt.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+      </div>
+      <div class="footer" style="margin-top: 48px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div class="thank-you" style="font-size: 14px; color: #64748b; font-style: italic;">Thank you for your payment!</div>
+        <div class="signature-box" style="text-align: center;">
+          ${organization?.signature ? `<img src="${organization.signature}" style="max-height: 48px; margin-bottom: 8px;" />` : '<div style="height: 48px;"></div>'}
+          <div style="width: 200px; height: 1px; background: #cbd5e1; margin-bottom: 8px;"></div>
+          <div style="font-size: 12px; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Authorized Signatory</div>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
+
 export const FinanceModules = {
   FeeStructure: ({ classes, students, data, onSave, onDelete, role, organization }: { classes: any[], students: Student[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, role?: string, organization?: any }) => {
     const { t, currency } = useLanguage();
@@ -401,193 +551,152 @@ export const FinanceModules = {
     const [bulkMode, setBulkMode] = useState<'payment' | 'invoice'>('payment');
     const [importPreviewItems, setImportPreviewItems] = useState<any[]>([]);
     const [isImporting, setIsImporting] = useState(false);
+    const [isBulkPrintModalOpen, setIsBulkPrintModalOpen] = useState(false);
+    const [bulkPrintConfig, setBulkPrintConfig] = useState<{
+      mode: 'all' | 'class' | 'selected';
+      targetClass?: string;
+      selectedStudents: string[];
+    }>({ mode: 'all', selectedStudents: [] });
 
-    const handlePrintInvoice = (invoice: any) => {
-      const template = (documentTemplates || [])
-        .filter(t => t.type === 'Invoice')
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+    const handlePrintInvoice = (invoice: any, studentOverride?: any) => {
+      const student = studentOverride || selectedStudent;
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        const invoiceHtml = getInvoiceHtml(invoice, student, organization, currency, payments || []);
+        
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>${invoice.id.split('-')[0].toUpperCase()}</title>
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+              <style>
+                @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
+                .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; margin-bottom: 40px; }
+                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #f59e0b, #ef4444); }
+                .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+                .school-info h2 { margin: 0 0 4px 0; font-weight: 800; font-size: 24px; color: #1e1b4b; }
+                .school-info p { margin: 0; color: #64748b; font-size: 14px; }
+                .receipt-title { text-align: right; }
+                .receipt-title h1 { margin: 0; font-size: 36px; font-weight: 800; color: #e2e8f0; letter-spacing: 2px; text-transform: uppercase; }
+                .receipt-title p { margin: 8px 0 0 0; font-size: 14px; color: #475569; font-weight: 600; }
+                .status-badge { display: inline-block; padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 9999px; font-size: 12px; font-weight: 800; letter-spacing: 1px; margin-top: 8px; border: 1px solid #fde68a; }
+                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+                .info-block label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; }
+                .info-block p { margin: 0; font-size: 15px; font-weight: 600; color: #1e293b; }
+                .table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+                .table th { text-align: left; padding: 12px 16px; background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 600; border-bottom: 2px solid #e2e8f0; border-radius: 8px 8px 0 0; }
+                .table td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 15px; color: #334155; }
+                .footer { margin-top: 48px; display: flex; justify-content: space-between; align-items: flex-end; }
+                .signature-box { text-align: center; }
+                .signature-line { width: 200px; height: 1px; background: #cbd5e1; margin-bottom: 8px; }
+                .signature-label { font-size: 12px; color: #94a3b8; font-weight: 600; }
+                .thank-you { font-size: 14px; color: #64748b; font-style: italic; }
+              </style>
+            </head>
+            <body>
+              ${invoiceHtml}
+              <script>window.onload = () => { window.print(); window.close(); }</script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    };
+
+    const handlePrintReceipt = (receipt: any) => {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        const receiptHtml = getReceiptHtml(receipt, selectedStudent, organization, currency);
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Receipt - ${receipt.transaction_id || receipt.id}</title>
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+              <style>
+                @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
+                .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
+                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #10b981, #3b82f6); }
+              </style>
+            </head>
+            <body>
+              ${receiptHtml}
+              <script>window.onload = () => { window.print(); window.close(); }</script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    };
+
+    const handleBulkPrint = () => {
+      let targets = data || [];
+      if (bulkPrintConfig.mode === 'class') {
+        targets = targets.filter(s => s.class_name === bulkPrintConfig.targetClass);
+      } else if (bulkPrintConfig.mode === 'selected') {
+        targets = targets.filter(s => bulkPrintConfig.selectedStudents.includes(s.id));
+      }
+
+      if (targets.length === 0) {
+        (window as any).showToast?.('No students found for current selection.', 'warning');
+        return;
+      }
 
       const printWindow = window.open('', '_blank');
       if (printWindow) {
-        let printHtml = '';
+        let allHtml = '';
+        targets.forEach(student => {
+          const studentInvoices = (invoices || []).filter(inv => String(inv.student_id) === String(student.id));
+          if (studentInvoices.length > 0) {
+            // Print the most recent pending invoice or just the last one
+            const latest = studentInvoices.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+            allHtml += getInvoiceHtml(latest, student, organization, currency, payments || []);
+          }
+        });
 
-        // Compute paid amount dynamically
-        const invoiceAmount = parseFloat(invoice.amount || 0);
-        const studentPays = (payments || []);
-        const paidForThis = studentPays
-          .filter((p: any) => String(p.invoice_id) === String(invoice.id) || String(p.invoiceId) === String(invoice.id))
-          .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
-        const balanceDue = invoiceAmount - paidForThis;
-        const isPaid = paidForThis >= invoiceAmount;
-        const isPartial = paidForThis > 0 && !isPaid;
-        const docTitle = isPaid ? 'RECEIPT' : 'INVOICE';
-        const statusLabel = isPaid ? 'PAID IN FULL' : isPartial ? 'PARTIAL PAYMENT' : 'PAYMENT DUE';
-        const accentGradient = isPaid ? 'linear-gradient(90deg, #10b981, #3b82f6)' : isPartial ? 'linear-gradient(90deg, #f59e0b, #3b82f6)' : 'linear-gradient(90deg, #f59e0b, #ef4444)';
-        const statusBadgeBg = isPaid ? '#dcfce7' : isPartial ? '#fef3c7' : '#fef3c7';
-        const statusBadgeColor = isPaid ? '#10b981' : '#b45309';
-        const statusBadgeBorder = isPaid ? '#bbf7d0' : '#fde68a';
-
-        if (false && template) {
-          const config = template.layout_config || {};
-          let body = config.content || '';
-
-          const replacements: Record<string, string> = {
-            '{{student_name}}': selectedStudent?.name || 'N/A',
-            '{{admission_no}}': selectedStudent?.admission_no || 'N/A',
-            '{{class_name}}': selectedStudent?.class_name || 'N/A',
-            '{{date}}': new Date().toLocaleDateString(),
-            '{{due_date}}': invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A',
-            '{{total_amount}}': `${currency}${invoice.amount}`,
-            '{{outstanding_amount}}': `${currency}${selectedStudent?.outstanding_amount || 0}`,
-            '{{school_name}}': organization?.name || 'The School',
-            '{{school_address}}': organization?.address || 'School Address',
-            '{{school_logo}}': organization?.logo ? `<img src="${organization.logo}" style="max-height: 80px; display: block; margin: 0 auto;" alt="Logo" />` : '',
-            '{{principal_signature}}': organization?.signature ? `<img src="${organization.signature}" style="max-height: 50px;" alt="Signature" />` : ''
-          };
-
-          Object.entries(replacements).forEach(([key, value]) => {
-            body = body.split(key).join(value);
-          });
-
-          // Apply page settings
-          const pageStyles = `
-            @page { margin: ${config.pageSettings?.margin || 20}px; }
-            .paper { 
-              padding: ${config.pageSettings?.padding || 60}px; 
-              line-height: ${config.pageSettings?.lineHeight || 1.6}; 
-              font-family: ${config.pageSettings?.fontFamily || 'serif'};
-              color: ${config.pageSettings?.textColor || '#18181b'};
-            }
-          `;
-
-          printHtml = `
-            <html>
-              <head>
-                <title>${docTitle} - ${invoice.id}</title>
-                <style>
-                  ${pageStyles}
-                  ${config.styles || ''}
-                </style>
-              </head>
-              <body class="paper">
-                <div class="header">${config.headerText || ''}</div>
-                <div class="content">${body}</div>
-                <div class="footer">${config.footerText || ''}</div>
-              </body>
-            </html>
-          `;
-        } else {
-          // Fallback basic invoice
-          printHtml = `
-            <html>
-              <head>
-                <title>${docTitle} - ${invoice.id.split('-')[0].toUpperCase()}</title>
-                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-                <style>
-                  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-                  body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
-                  .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
-                  .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: ${accentGradient}; }
-                  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
-                  .school-info h2 { margin: 0 0 4px 0; font-weight: 800; font-size: 24px; color: #1e1b4b; }
-                  .school-info p { margin: 0; color: #64748b; font-size: 14px; }
-                  .receipt-title { text-align: right; }
-                  .receipt-title h1 { margin: 0; font-size: 36px; font-weight: 800; color: #e2e8f0; letter-spacing: 2px; text-transform: uppercase; }
-                  .receipt-title p { margin: 8px 0 0 0; font-size: 14px; color: #475569; font-weight: 600; }
-                  .status-badge { display: inline-block; padding: 6px 12px; background: ${statusBadgeBg}; color: ${statusBadgeColor}; border-radius: 9999px; font-size: 12px; font-weight: 800; letter-spacing: 1px; margin-top: 8px; border: 1px solid ${statusBadgeBorder}; }
-                  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
-                  .info-block label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; }
-                  .info-block p { margin: 0; font-size: 15px; font-weight: 600; color: #1e293b; }
-                  .table { width: 100%; border-collapse: collapse; margin-top: 24px; }
-                  .table th { text-align: left; padding: 12px 16px; background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 600; border-bottom: 2px solid #e2e8f0; border-radius: 8px 8px 0 0; }
-                  .table td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 15px; color: #334155; }
-                  .amount-row { display: flex; justify-content: space-between; align-items: center; padding: 24px 32px; background: #f8fafc; border-radius: 12px; margin-top: 32px; border: 1px solid #e2e8f0; }
-                  .amount-row .label { font-size: 14px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-                  .amount-row .value { font-size: 28px; font-weight: 800; color: ${isPaid ? '#059669' : '#ea580c'}; }
-                  .footer { margin-top: 48px; display: flex; justify-content: space-between; align-items: flex-end; }
-                  .signature-box { text-align: center; }
-                  .signature-line { width: 200px; height: 1px; background: #cbd5e1; margin-bottom: 8px; }
-                  .signature-label { font-size: 12px; color: #94a3b8; font-weight: 600; }
-                  .thank-you { font-size: 14px; color: #64748b; font-style: italic; }
-                </style>
-              </head>
-              <body>
-                <div class="receipt-container">
-                  <div class="header">
-                    <div class="school-info">
-                      ${organization?.logo ? `<img src="${organization.logo}" style="max-height: 48px; margin-bottom: 12px;" />` : ''}
-                      <h2>${organization?.name || 'School Name'}</h2>
-                      <p>${organization?.address || 'School Address'}</p>
-                    </div>
-                    <div class="receipt-title">
-                      <h1>${docTitle}</h1>
-                      <p>#${invoice.id.split('-')[0].toUpperCase()}</p>
-                      <div class="status-badge">${statusLabel}</div>
-                    </div>
-                  </div>
-                  <div class="info-grid">
-                    <div class="info-block">
-                      <label>Billed To</label>
-                      <p>${selectedStudent?.name}</p>
-                      <p style="font-size: 13px; color: #64748b; font-weight: 400; margin-top: 2px;">Class: ${selectedStudent?.class_name || 'N/A'}</p>
-                    </div>
-                    <div class="info-block" style="text-align: right;">
-                      <label>${isPaid ? 'Payment Date' : 'Due Date'}</label>
-                      <p>${new Date(isPaid ? (invoice.paid_at || new Date()) : invoice.due_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
-                  </div>
-                  <div class="info-grid" style="margin-top: -12px;">
-                    <div class="info-block">
-                      <label>Academic Year</label>
-                      <p>${invoice.academic_year || organization?.academic_year || 'N/A'}</p>
-                    </div>
-                    <div class="info-block" style="text-align: right;">
-                      <label>Term</label>
-                      <p>${invoice.term || organization?.current_term || 'N/A'}</p>
-                    </div>
-                  </div>
-                  <table class="table">
-                    <thead><tr><th>Description</th><th style="text-align: right;">Amount</th></tr></thead>
-                    <tbody>
-                      <tr>
-                        <td>
-                          <strong style="color: #1e293b;">${invoice.description || 'General School Fee'}</strong>
-                        </td>
-                        <td style="text-align: right; font-weight: 600;">${currency} ${invoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div style="margin-top: 24px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
-                    <div style="display: flex; justify-content: space-between; padding: 14px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                      <span style="font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Total Billed</span>
-                      <span style="font-size: 15px; font-weight: 700; color: #334155;">${currency} ${invoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid #f1f5f9;">
-                      <span style="font-size: 13px; color: #059669; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Amount Paid</span>
-                      <span style="font-size: 15px; font-weight: 700; color: #059669;">${currency} ${paidForThis.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 16px 24px; background: ${isPaid ? '#f0fdf4' : '#fef2f2'};">
-                      <span style="font-size: 14px; color: ${isPaid ? '#059669' : '#dc2626'}; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">${isPaid ? 'Fully Settled' : 'Balance Due'}</span>
-                      <span style="font-size: 22px; font-weight: 800; color: ${isPaid ? '#059669' : '#dc2626'};">${currency} ${balanceDue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  </div>
-                  <div class="footer">
-                    <div class="thank-you">${isPaid ? 'Thank you for your payment!' : 'Please pay by the due date. Thank you!'}</div>
-                    <div class="signature-box">
-                      ${organization?.signature ? `<img src="${organization.signature}" style="max-height: 48px; margin-bottom: 8px;" />` : '<div style="height: 48px;"></div>'}
-                      <div class="signature-line"></div>
-                      <div class="signature-label">Authorized Signatory</div>
-                    </div>
-                  </div>
-                </div>
-              </body>
-            </html>
-          `;
-        }
-
-        printWindow.document.write(printHtml);
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Bulk Invoices - ${new Date().toLocaleDateString()}</title>
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+              <style>
+                @media print { 
+                  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0; background: #fff; } 
+                  .invoice-page { page-break-after: always; padding: 40px; }
+                }
+                body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; padding: 20px; }
+                .invoice-page { margin-bottom: 60px; }
+                .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
+                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #f59e0b, #ef4444); }
+                .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+                .school-info h2 { margin: 0 0 4px 0; font-weight: 800; font-size: 24px; color: #1e1b4b; }
+                .school-info p { margin: 0; color: #64748b; font-size: 14px; }
+                .receipt-title { text-align: right; }
+                .receipt-title h1 { margin: 0; font-size: 36px; font-weight: 800; color: #e2e8f0; letter-spacing: 2px; text-transform: uppercase; }
+                .receipt-title p { margin: 8px 0 0 0; font-size: 14px; color: #475569; font-weight: 600; }
+                .status-badge { display: inline-block; padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 9999px; font-size: 12px; font-weight: 800; letter-spacing: 1px; margin-top: 8px; border: 1px solid #fde68a; }
+                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+                .info-block label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94a3b8; font-weight: 600; margin-bottom: 4px; }
+                .info-block p { margin: 0; font-size: 15px; font-weight: 600; color: #1e293b; }
+                .table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+                .table th { text-align: left; padding: 12px 16px; background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-weight: 600; border-bottom: 2px solid #e2e8f0; border-radius: 8px 8px 0 0; }
+                .table td { padding: 16px; border-bottom: 1px solid #f1f5f9; font-size: 15px; color: #334155; }
+                .footer { margin-top: 48px; display: flex; justify-content: space-between; align-items: flex-end; }
+                .signature-box { text-align: center; }
+                .signature-line { width: 200px; height: 1px; background: #cbd5e1; margin-bottom: 8px; }
+                .signature-label { font-size: 12px; color: #94a3b8; font-weight: 600; }
+                .thank-you { font-size: 14px; color: #64748b; font-style: italic; }
+              </style>
+            </head>
+            <body>
+              ${allHtml}
+              <script>window.onload = () => { window.print(); window.close(); }</script>
+            </body>
+          </html>
+        `);
         printWindow.document.close();
-        printWindow.print();
+        setIsBulkPrintModalOpen(false);
       }
     };
 
@@ -755,8 +864,15 @@ export const FinanceModules = {
                         <p className="text-sm font-bold text-emerald-600">+ {currency} {parseFloat(p.amount).toLocaleString()}</p>
                         <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">{p.method} • {p.description || "Payment"} • {new Date(p.date).toLocaleDateString()}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         {p.transaction_id && <span className="text-[10px] text-zinc-400 font-mono">#{p.transaction_id}</span>}
+                        <button
+                          onClick={() => handlePrintReceipt(p)}
+                          className="p-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-lg hover:text-indigo-600 transition-colors"
+                          title="Print Receipt"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   )) : <p className="text-sm text-zinc-400 py-4">No payments recorded</p>}
@@ -857,11 +973,20 @@ export const FinanceModules = {
             </div>
             <div>
               <h3 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Bulk Operations</h3>
-              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Smarter fee management via Excel</p>
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Smarter fee management & printing</p>
             </div>
           </div>
 
           <div className="flex flex-col md:flex-row items-center gap-6">
+            <button
+              onClick={() => setIsBulkPrintModalOpen(true)}
+              className="flex items-center gap-2 group px-6 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all border border-indigo-100"
+            >
+              <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+              Bulk Print Invoices
+            </button>
+
+            <div className="h-10 w-px bg-zinc-200 dark:bg-zinc-800 hidden md:block" />
             <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-2xl">
               <button
                 type="button"
@@ -1044,6 +1169,90 @@ export const FinanceModules = {
               <button type="submit" className="px-6 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-lg shadow-emerald-200 dark:shadow-none">Record Payment</button>
             </div>
           </form>
+        </Modal>
+
+        <Modal
+          isOpen={isBulkPrintModalOpen}
+          onClose={() => setIsBulkPrintModalOpen(false)}
+          title="Bulk Print Invoices"
+          maxWidth="max-w-2xl"
+        >
+          <div className="space-y-6">
+            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-2xl">
+              <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest mb-2">Print Configuration</p>
+              <div className="grid grid-cols-3 gap-2">
+                {(['all', 'class', 'selected'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setBulkPrintConfig(prev => ({ ...prev, mode }))}
+                    className={cn(
+                      "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
+                      bulkPrintConfig.mode === mode
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-indigo-300"
+                    )}
+                  >
+                    {mode === 'all' ? 'All Students' : mode === 'class' ? 'By Class' : 'Selected'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {bulkPrintConfig.mode === 'class' && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Class</label>
+                <select
+                  value={bulkPrintConfig.targetClass}
+                  onChange={(e) => setBulkPrintConfig(prev => ({ ...prev, targetClass: e.target.value }))}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Choose Class...</option>
+                  {Array.from(new Set((data || []).map(s => s.class_name))).filter(Boolean).map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {bulkPrintConfig.mode === 'selected' && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Students</label>
+                <SearchableSelect
+                  multiple
+                  name="bulk_students"
+                  placeholder="Search and select students..."
+                  options={(data || []).map(s => ({ value: s.id, label: s.name, sublabel: s.class_name }))}
+                  defaultValue={bulkPrintConfig.selectedStudents}
+                  onValueChange={(val) => setBulkPrintConfig(prev => ({ ...prev, selectedStudents: val as string[] }))}
+                />
+              </div>
+            )}
+
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-900 flex items-center justify-center text-zinc-400">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                This will generate a single printable document with one invoice per page for the selected students. The most recent invoice for each student will be included.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsBulkPrintModalOpen(false)}
+                className="flex-1 py-4 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-zinc-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkPrint}
+                className="flex-[2] bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Generate Bulk Invoices
+              </button>
+            </div>
+          </div>
         </Modal>
 
         <Modal
@@ -1724,92 +1933,59 @@ export const FinanceModules = {
       });
     }, [filteredData, payments]);
 
-    const handlePrintReceipt = (item: any) => {
+    const handlePrintInvoice = (invoice: any, studentOverride?: any) => {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
+        const invoiceHtml = getInvoiceHtml(invoice, studentOverride, organization, currency, payments || []);
+        
         printWindow.document.write(`
           <html>
             <head>
-              <title>Payment Receipt - ${item.id}</title>
-              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+              <title>${invoice.id?.split('-')[0].toUpperCase() || 'INVOICE'}</title>
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
               <style>
-                @page { size: portrait; margin: 0; }
-                body { font-family: 'Inter', sans-serif; padding: 40px; color: #1f2937; background: #fff; }
-                .receipt-container { 
-                  border: 1px solid #e5e7eb; 
-                  padding: 60px; 
-                  max-width: 800px; 
-                  margin: auto; 
-                  position: relative;
-                  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-                  border-radius: 4px;
-                }
-                .header { 
-                  display: flex; 
-                  justify-content: space-between; 
-                  align-items: flex-start; 
-                  margin-bottom: 60px; 
-                  border-bottom: 4px solid #4f46e5;
-                  padding-bottom: 20px;
-                }
-                .school-logo { 
-                  width: 60px; 
-                  height: 60px; 
-                  background: #4f46e5; 
-                  border-radius: 12px; 
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  color: white;
-                  font-weight: 900;
-                  font-size: 24px;
-                }
-                .receipt-title { 
-                  text-align: right; 
-                }
-                .receipt-title h1 { 
-                  margin: 0; 
-                  font-size: 32px; 
-                  color: #4f46e5; 
-                  font-weight: 900; 
-                  letter-spacing: -0.025em;
-                  text-transform: uppercase;
-                }
-                .info-grid { 
-                  display: grid; 
-                  grid-cols: 2; 
-                  gap: 40px; 
-                  margin-bottom: 60px;
-                  display: flex;
-                  justify-content: space-between;
-                }
-                .info-block label { 
-                  display: block; 
-                  font-size: 10px; 
-                  font-weight: 900; 
-                  color: #9ca3af; 
-                  text-transform: uppercase; 
-                  letter-spacing: 0.1em;
-                  margin-bottom: 8px;
-                }
-                .info-block p { 
-                  margin: 0; 
-                  font-size: 14px; 
-                  font-weight: 700;
-                  color: #111827;
-                }
-                .amount-card { 
-                  background: #f9fafb; 
-                  padding: 30px; 
-                  border-radius: 12px; 
-                  display: flex; 
-                  justify-content: space-between; 
-                  align-items: center;
-                  margin-bottom: 40px;
-                  border: 1px solid #f3f4f6;
-                }
-                .amount-label { font-weight: 900; font-size: 14px; color: #6b7280; text-transform: uppercase; }
-                .amount-value { font-size: 32px; font-weight: 900; color: #111827; }
+                @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
+                .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; margin-bottom: 40px; }
+                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #f59e0b, #ef4444); }
+                .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
+                .school-info h2 { margin: 0 0 4px 0; font-weight: 800; font-size: 24px; color: #1e1b4b; }
+                .school-info p { margin: 0; color: #64748b; font-size: 14px; }
+                .receipt-title { text-align: right; }
+                .receipt-title h1 { margin: 0; font-size: 36px; font-weight: 800; color: #e2e8f0; letter-spacing: 2px; text-transform: uppercase; }
+                .receipt-title p { margin: 8px 0 0 0; font-size: 14px; color: #475569; font-weight: 600; }
+                .status-badge { display: inline-block; padding: 6px 12px; background: #fef3c7; color: #b45309; border-radius: 9999px; font-size: 12px; font-weight: 800; letter-spacing: 1px; margin-top: 8px; border: 1px solid #fde68a; }
+                .footer { margin-top: 48px; display: flex; justify-content: space-between; align-items: flex-end; }
+                .signature-box { text-align: center; }
+                .signature-line { width: 200px; height: 1px; background: #cbd5e1; margin-bottom: 8px; }
+                .signature-label { font-size: 12px; color: #94a3b8; font-weight: 600; }
+                .thank-you { font-size: 14px; color: #64748b; font-style: italic; }
+              </style>
+            </head>
+            <body>
+              ${invoiceHtml}
+              <script>window.onload = () => { window.print(); window.close(); }</script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    };
+
+    const handlePrintReceipt = (item: any) => {
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        const receiptHtml = getReceiptHtml(item, null, organization, currency);
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Receipt - ${item.transaction_id || item.id}</title>
+              <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+              <style>
+                @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
+                .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
+                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #10b981, #3b82f6); }
                 .status-stamp {
                   position: absolute;
                   top: 250px;
@@ -2458,12 +2634,21 @@ export const FinanceModules = {
                           <p className="font-bold text-sm text-zinc-900 dark:text-white">{inv.invoice_description || 'General Fees'}</p>
                           <p className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">Billed: {currency}{parseFloat(inv.amount || 0).toLocaleString()} • Due: {currency}{bal.toLocaleString()}</p>
                         </div>
-                        <span className={cn(
-                          "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                          bal <= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
-                        )}>
-                          {bal <= 0 ? 'Paid' : 'Pending'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                            bal <= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+                          )}>
+                            {bal <= 0 ? 'Paid' : 'Pending'}
+                          </span>
+                          <button
+                            onClick={() => handlePrintInvoice(inv, item)}
+                            className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
+                            title="Print Invoice/Receipt"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
