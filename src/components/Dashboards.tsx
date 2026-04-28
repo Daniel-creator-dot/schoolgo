@@ -547,11 +547,15 @@ function SMSPurchasePanel({ organization, onRefresh }: { organization: any, onRe
   );
 }
 
-export function SchoolAdminDashboard({ stats, invoices = [], payments = [], students = [], classes = [], organization, attendanceHistory = [], activities = [], unreadMessagesCount = 0, onNavigate, onUpdateOrganization, staffList = [], departments = [] }: { stats?: { totalStudents: string; totalStaff: string; attendanceRate: string; feesCollected: string }, invoices?: any[], payments?: any[], students?: any[], classes?: any[], organization?: any, attendanceHistory?: any[], activities?: any[], unreadMessagesCount?: number, onNavigate?: (view: string) => void, onUpdateOrganization?: (data: any) => void, staffList?: any[], departments?: any[] }) {
+export function SchoolAdminDashboard({ stats, invoices = [], payments = [], students = [], classes = [], organization, attendanceHistory = [], activities = [], unreadMessagesCount = 0, onNavigate, onUpdateOrganization, staffList = [], departments = [], initialShowSMS = false }: { stats?: { totalStudents: string; totalStaff: string; attendanceRate: string; feesCollected: string }, invoices?: any[], payments?: any[], students?: any[], classes?: any[], organization?: any, attendanceHistory?: any[], activities?: any[], unreadMessagesCount?: number, onNavigate?: (view: string) => void, onUpdateOrganization?: (data: any) => void, staffList?: any[], departments?: any[], initialShowSMS?: boolean }) {
   const { currency, t } = useLanguage();
   const [showOwingModal, setShowOwingModal] = useState(false);
   const [modalType, setModalType] = useState<'paid' | 'owing'>('owing');
-  const [showSMSPanel, setShowSMSPanel] = useState(false);
+  const [showSMSPanel, setShowSMSPanel] = useState(initialShowSMS);
+
+  useEffect(() => {
+    if (initialShowSMS) setShowSMSPanel(true);
+  }, [initialShowSMS]);
 
   // Calculate Attendance Trends from real history
   const attendanceTrendData = useMemo(() => {

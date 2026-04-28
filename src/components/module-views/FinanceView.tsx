@@ -562,7 +562,7 @@ export const FinanceModules = {
       </div>
     );
   },
-  FeeManagement: ({ students, feeStructures, data, invoices, payments, scholarships, onSave, onDelete, onRecordPayment, organization, documentTemplates, onRefreshTemplates }: { students: Student[], feeStructures: any[], data?: any[], invoices?: any[], payments?: any[], scholarships?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void, organization?: any, documentTemplates?: any[], onRefreshTemplates?: () => Promise<void> }) => {
+  FeeManagement: ({ students, feeStructures, data, invoices, payments, scholarships, onSave, onDelete, onRecordPayment, organization, documentTemplates, onRefreshTemplates, onNavigate }: { students: Student[], feeStructures: any[], data?: any[], invoices?: any[], payments?: any[], scholarships?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void, organization?: any, documentTemplates?: any[], onRefreshTemplates?: () => Promise<void>, onNavigate?: (view: string) => void }) => {
     const { t, currency } = useLanguage();
     const [selectedStudent, setSelectedStudent] = useState<any>(null);
     const [isDesignerOpen, setIsDesignerOpen] = useState(false);
@@ -1394,7 +1394,10 @@ export const FinanceModules = {
               </div>
               <button 
                 className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200 dark:shadow-none"
-                onClick={() => (window as any).showToast?.('Please contact your administrator to top up credits.', 'info')}
+                onClick={() => {
+                  setIsBulkSMSModalOpen(false);
+                  onNavigate?.('Dashboard');
+                }}
               >
                 Top Up
               </button>

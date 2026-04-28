@@ -305,6 +305,7 @@ export default function App() {
 
   const [editingOrganization, setEditingOrganization] = useState<any>(null);
   const [smsSettings, setSmsSettings] = useState<any>(null);
+  const [isSMSPanelOpen, setIsSMSPanelOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -1671,6 +1672,7 @@ export default function App() {
               <div className="space-y-8">
                 <SchoolAdminDashboard
                   onNavigate={setCurrentView}
+                  initialShowSMS={isSMSPanelOpen}
                   stats={{
                     totalStudents: studentList
                       .filter((s) => s.status !== "Alumni")
@@ -2571,6 +2573,10 @@ export default function App() {
           onRefreshTemplates={async () => {
             const res = await fetchDocumentTemplates();
             setDocumentTemplates(res);
+          }}
+          onNavigate={(view) => {
+            if (view === "Dashboard") setIsSMSPanelOpen(true);
+            setCurrentView(view);
           }}
         />
       ),
