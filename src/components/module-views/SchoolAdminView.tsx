@@ -5895,14 +5895,28 @@ export const AcademicModules = {
 
   StudentIDCards: ({ students = [], classes = [], organization }: { students?: any[], classes?: any[], organization?: any }) => {
     const [selectedClassId, setSelectedClassId] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState<string>('');
     const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
     const filteredStudents = useMemo(() => {
-      if (selectedClassId === 'unassigned') return students.filter(s => !s.class_id);
-      return selectedClassId
-        ? students.filter(s => s.class_id === selectedClassId)
-        : students;
-    }, [students, selectedClassId]);
+      let result = students;
+      
+      if (selectedClassId === 'unassigned') {
+        result = result.filter(s => !s.class_id);
+      } else if (selectedClassId) {
+        result = result.filter(s => s.class_id === selectedClassId);
+      }
+
+      if (searchTerm) {
+        const lowerSearch = searchTerm.toLowerCase();
+        result = result.filter(s => 
+          (s.name || '').toLowerCase().includes(lowerSearch) || 
+          (s.admission_no || '').toLowerCase().includes(lowerSearch)
+        );
+      }
+
+      return result;
+    }, [students, selectedClassId, searchTerm]);
 
     const toggleStudent = (id: string) => {
       setSelectedStudents(prev =>
@@ -5937,38 +5951,50 @@ export const AcademicModules = {
           }
         `}} />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
-          <div>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 no-print bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div className="space-y-1">
             <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">ID Card Generator</h2>
             <p className="text-sm text-zinc-500 font-medium">Generate professional dual-sided student identification cards.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            <div className="relative flex-1 min-w-[200px] lg:w-64">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <input
+                type="text"
+                placeholder="Search name or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-11 pr-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              />
+            </div>
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
-              className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 lg:flex-none px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer"
             >
               <option value="">All Students ({students.length})</option>
               <option value="unassigned">No Class Assigned ({students.filter(s => !s.class_id).length})</option>
-              <hr />
               {classes.map(c => (
                 <option key={c.id} value={c.id}>{c.name} {c.section}</option>
               ))}
             </select>
-            <button
-              onClick={() => setSelectedStudents(filteredStudents.map(s => s.id))}
-              className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-colors"
-            >
-              Select All
-            </button>
-            <button
-              onClick={handlePrint}
-              disabled={selectedStudents.length === 0}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200 dark:shadow-none transition-all"
-            >
-              <FileText className="w-4 h-4" />
-              Print Selected ({selectedStudents.length})
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => setSelectedStudents(filteredStudents.map(s => s.id))}
+                className="flex-1 sm:flex-none px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-all active:scale-95"
+              >
+                Select All
+              </button>
+              <button
+                onClick={handlePrint}
+                disabled={selectedStudents.length === 0}
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-200 dark:shadow-none transition-all active:scale-95"
+              >
+                <FileText className="w-4 h-4" />
+                <span className="hidden sm:inline">Print</span>
+                <span>({selectedStudents.length})</span>
+              </button>
+            </div>
           </div>
         </div>
 
