@@ -1260,6 +1260,11 @@ export const updateSMSSettings = async (data: any) => {
   return response.data;
 };
 
+export const sendBulkSMS = async (data: { messages: { recipient: string, message: string }[] }) => {
+  const response = await api.post('/sms/send-bulk', data);
+  return response.data;
+};
+
 export const distributeSMS = async (data: { org_id: string, amount: number, price: number }) => {
   const response = await api.post('/sms/distribute', data);
   return response.data;

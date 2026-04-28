@@ -29,8 +29,11 @@ import {
   Star,
   UserCheck,
   Check,
-  X
+  X,
+  MessageSquare,
+  Send
 } from 'lucide-react';
+import { sendBulkSMS } from '../../lib/api';
 import { useLanguage } from '../../lib/LanguageContext';
 import { downloadFeeTemplate, parseFeeExcel } from '../../lib/excel';
 import {
@@ -573,6 +576,9 @@ export const FinanceModules = {
       targetClass?: string;
       selectedStudents: string[];
     }>({ mode: 'all', selectedStudents: [] });
+    const [isBulkSMSModalOpen, setIsBulkSMSModalOpen] = useState(false);
+    const [smsSending, setSmsSending] = useState(false);
+    const [smsMessageTemplate, setSmsMessageTemplate] = useState(`Dear Parent, {{STUDENT_NAME}} has an outstanding balance of {{CURRENCY}} {{AMOUNT_OWING}}. Please settle at your earliest convenience. Thank you, {{SCHOOL_NAME}}.`);
 
     const handlePrintInvoice = (invoice: any, studentOverride?: any) => {
       const student = studentOverride || selectedStudent;
@@ -729,6 +735,79 @@ export const FinanceModules = {
         `);
         printWindow.document.close();
         setIsBulkPrintModalOpen(false);
+      }
+    };
+
+    const handleBulkSMS = async () => {
+      let targets = data || [];
+      if (bulkPrintConfig.mode === 'class') {
+        targets = targets.filter(s => s.class_name === bulkPrintConfig.targetClass);
+      } else if (bulkPrintConfig.mode === 'selected') {
+        targets = targets.filter(s => bulkPrintConfig.selectedStudents.includes(s.id));
+      }
+
+      const targetsWithDebt = targets.filter(student => {
+        const studentInvoices = (invoices || []).filter(inv => String(inv.student_id) === String(student.id));
+        return studentInvoices.some(inv => {
+          const amount = parseFloat(inv.amount || 0);
+          const status = (inv.status || '').toLowerCase().trim();
+          if (status === 'paid') return false;
+          const paid = (payments || [])
+            .filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id))
+            .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+          return paid < amount;
+        });
+      });
+
+      if (targetsWithDebt.length === 0) {
+        (window as any).showToast?.('No students with outstanding balances found in selection.', 'info');
+        return;
+      }
+
+      // Prepare messages
+      const messagesToSend = targetsWithDebt.map(student => {
+        const studentInvoices = (invoices || []).filter(inv => String(inv.student_id) === String(student.id));
+        const totalBilled = studentInvoices.reduce((sum, inv) => sum + parseFloat(inv.amount || 0), 0);
+        const totalPaid = (payments || [])
+          .filter((p: any) => String(p.student_id) === String(student.id))
+          .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+        
+        const balance = totalBilled - totalPaid;
+        
+        let message = smsMessageTemplate
+          .replace('{{STUDENT_NAME}}', student.name)
+          .replace('{{AMOUNT_OWING}}', balance.toLocaleString(undefined, { minimumFractionDigits: 2 }))
+          .replace('{{CURRENCY}}', currency)
+          .replace('{{SCHOOL_NAME}}', organization?.name || 'the School');
+
+        return {
+          recipient: student.contact || '',
+          message: message
+        };
+      }).filter(m => m.recipient);
+
+      if (messagesToSend.length === 0) {
+        (window as any).showToast?.('No contact numbers found for selected students.', 'warning');
+        return;
+      }
+
+      // Check balance (assuming 1 unit per message for simplicity, or handle more complex on backend)
+      const creditsNeeded = messagesToSend.length;
+      if ((organization?.sms_balance || 0) < creditsNeeded) {
+        (window as any).showToast?.(`Insufficient SMS balance. Need ${creditsNeeded} credits, have ${organization?.sms_balance || 0}.`, 'error');
+        return;
+      }
+
+      setSmsSending(true);
+      try {
+        await sendBulkSMS({ messages: messagesToSend });
+        (window as any).showToast?.(`Successfully queued ${messagesToSend.length} messages for delivery.`, 'success');
+        setIsBulkSMSModalOpen(false);
+      } catch (error) {
+        console.error('SMS send error:', error);
+        (window as any).showToast?.('Failed to send messages. Please try again.', 'error');
+      } finally {
+        setSmsSending(false);
       }
     };
 
@@ -1010,13 +1089,22 @@ export const FinanceModules = {
           </div>
 
           <div className="flex flex-col md:flex-row items-center gap-6">
-            <button
-              onClick={() => setIsBulkPrintModalOpen(true)}
-              className="flex items-center gap-2 group px-6 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all border border-indigo-100"
-            >
-              <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-              Bulk Print Invoices
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsBulkPrintModalOpen(true)}
+                className="flex items-center gap-2 group px-6 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all border border-indigo-100"
+              >
+                <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                Bulk Print
+              </button>
+              <button
+                onClick={() => setIsBulkSMSModalOpen(true)}
+                className="flex items-center gap-2 group px-6 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-100 transition-all border border-emerald-100"
+              >
+                <MessageSquare className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                Send SMS
+              </button>
+            </div>
 
             <div className="h-10 w-px bg-zinc-200 dark:bg-zinc-800 hidden md:block" />
             <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-2xl">
@@ -1283,6 +1371,121 @@ export const FinanceModules = {
                 <Download className="w-4 h-4" />
                 Generate Bulk Invoices
               </button>
+            </div>
+          </div>
+        </Modal>
+
+        <Modal
+          isOpen={isBulkSMSModalOpen}
+          onClose={() => setIsBulkSMSModalOpen(false)}
+          title="Send Bulk SMS Notifications"
+          maxWidth="max-w-2xl"
+        >
+          <div className="space-y-6">
+            <div className="p-6 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-[2rem] flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 flex items-center justify-center text-emerald-600 shadow-sm">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Available Balance</p>
+                  <p className="text-2xl font-black text-zinc-900 dark:text-white leading-none mt-1">{organization?.sms_balance || 0} Credits</p>
+                </div>
+              </div>
+              <button 
+                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200 dark:shadow-none"
+                onClick={() => (window as any).showToast?.('Please contact your administrator to top up credits.', 'info')}
+              >
+                Top Up
+              </button>
+            </div>
+
+            <div className="space-y-4 p-2">
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-2xl">
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Recipient Group</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['all', 'class', 'selected'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => setBulkPrintConfig(prev => ({ ...prev, mode }))}
+                      className={cn(
+                        "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border",
+                        bulkPrintConfig.mode === mode
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100"
+                          : "bg-white dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-emerald-300"
+                      )}
+                    >
+                      {mode === 'all' ? 'All Debtors' : mode === 'class' ? 'By Class' : 'Selected'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {bulkPrintConfig.mode === 'class' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Class</label>
+                  <select
+                    value={bulkPrintConfig.targetClass}
+                    onChange={(e) => setBulkPrintConfig(prev => ({ ...prev, targetClass: e.target.value }))}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="">Choose Class...</option>
+                    {Array.from(new Set((data || []).map(s => s.class_name))).filter(Boolean).map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {bulkPrintConfig.mode === 'selected' && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Students</label>
+                  <SearchableSelect
+                    multiple
+                    name="bulk_sms_students"
+                    placeholder="Search and select students..."
+                    options={(data || []).map(s => ({ value: s.id, label: s.name, sublabel: s.class_name }))}
+                    defaultValue={bulkPrintConfig.selectedStudents}
+                    onValueChange={(val) => setBulkPrintConfig(prev => ({ ...prev, selectedStudents: val as string[] }))}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider flex justify-between">
+                  <span>Message Template</span>
+                  <span className="text-[10px] text-zinc-400 normal-case italic">Use {'{{STUDENT_NAME}}'}, {'{{AMOUNT_OWING}}'}</span>
+                </label>
+                <textarea
+                  value={smsMessageTemplate}
+                  onChange={(e) => setSmsMessageTemplate(e.target.value)}
+                  className="w-full h-32 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-emerald-500 font-medium leading-relaxed"
+                  placeholder="Type your message here..."
+                />
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <button
+                onClick={handleBulkSMS}
+                disabled={smsSending}
+                className="w-full py-4 bg-emerald-600 text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200 dark:shadow-none flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                {smsSending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending Messages...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Broadcast SMS Notifications
+                  </>
+                )}
+              </button>
+              <p className="text-[10px] text-center text-zinc-400 mt-4 font-bold uppercase tracking-widest">
+                Each message consumes 1 unit per 160 characters
+              </p>
             </div>
           </div>
         </Modal>
