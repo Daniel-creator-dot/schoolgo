@@ -27,7 +27,9 @@ import {
   ShieldCheck,
   AlertCircle,
   Star,
-  UserCheck
+  UserCheck,
+  Check,
+  X
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { downloadFeeTemplate, parseFeeExcel } from '../../lib/excel';
@@ -1418,17 +1420,11 @@ export const FinanceModules = {
       </div>
     );
   },
-  Stocks: ({ students, data, onSave, onDelete }: { students: Student[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
+  Stocks: ({ students = [], data = [], requests = [], onSave, onDelete, onSaveRequest, onDeleteRequest }: { students?: Student[], data?: any[], requests?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onSaveRequest?: (data: any) => void, onDeleteRequest?: (item: any) => void }) => {
     const { t, currency } = useLanguage();
-    const [viewItem, setViewItem] = useState<any | null>(null);
+    const [viewMode, setViewMode] = useState<'inventory' | 'requests'>('inventory');
 
     const renderUniformForm = (item?: any, isViewOnly?: boolean) => {
-      const studentOptions = students.map(s => ({
-        value: s.id,
-        label: s.name,
-        sublabel: s.class
-      }));
-
       return (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -1439,7 +1435,7 @@ export const FinanceModules = {
                 name="item_name"
                 defaultValue={item?.item_name}
                 readOnly={isViewOnly}
-                placeholder="e.g. School Blazer"
+                required
                 className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
               />
             </div>
@@ -1477,65 +1473,171 @@ export const FinanceModules = {
               />
             </div>
           </div>
-
         </div>
       );
     };
 
     return (
-      <>
-        <DataTable
-          title={t('stock')}
-          data={data || []}
-          onSave={onSave}
-          onDelete={onDelete}
-          renderDetails={(item) => (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
-                <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-100 dark:shadow-none">
-                  <ShoppingCart className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.item_name}</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
-                      {item.size || 'Standard'}
-                    </span>
-                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('inventory_item')}</span>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm">
+            <button
+              onClick={() => setViewMode('inventory')}
+              className={cn(
+                "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                viewMode === 'inventory' 
+                  ? "bg-white dark:bg-zinc-700 text-indigo-600 shadow-lg shadow-indigo-500/10" 
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+              )}
+            >
+              Inventory List
+            </button>
+            <button
+              onClick={() => setViewMode('requests')}
+              className={cn(
+                "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all relative",
+                viewMode === 'requests' 
+                  ? "bg-white dark:bg-zinc-700 text-indigo-600 shadow-lg shadow-indigo-500/10" 
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+              )}
+            >
+              Order Requests
+              {requests.filter(r => r.status === 'Pending').length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] flex items-center justify-center rounded-full border-2 border-white dark:border-zinc-800 font-bold animate-pulse">
+                  {requests.filter(r => r.status === 'Pending').length}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {viewMode === 'inventory' ? (
+          <DataTable
+            title={t('stock')}
+            data={data || []}
+            onSave={onSave}
+            onDelete={onDelete}
+            renderDetails={(item) => (
+              <div className="space-y-6">
+                <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-100 dark:shadow-none">
+                    <ShoppingCart className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.item_name}</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                        {item.size || 'Standard'}
+                      </span>
+                      <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('inventory_item')}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Available Stock</p>
-                  <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.stock} Units</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                    <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Available Stock</p>
+                    <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.stock} Units</p>
+                  </div>
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                    <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Unit Price</p>
+                    <p className="text-2xl font-black text-indigo-600">{currency}{parseFloat(item.price).toLocaleString()}</p>
+                  </div>
                 </div>
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Unit Price</p>
-                  <p className="text-2xl font-black text-indigo-600">{currency}{parseFloat(item.price).toLocaleString()}</p>
-                </div>
-              </div>
 
-              <div className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
-                <p className="text-xs font-bold text-indigo-600 uppercase mb-1">Total Inventory Value</p>
-                <p className="text-3xl font-black text-indigo-700 dark:text-indigo-400 font-serif">
-                  {currency}{(parseFloat(item.stock) * parseFloat(item.price)).toLocaleString()}
-                </p>
+                <div className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                  <p className="text-xs font-bold text-indigo-600 uppercase mb-1">Total Inventory Value</p>
+                  <p className="text-3xl font-black text-indigo-700 dark:text-indigo-400 font-serif">
+                    {currency}{(parseFloat(item.stock) * parseFloat(item.price)).toLocaleString()}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          onEdit={() => { }}
-          columns={[
-            { header: 'Item', accessor: 'item_name', className: 'font-bold' },
-            { header: 'Category/Size', accessor: 'size' },
-            { header: 'Stock', accessor: 'stock' },
-            { header: 'Price', accessor: (item: any) => `${currency} ${item.price}` },
-          ]}
-          onAdd={onSave ? () => { } : undefined}
-          renderForm={renderUniformForm}
-        />
-      </>
+            )}
+            onEdit={() => { }}
+            columns={[
+              { header: 'Item', accessor: 'item_name', className: 'font-bold' },
+              { header: 'Category/Size', accessor: 'size' },
+              { header: 'Stock', accessor: 'stock' },
+              { header: 'Price', accessor: (item: any) => `${currency} ${item.price}` },
+            ]}
+            onAdd={onSave ? () => { } : undefined}
+            renderForm={renderUniformForm}
+          />
+        ) : (
+          <DataTable
+            title="Purchase Requests"
+            data={requests || []}
+            onDelete={onDeleteRequest}
+            columns={[
+              { header: 'Date', accessor: (item: any) => new Date(item.created_at || item.date).toLocaleDateString() },
+              { header: 'Student', accessor: (item: any) => {
+                const student = students.find(s => String(s.id) === String(item.student_id));
+                return (
+                  <div>
+                    <p className="font-bold text-zinc-900 dark:text-white">{student?.name || 'Unknown Student'}</p>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase">{student?.class || 'N/A'}</p>
+                  </div>
+                );
+              }},
+              { header: 'Item Ordered', accessor: (item: any) => (
+                <div>
+                  <p className="font-bold text-indigo-600">{item.item_name}</p>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase">Qty: {item.quantity || 1}</p>
+                </div>
+              )},
+              { header: 'Status', accessor: (item: any) => (
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                    item.status === 'Pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                    item.status === 'Approved' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                    "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+                  )}>
+                    {item.status || 'Pending'}
+                  </span>
+                  {item.status === 'Pending' && onSaveRequest && (
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!confirm('Approve this request and fulfill order?')) return;
+                          try {
+                            await onSaveRequest({ ...item, status: 'Approved' });
+                            (window as any).showToast?.('Request approved and fulfilled!', 'success');
+                          } catch (err) {
+                            (window as any).showToast?.('Failed to approve request', 'error');
+                          }
+                        }}
+                        className="p-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors shadow-lg shadow-emerald-500/20"
+                        title="Approve & Fulfill"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!confirm('Reject this request?')) return;
+                          try {
+                            await onSaveRequest({ ...item, status: 'Rejected' });
+                            (window as any).showToast?.('Request rejected', 'info');
+                          } catch (err) {
+                            (window as any).showToast?.('Failed to reject request', 'error');
+                          }
+                        }}
+                        className="p-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-lg transition-colors shadow-lg shadow-rose-500/20"
+                        title="Reject"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )},
+              { header: 'Total Price', accessor: (item: any) => `${currency} ${(parseFloat(item.total_price || item.price) || 0).toLocaleString()}` },
+            ]}
+          />
+        )}
+      </div>
     );
   },
 

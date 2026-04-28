@@ -2519,8 +2519,11 @@ export default function App() {
         <FinanceModules.Stocks
           students={studentList}
           data={uniforms}
+          requests={inventorySales}
           onSave={(data) => handleEntitySave("uniform", data)}
           onDelete={(item) => handleEntityDelete("uniform", item)}
+          onSaveRequest={(data) => handleEntitySave("inventory-sale", data)}
+          onDeleteRequest={(item) => handleEntityDelete("inventory-sale", item)}
         />
       ),
 
