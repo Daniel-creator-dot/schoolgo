@@ -1581,8 +1581,20 @@ export const FinanceModules = {
             return hasInv && student.invoices.some((i: any) => String(i.id) === String(hasInv));
           })
           .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
-        student.totalPaid = totalPaid;
-        student.balanceOwing = student.totalBilled - student.totalPaid;
+        
+        // Also consider invoices marked as 'Paid' but without explicit receipt records
+        const implicitPaid = student.invoices
+          .filter((inv: any) => {
+            const isMarkedPaid = inv.status && inv.status.toLowerCase().trim() === 'paid';
+            if (!isMarkedPaid) return false;
+            // Check if it already has matching payments to avoid double counting
+            const alreadyHasPayment = (payments || []).some(p => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id));
+            return !alreadyHasPayment;
+          })
+          .reduce((sum: number, inv: any) => sum + parseFloat(inv.amount || 0), 0);
+
+        student.totalPaid = totalPaid + implicitPaid;
+        student.balanceOwing = Math.max(0, student.totalBilled - student.totalPaid);
         return student;
       });
     }, [filteredData, payments]);
@@ -2158,8 +2170,9 @@ export const FinanceModules = {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {ward.invoices.map((inv: any) => {
                     const paid = (payments || []).filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id)).reduce((s: number, p: any) => s + parseFloat(p.amount || 0), 0);
-                    const bal = parseFloat(inv.amount || 0) - paid;
-                    const isFullyPaid = bal <= 0;
+                    const isMarkedPaid = inv.status && inv.status.toLowerCase().trim() === 'paid';
+                    const bal = isMarkedPaid ? 0 : Math.max(0, parseFloat(inv.amount || 0) - paid);
+                    const isFullyPaid = bal <= 0 || isMarkedPaid;
 
                     return (
                       <div key={inv.id} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-md transition-shadow group">

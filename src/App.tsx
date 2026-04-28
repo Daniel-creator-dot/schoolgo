@@ -8,7 +8,7 @@ import {
   Book,
   BorrowRecord,
 } from "./types";
-import { Toast, ToastType, ConfirmationModal } from "./components/UI";
+import { Toast, ToastType, ConfirmationModal, Modal } from "./components/UI";
 import { Calendar, ShieldCheck } from "lucide-react";
 import {
   SuperAdminDashboard,
@@ -285,6 +285,12 @@ export default function App() {
     message: string;
     type: ToastType;
   } | null>(null);
+  const [globalModal, setGlobalModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    content: React.ReactNode;
+    onSave?: (data: any) => void;
+  }>({ isOpen: false, title: "", content: null });
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
     item: any | null;
@@ -1270,8 +1276,9 @@ export default function App() {
           throw new Error(`Unknown entity type: ${entityType}`);
       }
 
+      const displayType = entityType === "uniform" ? "Stock" : entityType.charAt(0).toUpperCase() + entityType.slice(1);
       showToast(
-        `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} ${isUpdate ? "updated" : "created"} successfully!`,
+        `${displayType} ${isUpdate ? "updated" : "created"} successfully!`,
         "success",
       );
       loadData();
@@ -1458,6 +1465,9 @@ export default function App() {
 
   useEffect(() => {
     (window as any).showToast = showToast;
+    (window as any).showModal = (title: string, content: React.ReactNode, onSave?: (data: any) => void) => {
+      setGlobalModal({ isOpen: true, title, content, onSave });
+    };
   }, []);
 
   const renderContent = () => {
@@ -3641,6 +3651,45 @@ export default function App() {
         title={`Delete ${deleteConfirm.type.charAt(0).toUpperCase() + deleteConfirm.type.slice(1)}`}
         message={`Are you sure you want to delete this ${deleteConfirm.type}? This action is IRREVERSIBLE and will delete all associated data.`}
       />
+
+      <Modal
+        isOpen={globalModal.isOpen}
+        onClose={() => setGlobalModal({ ...globalModal, isOpen: false })}
+        title={globalModal.title}
+        footer={
+          <>
+            <button
+              onClick={() => setGlobalModal({ ...globalModal, isOpen: false })}
+              className="px-4 py-2 text-sm font-bold text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                const form = document.querySelector("#global-modal-form") as HTMLFormElement;
+                if (form) {
+                  const formData = new FormData(form);
+                  const data: any = {};
+                  formData.forEach((value, key) => {
+                    data[key] = value;
+                  });
+                  if (globalModal.onSave) {
+                    await globalModal.onSave(data);
+                  }
+                  setGlobalModal({ ...globalModal, isOpen: false });
+                }
+              }}
+              className="px-6 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-500/20"
+            >
+              Confirm
+            </button>
+          </>
+        }
+      >
+        <form id="global-modal-form" onSubmit={(e) => e.preventDefault()}>
+          {globalModal.content}
+        </form>
+      </Modal>
     </Layout>
   );
 }
