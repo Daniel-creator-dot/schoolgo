@@ -1660,12 +1660,14 @@ export default function App() {
               </div>
             );
           case "SCHOOL_ADMIN": {
-            const totalRecords = studentAttendance.length;
+            const activeStudentsCount = studentList.filter(s => s.status !== 'Alumni' && s.status !== 'Withdrawn').length || 1;
+            const uniqueDatesCount = new Set(studentAttendance.map(a => new Date(a.date).toDateString())).size || 1;
+            const expectedTotalRecords = activeStudentsCount * uniqueDatesCount;
             const presentRecords = studentAttendance.filter((a) => a.status === "Present").length;
-            
+
             const attendanceRate =
-              totalRecords > 0
-                ? `${Math.round((presentRecords / totalRecords) * 100)}%`
+              studentAttendance.length > 0
+                ? `${Math.round((presentRecords / expectedTotalRecords) * 100)}%`
                 : "0%";
             const totalFees = invoices.reduce((sum, inv) => {
               const amount = parseFloat(

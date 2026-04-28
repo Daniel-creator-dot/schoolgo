@@ -561,8 +561,10 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
   const attendanceTrendData = useMemo(() => {
     if (!attendanceHistory || attendanceHistory.length === 0) return [];
 
+    const totalStudentsCount = students.filter(s => s.status !== 'Alumni' && s.status !== 'Withdrawn').length || 1;
+
     // Group by date
-    const groups: Record<string, { presentIds: Set<string>, totalMarkedIds: Set<string>, rawDate: number }> = {};
+    const groups: Record<string, { presentIds: Set<string>, rawDate: number }> = {};
     attendanceHistory.forEach(record => {
       // Handle date parsing robustly to avoid timezone shifts
       let d: Date;
@@ -577,12 +579,10 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
       if (!groups[dateKey]) {
         groups[dateKey] = { 
           presentIds: new Set(), 
-          totalMarkedIds: new Set(), 
           rawDate: d.getTime() 
         };
       }
 
-      groups[dateKey].totalMarkedIds.add(String(record.student_id));
       if (record.status === 'Present') {
         groups[dateKey].presentIds.add(String(record.student_id));
       }
@@ -591,14 +591,12 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
     return Object.entries(groups)
       .map(([name, vals]) => ({
         name,
-        value: vals.totalMarkedIds.size > 0 
-          ? Math.round((vals.presentIds.size / vals.totalMarkedIds.size) * 100)
-          : 0,
+        value: Math.round((vals.presentIds.size / totalStudentsCount) * 100),
         rawDate: vals.rawDate
       }))
       .sort((a, b) => a.rawDate - b.rawDate)
       .slice(-7); // Last 7 unique days
-  }, [attendanceHistory]);
+  }, [attendanceHistory, students]);
 
   const downloadReport = (title: string, reportData: any[]) => {
     if (reportData.length === 0) return;
