@@ -369,6 +369,8 @@ export default function App() {
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
   const [documentTemplates, setDocumentTemplates] = useState<any[]>([]);
   const [hodStats, setHodStats] = useState<any>(null);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [meetings, setMeetings] = useState<any[]>([]);
 
   const totalStaffSalary = useMemo(() => {
     return staffList.reduce((sum, s) => sum + parseFloat(s.salary || 0), 0);
@@ -492,6 +494,8 @@ export default function App() {
         currentRole === "HOD" || currentRole === "SCHOOL_ADMIN"
           ? fetchHODDashboardStats()
           : Promise.resolve(null),
+        fetch(`${API_BASE_URL}/announcements`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.ok ? res.json() : []),
+        fetch(`${API_BASE_URL}/meetings`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.ok ? res.json() : []),
       ]);
 
       const assignIfFulfilled = (index: number, setter: (val: any) => void) => {
@@ -575,6 +579,8 @@ export default function App() {
       }
 
       assignIfFulfilled(48, setHodStats);
+      assignIfFulfilled(49, setAnnouncements);
+      assignIfFulfilled(50, setMeetings);
     } catch (err) {
       console.error("Failed to load data from backend:", err);
     } finally {
@@ -990,11 +996,7 @@ export default function App() {
           attendance: `${attendanceRate}%`,
           avgGrade: s.gpa || "0.0",
           feesPaid: outstanding <= 0 ? "Full" : (outstanding < totalInvoiced ? "Partial" : "Owing"),
-          performanceData: performanceData.length > 0 ? performanceData : [
-            { name: 'Term 1', value: 75 },
-            { name: 'Term 2', value: 82 },
-            { name: 'Term 3', value: 78 }
-          ],
+          performanceData: performanceData,
         };
       });
   }, [currentRole, currentUser?.email, studentList, studentAttendance, invoices, results]);
@@ -1658,6 +1660,8 @@ export default function App() {
                 attendance={studentAttendance}
                 invoices={invoices}
                 timetable={timetable}
+                announcements={announcements}
+                meetings={meetings}
                 organization={organizations.find(
                   (o) => o.id === currentUser?.org_id,
                 )}

@@ -1404,6 +1404,8 @@ export function ParentDashboard({
   attendance = [],
   invoices = [],
   timetable = [],
+  announcements = [],
+  meetings = [],
   organization,
   unreadMessagesCount = 0,
   onNavigate
@@ -1414,6 +1416,8 @@ export function ParentDashboard({
   attendance?: any[],
   invoices?: any[],
   timetable?: any[],
+  announcements?: any[],
+  meetings?: any[],
   organization?: any,
   unreadMessagesCount?: number,
   onNavigate?: (view: string) => void
@@ -1446,9 +1450,28 @@ export function ParentDashboard({
   };
 
   // Resolve outstanding fees for the selected ward
-  const outstandingFees = invoices
-    .filter(inv => String(inv.student_id) === String(selectedWard.id) && (inv.status === 'Pending' || inv.status === 'Overdue'))
+  const wardInvoices = invoices.filter(inv => String(inv.student_id) === String(selectedWard.id));
+  const outstandingFees = wardInvoices
+    .filter(inv => inv.status === 'Pending' || inv.status === 'Overdue' || inv.status === 'Partial')
     .reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
+
+  const nextInvoice = wardInvoices
+    .filter(inv => inv.status === 'Pending' || inv.status === 'Overdue')
+    .sort((a, b) => new Date(a.due_date || 0).getTime() - new Date(b.due_date || 0).getTime())[0];
+
+  const wardAnnouncements = announcements.filter(ann => 
+    ann.target_audience === 'ALL' || 
+    ann.target_audience === 'PARENT' || 
+    (ann.target_audience === 'CLASS' && String(ann.class_id) === String(selectedWard.class_id))
+  );
+
+  const wardMeetings = meetings.filter(m => 
+    m.target_audience === 'ALL' || 
+    m.target_audience === 'PARENT' || 
+    (m.target_audience === 'CLASS' && String(m.class_id) === String(selectedWard.class_id))
+  );
+
+  const totalNotices = wardAnnouncements.length + wardMeetings.length;
 
   return (
     <motion.div
@@ -1576,11 +1599,11 @@ export function ParentDashboard({
           </div>
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">3</p>
+              <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{totalNotices}</p>
               <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{t('notices')}</p>
             </div>
             <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600">
-              New
+              Update
             </div>
           </div>
         </div>
@@ -1693,7 +1716,7 @@ export function ParentDashboard({
                   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-emerald-500 transition-all duration-1000"
-                      style={{ width: outstandingFees > 0 ? '60%' : '100%' }}
+                      style={{ width: outstandingFees > 0 ? `${Math.min(100, (outstandingFees / 5000) * 100)}%` : '100%' }}
                     ></div>
                   </div>
                 </div>
@@ -1705,7 +1728,7 @@ export function ParentDashboard({
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-zinc-400 font-medium">{t('next_due_date')}</span>
-                    <span className="font-bold">Next Month</span>
+                    <span className="font-bold">{nextInvoice ? new Date(nextInvoice.due_date).toLocaleDateString() : 'N/A'}</span>
                   </div>
                 </div>
 
@@ -1724,21 +1747,24 @@ export function ParentDashboard({
           <motion.div variants={itemVariants} className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
             <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-8">{t('notices')}</h3>
             <div className="space-y-6">
-              {[
-                { title: 'Parent-Teacher Meeting', date: 'Mar 15', desc: 'Discussing the end-of-term results and next year targets.', category: 'Events' },
-                { title: 'School Trip Consent', date: 'Mar 10', desc: 'Please sign the digital consent form for the upcoming field trip.', category: 'Admin' },
-              ].map((item, i) => (
-                <div key={i} className="group cursor-pointer">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest px-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-md">
-                      {item.category}
-                    </span>
-                    <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{item.date}</span>
+              {[...wardAnnouncements, ...wardMeetings].length === 0 ? (
+                <p className="text-xs text-zinc-500 italic">No recent notices.</p>
+              ) : (
+                [...wardAnnouncements, ...wardMeetings].slice(0, 4).map((item, i) => (
+                  <div key={i} className="group cursor-pointer">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest px-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-md">
+                        {item.priority || item.status || 'Notice'}
+                      </span>
+                      <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">
+                        {new Date(item.created_at || item.start_time).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-zinc-900 dark:text-white group-hover:text-indigo-600 transition-colors mb-1">{item.title}</h4>
+                    <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">{item.content || item.description}</p>
                   </div>
-                  <h4 className="font-bold text-zinc-900 dark:text-white group-hover:text-indigo-600 transition-colors mb-1">{item.title}</h4>
-                  <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
+                ))
+              )}
             </div>
             <button
               onClick={() => onNavigate?.('Announcements')}
@@ -1774,6 +1800,7 @@ export function ParentDashboard({
     </motion.div>
   );
 }
+
 
 export function FinanceDashboard({ 
   invoices = [], 
