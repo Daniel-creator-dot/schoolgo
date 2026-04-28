@@ -5600,20 +5600,17 @@ export const AcademicModules = {
     };
 
     const availableMonths = useMemo(() => {
-      if (!data || data.length === 0) {
-        return [new Date().toLocaleString('default', { month: 'long', year: 'numeric' })];
-      }
       const monthsSet = new Set<string>();
-      data.forEach(item => {
+      (data || []).forEach(item => {
         if (item.date) {
           const d = new Date(item.date);
           monthsSet.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
         }
       });
-      return Array.from(monthsSet).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+      return ['Entire Term', ...Array.from(monthsSet).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())];
     }, [data]);
 
-    const [selectedMonth, setSelectedMonth] = useState(availableMonths[0]);
+    const [selectedMonth, setSelectedMonth] = useState('Entire Term');
     const [selectedWardId, setLocalSelectedWardId] = useState(propSelectedWardId || wards?.[0]?.id || "");
 
     useEffect(() => {
@@ -5629,6 +5626,7 @@ export const AcademicModules = {
     const filteredData = useMemo(() => {
       return (data || []).filter(item => {
         if (!item.date) return false;
+        if (selectedMonth === 'Entire Term') return true;
         const d = new Date(item.date);
         return d.toLocaleString('default', { month: 'long', year: 'numeric' }) === selectedMonth;
       });
@@ -5640,7 +5638,7 @@ export const AcademicModules = {
       return students.map(student => {
         const studentRecords = (data || []).filter(r => 
           String(r.student_id) === String(student.id) &&
-          (!selectedMonth || new Date(r.date).toLocaleString('default', { month: 'long', year: 'numeric' }) === selectedMonth)
+          (selectedMonth === 'Entire Term' || new Date(r.date).toLocaleString('default', { month: 'long', year: 'numeric' }) === selectedMonth)
         );
         const present = studentRecords.filter(r => r.status === 'Present').length;
         
@@ -5801,7 +5799,7 @@ export const AcademicModules = {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Total School Days for {selectedMonth}</label>
+                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Total School Days for {selectedMonth === 'Entire Term' ? 'the Entire Term' : selectedMonth}</label>
                 <div className="relative">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
@@ -5899,9 +5897,12 @@ export const AcademicModules = {
     const [selectedClassId, setSelectedClassId] = useState<string>('');
     const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
 
-    const filteredStudents = selectedClassId
-      ? students.filter(s => s.class_id === selectedClassId)
-      : students;
+    const filteredStudents = useMemo(() => {
+      if (selectedClassId === 'unassigned') return students.filter(s => !s.class_id);
+      return selectedClassId
+        ? students.filter(s => s.class_id === selectedClassId)
+        : students;
+    }, [students, selectedClassId]);
 
     const toggleStudent = (id: string) => {
       setSelectedStudents(prev =>
@@ -5947,7 +5948,9 @@ export const AcademicModules = {
               onChange={(e) => setSelectedClassId(e.target.value)}
               className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">All Classes</option>
+              <option value="">All Students ({students.length})</option>
+              <option value="unassigned">No Class Assigned ({students.filter(s => !s.class_id).length})</option>
+              <hr />
               {classes.map(c => (
                 <option key={c.id} value={c.id}>{c.name} {c.section}</option>
               ))}
