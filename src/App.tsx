@@ -997,6 +997,7 @@ export default function App() {
           avgGrade: s.gpa || "0.0",
           feesPaid: outstanding <= 0 ? "Full" : (outstanding < totalInvoiced ? "Partial" : "Owing"),
           performanceData: performanceData,
+          profile_pic: s.profile_pic,
         };
       });
   }, [currentRole, currentUser?.email, studentList, studentAttendance, invoices, results]);

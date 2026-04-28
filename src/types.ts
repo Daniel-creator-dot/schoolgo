@@ -100,6 +100,7 @@ export interface Ward {
   avgGrade: string;
   feesPaid: string;
   performanceData: { name: string; value: number }[];
+  profile_pic?: string;
 }
 
 export interface GradingScaleLevel {
