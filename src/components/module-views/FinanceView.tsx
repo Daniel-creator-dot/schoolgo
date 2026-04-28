@@ -2413,15 +2413,6 @@ export const FinanceModules = {
                               <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Balance Due</p>
                               <p className="text-lg font-black text-rose-600">{currency}{bal.toLocaleString()}</p>
                             </div>
-                            <button
-                              onClick={() => {
-                                setPaymentModalData(ward);
-                                setSelectedInvoiceId(inv.id);
-                              }}
-                              className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
-                            >
-                              Pay Now
-                            </button>
                           </div>
                         )}
                       </div>

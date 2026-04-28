@@ -1544,22 +1544,7 @@ export function ParentDashboard({
       </motion.div>
 
       {/* Quick Stats Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-emerald-600">
-            <ClipboardCheck className="w-6 h-6" />
-          </div>
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{selectedWard.attendance}</p>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{t('attendance')}</p>
-            </div>
-            <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600">
-              {parseFloat(selectedWard.attendance) >= 90 ? 'Excellent' : 'Good'}
-            </div>
-          </div>
-        </div>
-
+      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-indigo-600">
             <TrendingUp className="w-6 h-6" />
@@ -1732,13 +1717,6 @@ export function ParentDashboard({
                   </div>
                 </div>
 
-                <button
-                  onClick={() => onNavigate?.('Billing')}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-emerald-600/40 active:scale-95 flex items-center justify-center gap-2"
-                >
-                  {t('pay_fees')}
-                  <ArrowUpRight className="w-4 h-4" />
-                </button>
               </div>
             </div>
           </motion.div>
