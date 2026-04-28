@@ -2756,6 +2756,7 @@ export default function App() {
         <HRModules.ParentManagement
           students={studentList}
           onSave={async (data) => {
+            console.log("Saving Parent Management data:", data);
             try {
               // 1. Update Primary Parent (if email exists)
               if (data.parent_email) {
@@ -2773,26 +2774,32 @@ export default function App() {
                 });
               }
 
-              // 3. Update Student specific fields (like religion)
-              // Note: 'data' contains the fields from the form plus existing student fields
+              // 3. Update Student specific fields (including linking to parent)
               if (data.id) {
-                await updateStudent(data.id, {
-                  name: data.name,
+                const studentPayload = {
+                  name: data.name || data.student_name || "Unknown",
                   religion: data.religion,
-                  // Also update name/contact explicitly for this student just in case
+                  parent_email: data.parent_email,
+                  secondary_parent_email: data.secondary_parent_email,
                   parent_name: data.parent_name,
                   contact: data.contact,
                   secondary_parent_name: data.secondary_parent_name,
                   secondary_parent_contact: data.secondary_parent_contact
-                });
+                };
+                console.log("Updating student:", data.id, studentPayload);
+                await updateStudent(data.id, studentPayload);
               }
 
               (window as any).showToast?.(
                 "Parent and student details updated!",
                 "success",
               );
-              await fetchStudents(); // Refresh data
+              
+              // Refresh state properly
+              const updatedStudents = await fetchStudents();
+              setStudentList(updatedStudents);
             } catch (err: any) {
+              console.error("Parent Management Save Error:", err);
               (window as any).showToast?.(
                 err?.response?.data?.error || "Failed to update details",
                 "error",
