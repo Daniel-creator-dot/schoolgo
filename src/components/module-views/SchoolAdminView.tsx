@@ -4410,17 +4410,17 @@ export const AcademicModules = {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
-              <GraduationCap className="w-6 h-6" />
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none shrink-0">
+              <GraduationCap className="w-6 h-6 md:w-7 md:h-7" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Classroom Directory</h2>
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Manage class teachers, student capacities & promotion flows</p>
+              <h2 className="text-lg md:text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Classroom Directory</h2>
+              <p className="text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Manage class teachers, student capacities & promotion flows</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
               <button
                 onClick={() => setViewMode('list')}
@@ -4444,7 +4444,7 @@ export const AcademicModules = {
             {onSave && role !== 'STAFF' && (
               <button
                 onClick={() => setEditingItem({})}
-                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-200"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-200"
               >
                 <Plus className="w-4 h-4" />
                 Add Class
@@ -4485,7 +4485,7 @@ export const AcademicModules = {
               return (
                 <div 
                   key={cls.id}
-                  className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
+                  className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
                 >
                   <div className="flex flex-col gap-6">
                     {/* Class Icon & Title */}
@@ -4790,17 +4790,17 @@ export const AcademicModules = {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white dark:bg-zinc-900 p-6 md:p-8 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
-              <BookOpen className="w-6 h-6" />
+            <div className="w-12 h-12 md:w-14 md:h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none shrink-0">
+              <BookOpen className="w-6 h-6 md:w-7 md:h-7" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Curriculum Inventory</h2>
-              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Manage subjects, teacher assignments & departmental links</p>
+              <h2 className="text-lg md:text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Curriculum Inventory</h2>
+              <p className="text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Manage subjects, teacher assignments & departmental links</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
               <button
                 onClick={() => setViewMode('list')}
@@ -4824,7 +4824,7 @@ export const AcademicModules = {
             {onSave && role !== 'STAFF' && (
               <button
                 onClick={() => setEditingItem({})}
-                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-200"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-200"
               >
                 <Plus className="w-4 h-4" />
                 Add Subject
@@ -4863,7 +4863,7 @@ export const AcademicModules = {
             {data?.map((subject) => (
               <div 
                 key={subject.id}
-                className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
+                className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
               >
                 <div className="flex flex-col gap-6">
                   {/* Subject Icon & Title */}
