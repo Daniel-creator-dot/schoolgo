@@ -44,6 +44,7 @@ import {
   Palette,
   Target,
   Star,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { UserRole, Student } from "../../types";
@@ -5184,144 +5185,266 @@ export const HRModules = {
   }) => {
     const { currency, t } = useLanguage();
     const [viewingStudent, setViewingStudent] = React.useState<Student | null>(null);
+    const [viewMode, setViewMode] = React.useState<'list' | 'graphical'>('list');
+
+    const parentsMap = React.useMemo(() => {
+      const map = new Map<string, { name: string; email: string; contact: string; children: Student[] }>();
+      students.forEach(s => {
+        const email = s.parent_email || 'no-email@system.com';
+        if (!map.has(email)) {
+          map.set(email, {
+            name: s.parent_name || 'Unknown Parent',
+            email: email,
+            contact: s.contact || 'N/A',
+            children: []
+          });
+        }
+        map.get(email)!.children.push(s);
+      });
+      return Array.from(map.values());
+    }, [students]);
 
     return (
       <div className="space-y-6">
-        <DataTable
-          title={t('parent_management')}
-          data={students}
-          onSave={onSave}
-          columns={[
-            { header: t('student'), accessor: "name", className: "font-bold" },
-            { header: t('class'), accessor: (item: any) => `${item.class || 'N/A'} ${item.section || ''}` },
-            {
-              header: t('primary_parent'),
-              accessor: (item: any) => (
-                <div className="flex flex-col">
-                  <span className="font-bold text-xs">{item.parent_name || 'N/A'}</span>
-                  <span className="text-[10px] text-zinc-500">{item.contact || 'N/A'}</span>
-                </div>
-              )
-            },
-            {
-              header: t('secondary_parent'),
-              accessor: (item: any) => (
-                <div className="flex flex-col">
-                  <span className="font-bold text-xs">{item.secondary_parent_name || 'N/A'}</span>
-                  <span className="text-[10px] text-zinc-500">{item.secondary_parent_contact || 'N/A'}</span>
-                </div>
-              )
-            },
-          ]}
-          onView={(item) => setViewingStudent(item)}
-          renderForm={(item) => (
-            <div className="space-y-8 max-h-[70vh] overflow-y-auto px-1">
-              {/* Hidden fields to ensure data integrity */}
-              <input type="hidden" name="id" defaultValue={item?.id} />
-              <input type="hidden" name="name" defaultValue={item?.name} />
-              
-              {/* Primary Parent section */}
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-indigo-100 pb-2 flex items-center gap-2">
-                  <UserCircle className="w-3.5 h-3.5" />
-                  Primary Parent / Guardian
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">{t('full_name')}</label>
-                    <input
-                      type="text"
-                      name="parent_name"
-                      defaultValue={item?.parent_name}
-                      required
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">{t('contact_number')}</label>
-                    <input
-                      type="text"
-                      name="contact"
-                      defaultValue={item?.contact}
-                      required
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">{t('email')}</label>
-                  <input
-                    type="email"
-                    name="parent_email"
-                    defaultValue={item?.parent_email}
-                    placeholder="Enter parent email..."
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                  />
-                </div>
-              </div>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{t('parent_management')}</h2>
+            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Visualize family relationships & manage profiles</p>
+          </div>
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode('list')}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                viewMode === 'list' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              <List className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('graphical')}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                viewMode === 'graphical' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
 
-              {/* Secondary Parent section */}
-              <div className="space-y-4 pt-4">
-                <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] border-b border-amber-100 pb-2 flex items-center gap-2">
-                  <Users className="w-3.5 h-3.5" />
-                  Secondary Parent / Guardian
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">Secondary Parent Name</label>
-                    <input
-                      type="text"
-                      name="secondary_parent_name"
-                      defaultValue={item?.secondary_parent_name}
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                    />
+        {viewMode === 'list' ? (
+          <DataTable
+            title=""
+            data={students}
+            onSave={onSave}
+            columns={[
+              { header: t('student'), accessor: "name", className: "font-bold" },
+              { header: t('class'), accessor: (item: any) => `${item.class || 'N/A'} ${item.section || ''}` },
+              {
+                header: t('primary_parent'),
+                accessor: (item: any) => (
+                  <div className="flex flex-col">
+                    <span className="font-bold text-xs">{item.parent_name || 'N/A'}</span>
+                    <span className="text-[10px] text-zinc-500">{item.contact || 'N/A'}</span>
+                  </div>
+                )
+              },
+              {
+                header: t('secondary_parent'),
+                accessor: (item: any) => (
+                  <div className="flex flex-col">
+                    <span className="font-bold text-xs">{item.secondary_parent_name || 'N/A'}</span>
+                    <span className="text-[10px] text-zinc-500">{item.secondary_parent_contact || 'N/A'}</span>
+                  </div>
+                )
+              },
+            ]}
+            onView={(item) => setViewingStudent(item)}
+            renderForm={(item) => (
+              <div className="space-y-8 max-h-[70vh] overflow-y-auto px-1">
+                {/* Hidden fields to ensure data integrity */}
+                <input type="hidden" name="id" defaultValue={item?.id} />
+                <input type="hidden" name="name" defaultValue={item?.name} />
+                
+                {/* Primary Parent section */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] border-b border-indigo-100 pb-2 flex items-center gap-2">
+                    <UserCircle className="w-3.5 h-3.5" />
+                    Primary Parent / Guardian
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase">{t('full_name')}</label>
+                      <input
+                        type="text"
+                        name="parent_name"
+                        defaultValue={item?.parent_name}
+                        required
+                        className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase">{t('contact_number')}</label>
+                      <input
+                        type="text"
+                        name="contact"
+                        defaultValue={item?.contact}
+                        required
+                        className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                      />
+                    </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-500 uppercase">Secondary Parent Contact</label>
+                    <label className="text-xs font-bold text-zinc-500 uppercase">{t('email')}</label>
                     <input
-                      type="text"
-                      name="secondary_parent_contact"
-                      defaultValue={item?.secondary_parent_contact}
+                      type="email"
+                      name="parent_email"
+                      defaultValue={item?.parent_email}
+                      placeholder="Enter parent email..."
                       className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
                     />
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">Secondary Parent Email</label>
-                  <input
-                    type="email"
-                    name="secondary_parent_email"
-                    defaultValue={item?.secondary_parent_email}
-                    placeholder="Enter secondary parent email..."
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                  />
-                </div>
-              </div>
 
-              {/* Additional Details */}
-              <div className="space-y-4 pt-4">
-                <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] border-b border-zinc-100 pb-2">Additional Information</h4>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">{t('religion')}</label>
-                  <select
-                    name="religion"
-                    defaultValue={item?.religion || ""}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">Select Religion...</option>
-                    <option value="Christianity">Christianity</option>
-                    <option value="Islam">Islam</option>
-                    <option value="Hinduism">Hinduism</option>
-                    <option value="Buddhism">Buddhism</option>
-                    <option value="Sikhism">Sikhism</option>
-                    <option value="Traditional">Traditional</option>
-                    <option value="Other">Other</option>
-                  </select>
+                {/* Secondary Parent section */}
+                <div className="space-y-4 pt-4">
+                  <h4 className="text-[10px] font-black text-amber-600 uppercase tracking-[0.2em] border-b border-amber-100 pb-2 flex items-center gap-2">
+                    <Users className="w-3.5 h-3.5" />
+                    Secondary Parent / Guardian
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase">Secondary Parent Name</label>
+                      <input
+                        type="text"
+                        name="secondary_parent_name"
+                        defaultValue={item?.secondary_parent_name}
+                        className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase">Secondary Parent Contact</label>
+                      <input
+                        type="text"
+                        name="secondary_parent_contact"
+                        defaultValue={item?.secondary_parent_contact}
+                        className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Secondary Parent Email</label>
+                    <input
+                      type="email"
+                      name="secondary_parent_email"
+                      defaultValue={item?.secondary_parent_email}
+                      placeholder="Enter secondary parent email..."
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Additional Details */}
+                <div className="space-y-4 pt-4">
+                  <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] border-b border-zinc-100 pb-2">Additional Information</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">{t('religion')}</label>
+                    <select
+                      name="religion"
+                      defaultValue={item?.religion || ""}
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">Select Religion...</option>
+                      <option value="Christianity">Christianity</option>
+                      <option value="Islam">Islam</option>
+                      <option value="Hinduism">Hinduism</option>
+                      <option value="Buddhism">Buddhism</option>
+                      <option value="Sikhism">Sikhism</option>
+                      <option value="Traditional">Traditional</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        />
+            )}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
+            {parentsMap.map((parent) => (
+              <div 
+                key={parent.email}
+                className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/20 dark:shadow-none p-6 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:-translate-y-1"
+              >
+                {/* Parent Card Header */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight truncate max-w-[150px]">
+                        {parent.name}
+                      </h3>
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest truncate max-w-[150px]">
+                        {parent.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-full text-[10px] font-black uppercase">
+                    {parent.children.length} {parent.children.length === 1 ? 'Ward' : 'Wards'}
+                  </div>
+                </div>
+
+                {/* Contact Line */}
+                <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl">
+                  <Phone className="w-3.5 h-3.5 text-indigo-500" />
+                  {parent.contact}
+                </div>
+
+                {/* Children Connection Visualization */}
+                <div className="space-y-3 relative pt-2">
+                  <div className="absolute left-[27px] top-0 bottom-6 w-0.5 bg-gradient-to-b from-indigo-500/20 to-transparent" />
+                  
+                  {parent.children.map((child, idx) => (
+                    <div key={child.id} className="flex items-center gap-4 pl-2 group/child">
+                      <div className="relative z-10">
+                        <div className="absolute top-1/2 -left-2 w-4 h-0.5 bg-indigo-500/20" />
+                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 group-hover/child:border-indigo-500 group-hover/child:text-indigo-600 transition-all shadow-sm">
+                          {child.profile_pic ? (
+                            <img src={child.profile_pic} className="w-full h-full object-cover rounded-xl" />
+                          ) : (
+                            <User className="w-5 h-5" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase truncate">
+                          {child.name}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-zinc-400 uppercase">
+                            {child.class} {child.section}
+                          </span>
+                          <div className="w-1 h-1 rounded-full bg-zinc-300" />
+                          <span className="text-[9px] font-black text-indigo-500 uppercase italic">
+                            GPA: {child.gpa || '—'}
+                          </span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setViewingStudent(child)}
+                        className="p-2 opacity-0 group-hover:opacity-100 group-hover/child:opacity-100 transition-opacity hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg text-indigo-600"
+                      >
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <Modal
           isOpen={!!viewingStudent}
@@ -5408,5 +5531,4 @@ export const HRModules = {
       </div>
     );
   },
-
 };
