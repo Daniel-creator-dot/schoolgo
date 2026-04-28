@@ -2530,17 +2530,6 @@ export default function App() {
         />
       ),
 
-      "Inventory Sales": (
-        <FinanceModules.InventorySales
-          students={studentList}
-          inventoryItems={combinedInventory}
-          data={inventorySales}
-          onSave={(data) => handleEntitySave("inventory-sale", data)}
-          onDelete={(item) => handleEntityDelete("inventory-sale", item)}
-          organization={organizations.find((o) => o.id === currentUser?.org_id)}
-        />
-      ),
-
       Scholarships: (
         <FinanceModules.Scholarships
           students={studentList}
@@ -2594,6 +2583,7 @@ export default function App() {
           students={studentList}
           selectedWardId={selectedWardId}
           onWardSelect={setSelectedWardId}
+          inventoryItems={uniforms}
           payments={receipts}
           onRecordPayment={async (data) => {
             await handleEntitySave("receipt", data);

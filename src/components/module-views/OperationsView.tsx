@@ -1349,7 +1349,7 @@ export const OperationsModules = {
     return (
       <div className="space-y-6">
         <DataTable 
-          title="Inventory & Assets" 
+          title="Assets & Equipment Management" 
           data={data || []}
           onSave={onSave}
           onDelete={onDelete}
@@ -1397,7 +1397,7 @@ export const OperationsModules = {
                     <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
                       {item.category || 'Asset'}
                     </span>
-                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Inventory Management</span>
+                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Asset Registry</span>
                   </div>
                 </div>
               </div>
@@ -1425,11 +1425,11 @@ export const OperationsModules = {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
                   <div>
-                    <p className="text-xs font-bold text-zinc-500 uppercase">Current Inventory</p>
+                    <p className="text-xs font-bold text-zinc-500 uppercase">Current Stock Count</p>
                     <p className="text-lg font-black text-zinc-900 dark:text-white">{item.quantity} Units</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-bold text-zinc-500 uppercase">Unit Value</p>
+                    <p className="text-xs font-bold text-zinc-500 uppercase">Asset Unit Value</p>
                     <p className="text-lg font-black text-indigo-600">{currency}{Number(item.price || 0).toLocaleString()}</p>
                   </div>
                 </div>
@@ -1493,7 +1493,7 @@ export const OperationsModules = {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">Unit Price ({currency})</label>
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Asset Unit Value ({currency})</label>
                   <input 
                     type="number"
                     step="0.01"

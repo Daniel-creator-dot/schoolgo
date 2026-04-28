@@ -1538,242 +1538,8 @@ export const FinanceModules = {
       </>
     );
   },
-  InventorySales: ({ students, inventoryItems, data, onSave, onDelete, organization }: { students: Student[], inventoryItems: any[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, organization?: any }) => {
-    const { t, currency } = useLanguage();
-    const renderSaleForm = (item?: any, isViewOnly?: boolean) => {
-      const studentOptions = students.map(s => ({
-        value: s.id,
-        label: s.name,
-        sublabel: s.class
-      }));
 
-      const inventoryOptions = (inventoryItems || []).map(inv => ({
-        value: inv.id,
-        label: inv.item_name,
-        sublabel: `Stock: ${inv.stock} | Price: ${currency} ${inv.price}`
-      }));
-
-      const handleItemSelect = (val: string | string[]) => {
-        const selectedId = Array.isArray(val) ? val[0] : val;
-        const selectedItem = inventoryItems.find(i => i.id === selectedId);
-        if (selectedItem) {
-          // Find the form and set hidden fields/inputs
-          const form = document.querySelector('form');
-          if (form) {
-            const itemNameInput = form.querySelector('input[name="item_name"]') as HTMLInputElement;
-            const totalPriceInput = form.querySelector('input[name="total_price"]') as HTMLInputElement;
-            const quantityInput = form.querySelector('input[name="quantity"]') as HTMLInputElement;
-
-            if (itemNameInput) itemNameInput.value = selectedItem.item_name;
-            if (totalPriceInput && quantityInput) {
-              totalPriceInput.value = (parseFloat(selectedItem.price || 0) * parseInt(quantityInput.value || '1')).toString();
-            }
-          }
-        }
-      };
-
-      return (
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Item from Inventory</label>
-            <SearchableSelect
-              name="item_id"
-              options={inventoryOptions}
-              defaultValue={item?.item_id}
-              disabled={isViewOnly}
-              placeholder="Start typing item name..."
-              onValueChange={handleItemSelect}
-            />
-          </div>
-
-          {/* Hidden input to keep item_name for legacy/reporting if needed, though backend uses item_id now */}
-          <input type="hidden" name="item_name" defaultValue={item?.item_name} />
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">How many will the person buy?</label>
-            <input
-              type="number"
-              name="quantity"
-              defaultValue={item?.quantity || 1}
-              readOnly={isViewOnly}
-              onChange={(e) => {
-                const form = e.target.closest('form');
-                const itemIdInput = form?.querySelector('input[name="item_id"]');
-                const selectedId = itemIdInput instanceof HTMLInputElement ? itemIdInput.value : '';
-                const selectedItem = inventoryItems.find(i => i.id === selectedId);
-                if (selectedItem) {
-                  const totalPriceInput = form?.querySelector('input[name="total_price"]') as HTMLInputElement;
-                  if (totalPriceInput) {
-                    totalPriceInput.value = (parseFloat(selectedItem.price || 0) * parseInt(e.target.value || '1')).toString();
-                  }
-                }
-              }}
-              className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-            />
-          </div>
-
-          <input
-            type="hidden"
-            name="total_price"
-            defaultValue={item?.total_price}
-          />
-
-          <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-3">Buyer Information</label>
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Assign to Student (Mandatory for Fees)</label>
-                <SearchableSelect
-                  name="student_id"
-                  options={studentOptions}
-                  defaultValue={item?.student_id}
-                  disabled={isViewOnly}
-                  placeholder="Select Student..."
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Or Walk-in Buyer Name</label>
-                <input
-                  type="text"
-                  name="buyer_name"
-                  defaultValue={item?.buyer_name}
-                  readOnly={isViewOnly}
-                  placeholder="e.g. Parent Name"
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Academic Year</label>
-                  <input
-                    type="text"
-                    name="academic_year"
-                    defaultValue={item?.academic_year || organization?.academic_year || ""}
-                    readOnly={isViewOnly}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Term</label>
-                  <select
-                    name="term"
-                    defaultValue={item?.term || organization?.current_term || ""}
-                    disabled={isViewOnly}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-                  >
-                    <option value="">Select Term (Optional)</option>
-                    <option value="Term 1">Term 1</option>
-                    <option value="Term 2">Term 2</option>
-                    <option value="Term 3">Term 3</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="add_to_fees"
-                  id="sale_add_to_fees"
-                  defaultChecked={item?.add_to_fees}
-                  disabled={isViewOnly}
-                  className="w-4 h-4 text-indigo-600 rounded border-zinc-300 focus:ring-indigo-500"
-                  onChange={(e) => {
-                    const form = e.target.closest('form');
-                    const studentIdInput = form?.querySelector('input[name="student_id"]');
-                    const studentId = studentIdInput instanceof HTMLInputElement ? studentIdInput.value : '';
-                    if (e.target.checked && !studentId) {
-                      (window as any).showToast?.("Please select a student buyer for 'Pay Later' items", "warning");
-                      e.target.checked = false;
-                    }
-                  }}
-                />
-                <label htmlFor="sale_add_to_fees" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
-                  {isViewOnly
-                    ? (item?.add_to_fees ? "Added to student fees (Pay Later)" : "Paid Immediately")
-                    : "Add to student fees (Pay Later)"}
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    return (
-      <>
-        <DataTable
-          title={t('inventory_sales')}
-          data={data || []}
-          onSave={onSave}
-          renderDetails={(item) => (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/20">
-                <div className="w-12 h-12 rounded-xl bg-amber-600 flex items-center justify-center text-white shadow-lg shadow-amber-100 dark:shadow-none">
-                  <ShoppingCart className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.item_name}</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg text-[10px] font-bold uppercase tracking-widest">
-                      Qty: {item.quantity}
-                    </span>
-                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{new Date(item.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Total Sale Value</p>
-                  <p className="text-2xl font-black text-amber-600 font-serif">{currency}{parseFloat(item.total_price).toLocaleString()}</p>
-                </div>
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Buyer Status</p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    {item.add_to_fees ? (
-                      <span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase">Unpaid / Invoiced</span>
-                    ) : (
-                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-black uppercase">Paid Immediately</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Assigned Buyer</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-zinc-500 text-xs font-black">
-                    {item.student_name?.charAt(0) || 'B'}
-                  </div>
-                  <div>
-                    <p className="text-sm font-black text-zinc-900 dark:text-white">{item.student_name || item.buyer_name || 'Walk-in Customer'}</p>
-                    <p className="text-[10px] text-zinc-500 font-bold uppercase">{item.class_name || 'Individual'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          onEdit={() => { }}
-          columns={[
-            { header: 'Date', accessor: (item: any) => new Date(item.created_at).toLocaleDateString() },
-            { header: 'Item', accessor: 'item_name', className: 'font-bold' },
-            { header: 'Qty', accessor: 'quantity' },
-            { header: 'Total', accessor: (item: any) => `${currency} ${item.total_price}` },
-            { header: 'Buyer', accessor: (item: any) => item.student_name || item.buyer_name || 'Walk-in' },
-            {
-              header: 'Pay Later',
-              accessor: (item: any) => item.add_to_fees ?
-                <span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest">Yes</span> :
-                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest">Paid</span>
-            },
-          ]}
-          onAdd={onSave ? () => { } : undefined}
-          renderForm={renderSaleForm}
-        />
-      </>
-    );
-  },
-  InvoicesPayments: ({ role, students, wards, selectedWardId: propSelectedWardId, data, payments, feeStructures, organization, onSave, onDelete, onRecordPayment, onWardSelect }: { role?: UserRole, students?: Student[], wards?: any[], selectedWardId?: string, data?: any[], payments?: any[], feeStructures?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void, onWardSelect?: (id: string) => void }) => {
+  InvoicesPayments: ({ role, students, wards, selectedWardId: propSelectedWardId, data, payments, feeStructures, inventoryItems = [], organization, onSave, onDelete, onRecordPayment, onWardSelect }: { role?: UserRole, students?: Student[], wards?: any[], selectedWardId?: string, data?: any[], payments?: any[], feeStructures?: any[], inventoryItems?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void, onWardSelect?: (id: string) => void }) => {
     const { t, currency } = useLanguage();
     const [localSelectedWardId, setLocalSelectedWardId] = useState("");
     
@@ -2041,6 +1807,12 @@ export const FinanceModules = {
           const debt = (data || []).find(d => String(d.id) === String(debtId));
           setSelectedDebt(debt || null);
           setSelectedFee(null);
+          setSelectedFee({ name: debt?.invoice_description, amount: debt?.amount }); // Temporary to trigger UI update
+        } else if (val.startsWith('stock_')) {
+          const stockId = val.replace('stock_', '');
+          const item = (inventoryItems || []).find(i => String(i.id) === String(stockId));
+          setSelectedFee({ name: item?.item_name, amount: item?.price });
+          setSelectedDebt(null);
         } else {
           const fee = (feeStructures || []).find(f => f.id === val);
           setSelectedFee(fee || null);
@@ -2192,10 +1964,17 @@ export const FinanceModules = {
                   ))}
                 </optgroup>
               )}
-              <optgroup label="Standard Fees Structures">
+               <optgroup label="Standard Fees Structures">
                 {(feeStructures || []).map(f => (
                   <option key={f.id} value={f.id}>
                     {f.name} — {currency} {f.amount}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Stocks / Inventory Items">
+                {(inventoryItems || []).map(i => (
+                  <option key={`stock_${i.id}`} value={`stock_${i.id}`}>
+                    {i.item_name} {i.size ? `(${i.size})` : ''} — {currency} {i.price} (Stock: {i.quantity || i.stock || 0})
                   </option>
                 ))}
               </optgroup>
