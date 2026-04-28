@@ -2079,6 +2079,9 @@ export default function App() {
         ) : (
           <AcademicModules.Attendance
             role={currentRole}
+            wards={wards}
+            selectedWardId={selectedWardId}
+            onWardSelect={setSelectedWardId}
             students={studentList}
             staffList={staffList}
             data={
@@ -2136,6 +2139,8 @@ export default function App() {
         <ExamModules.ExamSchedules
           role={currentRole}
           wards={wards}
+          selectedWardId={selectedWardId}
+          onWardSelect={setSelectedWardId}
           onNavigate={setCurrentView}
           organization={organization}
           data={exams}
@@ -2200,6 +2205,7 @@ export default function App() {
           role={currentRole}
           wards={wards}
           selectedWardId={selectedWardId}
+          onWardSelect={setSelectedWardId}
           data={results}
           students={studentList}
           classes={classList}
@@ -2585,6 +2591,7 @@ export default function App() {
           role={currentRole}
           students={studentList}
           selectedWardId={selectedWardId}
+          onWardSelect={setSelectedWardId}
           payments={receipts}
           onRecordPayment={async (data) => {
             await handleEntitySave("receipt", data);
@@ -2978,6 +2985,8 @@ export default function App() {
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
               currentUser?.id
           }
+          wards={wards}
+          onWardSelect={setSelectedWardId}
           data={transportRoutes}
           students={studentList}
           onSave={
@@ -3003,6 +3012,8 @@ export default function App() {
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
               currentUser?.id
           }
+          wards={wards}
+          onWardSelect={setSelectedWardId}
           data={hostels}
           students={studentList}
           onSave={
@@ -3028,6 +3039,8 @@ export default function App() {
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
               currentUser?.id
           }
+          wards={wards}
+          onWardSelect={setSelectedWardId}
           data={clubs}
           students={studentList}
           staff={staffList}
@@ -3056,6 +3069,7 @@ export default function App() {
               currentUser?.id
           }
           wards={wards}
+          onWardSelect={setSelectedWardId}
           data={
             currentRole === "STUDENT"
               ? healthRecords.filter(
@@ -3094,6 +3108,8 @@ export default function App() {
               : studentList.find((s) => s.email === currentUser?.email)?.id ||
               currentUser?.id
           }
+          wards={wards}
+          onWardSelect={setSelectedWardId}
           data={
             currentRole === "STUDENT"
               ? behaviorIncidents.filter(

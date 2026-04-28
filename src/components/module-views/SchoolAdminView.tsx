@@ -5050,7 +5050,7 @@ export const AcademicModules = {
       </div>
     );
   },
-  Attendance: ({ role, wards, data = [], onSave, onDelete, students = [], staffList = [] }: { role?: UserRole, wards?: any[], data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[] }) => {
+  Attendance: ({ role, wards, selectedWardId: propSelectedWardId, onWardSelect, data = [], onSave, onDelete, students = [], staffList = [] }: { role?: UserRole, wards?: any[], selectedWardId?: string | null, onWardSelect?: (id: string) => void, data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[] }) => {
     const [viewingStudent, setViewingStudent] = useState<any>(null);
 
     const availableMonths = useMemo(() => {
@@ -5068,7 +5068,11 @@ export const AcademicModules = {
     }, [data]);
 
     const [selectedMonth, setSelectedMonth] = useState(availableMonths[0]);
-    const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
+    const [selectedWardId, setLocalSelectedWardId] = useState(propSelectedWardId || wards?.[0]?.id || "");
+
+    useEffect(() => {
+      if (propSelectedWardId) setLocalSelectedWardId(propSelectedWardId);
+    }, [propSelectedWardId]);
 
     useEffect(() => {
       if (availableMonths.length > 0 && !availableMonths.includes(selectedMonth)) {
@@ -5189,7 +5193,10 @@ export const AcademicModules = {
             {role === 'PARENT' && wards && wards.length > 1 && (
               <select
                 value={selectedWardId}
-                onChange={(e) => setSelectedWardId(e.target.value)}
+                onChange={(e) => {
+                  setLocalSelectedWardId(e.target.value);
+                  onWardSelect?.(e.target.value);
+                }}
                 className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -6424,6 +6431,8 @@ export const ExamModules = {
     currentUser,
     staffList = [],
     onNavigate,
+    selectedWardId: propSelectedWardId,
+    onWardSelect,
   }: {
     role?: UserRole;
     wards?: any[];
@@ -6436,11 +6445,17 @@ export const ExamModules = {
     currentUser?: any;
     staffList?: any[];
     onNavigate?: (view: string) => void;
+    selectedWardId?: string | null;
+    onWardSelect?: (id: string) => void;
   }) => {
     const [viewMode, setViewMode] = useState<'list' | 'timetable'>('list');
     const [filterType, setFilterType] = useState<'day' | 'week' | 'month' | 'year'>('month');
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
+    const [selectedWardId, setLocalSelectedWardId] = useState(propSelectedWardId || wards?.[0]?.id || "");
+
+    useEffect(() => {
+      if (propSelectedWardId) setLocalSelectedWardId(propSelectedWardId);
+    }, [propSelectedWardId]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<any | null>(null);
     const [isEditingModal, setIsEditingModal] = useState(false);
@@ -6941,7 +6956,10 @@ export const ExamModules = {
                 <span className="text-[10px] font-black text-zinc-400 ml-2 uppercase tracking-[0.2em]">Ward:</span>
                 <select
                   value={selectedWardId}
-                  onChange={(e) => setSelectedWardId(e.target.value)}
+                  onChange={(e) => {
+                    setLocalSelectedWardId(e.target.value);
+                    onWardSelect?.(e.target.value);
+                  }}
                   className="bg-transparent text-sm font-black text-zinc-900 dark:text-white outline-none pr-4 cursor-pointer"
                 >
                   {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -7161,7 +7179,14 @@ export const ExamModules = {
       </div>
     );
   },
-  ResultsManagement: ({ role, data = [], wards = [], selectedWardId, classes = [], students = [], exams = [], reportCardTemplates = [], remarkTemplates = [], organization, onSaveResults, subjects = [], staffList = [], currentUser }: { role?: UserRole, data?: any[], wards?: any[], selectedWardId?: string | null, classes?: any[], students?: any[], exams?: any[], reportCardTemplates?: any[], remarkTemplates?: any[], organization?: any, onSaveResults?: (data: any) => Promise<void>, subjects?: any[], staffList?: any[], currentUser?: any }) => {
+  ResultsManagement: ({ role, data = [], wards = [], selectedWardId: propSelectedWardId, onWardSelect, classes = [], students = [], exams = [], reportCardTemplates = [], remarkTemplates = [], organization, onSaveResults, subjects = [], staffList = [], currentUser }: { role?: UserRole, data?: any[], wards?: any[], selectedWardId?: string | null, onWardSelect?: (id: string) => void, classes?: any[], students?: any[], exams?: any[], reportCardTemplates?: any[], remarkTemplates?: any[], organization?: any, onSaveResults?: (data: any) => Promise<void>, subjects?: any[], staffList?: any[], currentUser?: any }) => {
+    const [localSelectedWardId, setLocalSelectedWardId] = useState(propSelectedWardId || wards?.[0]?.id || "");
+
+    useEffect(() => {
+      if (propSelectedWardId) setLocalSelectedWardId(propSelectedWardId);
+    }, [propSelectedWardId]);
+
+    const selectedWardId = propSelectedWardId || localSelectedWardId;
     const [showTopPerformers, setShowTopPerformers] = useState(false);
     const [selectedExamId, setSelectedExamId] = useState("");
     const [scoreDetails, setScoreDetails] = useState<Record<string, Record<string, number>>>({});

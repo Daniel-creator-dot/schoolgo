@@ -26,7 +26,7 @@ import { downloadInventoryTemplate, parseInventoryExcel } from '../../lib/excel'
 import { useLanguage } from '../../lib/LanguageContext';
 
 export const OperationsModules = {
-  Transport: ({ role, currentStudentId, data, students, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+  Transport: ({ role, currentStudentId, wards, onWardSelect, data, students, onSave, onDelete, onRefresh }: { role?: UserRole, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
     const { currency } = useLanguage();
     const [viewingStudents, setViewingStudents] = useState<any | null>(null);
     const [routeStudents, setRouteStudents] = useState<any[]>([]);
@@ -109,11 +109,32 @@ export const OperationsModules = {
           setRequesting(null);
         }
       };
+      const [localSelectedWardId, setLocalSelectedWardId] = useState(currentStudentId || wards?.[0]?.id || "");
+      
+      React.useEffect(() => {
+        if (currentStudentId) setLocalSelectedWardId(currentStudentId);
+      }, [currentStudentId]);
 
-      const myAssignments = allAssignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(currentStudentId));
+      const selectedWardId = currentStudentId || localSelectedWardId;
+      const myAssignments = allAssignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(selectedWardId));
 
       return (
         <div className="space-y-10">
+          {role === 'PARENT' && wards && wards.length > 1 && (
+            <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm w-fit group hover:border-indigo-400 transition-colors mb-6">
+              <span className="text-[10px] font-black text-zinc-400 ml-2 uppercase tracking-[0.2em]">Select Ward:</span>
+              <select
+                value={selectedWardId}
+                onChange={(e) => {
+                  setLocalSelectedWardId(e.target.value);
+                  onWardSelect?.(e.target.value);
+                }}
+                className="bg-transparent text-sm font-black text-zinc-900 dark:text-white outline-none pr-4 cursor-pointer"
+              >
+                {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Bus className="w-5 h-5 text-indigo-600" />
@@ -526,7 +547,7 @@ export const OperationsModules = {
       </div>
     );
   },
-  Hostel: ({ role, currentStudentId, data, students, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+  Hostel: ({ role, currentStudentId, wards, onWardSelect, data, students, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
     const { currency, t } = useLanguage();
     const [viewingRoomsHostel, setViewingRoomsHostel] = useState<any | null>(null);
     const [hostelRooms, setHostelRooms] = useState<any[]>([]);
@@ -656,10 +677,32 @@ export const OperationsModules = {
       }
     };
 
-    const myHostelAssignments = allAssignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(currentStudentId));
+    const [localSelectedWardId, setLocalSelectedWardId] = useState(currentStudentId || wards?.[0]?.id || "");
+    
+    React.useEffect(() => {
+      if (currentStudentId) setLocalSelectedWardId(currentStudentId);
+    }, [currentStudentId]);
+
+    const selectedWardId = currentStudentId || localSelectedWardId;
+    const myHostelAssignments = allAssignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(selectedWardId));
 
     return (
       <div className="space-y-6">
+        {role === 'PARENT' && wards && wards.length > 1 && (
+          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm w-fit group hover:border-indigo-400 transition-colors">
+            <span className="text-[10px] font-black text-zinc-400 ml-2 uppercase tracking-[0.2em]">Select Ward:</span>
+            <select
+              value={selectedWardId}
+              onChange={(e) => {
+                setLocalSelectedWardId(e.target.value);
+                onWardSelect?.(e.target.value);
+              }}
+              className="bg-transparent text-sm font-black text-zinc-900 dark:text-white outline-none pr-4 cursor-pointer"
+            >
+              {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+          </div>
+        )}
         {role === 'STUDENT' || role === 'PARENT' ? (
           <div className="space-y-10">
             <div>
@@ -1556,12 +1599,33 @@ export const OperationsModules = {
       </div>
     );
   },
-  HealthMedical: ({ role, currentStudentId, wards, data, staffList, students, onSave, onDelete }: { role?: UserRole, currentStudentId?: string, wards?: Ward[], data?: any[], staffList?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
-    const [selectedWardId, setSelectedWardId] = useState(wards?.[0]?.id || "");
+  HealthMedical: ({ role, currentStudentId, wards, onWardSelect, data, staffList, students, onSave, onDelete }: { role?: UserRole, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], staffList?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
+    const [localSelectedWardId, setLocalSelectedWardId] = useState(currentStudentId || wards?.[0]?.id || "");
+    
+    React.useEffect(() => {
+      if (currentStudentId) setLocalSelectedWardId(currentStudentId);
+    }, [currentStudentId]);
+
+    const selectedWardId = currentStudentId || localSelectedWardId;
     const filteredData = role === 'PARENT' ? (data || []).filter(d => d.wardId === selectedWardId) : (data || []);
 
     return (
       <div className="space-y-6">
+        {role === 'PARENT' && wards && wards.length > 1 && (
+          <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm w-fit group hover:border-emerald-400 transition-colors">
+            <span className="text-[10px] font-black text-zinc-400 ml-2 uppercase tracking-[0.2em]">Select Ward:</span>
+            <select
+              value={selectedWardId}
+              onChange={(e) => {
+                setLocalSelectedWardId(e.target.value);
+                onWardSelect?.(e.target.value);
+              }}
+              className="bg-transparent text-sm font-black text-zinc-900 dark:text-white outline-none pr-4 cursor-pointer"
+            >
+              {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+            </select>
+          </div>
+        )}
         {(role === 'STUDENT' || role === 'PARENT') ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {(data || []).map((record: any) => (
@@ -1743,10 +1807,36 @@ export const OperationsModules = {
       </div>
     );
   },
-  BehaviorDiscipline: ({ role, currentStudentId, data, students, onSave, onDelete }: { role?: UserRole, currentStudentId?: string, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => (
+  BehaviorDiscipline: ({ role, currentStudentId, wards, onWardSelect, data, students, onSave, onDelete }: { role?: UserRole, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
+    const [localSelectedWardId, setLocalSelectedWardId] = useState(currentStudentId || (wards && wards.length > 0 ? wards[0].id : ""));
+    
+    React.useEffect(() => {
+      if (currentStudentId) setLocalSelectedWardId(currentStudentId);
+    }, [currentStudentId]);
+
+    const selectedWardId = currentStudentId || localSelectedWardId;
+    const filteredData = role === 'PARENT' ? (data || []).filter(d => String(d.student_id) === String(selectedWardId)) : (data || []);
+
+    return (
+    <div className="space-y-6">
+      {role === 'PARENT' && wards && wards.length > 1 && (
+        <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm w-fit group hover:border-indigo-400 transition-colors">
+          <span className="text-[10px] font-black text-zinc-400 ml-2 uppercase tracking-[0.2em]">Select Ward:</span>
+          <select
+            value={selectedWardId}
+            onChange={(e) => {
+              setLocalSelectedWardId(e.target.value);
+              onWardSelect?.(e.target.value);
+            }}
+            className="bg-transparent text-sm font-black text-zinc-900 dark:text-white outline-none pr-4 cursor-pointer"
+          >
+            {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+          </select>
+        </div>
+      )}
     <DataTable 
       title="Behavior & Discipline" 
-      data={data || []}
+      data={filteredData}
       onSave={onSave}
       onEdit={() => {}}
       onDelete={onDelete}
@@ -1882,14 +1972,23 @@ export const OperationsModules = {
         </div>
       )}
     />
-  ),
-  Clubs: ({ role, currentStudentId, data, students, staff, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, data?: any[], students?: any[], staff?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+    </div>
+  );
+  },
+  Clubs: ({ role, currentStudentId, wards, onWardSelect, data, students, staff, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], students?: any[], staff?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
     const { currency } = useLanguage();
     const [viewingMembers, setViewingMembers] = useState<any | null>(null);
     const [clubMembers, setClubMembers] = useState<any[]>([]);
     const [isLoadingMembers, setIsLoadingMembers] = useState(false);
     const [viewMode, setViewMode] = useState<'clubs' | 'memberships'>('clubs');
     const [allMemberships, setAllMemberships] = useState<any[]>([]);
+    const [localSelectedWardId, setLocalSelectedWardId] = useState(currentStudentId || (wards && wards.length > 0 ? wards[0].id : ""));
+    
+    React.useEffect(() => {
+      if (currentStudentId) setLocalSelectedWardId(currentStudentId);
+    }, [currentStudentId]);
+
+    const selectedWardId = currentStudentId || localSelectedWardId;
     const [isAddingMember, setIsAddingMember] = useState(false);
 
     const refreshMemberships = async () => {
@@ -1957,9 +2056,24 @@ export const OperationsModules = {
     if (role === 'STUDENT' || role === 'PARENT') {
       return (
         <div className="space-y-6">
+          {role === 'PARENT' && wards && wards.length > 1 && (
+            <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm w-fit group hover:border-indigo-400 transition-colors">
+              <span className="text-[10px] font-black text-zinc-400 ml-2 uppercase tracking-[0.2em]">Select Ward:</span>
+              <select
+                value={selectedWardId}
+                onChange={(e) => {
+                  setLocalSelectedWardId(e.target.value);
+                  onWardSelect?.(e.target.value);
+                }}
+                className="bg-transparent text-sm font-black text-zinc-900 dark:text-white outline-none pr-4 cursor-pointer"
+              >
+                {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+              </select>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(data || []).map((club: any) => {
-              const myMembership = allMemberships.find(m => m.club_id === club.id && m.student_id === currentStudentId);
+              const myMembership = allMemberships.find(m => m.club_id === club.id && String(m.student_id) === String(selectedWardId));
               return (
                 <div key={club.id} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-md transition-all">
                   <div className="flex justify-between items-start mb-4">
@@ -2004,7 +2118,7 @@ export const OperationsModules = {
                     </div>
                   ) : (
                     <button
-                      onClick={() => handleJoin(club.id, currentStudentId!)}
+                      onClick={() => handleJoin(club.id, selectedWardId!)}
                       disabled={club.status !== 'Active'}
                       className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
                     >

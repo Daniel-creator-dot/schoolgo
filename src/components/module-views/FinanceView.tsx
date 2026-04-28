@@ -1773,7 +1773,7 @@ export const FinanceModules = {
       </>
     );
   },
-  InvoicesPayments: ({ role, students, wards, selectedWardId: propSelectedWardId, data, payments, feeStructures, organization, onSave, onDelete, onRecordPayment }: { role?: UserRole, students?: Student[], wards?: any[], selectedWardId?: string, data?: any[], payments?: any[], feeStructures?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void }) => {
+  InvoicesPayments: ({ role, students, wards, selectedWardId: propSelectedWardId, data, payments, feeStructures, organization, onSave, onDelete, onRecordPayment, onWardSelect }: { role?: UserRole, students?: Student[], wards?: any[], selectedWardId?: string, data?: any[], payments?: any[], feeStructures?: any[], organization?: any, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRecordPayment?: (data: any) => void, onWardSelect?: (id: string) => void }) => {
     const { t, currency } = useLanguage();
     const [localSelectedWardId, setLocalSelectedWardId] = useState("");
     
@@ -2328,7 +2328,10 @@ export const FinanceModules = {
                 <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Select Ward</span>
                 <select
                   value={selectedWardId}
-                  onChange={(e) => setLocalSelectedWardId(e.target.value)}
+                  onChange={(e) => {
+                    setLocalSelectedWardId(e.target.value);
+                    onWardSelect?.(e.target.value);
+                  }}
                   className="bg-transparent text-sm font-bold outline-none pr-6 cursor-pointer text-zinc-900 dark:text-white"
                 >
                   {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -2480,7 +2483,10 @@ export const FinanceModules = {
             <span className="text-xs font-bold text-zinc-500 ml-2 uppercase tracking-wider">Ward:</span>
             <select
               value={selectedWardId}
-              onChange={(e) => setLocalSelectedWardId(e.target.value)}
+              onChange={(e) => {
+                setLocalSelectedWardId(e.target.value);
+                onWardSelect?.(e.target.value);
+              }}
               className="bg-transparent text-sm font-bold outline-none pr-4"
             >
               {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}

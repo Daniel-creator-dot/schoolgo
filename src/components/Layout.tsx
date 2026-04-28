@@ -328,7 +328,7 @@ export default function Layout({
 
             {/* Ward Switcher for Parents */}
             {currentRole === 'PARENT' && wards.length > 0 && (
-              <div className="relative ml-2 sm:ml-4 flex-1 sm:flex-initial hidden md:flex">
+              <div className="relative ml-2 sm:ml-4 flex-1 sm:flex-initial flex">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm transition-all hover:bg-indigo-100 dark:hover:bg-indigo-900/40 group max-w-[140px] sm:max-w-none">
                   <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div className="flex flex-col min-w-0">
