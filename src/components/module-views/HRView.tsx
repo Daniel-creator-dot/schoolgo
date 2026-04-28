@@ -1174,6 +1174,7 @@ export const HRModules = {
     const { currency, t } = useLanguage();
     const [editingStaff, setEditingStaff] = useState<any | null>(null);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'list' | 'graphical'>('graphical');
     const [selectedAdditionalRoles, setSelectedAdditionalRoles] = useState<
       string[]
     >([]);
@@ -1221,78 +1222,177 @@ export const HRModules = {
 
     return (
       <div className="space-y-6">
-        <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-indigo-600" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
+              <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">
                 {t('roles_permissions_mgmt')}
               </h2>
-              <p className="text-sm text-zinc-500">
-                Assign multiple roles to staff members to enable role switching.
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                Assign multiple roles to staff members for switchable access
               </p>
             </div>
           </div>
-
-          <DataTable<any>
-            title={t('staff_role_assignments')}
-            data={staff}
-            columns={[
-              {
-                header: "Staff Name",
-                accessor: "name",
-                className: "font-bold",
-              },
-              {
-                header: "Primary Role",
-                accessor: (item: any) => (
-                  <span className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-400">
-                    {item.role}
-                  </span>
-                ),
-              },
-              {
-                header: "Additional Roles",
-                accessor: (item: any) => (
-                  <div className="flex flex-wrap gap-1">
-                    {item.additional_roles &&
-                      item.additional_roles.length > 0 ? (
-                      item.additional_roles.map((role: string) => (
-                        <span
-                          key={role}
-                          className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-xs font-bold text-indigo-600 dark:text-indigo-400"
-                        >
-                          {role}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-xs text-zinc-400">None</span>
-                    )}
-                  </div>
-                ),
-              },
-              {
-                header: "Status",
-                accessor: (item: any) => (
-                  <span
-                    className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                      item.status === "Active"
-                        ? "bg-emerald-50 text-emerald-600"
-                        : "bg-red-50 text-red-600",
-                    )}
-                  >
-                    {item.status}
-                  </span>
-                ),
-              },
-            ]}
-            onEdit={handleOpenModal}
-            autoModal={false}
-          />
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode('list')}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                viewMode === 'list' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              <List className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('graphical')}
+              className={cn(
+                "p-2 rounded-lg transition-all",
+                viewMode === 'graphical' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+              )}
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+          </div>
         </div>
+
+        {viewMode === 'list' ? (
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <DataTable<any>
+              title={t('staff_role_assignments')}
+              data={staff}
+              columns={[
+                {
+                  header: "Staff Name",
+                  accessor: "name",
+                  className: "font-bold",
+                },
+                {
+                  header: "Primary Role",
+                  accessor: (item: any) => (
+                    <span className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-400">
+                      {item.role}
+                    </span>
+                  ),
+                },
+                {
+                  header: "Additional Roles",
+                  accessor: (item: any) => (
+                    <div className="flex flex-wrap gap-1">
+                      {item.additional_roles &&
+                        item.additional_roles.length > 0 ? (
+                        item.additional_roles.map((role: string) => (
+                          <span
+                            key={role}
+                            className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-xs font-bold text-indigo-600 dark:text-indigo-400"
+                          >
+                            {role}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-zinc-400">None</span>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  header: "Status",
+                  accessor: (item: any) => (
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                        item.status === "Active"
+                          ? "bg-emerald-50 text-emerald-600"
+                          : "bg-red-50 text-red-600",
+                      )}
+                    >
+                      {item.status}
+                    </span>
+                  ),
+                },
+              ]}
+              onEdit={handleOpenModal}
+              autoModal={false}
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {staff.map((member) => (
+              <div 
+                key={member.id}
+                className="group relative bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 p-6 space-y-6 hover:border-indigo-500 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10"
+              >
+                {/* Header: Avatar & Basic Info */}
+                <div className="flex items-start gap-4">
+                  <div className="relative">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-indigo-200 dark:shadow-none">
+                      {member.name[0]}
+                    </div>
+                    <div className={cn(
+                      "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white dark:border-zinc-900 shadow-sm",
+                      member.status === 'Active' ? "bg-emerald-500" : "bg-red-500"
+                    )} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight truncate">
+                      {member.name}
+                    </h3>
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest truncate">
+                      {member.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Role Status Section */}
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest pl-1">Primary Role</label>
+                    <div className="flex items-center gap-2 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-100 dark:border-zinc-700/50">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                        <UserCheck className="w-3.5 h-3.5 text-indigo-600" />
+                      </div>
+                      <span className="text-xs font-black text-indigo-600 uppercase tracking-wide">
+                        {member.role || 'Unassigned'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest pl-1">Additional Privileges</label>
+                    <div className="flex flex-wrap gap-1.5 min-h-[2.5rem]">
+                      {member.additional_roles && member.additional_roles.length > 0 ? (
+                        member.additional_roles.map((role: string) => (
+                          <div 
+                            key={role}
+                            className="px-2.5 py-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-[9px] font-black text-zinc-600 dark:text-zinc-400 uppercase tracking-wide flex items-center gap-1.5 hover:border-indigo-300 transition-colors"
+                          >
+                            <ShieldCheck className="w-3 h-3 text-indigo-400" />
+                            {role}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[10px] text-zinc-400 italic pl-1 pt-1">No additional roles assigned</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-2">
+                  <button 
+                    onClick={() => handleOpenModal(member)}
+                    className="w-full py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform active:scale-95 shadow-lg shadow-zinc-200 dark:shadow-none flex items-center justify-center gap-2"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                    Manage Permissions
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <Modal
           isOpen={isRoleModalOpen}
