@@ -73,20 +73,71 @@ export const getAnnouncements = async (req: AuthRequest, res: Response) => {
   }
 };
 
+import { SMSService } from '../services/SMSService.ts';
+
 export const createAnnouncement = async (req: AuthRequest, res: Response) => {
   try {
-    const { title, content, target_audience, priority, class_id, scheduled_for } = req.body;
+    const { title, content, target_audience, priority, class_id, scheduled_for, send_sms } = req.body;
     const org_id = req.user.org_id;
     const sender_id = req.user.id;
 
+    // 1. Create the announcement record
     const result = await pool.query(
       `INSERT INTO announcements (org_id, sender_id, title, content, target_audience, priority, class_id, scheduled_for) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
       [org_id, sender_id, title, content, target_audience || 'ALL', priority || 'Normal', class_id || null, scheduled_for || null]
     );
 
-    res.status(201).json(result.rows[0]);
+    const announcement = result.rows[0];
+
+    // 2. Handle SMS if requested
+    if (send_sms && !scheduled_for) {
+      // Fetch recipients
+      let recipientQuery = '';
+      let recipientParams: any[] = [org_id];
+
+      if (target_audience === 'STAFF') {
+        recipientQuery = 'SELECT contact as phone FROM staff WHERE org_id = $1 AND contact IS NOT NULL AND contact != \'\'';
+      } else if (target_audience === 'PARENT') {
+        recipientQuery = 'SELECT contact as phone FROM students WHERE org_id = $1 AND contact IS NOT NULL AND contact != \'\'';
+      } else if (target_audience === 'STUDENT') {
+        recipientQuery = 'SELECT contact as phone FROM students WHERE org_id = $1 AND contact IS NOT NULL AND contact != \'\''; // Students usually use parent contact or their own
+      } else if (target_audience === 'CLASS') {
+        recipientQuery = 'SELECT contact as phone FROM students WHERE org_id = $1 AND class_id = $2 AND contact IS NOT NULL AND contact != \'\'';
+        recipientParams.push(class_id);
+      } else {
+        // ALL: Combine Staff and Parents/Students
+        recipientQuery = `
+          SELECT contact as phone FROM staff WHERE org_id = $1 AND contact IS NOT NULL AND contact != ''
+          UNION
+          SELECT contact as phone FROM students WHERE org_id = $1 AND contact IS NOT NULL AND contact != ''
+        `;
+      }
+
+      const recipients = await pool.query(recipientQuery, recipientParams);
+      const phones = [...new Set(recipients.rows.map(r => r.phone))];
+
+      // Check balance first
+      const orgBalance = await pool.query('SELECT sms_balance FROM organizations WHERE id = $1', [org_id]);
+      const balance = orgBalance.rows[0]?.sms_balance || 0;
+
+      if (balance < phones.length) {
+        // We still created the announcement, but we'll return a warning about SMS
+        return res.status(201).json({
+          ...announcement,
+          sms_error: `Insufficient SMS balance. Required: ${phones.length}, Available: ${balance}. Announcement created without SMS.`
+        });
+      }
+
+      // Send SMS (async)
+      const smsMessage = `${title.toUpperCase()}\n${content}`;
+      Promise.all((phones as string[]).map(phone => SMSService.sendSMS(org_id as string, phone, smsMessage)))
+        .catch(err => console.error('Bulk SMS sending error:', err));
+    }
+
+    res.status(201).json(announcement);
   } catch (err: any) {
+    console.error('createAnnouncement error:', err);
     res.status(500).json({ error: err.message });
   }
 };

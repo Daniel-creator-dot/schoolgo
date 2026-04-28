@@ -1560,7 +1560,14 @@ export default function App() {
         />
       );
     if (currentView === "Announcements")
-      return <Announcements role={currentRole} />;
+      return (
+        <Announcements 
+          role={currentRole} 
+          students={studentList}
+          staff={staffList}
+          organization={organizations.find(o => o.id === currentUser?.org_id)}
+        />
+      );
     if (currentView === "profile" && currentRole === "SUPER_ADMIN") {
       return (
         <Profile

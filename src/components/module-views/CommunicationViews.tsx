@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../lib/LanguageContext';
-import { Bell, Plus, Trash2, ShieldAlert, Users, GraduationCap, UserCircle, Calendar, MapPin, Clock } from 'lucide-react';
+import { Bell, Plus, Trash2, ShieldAlert, Users, GraduationCap, UserCircle, Calendar, MapPin, Clock, MessageSquare, Smartphone, Info } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Modal } from '../UI';
 import { API_BASE_URL } from '../../constants';
 
-export function Announcements({ role }: { role: string }) {
+export function Announcements({ role, students = [], staff = [], organization }: { role: string; students?: any[]; staff?: any[]; organization?: any }) {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'announcements' | 'meetings'>('announcements');
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -20,7 +20,8 @@ export function Announcements({ role }: { role: string }) {
     target_audience: 'ALL',
     priority: 'Normal',
     class_id: '',
-    scheduled_for: ''
+    scheduled_for: '',
+    send_sms: false
   });
   const [meetingFormData, setMeetingFormData] = useState({
     title: '',
@@ -75,7 +76,7 @@ export function Announcements({ role }: { role: string }) {
       if (res.ok) {
         (window as any).showToast?.('Announcement created!', 'success');
         setIsModalOpen(false);
-        setFormData({ title: '', content: '', target_audience: 'ALL', priority: 'Normal', class_id: '', scheduled_for: '' });
+        setFormData({ title: '', content: '', target_audience: 'ALL', priority: 'Normal', class_id: '', scheduled_for: '', send_sms: false });
         fetchData();
       } else {
         const error = await res.json();
@@ -155,6 +156,18 @@ export function Announcements({ role }: { role: string }) {
       default: return <Users className="w-4 h-4" />;
     }
   };
+
+  const getRecipientCount = () => {
+    const { target_audience, class_id } = formData;
+    if (target_audience === 'STAFF') return staff.length;
+    if (target_audience === 'STUDENT' || target_audience === 'PARENT') return students.length;
+    if (target_audience === 'CLASS') return students.filter(s => s.class_id === class_id).length;
+    return (staff.length + students.length); // ALL
+  };
+
+  const recipientCount = getRecipientCount();
+  const smsBalance = organization?.sms_balance || 0;
+  const hasEnoughBalance = smsBalance >= recipientCount;
 
   if (isLoading) {
     return (
@@ -434,6 +447,53 @@ export function Announcements({ role }: { role: string }) {
             <p className="text-[10px] text-zinc-500">Leave blank to broadcast immediately.</p>
           </div>
 
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                  <Smartphone className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white">Send as SMS</p>
+                  <p className="text-[10px] text-zinc-500">Broadcast as a text message to phones</p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer"
+                  checked={formData.send_sms}
+                  onChange={(e) => setFormData({ ...formData, send_sms: e.target.checked })}
+                />
+                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              </label>
+            </div>
+
+            {formData.send_sms && (
+              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                <div className="flex items-center justify-between text-xs mb-2">
+                  <span className="text-zinc-500">SMS Balance:</span>
+                  <span className={cn("font-bold", smsBalance < 10 ? "text-red-500" : "text-emerald-500")}>
+                    {smsBalance} credits
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-500">Required Credits:</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">
+                    {recipientCount} (1 per recipient)
+                  </span>
+                </div>
+
+                {!hasEnoughBalance && (
+                  <div className="mt-3 flex items-start gap-2 p-2.5 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-lg border border-red-100 dark:border-red-900/20 text-[10px] leading-tight">
+                    <Info className="w-3 h-3 mt-0.5 shrink-0" />
+                    <p>Insufficient SMS balance to send to all {recipientCount} recipients. Please top up your balance.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-zinc-800 mt-6">
             <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 text-zinc-600 dark:text-zinc-400 font-bold hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors">
               Cancel
@@ -553,4 +613,3 @@ export function Announcements({ role }: { role: string }) {
   );
 }
 
-import { MessageSquare } from 'lucide-react';
