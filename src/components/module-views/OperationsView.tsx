@@ -108,70 +108,112 @@ export const OperationsModules = {
         }
       };
 
+      const myAssignments = allAssignments.filter((a: any) => String(a.id) === String(currentStudentId));
+
       return (
-        <div className="space-y-6">
+        <div className="space-y-10">
           <div>
-            <h2 className="text-lg font-bold mb-1">My Transport Assignment</h2>
-            {allAssignments.filter((a: any) => String(a.id) === String(currentStudentId)).length > 0 ? (
-              <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex flex-col gap-2">
-                {allAssignments.filter((a: any) => String(a.id) === String(currentStudentId)).map((a: any) => (
-                  <div key={a.id}>
-                    <div className="flex items-center gap-3">
-                      <p className="font-bold text-emerald-700 dark:text-emerald-400">{a.route_name}</p>
-                      <span className={cn(
-                        "px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase",
-                        a.transport_status === 'Pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" :
-                        "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
-                      )}>
-                        {a.transport_status || 'Approved'}
-                      </span>
+            <div className="flex items-center gap-2 mb-4">
+              <Bus className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">My Transport Assignment</h2>
+            </div>
+            
+            {myAssignments.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {myAssignments.map((a: any) => (
+                  <div key={a.id} className="p-6 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden group">
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-1">Active Route</p>
+                          <h3 className="text-xl font-black text-zinc-900 dark:text-white">{a.route_name}</h3>
+                        </div>
+                        <span className={cn(
+                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                          a.transport_status === 'Pending' ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                        )}>
+                          {a.transport_status || 'Approved'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-emerald-100 dark:border-emerald-800/50">
+                        <div>
+                          <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">Pricing</p>
+                          <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">{currency}{a.price || '0.00'}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">Effective Date</p>
+                          <p className="text-xs font-bold text-emerald-700/70 dark:text-emerald-400/60">{new Date().toLocaleDateString()}</p>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs text-emerald-800/70 dark:text-emerald-200/60 mt-0.5 font-medium">Price: {currency}{a.price || '0.00'}</p>
+                    <Bus className="absolute -right-6 -bottom-6 w-32 h-32 text-emerald-500/5 -rotate-12 group-hover:scale-110 transition-transform duration-700" />
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-zinc-400 italic">You are not assigned to any transport route yet.</p>
+              <div className="p-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2.5rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                <Bus className="w-10 h-10 text-zinc-300 mx-auto mb-4" />
+                <p className="text-sm text-zinc-500 font-medium">You are not assigned to any transport route yet.</p>
+              </div>
             )}
           </div>
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold">Available Transport Routes</h2>
-            <div className="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/60">
-                    <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Route Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Price</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Driver</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Driver Phone</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Vehicle</th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase tracking-wider">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {(data || []).map((route: any) => (
-                    <tr key={route.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
-                      <td className="px-4 py-3 font-bold">{route.route_name}</td>
-                      <td className="px-4 py-3">{currency}{route.price || '0.00'}</td>
-                      <td className="px-4 py-3">{route.driver_name || 'N/A'}</td>
-                      <td className="px-4 py-3">{route.driver_phone || 'N/A'}</td>
-                      <td className="px-4 py-3">{route.vehicle_number || 'N/A'}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => handleRequest(route.id)}
-                          disabled={requesting === route.id}
-                          className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
-                        >
-                          {requesting === route.id ? 'Requesting...' : 'Request to Join'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {(data || []).length === 0 && (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-zinc-400 italic text-sm">No transport routes available</td></tr>
-                  )}
-                </tbody>
-              </table>
+
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Navigation className="w-5 h-5 text-indigo-600" />
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Available Transport Routes</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(data || []).map((route: any) => (
+                <div key={route.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm group hover:shadow-xl hover:border-indigo-500 transition-all duration-500 flex flex-col">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-500">
+                      <Navigation className="w-6 h-6" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Route Fare</p>
+                      <p className="text-xl font-black text-indigo-600">{currency}{route.price || '0.00'}</p>
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6 tracking-tight group-hover:text-indigo-600 transition-colors">{route.route_name}</h3>
+
+                  <div className="space-y-4 mb-8 flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Assigned Driver</p>
+                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{route.driver_name || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Vehicle Reg</p>
+                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300 font-mono tracking-wider">{route.vehicle_number || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleRequest(route.id)}
+                    disabled={requesting === route.id}
+                    className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all shadow-xl disabled:opacity-50"
+                  >
+                    {requesting === route.id ? 'Processing...' : 'Request to Join'}
+                  </button>
+                </div>
+              ))}
+              {(data || []).length === 0 && (
+                <div className="col-span-full py-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                  <p className="text-zinc-400 italic text-sm">No transport routes available at this time.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -612,306 +654,336 @@ export const OperationsModules = {
       }
     };
 
+    const myHostelAssignments = allAssignments.filter((a: any) => String(a.id) === String(currentStudentId));
+
     return (
       <div className="space-y-6">
-      {role === 'STUDENT' || role === 'PARENT' ? (
-          <div className="space-y-4">
+        {role === 'STUDENT' || role === 'PARENT' ? (
+          <div className="space-y-10">
             <div>
-              <h2 className="text-lg font-bold mb-1">My Hostel Assignment</h2>
-              {allAssignments.filter((a: any) => String(a.id) === String(currentStudentId)).length > 0 ? (
-                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-800 flex flex-col gap-2">
-                  {allAssignments.filter((a: any) => String(a.id) === String(currentStudentId)).map((a: any) => (
-                    <div key={a.id}>
-                      <div className="flex items-center gap-3">
-                        <p className="font-bold text-emerald-700 dark:text-emerald-400">{a.hostel_name} — Room {a.room_number}</p>
-                        <span className={cn(
-                          "px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase",
-                          a.hostel_status === 'Pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" :
-                          "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
-                        )}>
-                          {a.hostel_status || 'Approved'}
-                        </span>
+              <div className="flex items-center gap-2 mb-4">
+                <Home className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">My Hostel Assignment</h2>
+              </div>
+
+              {myHostelAssignments.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {myHostelAssignments.map((a: any) => (
+                    <div key={a.id} className="p-6 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden group">
+                      <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-1">Active Residency</p>
+                            <h3 className="text-xl font-black text-zinc-900 dark:text-white">{a.hostel_name} — Room {a.room_number}</h3>
+                          </div>
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                            a.hostel_status === 'Pending' ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                          )}>
+                            {a.hostel_status || 'Approved'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-emerald-100 dark:border-emerald-800/50">
+                          <div>
+                            <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">Pricing</p>
+                            <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">{currency}{a.price || '0.00'}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">Effective Date</p>
+                            <p className="text-xs font-bold text-emerald-700/70 dark:text-emerald-400/60">{new Date().toLocaleDateString()}</p>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-emerald-800/70 dark:text-emerald-200/60 mt-0.5 font-medium">Price: {a.price || '0.00'}</p>
+                      <Home className="absolute -right-6 -bottom-6 w-32 h-32 text-emerald-500/5 -rotate-12 group-hover:scale-110 transition-transform duration-700" />
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-zinc-400 italic">You are not assigned to any hostel yet.</p>
+                <div className="p-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2.5rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                  <Home className="w-10 h-10 text-zinc-300 mx-auto mb-4" />
+                  <p className="text-sm text-zinc-500 font-medium">You are not assigned to any hostel yet.</p>
+                </div>
               )}
             </div>
-            <div>
-              <h2 className="text-lg font-bold mb-3">Available Rooms</h2>
-              <div className="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-zinc-50 dark:bg-zinc-800/60 border-b border-zinc-100 dark:border-zinc-800">
-                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Hostel</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Room</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Capacity</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Available</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Price</th>
-                      <th className="px-4 py-3 text-left text-xs font-bold text-zinc-500 uppercase">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                    {allRooms.filter((r: any) => Number(r.student_count) < Number(r.capacity)).map((room: any) => (
-                      <tr key={room.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
-                        <td className="px-4 py-3 font-bold">{room.hostel_name}</td>
-                        <td className="px-4 py-3">Room {room.room_number}</td>
-                        <td className="px-4 py-3">{room.capacity}</td>
-                        <td className="px-4 py-3">{Number(room.capacity) - Number(room.student_count)} slots</td>
-                        <td className="px-4 py-3">{room.price || '0.00'}</td>
-                        <td className="px-4 py-3">
-                          <button
-                            onClick={async () => {
-                              setHostelRequesting(room.id);
-                              try {
-                                const { assignStudentToRoom } = await import('../../lib/api');
-                                await assignStudentToRoom(room.id, currentStudentId!);
-                                (window as any).showToast?.('Hostel room request submitted!', 'success');
-                                refreshAssignments();
-                                fetchAllRooms();
-                                onRefresh?.();
-                              } catch (err: any) {
-                                (window as any).showToast?.(err?.response?.data?.error || 'Request failed', 'error');
-                              } finally {
-                                setHostelRequesting(null);
-                              }
-                            }}
-                            disabled={hostelRequesting === room.id}
-                            className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
-                          >
-                            {hostelRequesting === room.id ? 'Requesting...' : 'Request to Join'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                    {allRooms.filter((r: any) => Number(r.student_count) < Number(r.capacity)).length === 0 && (
-                      <tr><td colSpan={6} className="px-4 py-8 text-center text-zinc-400 italic text-sm">No available rooms</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div>
-          <div className="flex items-center justify-between">
-          <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-fit">
-            <button 
-              onClick={() => setViewMode('hostels')}
-              className={cn(
-                "px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
-                viewMode === 'hostels' ? "bg-white dark:bg-zinc-700 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-              )}
-            >
-              Hostels
-            </button>
-            <button 
-              onClick={() => setViewMode('residents')}
-              className={cn(
-                "px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
-                viewMode === 'residents' ? "bg-white dark:bg-zinc-700 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-              )}
-            >
-              Manage Residents
-            </button>
-          </div>
-          {viewMode === 'residents' && (
-            <button 
-              onClick={() => setIsAddingResident(true)}
-              className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Resident to Room
-            </button>
-          )}
-        </div>
 
-        {viewMode === 'hostels' ? (
-          <DataTable 
-            title="Hostel Management" 
-            data={data || []}
-            onSave={onSave}
-            onEdit={() => {}}
-            onDelete={onDelete}
-            columns={[
-            { header: 'Hostel Name', accessor: (item: any) => item.name, className: 'font-bold' },
-            { header: 'Type', accessor: (item: any) => (
-              <span className={cn(
-                "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                item.type === 'Boys' ? "bg-blue-50 text-blue-600" : 
-                item.type === 'Girls' ? "bg-pink-50 text-pink-600" : "bg-zinc-50 text-zinc-600"
-              )}>
-                {item.type}
-              </span>
-            )},
-            { header: 'Warden', accessor: (item: any) => item.warden_name },
-            { header: 'Rooms', accessor: (item: any) => (
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleViewRooms(item); }}
-                className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-xs font-bold transition-colors"
-              >
-                {item.total_rooms || 0} Rooms
-              </button>
-            )},
-            { header: 'Capacity', accessor: (item: any) => item.total_capacity || '0' },
-          ]}
-          renderDetails={(item) => (
             <div className="space-y-6">
-              <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
-                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
-                  <Home className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-widest",
-                      item.type === 'Boys' ? "bg-blue-100 text-blue-600" : 
-                      item.type === 'Girls' ? "bg-pink-100 text-pink-600" : "bg-zinc-100 text-zinc-600"
-                    )}>
-                      {item.type} Hostel
-                    </span>
-                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Hostel Management</span>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Available Rooms</h2>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Total Capacity</p>
-                  <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.total_capacity || 0} Beds</p>
-                </div>
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Total Rooms</p>
-                  <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.total_rooms || 0} Units</p>
-                </div>
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allRooms.filter((r: any) => Number(r.student_count) < Number(r.capacity)).map((room: any) => (
+                  <div key={room.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm group hover:shadow-xl hover:border-indigo-500 transition-all duration-500 flex flex-col">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-500">
+                        <Home className="w-6 h-6" />
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Room Fare</p>
+                        <p className="text-xl font-black text-indigo-600">{currency}{room.price || '0.00'}</p>
+                      </div>
+                    </div>
 
-              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-                <div>
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Assigned Warden</p>
-                  <p className="text-sm font-black text-zinc-900 dark:text-white">{item.warden_name || 'No warden assigned'}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Hostel ID</p>
-                  <p className="text-xs font-mono text-zinc-400 font-bold uppercase">#{item.id.slice(0, 8).toUpperCase()}</p>
-                </div>
-              </div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-1 tracking-tight group-hover:text-indigo-600 transition-colors">{room.hostel_name}</h3>
+                    <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-6">Room {room.room_number}</p>
 
-              <div className="p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/20">
-                <p className="text-xs font-bold text-amber-600 uppercase mb-1">Management Note</p>
-                <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium italic">All rooms and residents in this hostel are managed through the Room Management sub-module.</p>
-              </div>
-            </div>
-          )}
-          onAdd={onSave ? () => {} : undefined}
-          renderForm={(item, isViewOnly) => (
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase">Hostel Name</label>
-                <input 
-                  name="name" 
-                  defaultValue={item?.name} 
-                  required 
-                  disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">Type</label>
-                  <select 
-                    name="type" 
-                    defaultValue={item?.type || 'Boys'} 
-                    disabled={isViewOnly}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium"
-                  >
-                    <option value="Boys">Boys</option>
-                    <option value="Girls">Girls</option>
-                    <option value="Mixed">Mixed</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase">Warden Name</label>
-                  <input 
-                    name="warden_name" 
-                    defaultValue={item?.warden_name} 
-                    disabled={isViewOnly}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        />
-        ) : (
-          <DataTable 
-            title="Current Residents"
-            data={allAssignments}
-            columns={[
-              { header: 'Resident Name', accessor: (item: any) => item.name, className: 'font-bold' },
-              { header: 'Adm No.', accessor: (item: any) => item.admission_no },
-              { header: 'Hostel', accessor: (item: any) => item.hostel_name },
-              { header: 'Room', accessor: (item: any) => (
-                <span className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[10px] font-bold uppercase">
-                  Room {item.room_number}
-                </span>
-              )},
-              { header: 'Status', accessor: (item: any) => (
-                <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "px-2 py-1 rounded-lg text-[10px] font-bold uppercase",
-                    item.hostel_status === 'Pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
-                    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                  )}>
-                    {item.hostel_status || 'Approved'}
-                  </span>
-                  {item.hostel_status === 'Pending' && (
-                    <button 
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        if (!confirm(`Approve hostel request for ${item.name}?`)) return;
+                    <div className="space-y-4 mb-8 flex-1">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Availability</p>
+                          <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{Number(room.capacity) - Number(room.student_count)} Slots Left ({room.capacity} Total)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={async () => {
+                        setHostelRequesting(room.id);
                         try {
-                          const { approveHostelRequest } = await import('../../lib/api');
-                          await approveHostelRequest(item.id);
+                          const { assignStudentToRoom } = await import('../../lib/api');
+                          await assignStudentToRoom(room.id, currentStudentId!);
+                          (window as any).showToast?.('Hostel room request submitted!', 'success');
                           refreshAssignments();
+                          fetchAllRooms();
                           onRefresh?.();
-                          (window as any).showToast?.('Request approved successfully!', 'success');
                         } catch (err: any) {
-                          (window as any).showToast?.('Failed to approve request', 'error');
+                          (window as any).showToast?.(err?.response?.data?.error || 'Request failed', 'error');
+                        } finally {
+                          setHostelRequesting(null);
                         }
                       }}
-                      className="px-2 py-1 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-[10px] font-bold transition-colors"
+                      disabled={hostelRequesting === room.id}
+                      className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all shadow-xl disabled:opacity-50"
                     >
-                      Approve
+                      {hostelRequesting === room.id ? 'Processing...' : 'Request to Join'}
                     </button>
+                  </div>
+                ))}
+                {allRooms.filter((r: any) => Number(r.student_count) < Number(r.capacity)).length === 0 && (
+                  <div className="col-span-full py-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                    <p className="text-zinc-400 italic text-sm">No available rooms at this time.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-fit">
+                <button 
+                  onClick={() => setViewMode('hostels')}
+                  className={cn(
+                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    viewMode === 'hostels' ? "bg-white dark:bg-zinc-700 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                   )}
+                >
+                  Hostels
+                </button>
+                <button 
+                  onClick={() => setViewMode('residents')}
+                  className={cn(
+                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    viewMode === 'residents' ? "bg-white dark:bg-zinc-700 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                  )}
+                >
+                  Manage Residents
+                </button>
+              </div>
+              {viewMode === 'residents' && (
+                <button 
+                  onClick={() => setIsAddingResident(true)}
+                  className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Resident to Room
+                </button>
+              )}
+            </div>
+
+            {viewMode === 'hostels' ? (
+              <DataTable 
+                title="Hostel Management" 
+                data={data || []}
+                onSave={onSave}
+                onEdit={() => {}}
+                onDelete={onDelete}
+                columns={[
+                { header: 'Hostel Name', accessor: (item: any) => item.name, className: 'font-bold' },
+                { header: 'Type', accessor: (item: any) => (
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                    item.type === 'Boys' ? "bg-blue-50 text-blue-600" : 
+                    item.type === 'Girls' ? "bg-pink-50 text-pink-600" : "bg-zinc-50 text-zinc-600"
+                  )}>
+                    {item.type}
+                  </span>
+                )},
+                { header: 'Warden', accessor: (item: any) => item.warden_name },
+                { header: 'Rooms', accessor: (item: any) => (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleViewRooms(item); }}
+                    className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg text-xs font-bold transition-colors"
+                  >
+                    {item.total_rooms || 0} Rooms
+                  </button>
+                )},
+                { header: 'Capacity', accessor: (item: any) => item.total_capacity || '0' },
+              ]}
+              renderDetails={(item) => (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/20">
+                    <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
+                      <Home className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-zinc-900 dark:text-white">{item.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-widest",
+                          item.type === 'Boys' ? "bg-blue-100 text-blue-600" : 
+                          item.type === 'Girls' ? "bg-pink-100 text-pink-600" : "bg-zinc-100 text-zinc-600"
+                        )}>
+                          {item.type} Hostel
+                        </span>
+                        <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Hostel Management</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Total Capacity</p>
+                      <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.total_capacity || 0} Beds</p>
+                    </div>
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Total Rooms</p>
+                      <p className="text-2xl font-black text-zinc-900 dark:text-white">{item.total_rooms || 0} Units</p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                    <div>
+                      <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Assigned Warden</p>
+                      <p className="text-sm font-black text-zinc-900 dark:text-white">{item.warden_name || 'No warden assigned'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-zinc-500 uppercase mb-1">Hostel ID</p>
+                      <p className="text-xs font-mono text-zinc-400 font-bold uppercase">#{item.id.slice(0, 8).toUpperCase()}</p>
+                    </div>
+                  </div>
                 </div>
-              )},
-              { header: 'Price', accessor: (item: any) => item.price ? `${currency}${item.price}` : '0.00' },
-            ]}
-            onDelete={async (item) => {
-              const isPending = item.hostel_status === 'Pending';
-              if (!confirm(`${isPending ? 'Reject request for' : 'Unassign'} ${item.name} from hostel/room?`)) return;
-              try {
-                if (isPending) {
-                  const { rejectHostelRequest } = await import('../../lib/api');
-                  await rejectHostelRequest(item.id);
-                } else {
-                  const { unassignStudentFromRoom } = await import('../../lib/api');
-                  await unassignStudentFromRoom(item.id);
-                }
-                refreshAssignments();
-                onRefresh?.();
-                (window as any).showToast?.(isPending ? 'Request rejected' : 'Resident unassigned successfully!', 'success');
-              } catch (err: any) {
-                (window as any).showToast?.('Failed to unassign/reject', 'error');
-              }
-            }}
-          />
+              )}
+              renderForm={(item, isViewOnly) => (
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase">Hostel Name</label>
+                    <input 
+                      name="name" 
+                      defaultValue={item?.name} 
+                      required 
+                      disabled={isViewOnly}
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase">Type</label>
+                      <select 
+                        name="type" 
+                        defaultValue={item?.type || 'Boys'} 
+                        disabled={isViewOnly}
+                        className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-medium"
+                      >
+                        <option value="Boys">Boys</option>
+                        <option value="Girls">Girls</option>
+                        <option value="Mixed">Mixed</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-500 uppercase">Warden Name</label>
+                      <input 
+                        name="warden_name" 
+                        defaultValue={item?.warden_name} 
+                        disabled={isViewOnly}
+                        className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
+            ) : (
+              <DataTable 
+                title="Current Residents"
+                data={allAssignments}
+                columns={[
+                  { header: 'Resident Name', accessor: (item: any) => item.name, className: 'font-bold' },
+                  { header: 'Adm No.', accessor: (item: any) => item.admission_no },
+                  { header: 'Hostel', accessor: (item: any) => item.hostel_name },
+                  { header: 'Room', accessor: (item: any) => (
+                    <span className="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[10px] font-bold uppercase">
+                      Room {item.room_number}
+                    </span>
+                  )},
+                  { header: 'Status', accessor: (item: any) => (
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "px-2 py-1 rounded-lg text-[10px] font-bold uppercase",
+                        item.hostel_status === 'Pending' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                        "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                      )}>
+                        {item.hostel_status || 'Approved'}
+                      </span>
+                      {item.hostel_status === 'Pending' && (
+                        <button 
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!confirm(`Approve hostel request for ${item.name}?`)) return;
+                            try {
+                              const { approveHostelRequest } = await import('../../lib/api');
+                              await approveHostelRequest(item.id);
+                              refreshAssignments();
+                              onRefresh?.();
+                              (window as any).showToast?.('Request approved successfully!', 'success');
+                            } catch (err: any) {
+                              (window as any).showToast?.('Failed to approve request', 'error');
+                            }
+                          }}
+                          className="px-2 py-1 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-[10px] font-bold transition-colors"
+                        >
+                          Approve
+                        </button>
+                      )}
+                    </div>
+                  )},
+                  { header: 'Price', accessor: (item: any) => item.price ? `${currency}${item.price}` : '0.00' },
+                ]}
+                onDelete={async (item) => {
+                  const isPending = item.hostel_status === 'Pending';
+                  if (!confirm(`${isPending ? 'Reject request for' : 'Unassign'} ${item.name} from hostel/room?`)) return;
+                  try {
+                    if (isPending) {
+                      const { rejectHostelRequest } = await import('../../lib/api');
+                      await rejectHostelRequest(item.id);
+                    } else {
+                      const { unassignStudentFromRoom } = await import('../../lib/api');
+                      await unassignStudentFromRoom(item.id);
+                    }
+                    refreshAssignments();
+                    onRefresh?.();
+                    (window as any).showToast?.(isPending ? 'Request rejected' : 'Resident unassigned successfully!', 'success');
+                  } catch (err: any) {
+                    (window as any).showToast?.('Failed to unassign/reject', 'error');
+                  }
+                }}
+              />
+            )}
+          </div>
         )}
 
         {/* Rooms Modal */}
@@ -1185,8 +1257,6 @@ export const OperationsModules = {
                 </button>
               </div>
             </div>
-          </div>
-        )}
           </div>
         )}
       </div>
