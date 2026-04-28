@@ -70,6 +70,7 @@ import {
 import { StudentModules } from "./components/module-views/StudentView";
 import { CalendarView } from "./components/module-views/CalendarView";
 import { Profile } from "./components/module-views/Profile";
+import { ParentModules } from "./components/module-views/ParentView";
 import { GenericModuleView } from "./components/ModuleViews";
 import LandingPage from "./components/LandingPage";
 import Login from "./components/Login";
@@ -3559,6 +3560,12 @@ export default function App() {
           <StaffHRModules.StaffProfile
             data={staffData.profile}
             onSave={(data) => handleEntitySave("staff", data)}
+          />
+        ) : currentRole === "PARENT" ? (
+          <ParentModules.ParentProfile
+            currentUser={currentUser}
+            wards={wards}
+            onNavigate={setCurrentView}
           />
         ) : (
           <div className="p-8 text-center text-zinc-500">
