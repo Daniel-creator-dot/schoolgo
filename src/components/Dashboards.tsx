@@ -561,29 +561,44 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
   const attendanceTrendData = useMemo(() => {
     if (!attendanceHistory || attendanceHistory.length === 0) return [];
 
-    const totalStudentsCount = students.filter(s => s.status !== 'Alumni').length || 1;
-
     // Group by date
-    const groups: Record<string, { presentStudentIds: Set<string>, rawDate: number }> = {};
+    const groups: Record<string, { presentIds: Set<string>, totalMarkedIds: Set<string>, rawDate: number }> = {};
     attendanceHistory.forEach(record => {
-      const d = new Date(record.date);
+      // Handle date parsing robustly to avoid timezone shifts
+      let d: Date;
+      if (typeof record.date === 'string' && record.date.includes('-')) {
+        const dateParts = record.date.split('T')[0].split('-');
+        d = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+      } else {
+        d = new Date(record.date);
+      }
+      
       const dateKey = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      if (!groups[dateKey]) groups[dateKey] = { presentStudentIds: new Set(), rawDate: d.setHours(0, 0, 0, 0) };
+      if (!groups[dateKey]) {
+        groups[dateKey] = { 
+          presentIds: new Set(), 
+          totalMarkedIds: new Set(), 
+          rawDate: d.getTime() 
+        };
+      }
 
+      groups[dateKey].totalMarkedIds.add(String(record.student_id));
       if (record.status === 'Present') {
-        groups[dateKey].presentStudentIds.add(String(record.student_id));
+        groups[dateKey].presentIds.add(String(record.student_id));
       }
     });
 
     return Object.entries(groups)
       .map(([name, vals]) => ({
         name,
-        value: Math.round((vals.presentStudentIds.size / totalStudentsCount) * 100),
+        value: vals.totalMarkedIds.size > 0 
+          ? Math.round((vals.presentIds.size / vals.totalMarkedIds.size) * 100)
+          : 0,
         rawDate: vals.rawDate
       }))
       .sort((a, b) => a.rawDate - b.rawDate)
       .slice(-7); // Last 7 unique days
-  }, [attendanceHistory, students]);
+  }, [attendanceHistory]);
 
   const downloadReport = (title: string, reportData: any[]) => {
     if (reportData.length === 0) return;
