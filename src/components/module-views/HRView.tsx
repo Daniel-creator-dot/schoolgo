@@ -5249,9 +5249,9 @@ export const HRModules = {
                   <input
                     type="email"
                     name="parent_email"
-                    value={item?.parent_email}
-                    readOnly
-                    className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm opacity-60 cursor-not-allowed"
+                    defaultValue={item?.parent_email}
+                    placeholder="Enter parent email..."
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
                   />
                 </div>
               </div>
@@ -5287,9 +5287,9 @@ export const HRModules = {
                   <input
                     type="email"
                     name="secondary_parent_email"
-                    value={item?.secondary_parent_email}
-                    readOnly
-                    className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm opacity-60 cursor-not-allowed"
+                    defaultValue={item?.secondary_parent_email}
+                    placeholder="Enter secondary parent email..."
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
                   />
                 </div>
               </div>

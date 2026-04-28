@@ -2777,6 +2777,7 @@ export default function App() {
               // Note: 'data' contains the fields from the form plus existing student fields
               if (data.id) {
                 await updateStudent(data.id, {
+                  name: data.name,
                   religion: data.religion,
                   // Also update name/contact explicitly for this student just in case
                   parent_name: data.parent_name,
