@@ -5185,7 +5185,7 @@ export const HRModules = {
   }) => {
     const { currency, t } = useLanguage();
     const [viewingStudent, setViewingStudent] = React.useState<Student | null>(null);
-    const [viewMode, setViewMode] = React.useState<'list' | 'graphical'>('list');
+    const [viewMode, setViewMode] = React.useState<'list' | 'graphical'>('graphical');
 
     const parentsMap = React.useMemo(() => {
       const map = new Map<string, { name: string; email: string; contact: string; children: Student[] }>();
@@ -5449,17 +5449,34 @@ export const HRModules = {
         <Modal
           isOpen={!!viewingStudent}
           onClose={() => setViewingStudent(null)}
-          title={t('parent_details')}
+          title={t('edit_parent_ward_details')}
         >
           {viewingStudent && (
-            <div className="p-6 space-y-8 max-h-[85vh] overflow-y-auto">
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const values: any = {};
+                formData.forEach((value, key) => {
+                  values[key] = value;
+                });
+                // Merge with existing student data
+                await onSave?.({ ...viewingStudent, ...values });
+                setViewingStudent(null);
+              }}
+              className="p-6 space-y-8 max-h-[85vh] overflow-y-auto"
+            >
+              {/* Hidden Fields */}
+              <input type="hidden" name="id" value={viewingStudent.id} />
+              <input type="hidden" name="name" value={viewingStudent.name} />
+
               <div className="flex items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl">
                 <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-xl">
                   {viewingStudent.name[0]}
                 </div>
                 <div>
                   <h3 className="font-bold text-lg">{viewingStudent.name}</h3>
-                  <p className="text-sm text-zinc-500">{viewingStudent.class} | {viewingStudent.admission_no}</p>
+                  <p className="text-sm text-zinc-500">{viewingStudent.class} | {viewingStudent.admission_no || viewingStudent.admissionNo}</p>
                 </div>
               </div>
 
@@ -5470,17 +5487,34 @@ export const HRModules = {
                   Primary Parent / Guardian
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl">
-                    <p className="text-[10px] font-black uppercase text-zinc-400">{t('full_name')}</p>
-                    <p className="text-sm font-bold">{viewingStudent.parent_name || 'N/A'}</p>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-400 pl-1">{t('full_name')}</label>
+                    <input
+                      type="text"
+                      name="parent_name"
+                      defaultValue={viewingStudent.parent_name}
+                      required
+                      className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+                    />
                   </div>
-                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl">
-                    <p className="text-[10px] font-black uppercase text-zinc-400">{t('contact_number')}</p>
-                    <p className="text-sm font-bold">{viewingStudent.contact || 'N/A'}</p>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-400 pl-1">{t('contact_number')}</label>
+                    <input
+                      type="text"
+                      name="contact"
+                      defaultValue={viewingStudent.contact}
+                      required
+                      className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+                    />
                   </div>
-                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl md:col-span-2">
-                    <p className="text-[10px] font-black uppercase text-zinc-400">{t('email')}</p>
-                    <p className="text-sm font-bold">{viewingStudent.parent_email || 'N/A'}</p>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-[10px] font-black uppercase text-zinc-400 pl-1">{t('email')}</label>
+                    <input
+                      type="email"
+                      name="parent_email"
+                      defaultValue={viewingStudent.parent_email}
+                      className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+                    />
                   </div>
                 </div>
               </div>
@@ -5492,40 +5526,77 @@ export const HRModules = {
                   Secondary Parent / Guardian
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl">
-                    <p className="text-[10px] font-black uppercase text-zinc-400">{t('full_name')}</p>
-                    <p className="text-sm font-bold">{viewingStudent.secondary_parent_name || 'N/A'}</p>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-400 pl-1">{t('full_name')}</label>
+                    <input
+                      type="text"
+                      name="secondary_parent_name"
+                      defaultValue={viewingStudent.secondary_parent_name}
+                      className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+                    />
                   </div>
-                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl">
-                    <p className="text-[10px] font-black uppercase text-zinc-400">{t('contact_number')}</p>
-                    <p className="text-sm font-bold">{viewingStudent.secondary_parent_contact || 'N/A'}</p>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase text-zinc-400 pl-1">{t('contact_number')}</label>
+                    <input
+                      type="text"
+                      name="secondary_parent_contact"
+                      defaultValue={viewingStudent.secondary_parent_contact}
+                      className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+                    />
                   </div>
-                  <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl md:col-span-2">
-                    <p className="text-[10px] font-black uppercase text-zinc-400">{t('email')}</p>
-                    <p className="text-sm font-bold">{viewingStudent.secondary_parent_email || 'N/A'}</p>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-[10px] font-black uppercase text-zinc-400 pl-1">{t('email')}</label>
+                    <input
+                      type="email"
+                      name="secondary_parent_email"
+                      defaultValue={viewingStudent.secondary_parent_email}
+                      className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+                    />
                   </div>
                 </div>
               </div>
 
-              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl flex items-center gap-4">
-                <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-indigo-600" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase text-zinc-400">{t('religion')}</p>
-                  <p className="text-sm font-bold">{viewingStudent.religion || 'N/A'}</p>
+              {/* Additional Information */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-black text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Additional Information
+                </h4>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-zinc-400 pl-1">{t('religion')}</label>
+                  <select
+                    name="religion"
+                    defaultValue={viewingStudent.religion || ""}
+                    className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 transition-all"
+                  >
+                    <option value="">Select Religion...</option>
+                    <option value="Christianity">Christianity</option>
+                    <option value="Islam">Islam</option>
+                    <option value="Hinduism">Hinduism</option>
+                    <option value="Buddhism">Buddhism</option>
+                    <option value="Sikhism">Sikhism</option>
+                    <option value="Traditional">Traditional</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white dark:bg-zinc-900 pb-2">
                 <button
+                  type="button"
                   onClick={() => setViewingStudent(null)}
-                  className="px-8 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg"
+                  className="px-6 py-2.5 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                 >
-                  {t('close_details')}
+                  {t('cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="px-8 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-200 dark:shadow-none"
+                >
+                  {t('save_changes')}
                 </button>
               </div>
-            </div>
+            </form>
           )}
         </Modal>
       </div>
