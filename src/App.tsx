@@ -2211,6 +2211,7 @@ export default function App() {
         <QRAttendanceScanner
           classes={staffData ? staffData.classes : classList}
           onNavigate={setCurrentView}
+          onRefresh={loadData}
         />
       ),
 

@@ -15,7 +15,7 @@ interface ScannedStudent {
     message?: string;
 }
 
-export default function QRAttendanceScanner({ classes = [], onNavigate }: { classes?: any[]; onNavigate?: (view: string) => void }) {
+export default function QRAttendanceScanner({ classes = [], onNavigate, onRefresh }: { classes?: any[]; onNavigate?: (view: string) => void, onRefresh?: () => void }) {
     const { t } = useLanguage();
     const [scanning, setScanning] = useState(false);
     const [selectedClass, setSelectedClass] = useState('');
@@ -68,6 +68,9 @@ export default function QRAttendanceScanner({ classes = [], onNavigate }: { clas
             };
             setScannedList(prev => [entry, ...prev]);
             setLastResult({ type: 'success', message: `✓ ${result.student_name} ${t('present').toLowerCase()}` });
+            
+            // Trigger refresh so attendance counts update in other views
+            if (onRefresh) onRefresh();
         } catch (err: any) {
             const data = err?.response?.data;
             const isDuplicate = data?.already_marked || err?.response?.status === 409;
