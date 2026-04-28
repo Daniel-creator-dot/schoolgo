@@ -44,12 +44,15 @@ import {
   Trash2,
   Upload,
   User,
+  UserCheck,
   UserCircle,
   UserPlus,
   Users,
   Video,
   X,
-  Zap
+  Zap,
+  Settings,
+  Briefcase
 } from 'lucide-react';
 import TimetableEntryModal from '../modals/TimetableEntryModal';
 import {
@@ -4018,61 +4021,195 @@ export const AcademicModules = {
   },
   DepartmentManagement: ({ data, staff = [], subjects = [], onSave, onDelete }: { data?: any[], staff?: any[], subjects?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
     const [viewItem, setViewItem] = useState<any | null>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'graphical'>('graphical');
+    const [editingItem, setEditingItem] = useState<any | null>(null);
 
     return (
       <div className="space-y-6">
-        <DataTable
-          title="Department Management"
-          data={data || []}
-          onSave={onSave}
-          onDelete={onDelete}
-          onView={setViewItem}
-          columns={[
-            { header: 'Department', accessor: 'name', className: 'font-bold text-zinc-900 dark:text-white' },
-            { header: 'Head of Dept', accessor: 'head_name', className: 'text-zinc-600 dark:text-zinc-400 font-medium' },
-            { header: 'Staff Count', accessor: (item) => <span className="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 font-black text-[10px] text-zinc-500 uppercase tracking-widest">{item.staff_count || 0} Members</span> },
-          ]}
-          renderForm={(item) => (
-            <div className="space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Department Name</label>
-                <input
-                  required
-                  type="text"
-                  name="name"
-                  defaultValue={item?.name}
-                  placeholder="e.g. Science Department"
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Head of Department</label>
-                <select
-                  name="hod_id"
-                  defaultValue={item?.hod_id}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Select HOD</option>
-                  {staff.map((s: any) => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Description (Optional)</label>
-                <textarea
-                  name="description"
-                  defaultValue={item?.description}
-                  placeholder="Describe the department's focus..."
-                  rows={3}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                />
-              </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
+              <Building2 className="w-6 h-6" />
             </div>
-          )}
-          onAdd={onSave ? () => { } : undefined}
-          onEdit={onSave ? () => { } : undefined}
-        />
+            <div>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Departmental Overview</h2>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Manage academic & administrative departments</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  viewMode === 'list' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                )}
+              >
+                <List className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('graphical')}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  viewMode === 'graphical' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                )}
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </button>
+            </div>
+            {onSave && (
+              <button
+                onClick={() => setEditingItem({})}
+                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-200"
+              >
+                <Plus className="w-4 h-4" />
+                Add Department
+              </button>
+            )}
+          </div>
+        </div>
+
+        {viewMode === 'list' ? (
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <DataTable
+              title="Department List"
+              data={data || []}
+              onSave={onSave}
+              onDelete={onDelete}
+              onView={setViewItem}
+              columns={[
+                { header: 'Department', accessor: 'name', className: 'font-bold text-zinc-900 dark:text-white' },
+                { header: 'Head of Dept', accessor: 'head_name', className: 'text-zinc-600 dark:text-zinc-400 font-medium' },
+                { header: 'Staff Count', accessor: (item) => <span className="px-3 py-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 font-black text-[10px] text-zinc-500 uppercase tracking-widest">{item.staff_count || 0} Members</span> },
+              ]}
+              renderForm={(item) => (
+                <div className="space-y-6">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Department Name</label>
+                    <input
+                      required
+                      type="text"
+                      name="name"
+                      defaultValue={item?.name}
+                      placeholder="e.g. Science Department"
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Head of Department</label>
+                    <select
+                      name="hod_id"
+                      defaultValue={item?.hod_id}
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="">Select HOD</option>
+                      {staff.map((s: any) => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Description (Optional)</label>
+                    <textarea
+                      name="description"
+                      defaultValue={item?.description}
+                      placeholder="Describe the department's focus..."
+                      rows={3}
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+              onAdd={onSave ? () => { } : undefined}
+              onEdit={onSave ? (item) => setEditingItem(item) : undefined}
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {data?.map((dept) => (
+              <div 
+                key={dept.id}
+                className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
+              >
+                {/* Status indicator decoration */}
+                <div className="absolute top-8 right-8 w-12 h-12 bg-zinc-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center border border-zinc-100 dark:border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Briefcase className="w-5 h-5 text-zinc-400" />
+                </div>
+
+                <div className="flex flex-col gap-6">
+                  {/* Department Icon & Title */}
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none">
+                      <Building2 className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight line-clamp-1">{dept.name}</h3>
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mt-1 italic">Academic Infrastructure</p>
+                    </div>
+                  </div>
+
+                  {/* Stats Section */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-700/50 space-y-1">
+                      <div className="flex items-center gap-2 text-indigo-600">
+                        <Users className="w-4 h-4" />
+                        <span className="text-lg font-black">{dept.staff_count || 0}</span>
+                      </div>
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Total Staff</p>
+                    </div>
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-700/50 space-y-1">
+                      <div className="flex items-center gap-2 text-emerald-600">
+                        <Layers className="w-4 h-4" />
+                        <span className="text-lg font-black">Active</span>
+                      </div>
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Status</p>
+                    </div>
+                  </div>
+
+                  {/* HOD Section */}
+                  <div className="p-5 bg-indigo-50 dark:bg-indigo-900/20 rounded-[1.5rem] border border-indigo-100 dark:border-indigo-800/50 flex items-center justify-between group/hod">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm">
+                        <UserCheck className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Head of Dept</p>
+                        <p className="text-xs font-black text-indigo-900 dark:text-indigo-100 uppercase truncate max-w-[120px]">
+                          {dept.head_name || 'Not Assigned'}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => setViewItem(dept)}
+                      className="p-2 hover:bg-white dark:hover:bg-zinc-700 rounded-lg text-indigo-600 transition-colors"
+                    >
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <button 
+                      onClick={() => setEditingItem(dept)}
+                      className="flex-1 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                      Manage
+                    </button>
+                    {onDelete && (
+                      <button 
+                        onClick={() => onDelete(dept)}
+                        className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <Modal
           isOpen={!!viewItem}
@@ -4160,6 +4297,78 @@ export const AcademicModules = {
               </div>
             </div>
           )}
+        </Modal>
+
+        <Modal
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          title={editingItem?.id ? "Edit Department" : "Add New Department"}
+        >
+          <form 
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const values: any = {};
+              formData.forEach((value, key) => {
+                values[key] = value;
+              });
+              if (onSave) {
+                await onSave({ ...editingItem, ...values });
+                setEditingItem(null);
+              }
+            }}
+            className="p-6 space-y-6"
+          >
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Department Name</label>
+              <input
+                required
+                type="text"
+                name="name"
+                defaultValue={editingItem?.name}
+                placeholder="e.g. Science Department"
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Head of Department</label>
+              <select
+                name="hod_id"
+                defaultValue={editingItem?.hod_id}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Select HOD</option>
+                {staff.map((s: any) => (
+                  <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Description (Optional)</label>
+              <textarea
+                name="description"
+                defaultValue={editingItem?.description}
+                placeholder="Describe the department's focus..."
+                rows={3}
+                className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setEditingItem(null)}
+                className="px-6 py-2 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-sm hover:bg-zinc-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-8 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all"
+              >
+                {editingItem?.id ? "Update Department" : "Create Department"}
+              </button>
+            </div>
+          </form>
         </Modal>
       </div>
     );
