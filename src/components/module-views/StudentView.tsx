@@ -19,33 +19,44 @@ import { Modal } from '../UI';
 import { useLanguage } from '../../lib/LanguageContext';
 
 export const StudentModules = {
-  UniformRequests: ({ uniforms, data, studentId, onSave, role }: { uniforms: any[], data: any[], studentId?: string | null, onSave: (data: any) => void, role?: string }) => {
+  UniformRequests: ({ uniforms, data, studentId, onSave, role, wards = [], onWardSelect }: { uniforms: any[], data: any[], studentId?: string | null, onSave: (data: any) => void, role?: string, wards?: any[], onWardSelect?: (id: string) => void }) => {
     const { currency, t } = useLanguage();
-    const renderRequestForm = (item?: any) => (
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterCategory, setFilterCategory] = useState('All');
+
+    const categories = ['All', ...new Set(uniforms.map(u => u.category || 'Other'))];
+
+    const filteredUniforms = uniforms.filter(u => {
+      const matchesSearch = u.item_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = filterCategory === 'All' || u.category === filterCategory;
+      return matchesSearch && matchesCategory;
+    });
+
+    const renderRequestForm = (item?: any, presetItem?: any) => (
       <div className="space-y-4">
         <input type="hidden" name="student_id" value={studentId || ""} />
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Uniform Item</label>
+          <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Select Item</label>
           <select 
             name="item_id" 
             className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-            defaultValue={item?.item_id || ""}
+            defaultValue={presetItem?.id || item?.item_id || ""}
             onChange={(e) => {
               const selected = uniforms.find(u => u.id === e.target.value);
               if (selected) {
                 const nameInput = document.getElementsByName('item_name')[0] as HTMLInputElement;
                 const priceInput = document.getElementsByName('total_price')[0] as HTMLInputElement;
-                if (nameInput) nameInput.value = `${selected.item_name} (${selected.size})`;
+                if (nameInput) nameInput.value = `${selected.item_name}${selected.size ? ` (${selected.size})` : ''}`;
                 if (priceInput) priceInput.value = selected.price;
               }
             }}
           >
-            <option value="">Choose Uniform...</option>
+            <option value="">Choose Item...</option>
             {uniforms.map(u => (
-              <option key={u.id} value={u.id}>{u.item_name} (Size: {u.size}) - {currency} {u.price}</option>
+              <option key={u.id} value={u.id}>{u.item_name} {u.size ? `(Size: ${u.size})` : ''} - {currency} {u.price}</option>
             ))}
           </select>
-          <input type="hidden" name="item_name" />
+          <input type="hidden" name="item_name" defaultValue={presetItem ? `${presetItem.item_name}${presetItem.size ? ` (${presetItem.size})` : ''}` : ""} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -71,6 +82,7 @@ export const StudentModules = {
             <input 
               type="number" 
               name="total_price" 
+              defaultValue={presetItem ? presetItem.price : ""}
               readOnly
               className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none font-bold text-indigo-600" 
             />
@@ -85,26 +97,114 @@ export const StudentModules = {
             className="w-4 h-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
           />
           <label htmlFor="add_to_fees_request" className="text-sm text-zinc-600 dark:text-zinc-400">
-            Add to my fees (Pay Later)
+            Add to fees (Pay Later)
           </label>
         </div>
       </div>
     );
 
-    if (role === 'PARENT') {
-      return (
+    return (
+      <div className="space-y-10">
+        {/* Ward Switcher for Parents */}
+        {role === 'PARENT' && wards.length > 0 && (
+          <div className="flex items-center justify-between p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600">
+                <Users className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 dark:text-white">Ward Selection</h3>
+                <p className="text-xs text-zinc-500 uppercase font-bold tracking-widest">Select ward for request</p>
+              </div>
+            </div>
+            <select 
+              value={studentId || ""}
+              onChange={(e) => onWardSelect?.(e.target.value)}
+              className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              {wards.map(w => (
+                <option key={w.id} value={w.id}>{w.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Inventory Catalog */}
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Inventory Catalog</h3>
+              <p className="text-sm text-zinc-500 font-medium">Browse available items and make requests.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input 
+                  type="text"
+                  placeholder="Search catalog..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
+                />
+              </div>
+              <select 
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredUniforms.map((item, i) => (
+              <div key={i} className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm hover:border-indigo-500 transition-all duration-300">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-indigo-600">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div className="mb-4">
+                  <h4 className="font-bold text-zinc-900 dark:text-white line-clamp-1">{item.item_name}</h4>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">
+                    {item.category || 'General'} {item.size ? `• Size ${item.size}` : ''}
+                  </p>
+                </div>
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <div>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Price</p>
+                    <p className="text-lg font-black text-indigo-600">{currency} {item.price}</p>
+                  </div>
+                  <button 
+                    onClick={() => (window as any).showModal?.('Request Item', renderRequestForm(undefined, item), onSave)}
+                    className="p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 dark:shadow-none active:scale-95"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {filteredUniforms.length === 0 && (
+              <div className="col-span-full py-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border border-dashed border-zinc-200 dark:border-zinc-700">
+                <SearchX className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
+                <p className="text-sm text-zinc-500">No items found matching your criteria.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Request History */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Uniform Requests</h3>
+            <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Request History</h3>
             <button 
-              onClick={() => (window as any).showModal?.('Request', renderRequestForm(), onSave)}
+              onClick={() => (window as any).showModal?.('New Request', renderRequestForm(), onSave)}
               className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 dark:shadow-none"
             >
-              New Request
+              Custom Request
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(data || []).map((item: any, i: number) => (
+            {(data || []).length > 0 ? (data || []).map((item: any, i: number) => (
               <div key={i} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm group hover:border-indigo-500 transition-all duration-300">
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -129,39 +229,15 @@ export const StudentModules = {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="col-span-full py-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border border-dashed border-zinc-200 dark:border-zinc-700">
+                <History className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
+                <p className="text-sm text-zinc-500">You haven't made any requests yet.</p>
+              </div>
+            )}
           </div>
         </div>
-      );
-    }
-
-    return (
-      <DataTable
-        title="My Uniform Requests"
-        modalTitle="Request"
-        addLabel="Request"
-        data={data || []}
-        onSave={onSave}
-        columns={[
-          { header: 'Item', accessor: 'item_name', className: 'font-bold' },
-          { header: 'Qty', accessor: 'quantity' },
-          { header: 'Total', accessor: (item: any) => `${currency} ${item.total_price}`, className: 'font-bold text-indigo-600' },
-          { header: 'Date', accessor: (item: any) => new Date(item.created_at).toLocaleDateString() },
-          { 
-            header: 'Status', 
-            accessor: (item: any) => (
-              <span className={cn(
-                "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                item.status === 'Completed' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
-              )}>
-                {item.status || 'Pending'}
-              </span>
-            )
-          }
-        ]}
-        onAdd={() => {}}
-        renderForm={renderRequestForm}
-      />
+      </div>
     );
   },
   PersonalInformation: ({ currentUser, students = [] }: { currentUser: any, students: any[] }) => {

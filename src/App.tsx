@@ -3497,6 +3497,8 @@ export default function App() {
         <StudentModules.UniformRequests
           role={currentRole}
           uniforms={combinedInventory}
+          wards={wards}
+          onWardSelect={setSelectedWardId}
           studentId={
             currentRole === "STUDENT"
               ? studentList.find((st) => st.email === currentUser?.email)?.id
