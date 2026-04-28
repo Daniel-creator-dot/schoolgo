@@ -2505,7 +2505,7 @@ export default function App() {
         />
       ),
 
-      Stock: (
+      "Sellable Items (Stocks)": (
         <FinanceModules.Stocks
           students={studentList}
           data={uniforms}
