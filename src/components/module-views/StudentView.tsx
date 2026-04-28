@@ -19,7 +19,7 @@ import { Modal } from '../UI';
 import { useLanguage } from '../../lib/LanguageContext';
 
 export const StudentModules = {
-  UniformRequests: ({ uniforms, data, studentId, onSave }: { uniforms: any[], data: any[], studentId?: string | null, onSave: (data: any) => void }) => {
+  UniformRequests: ({ uniforms, data, studentId, onSave, role }: { uniforms: any[], data: any[], studentId?: string | null, onSave: (data: any) => void, role?: string }) => {
     const { currency, t } = useLanguage();
     const renderRequestForm = (item?: any) => (
       <div className="space-y-4">
@@ -90,6 +90,50 @@ export const StudentModules = {
         </div>
       </div>
     );
+
+    if (role === 'PARENT') {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Uniform Requests</h3>
+            <button 
+              onClick={() => (window as any).showModal?.('Request', renderRequestForm(), onSave)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 dark:shadow-none"
+            >
+              New Request
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(data || []).map((item: any, i: number) => (
+              <div key={i} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm group hover:border-indigo-500 transition-all duration-300">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="font-bold text-zinc-900 dark:text-white">{item.item_name}</h4>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Quantity: {item.quantity}</p>
+                  </div>
+                  <span className={cn(
+                    "px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest",
+                    item.status === 'Completed' ? "bg-emerald-50 text-emerald-600" : "bg-indigo-50 text-indigo-600"
+                  )}>
+                    {item.status || 'Pending'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <div>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Total Price</p>
+                    <p className="text-lg font-black text-indigo-600">{currency} {item.total_price}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Request Date</p>
+                    <p className="text-xs font-bold text-zinc-500">{new Date(item.created_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
     return (
       <DataTable
@@ -207,7 +251,7 @@ export const StudentModules = {
       </div>
     );
   },
-  AcademicInformation: ({ currentUser, students = [], subjects = [], classes = [] }: { currentUser: any, students: any[], subjects: any[], classes: any[] }) => {
+  AcademicInformation: ({ currentUser, students = [], subjects = [], classes = [], role }: { currentUser: any, students: any[], subjects: any[], classes: any[], role?: string }) => {
     const student = students.find((s: any) => s.email === currentUser?.email);
     if (!student) return <div className="p-8 text-center text-zinc-500">Academic information not found.</div>;
 
@@ -252,19 +296,48 @@ export const StudentModules = {
         </div>
 
         <div className="grid grid-cols-1 gap-8">
-          <DataTable 
-            title="Enrolled Subjects" 
-            data={mySubjects}
-            columns={[
-              { header: 'Subject', accessor: 'name', className: 'font-bold' },
-              { header: 'Code', accessor: 'code', className: 'font-mono text-xs' },
-              { header: 'Teacher', accessor: 'teacher_name' },
-              { 
-                header: 'Department', 
-                accessor: 'department_name'
-              },
-            ]}
-          />
+          {role === 'PARENT' ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1">
+                <BookOpen className="w-5 h-5 text-indigo-600" />
+                <h3 className="font-bold text-zinc-900 dark:text-white uppercase tracking-tight">Enrolled Subjects</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {mySubjects.map((sub: any, i: number) => (
+                  <div key={i} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm hover:border-indigo-500 transition-colors group">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:text-indigo-600 transition-colors">
+                        <BookOpen className="w-5 h-5" />
+                      </div>
+                      <span className="font-mono text-[10px] text-zinc-400 font-bold">{sub.code}</span>
+                    </div>
+                    <h4 className="font-bold text-zinc-900 dark:text-white mb-1">{sub.name}</h4>
+                    <p className="text-xs text-zinc-500 mb-4">{sub.department_name || 'General Studies'}</p>
+                    <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                        <User className="w-3 h-3 text-zinc-400" />
+                      </div>
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{sub.teacher_name || 'No Teacher Assigned'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <DataTable 
+              title="Enrolled Subjects" 
+              data={mySubjects}
+              columns={[
+                { header: 'Subject', accessor: 'name', className: 'font-bold' },
+                { header: 'Code', accessor: 'code', className: 'font-mono text-xs' },
+                { header: 'Teacher', accessor: 'teacher_name' },
+                { 
+                  header: 'Department', 
+                  accessor: 'department_name'
+                },
+              ]}
+            />
+          )}
         </div>
       </div>
     );

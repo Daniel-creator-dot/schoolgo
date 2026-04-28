@@ -3453,6 +3453,7 @@ export default function App() {
       ),
       "Academic Information": (
         <StudentModules.AcademicInformation
+          role={currentRole}
           currentUser={currentUser}
           students={studentList}
           subjects={subjectList}
@@ -3477,6 +3478,7 @@ export default function App() {
       "Edit Profile": <StudentModules.EditProfile />,
       "Inventory Request": (
         <StudentModules.UniformRequests
+          role={currentRole}
           uniforms={combinedInventory}
           studentId={
             currentRole === "STUDENT"

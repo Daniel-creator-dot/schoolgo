@@ -328,7 +328,7 @@ export default function Layout({
 
             {/* Ward Switcher for Parents */}
             {currentRole === 'PARENT' && wards.length > 0 && (
-              <div className="relative ml-2 sm:ml-4 flex-1 sm:flex-initial">
+              <div className="relative ml-2 sm:ml-4 flex-1 sm:flex-initial hidden md:flex">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-full border border-indigo-100 dark:border-indigo-800 shadow-sm transition-all hover:bg-indigo-100 dark:hover:bg-indigo-900/40 group max-w-[140px] sm:max-w-none">
                   <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform shrink-0" />
                   <div className="flex flex-col min-w-0">
@@ -584,38 +584,6 @@ export default function Layout({
                 </button>
               </div>
               <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-                {currentRole === 'PARENT' && wards.length > 0 && (
-                  <div className="mb-6 px-2">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-2 block">Switch Ward</label>
-                    <div className="space-y-2">
-                      {wards.map((ward) => (
-                        <button
-                          key={ward.id}
-                          onClick={() => {
-                            onWardSelect?.(ward.id);
-                            // Keep optional: maybe don't close menu if switching wards?
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-                            selectedWardId === ward.id 
-                              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none" 
-                              : "bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                          )}
-                        >
-                          <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold",
-                            selectedWardId === ward.id ? "bg-white/20" : "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600"
-                          )}>
-                            {ward.name.charAt(0)}
-                          </div>
-                          <span className="font-semibold text-sm">{ward.name}</span>
-                          {selectedWardId === ward.id && <div className="ml-auto w-2 h-2 rounded-full bg-white animate-pulse" />}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="mt-6 border-t border-zinc-100 dark:border-zinc-800 pt-4"></div>
-                  </div>
-                )}
                 {filteredNav.map(item => (
                   <NavLink 
                     key={item.title} 

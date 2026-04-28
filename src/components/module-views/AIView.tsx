@@ -252,83 +252,156 @@ export const AIModules = {
           </div>
         )}
 
-        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-          <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/20">
-            <div>
-              <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-indigo-600" />
-                Student Academic Predictions
-              </h3>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">AI-analyzed growth potential and risk assessment</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Prediction Status:</span>
-              {Object.keys(studentPredictions).length > 0 ? (
-                <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /><span className="text-[10px] text-emerald-500 font-bold uppercase">Generated</span></div>
-              ) : (
-                <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-amber-500 rounded-full" /><span className="text-[10px] text-amber-500 font-bold uppercase">Pending Analysis</span></div>
-              )}
-            </div>
+        {role === 'PARENT' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {students?.map((ward: any) => {
+              const predictionData = studentPredictions[ward.name] as any;
+              const trend = (predictionData?.trend || '').toLowerCase();
+              const forecast = predictionData?.forecast || '';
+              const isHighRisk = trend.includes('risk') || trend.includes('drop') || trend.includes('concern');
+              const isImproving = trend.includes('impro') || trend.includes('grow') || trend.includes('excep');
+
+              return (
+                <div key={ward.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm group hover:shadow-xl transition-all duration-500">
+                  <div className="flex items-center gap-6 mb-8">
+                    <div className="w-16 h-16 rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:scale-110 transition-transform duration-500">
+                      {ward.profile_pic ? (
+                        <img src={ward.profile_pic} alt={ward.name} className="w-full h-full object-cover rounded-3xl" />
+                      ) : (
+                        <Users className="w-8 h-8" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{ward.name}</h4>
+                      <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{ward.class || 'Class Unknown'}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Current GPA</p>
+                      <p className="text-2xl font-black text-indigo-600">{ward.gpa || '0.00'}</p>
+                    </div>
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Growth Index</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                          <div className={cn(
+                            "h-full transition-all duration-1000",
+                            isImproving ? "bg-emerald-500" : isHighRisk ? "bg-rose-500" : "bg-indigo-500"
+                          )} style={{ width: isImproving ? '90%' : isHighRisk ? '30%' : '65%' }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {predictionData ? (
+                    <div className="p-6 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-3xl relative overflow-hidden">
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className={cn(
+                            "inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                            isHighRisk ? "bg-rose-100 text-rose-600" : isImproving ? "bg-emerald-100 text-emerald-600" : "bg-indigo-100 text-indigo-600"
+                          )}>
+                            {isImproving ? <Sparkles className="w-3 h-3" /> : isHighRisk ? <AlertCircle className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                            {trend}
+                          </div>
+                        </div>
+                        <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium leading-relaxed italic">
+                          "{forecast}"
+                        </p>
+                      </div>
+                      <Bot className="absolute -right-4 -bottom-4 w-24 h-24 text-indigo-600/5 rotate-12" />
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                      <Bot className="w-8 h-8 text-zinc-300 mx-auto mb-3" />
+                      <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Awaiting AI Analysis</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          <DataTable
-            title="Student Academic Predictions"
-            data={students || []}
-            autoModal={false}
-            columns={[
-              { header: 'Student Name', accessor: (item: any) => <span className="font-bold text-zinc-900 dark:text-white">{item.name}</span> },
-              { header: 'Admission No', accessor: (item: any) => <span className="font-mono text-zinc-500">{item.admission_no || item.id?.substring(0, 8)}</span> },
-              { header: 'Current GPA', accessor: (item: any) => <span className="text-indigo-600 font-black">{item.gpa || '0.00'}</span> },
-              {
-                header: 'AI Prediction', 
-                accessor: (item: any) => {
-                  const predictionData = studentPredictions[item.name] as any;
-                  if (!predictionData) return <span className="text-zinc-400 italic text-[10px]">Run engine to predict</span>;
-                  
-                  const trend = (predictionData.trend || '').toLowerCase();
-                  const forecast = predictionData.forecast || '';
-                  
-                  const isHighRisk = trend.includes('risk') || trend.includes('drop') || trend.includes('concern');
-                  const isImproving = trend.includes('impro') || trend.includes('grow') || trend.includes('excep');
-                  
-                  return (
-                    <div className="space-y-1">
-                      <div className={cn(
-                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest",
-                        isHighRisk ? "bg-rose-50 text-rose-600 border border-rose-100" :
-                        isImproving ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                        "bg-blue-50 text-blue-600 border border-blue-100"
-                      )}>
-                        {isImproving ? <Sparkles className="w-3 h-3" /> : isHighRisk ? <AlertCircle className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
-                        {trend}
-                      </div>
-                      <p className="text-[9px] text-zinc-500 font-medium leading-tight max-w-[150px]">{forecast}</p>
-                    </div>
-                  );
-                }
-              },
-              {
-                header: 'Growth Potential', 
-                accessor: (item: any) => {
-                  const predictionData = studentPredictions[item.name] as any;
-                  const trend = (predictionData?.trend || '').toLowerCase();
-                  const isImproving = trend.includes('impro') || trend.includes('grow') || trend.includes('excep');
-                  const isRisk = trend.includes('risk') || trend.includes('drop');
-                  
-                  return (
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 w-20 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+        ) : (
+          <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/20">
+              <div>
+                <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-600" />
+                  Student Academic Predictions
+                </h3>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">AI-analyzed growth potential and risk assessment</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Prediction Status:</span>
+                {Object.keys(studentPredictions).length > 0 ? (
+                  <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /><span className="text-[10px] text-emerald-500 font-bold uppercase">Generated</span></div>
+                ) : (
+                  <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-amber-500 rounded-full" /><span className="text-[10px] text-amber-500 font-bold uppercase">Pending Analysis</span></div>
+                )}
+              </div>
+            </div>
+            <DataTable
+              title="Student Academic Predictions"
+              data={students || []}
+              autoModal={false}
+              columns={[
+                { header: 'Student Name', accessor: (item: any) => <span className="font-bold text-zinc-900 dark:text-white">{item.name}</span> },
+                { header: 'Admission No', accessor: (item: any) => <span className="font-mono text-zinc-500">{item.admission_no || item.id?.substring(0, 8)}</span> },
+                { header: 'Current GPA', accessor: (item: any) => <span className="text-indigo-600 font-black">{item.gpa || '0.00'}</span> },
+                {
+                  header: 'AI Prediction', 
+                  accessor: (item: any) => {
+                    const predictionData = studentPredictions[item.name] as any;
+                    if (!predictionData) return <span className="text-zinc-400 italic text-[10px]">Run engine to predict</span>;
+                    
+                    const trend = (predictionData.trend || '').toLowerCase();
+                    const forecast = predictionData.forecast || '';
+                    
+                    const isHighRisk = trend.includes('risk') || trend.includes('drop') || trend.includes('concern');
+                    const isImproving = trend.includes('impro') || trend.includes('grow') || trend.includes('excep');
+                    
+                    return (
+                      <div className="space-y-1">
                         <div className={cn(
-                          "h-full transition-all duration-1000",
-                          isImproving ? "bg-emerald-500" : isRisk ? "bg-rose-500" : "bg-indigo-500"
-                        )} style={{ width: isImproving ? '90%' : isRisk ? '30%' : '65%' }} />
+                          "inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest",
+                          isHighRisk ? "bg-rose-50 text-rose-600 border border-rose-100" :
+                          isImproving ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
+                          "bg-blue-50 text-blue-600 border border-blue-100"
+                        )}>
+                          {isImproving ? <Sparkles className="w-3 h-3" /> : isHighRisk ? <AlertCircle className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
+                          {trend}
+                        </div>
+                        <p className="text-[9px] text-zinc-500 font-medium leading-tight max-w-[150px]">{forecast}</p>
                       </div>
-                    </div>
-                  );
-                }
-              },
-            ]}
-          />
-        </div>
+                    );
+                  }
+                },
+                {
+                  header: 'Growth Potential', 
+                  accessor: (item: any) => {
+                    const predictionData = studentPredictions[item.name] as any;
+                    const trend = (predictionData?.trend || '').toLowerCase();
+                    const isImproving = trend.includes('impro') || trend.includes('grow') || trend.includes('excep');
+                    const isRisk = trend.includes('risk') || trend.includes('drop');
+                    
+                    return (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 w-20 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                          <div className={cn(
+                            "h-full transition-all duration-1000",
+                            isImproving ? "bg-emerald-500" : isRisk ? "bg-rose-500" : "bg-indigo-500"
+                          )} style={{ width: isImproving ? '90%' : isRisk ? '30%' : '65%' }} />
+                        </div>
+                      </div>
+                    );
+                  }
+                },
+              ]}
+            />
+          </div>
+        )}
       </div>
     );
   },
