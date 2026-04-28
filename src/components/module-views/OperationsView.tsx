@@ -17,7 +17,9 @@ import {
   MapPin,
   Bus,
   Plus,
-  Trash2
+  Trash2,
+  Heart,
+  User
 } from 'lucide-react';
 import { UserRole, Ward } from '../../types';
 import { downloadInventoryTemplate, parseInventoryExcel } from '../../lib/excel';
@@ -108,7 +110,7 @@ export const OperationsModules = {
         }
       };
 
-      const myAssignments = allAssignments.filter((a: any) => String(a.id) === String(currentStudentId));
+      const myAssignments = allAssignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(currentStudentId));
 
       return (
         <div className="space-y-10">
@@ -654,7 +656,7 @@ export const OperationsModules = {
       }
     };
 
-    const myHostelAssignments = allAssignments.filter((a: any) => String(a.id) === String(currentStudentId));
+    const myHostelAssignments = allAssignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(currentStudentId));
 
     return (
       <div className="space-y-6">
@@ -1559,33 +1561,72 @@ export const OperationsModules = {
     const filteredData = role === 'PARENT' ? (data || []).filter(d => d.wardId === selectedWardId) : (data || []);
 
     return (
-      <div className="space-y-4">
-        {role === 'PARENT' && wards && wards.length > 1 && (
-          <div className="flex items-center gap-2 mb-4 bg-white dark:bg-zinc-900 p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 w-fit">
-            <span className="text-xs font-bold text-zinc-500 ml-2 uppercase tracking-wider">Ward:</span>
-            <select 
-              value={selectedWardId} 
-              onChange={(e) => setSelectedWardId(e.target.value)}
-              className="bg-transparent text-sm font-bold outline-none pr-4"
-            >
-              {wards.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-            </select>
+      <div className="space-y-6">
+        {(role === 'STUDENT' || role === 'PARENT') ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {(data || []).map((record: any) => (
+              <div key={record.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm group hover:shadow-xl hover:border-emerald-500 transition-all duration-500 relative overflow-hidden">
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform duration-500">
+                      <Heart className="w-6 h-6" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Record Date</p>
+                      <p className="text-sm font-black text-zinc-900 dark:text-white">{record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-2 tracking-tight group-hover:text-emerald-600 transition-colors">{record.condition}</h3>
+                  <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-6">{record.student_name}</p>
+
+                  <div className="space-y-4 mb-2">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Treatment Plan</p>
+                        <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed">{record.treatment || 'No specific treatment recorded.'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Attending Physician</p>
+                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{record.doctor_name || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <Heart className="absolute -right-8 -bottom-8 w-40 h-40 text-emerald-500/5 -rotate-12 group-hover:scale-110 transition-transform duration-700" />
+              </div>
+            ))}
+            {(data || []).length === 0 && (
+              <div className="col-span-full py-16 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[3rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
+                <Heart className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
+                <p className="text-zinc-500 font-bold">No medical records found.</p>
+              </div>
+            )}
           </div>
-        )}
-        <DataTable 
-          title="Health & Medical Records" 
-          data={filteredData || []}
-          onSave={onSave}
-          onEdit={() => {}}
-          onDelete={onDelete}
-          columns={[
-            { header: 'Student', accessor: (item: any) => item.student_name, className: 'font-bold' },
-            { header: 'Condition', accessor: (item: any) => item.condition },
-            { header: 'Treatment', accessor: (item: any) => item.treatment },
-            { header: 'Doctor', accessor: (item: any) => item.doctor_name },
-            { header: 'Date', accessor: (item: any) => item.date ? new Date(item.date).toLocaleDateString() : 'N/A' },
-          ]}
-          onAdd={onSave ? () => {} : undefined}
+        ) : (
+          <DataTable 
+            title="Health & Medical Records" 
+            data={data || []}
+            onSave={onSave}
+            onEdit={() => {}}
+            onDelete={onDelete}
+            columns={[
+              { header: 'Student', accessor: (item: any) => item.student_name, className: 'font-bold' },
+              { header: 'Condition', accessor: (item: any) => item.condition },
+              { header: 'Treatment', accessor: (item: any) => item.treatment },
+              { header: 'Doctor', accessor: (item: any) => item.doctor_name },
+              { header: 'Date', accessor: (item: any) => item.date ? new Date(item.date).toLocaleDateString() : 'N/A' },
+            ]}
+            onAdd={onSave ? () => {} : undefined}
           renderForm={(item, isViewOnly) => (
             <div className="space-y-4">
               <div className="space-y-1.5">
@@ -1698,6 +1739,7 @@ export const OperationsModules = {
           )}
 
         />
+      )}
       </div>
     );
   },
