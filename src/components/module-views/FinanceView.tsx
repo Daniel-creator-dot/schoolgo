@@ -589,7 +589,6 @@ export const FinanceModules = {
                 @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
                 body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
                 .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; margin-bottom: 40px; }
-                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #f59e0b, #ef4444); }
                 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
                 .school-info h2 { margin: 0 0 4px 0; font-weight: 800; font-size: 24px; color: #1e1b4b; }
                 .school-info p { margin: 0; color: #64748b; font-size: 14px; }
@@ -633,7 +632,6 @@ export const FinanceModules = {
                 @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
                 body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
                 .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
-                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #10b981, #3b82f6); }
               </style>
             </head>
             <body>
@@ -691,7 +689,6 @@ export const FinanceModules = {
                 body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; padding: 20px; }
                 .invoice-page { margin-bottom: 60px; }
                 .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
-                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #f59e0b, #ef4444); }
                 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
                 .school-info h2 { margin: 0 0 4px 0; font-weight: 800; font-size: 24px; color: #1e1b4b; }
                 .school-info p { margin: 0; color: #64748b; font-size: 14px; }
@@ -1477,7 +1474,6 @@ export const FinanceModules = {
                   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
                   body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
                   .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
-                  .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #4f46e5, #ec4899); }
                   .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
                   .school-info h2 { margin: 0 0 4px 0; font-weight: 800; font-size: 24px; color: #1e1b4b; }
                   .school-info p { margin: 0; color: #64748b; font-size: 14px; }
@@ -1970,7 +1966,6 @@ export const FinanceModules = {
                 @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
                 body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
                 .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; margin-bottom: 40px; }
-                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #f59e0b, #ef4444); }
                 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; }
                 .school-info h2 { margin: 0 0 4px 0; font-weight: 800; font-size: 24px; color: #1e1b4b; }
                 .school-info p { margin: 0; color: #64748b; font-size: 14px; }
@@ -2008,107 +2003,10 @@ export const FinanceModules = {
                 @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
                 body { font-family: 'Inter', sans-serif; padding: 40px; background: #f8fafc; color: #0f172a; }
                 .receipt-container { max-width: 650px; margin: 0 auto; background: #ffffff; padding: 48px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
-                .receipt-container::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, #10b981, #3b82f6); }
-                .status-stamp {
-                  position: absolute;
-                  top: 250px;
-                  right: 100px;
-                  border: 4px solid #10b981;
-                  color: #10b981;
-                  padding: 10px 40px;
-                  font-size: 40px;
-                  font-weight: 900;
-                  text-transform: uppercase;
-                  border-radius: 12px;
-                  opacity: 0.2;
-                  transform: rotate(-15deg);
-                }
-                .footer { 
-                  margin-top: 80px; 
-                  padding-top: 20px;
-                  border-top: 1px solid #f3f4f6;
-                  text-align: center; 
-                  font-size: 12px; 
-                  color: #9ca3af; 
-                }
               </style>
             </head>
             <body>
-              <div class="receipt-container">
-                <div class="status-stamp">PAID</div>
-                <div class="header">
-                  <div style="display: flex; align-items: center; gap: 20px;">
-                    <div class="school-logo">${(organization?.name || 'S')[0]}</div>
-                    <div>
-                      <h2 style="margin: 0; font-size: 18px; font-weight: 900; color: #111827;">${organization?.name || 'School Management System'}</h2>
-                      <p style="margin: 2px 0 0 0; font-size: 10px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Official Payment Receipt</p>
-                    </div>
-                  </div>
-                  <div class="receipt-title">
-                    <h1>Receipt</h1>
-                    <p style="margin:4px 0 0 0; font-size:12px; color:#6b7280; font-weight:700;">#${String(item.id || '').substring(0, 8).toUpperCase()}</p>
-                  </div>
-                </div>
-                
-                <div class="info-grid">
-                  <div class="info-block">
-                    <label>Date Issued</label>
-                    <p>${new Date(item.payment_date || item.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                  </div>
-                  <div class="info-block">
-                    <label>Academic Year</label>
-                    <p>${item.academic_year || organization?.academic_year || 'N/A'}</p>
-                  </div>
-                  <div class="info-block">
-                    <label>Term</label>
-                    <p>${item.term || organization?.current_term || 'N/A'}</p>
-                  </div>
-                  <div class="info-block" style="text-align: right;">
-                    <label>Payment Method</label>
-                    <p>${item.payment_method || 'Direct Payment'}</p>
-                  </div>
-                </div>
-
-                <div style="margin-bottom: 40px;">
-                  <label style="display: block; font-size: 10px; font-weight: 900; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">Bill To</label>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div>
-                      <p style="margin: 0; font-size: 18px; font-weight: 900; color: #111827;">${item.student_name}</p>
-                      <p style="margin: 4px 0 0 0; font-size: 14px; font-weight: 500; color: #6b7280;">${item.student_class || 'General'}</p>
-                    </div>
-                    <div style="text-align: right;">
-                      <p style="margin: 0; font-size: 12px; font-weight: 700; color: #6b7280;">Admission No</p>
-                      <p style="margin: 2px 0 0 0; font-size: 14px; font-weight: 900; color: #111827;">${item.student_admission_no || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div style="margin-bottom: 40px; padding: 20px; border: 1px solid #f3f4f6; border-radius: 12px;">
-                  <label style="display: block; font-size: 10px; font-weight: 900; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">For Items</label>
-                  <p style="margin: 0; font-size: 14px; font-weight: 700; color: #374151;">${item.invoice_description || 'N/A'}</p>
-                </div>
-
-                <div class="amount-card">
-                  <span class="amount-label">Total Amount Paid</span>
-                  <span class="amount-value">${currency} ${item.amount}</span>
-                </div>
-
-                <div class="footer">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; text-align: left;">
-                    <div>
-                      <p style="margin: 0; font-size: 10px; font-weight: 900; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em;">Issued By</p>
-                      <p style="margin: 8px 0 0 0; font-family: 'Dancing Script', cursive; font-size: 24px; color: #111827;">${organization?.principal_name || 'The Principal'}</p>
-                      <div style="width: 200px; border-top: 1px solid #e5e7eb; margin-top: 4px;"></div>
-                      <p style="margin: 4px 0 0 0; font-size: 10px; font-weight: 700; color: #6b7280;">Principal / Administrator</p>
-                    </div>
-                    <div style="text-align: right;">
-                      <div style="width: 100px; height: 100px; border: 2px double #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #f3f4f6; font-weight: 900; font-size: 10px; text-transform: uppercase; transform: rotate(-15deg);">School Stamp</div>
-                    </div>
-                  </div>
-                  <p>Thank you for your timely payment. This receipt is computer-generated and is valid without a physical signature.</p>
-                  <p style="margin-top: 8px; font-weight: 700;">${organization?.name || 'School Management System'}</p>
-                </div>
-              </div>
+              ${receiptHtml}
               <script>window.onload = () => { window.print(); window.close(); }</script>
             </body>
           </html>
