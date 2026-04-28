@@ -264,6 +264,8 @@ import {
   updateClub,
   deleteClub,
   fetchPartnerDashboard,
+  fetchTransportAssignments,
+  fetchHostelAssignments,
 } from "./lib/api";
 
 import { useLanguage } from "./lib/LanguageContext";
@@ -370,7 +372,9 @@ export default function App() {
   const [remarkTemplates, setRemarkTemplates] = useState<any[]>([]);
   const [studentFeesSummary, setStudentFeesSummary] = useState<any[]>([]);
   const [transportRoutes, setTransportRoutes] = useState<any[]>([]);
+  const [transportAssignments, setTransportAssignments] = useState<any[]>([]);
   const [hostels, setHostels] = useState<any[]>([]);
+  const [hostelAssignments, setHostelAssignments] = useState<any[]>([]);
   const [healthRecords, setHealthRecords] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
@@ -476,6 +480,8 @@ export default function App() {
           ? fetchPlatformUsers()
           : Promise.resolve([]),
         isAdmin ? fetchAuditLogs() : Promise.resolve([]),
+        fetchTransportAssignments(),
+        fetchHostelAssignments(),
         fetchModules(),
         fetchPlans(),
         fetchPayroll(),
@@ -555,27 +561,29 @@ export default function App() {
       }
 
       assignIfFulfilled(27, setAuditLogs);
-      assignIfFulfilled(28, setSystemModules);
-      assignIfFulfilled(29, setPlanTemplates);
-      assignIfFulfilled(30, setPayrollEntries);
-      assignIfFulfilled(31, setPerformanceReviews);
-      assignIfFulfilled(32, setLeaveRequests);
-      assignIfFulfilled(33, setExitManagement);
-      assignIfFulfilled(34, setFeeStructures);
-      assignIfFulfilled(35, setTimetable);
-      assignIfFulfilled(36, setGradingScales);
-      assignIfFulfilled(37, setReportCardTemplates);
-      assignIfFulfilled(38, setRemarkTemplates);
-      assignIfFulfilled(39, setStudentFeesSummary);
-      assignIfFulfilled(40, setBooks);
-      assignIfFulfilled(41, setBookLoans);
-      assignIfFulfilled(42, setTransportRoutes);
-      assignIfFulfilled(43, setHostels);
-      assignIfFulfilled(44, setHealthRecords);
-      assignIfFulfilled(45, setInventory);
-      assignIfFulfilled(46, setDocumentTemplates);
+      assignIfFulfilled(28, setTransportAssignments);
+      assignIfFulfilled(29, setHostelAssignments);
+      assignIfFulfilled(30, setSystemModules);
+      assignIfFulfilled(31, setPlanTemplates);
+      assignIfFulfilled(32, setPayrollEntries);
+      assignIfFulfilled(33, setPerformanceReviews);
+      assignIfFulfilled(34, setLeaveRequests);
+      assignIfFulfilled(35, setExitManagement);
+      assignIfFulfilled(36, setFeeStructures);
+      assignIfFulfilled(37, setTimetable);
+      assignIfFulfilled(38, setGradingScales);
+      assignIfFulfilled(39, setReportCardTemplates);
+      assignIfFulfilled(40, setRemarkTemplates);
+      assignIfFulfilled(41, setStudentFeesSummary);
+      assignIfFulfilled(42, setBooks);
+      assignIfFulfilled(43, setBookLoans);
+      assignIfFulfilled(44, setTransportRoutes);
+      assignIfFulfilled(45, setHostels);
+      assignIfFulfilled(46, setHealthRecords);
+      assignIfFulfilled(47, setInventory);
+      assignIfFulfilled(48, setDocumentTemplates);
 
-      const currentOrgInfo = resultsArr[47];
+      const currentOrgInfo = resultsArr[49];
       if (currentOrgInfo && currentOrgInfo.status === "fulfilled" && currentOrgInfo.value) {
         if (currentOrgInfo.value.currency && currentRole !== 'SUPER_ADMIN') {
           setCurrency(currentOrgInfo.value.currency);
@@ -585,9 +593,9 @@ export default function App() {
         }
       }
 
-      assignIfFulfilled(48, setHodStats);
-      assignIfFulfilled(49, setAnnouncements);
-      assignIfFulfilled(50, setMeetings);
+      assignIfFulfilled(50, setHodStats);
+      assignIfFulfilled(51, setAnnouncements);
+      assignIfFulfilled(52, setMeetings);
     } catch (err) {
       console.error("Failed to load data from backend:", err);
     } finally {
@@ -1086,6 +1094,26 @@ export default function App() {
             ? await updateInventorySale(data.id, data)
             : await createInventorySale(data);
 
+          // AUTO-INVOICING: Create invoice if approved
+          if (data.status === "Approved" && !data.invoice_generated) {
+            try {
+              const { createInvoice } = await import("./lib/api");
+              await createInvoice({
+                student_id: data.student_id,
+                title: `Inventory/Stock: ${data.item_name}`,
+                amount: data.total_price || data.price,
+                due_date: new Date().toISOString().split('T')[0],
+                status: 'Pending',
+                description: `Quantity: ${data.quantity || 1}`,
+                source_type: 'inventory-sale',
+                source_id: result?.id || data.id
+              });
+              // Mark as invoice generated so we don't do it again
+              await updateInventorySale(result?.id || data.id, { invoice_generated: true });
+            } catch (err) {
+              console.error("Failed to auto-invoice:", err);
+            }
+          }
           break;
         case "student":
           result = isUpdate
@@ -1289,6 +1317,54 @@ export default function App() {
         "error",
       );
       throw err;
+    }
+  };
+
+  const handleApproveTransport = async (assignment: any) => {
+    try {
+      const { approveTransportRequest, createInvoice } = await import("./lib/api");
+      await approveTransportRequest(assignment.student_id);
+      
+      // Auto-Invoicing
+      await createInvoice({
+        student_id: assignment.student_id,
+        title: `Transport: ${assignment.route_name || 'Assigned Route'}`,
+        amount: assignment.price || 0,
+        due_date: new Date().toISOString().split('T')[0],
+        status: 'Pending',
+        source_type: 'transport',
+        source_id: assignment.id
+      });
+      
+      showToast("Transport request approved and invoiced!", "success");
+      loadData();
+    } catch (err) {
+      console.error("Failed to approve transport:", err);
+      showToast("Failed to approve transport", "error");
+    }
+  };
+
+  const handleApproveHostel = async (assignment: any) => {
+    try {
+      const { approveHostelRequest, createInvoice } = await import("./lib/api");
+      await approveHostelRequest(assignment.id);
+      
+      // Auto-Invoicing
+      await createInvoice({
+        student_id: assignment.student_id,
+        title: `Hostel: ${assignment.hostel_name} - ${assignment.room_number}`,
+        amount: assignment.price || 0,
+        due_date: new Date().toISOString().split('T')[0],
+        status: 'Pending',
+        source_type: 'hostel',
+        source_id: assignment.id
+      });
+      
+      showToast("Hostel request approved and invoiced!", "success");
+      loadData();
+    } catch (err) {
+      console.error("Failed to approve hostel:", err);
+      showToast("Failed to approve hostel", "error");
     }
   };
 
@@ -2571,6 +2647,9 @@ export default function App() {
           payments={receipts}
           expenses={expenses}
           budgets={budgets}
+          inventorySales={inventorySales}
+          transportAssignments={transportAssignments}
+          hostelAssignments={hostelAssignments}
         />
       ),
 
@@ -2977,7 +3056,9 @@ export default function App() {
           wards={wards}
           onWardSelect={setSelectedWardId}
           data={transportRoutes}
+          assignments={transportAssignments}
           students={studentList}
+          onApprove={handleApproveTransport}
           onSave={
             currentRole === "STUDENT"
               ? undefined
@@ -3004,7 +3085,9 @@ export default function App() {
           wards={wards}
           onWardSelect={setSelectedWardId}
           data={hostels}
+          assignments={hostelAssignments}
           students={studentList}
+          onApprove={handleApproveHostel}
           onSave={
             currentRole === "STUDENT"
               ? undefined

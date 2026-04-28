@@ -26,30 +26,15 @@ import { downloadInventoryTemplate, parseInventoryExcel } from '../../lib/excel'
 import { useLanguage } from '../../lib/LanguageContext';
 
 export const OperationsModules = {
-  Transport: ({ role, currentStudentId, wards, onWardSelect, data, students, onSave, onDelete, onRefresh }: { role?: UserRole, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+  Transport: ({ role, currentStudentId, wards, onWardSelect, data, assignments = [], students, onApprove, onSave, onDelete, onRefresh }: { role?: UserRole, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], assignments?: any[], students?: any[], onApprove?: (assignment: any) => void, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
     const { currency } = useLanguage();
     const [viewingStudents, setViewingStudents] = useState<any | null>(null);
     const [routeStudents, setRouteStudents] = useState<any[]>([]);
     const [isLoadingStudents, setIsLoadingStudents] = useState(false);
     const [viewMode, setViewMode] = useState<'routes' | 'students'>('routes');
-    const [allAssignments, setAllAssignments] = useState<any[]>([]);
-    const [isAddingStudent, setIsAddingStudent] = useState(false);
     const [requesting, setRequesting] = useState<string | null>(null);
     const [pickupInput, setPickupInput] = useState('');
-
-    const refreshAssignments = async () => {
-      try {
-        const { fetchTransportAssignments } = await import('../../lib/api');
-        const res = await fetchTransportAssignments();
-        setAllAssignments(res);
-      } catch (err) {
-        console.error('Failed to fetch assignments:', err);
-      }
-    };
-
-    React.useEffect(() => {
-      refreshAssignments();
-    }, [viewMode]);
+    const [isAddingStudent, setIsAddingStudent] = useState(false);
 
     const handleViewStudents = async (route: any) => {
       setViewingStudents(route);
@@ -99,145 +84,109 @@ export const OperationsModules = {
       const handleRequest = async (routeId: string) => {
         setRequesting(routeId);
         try {
-          const { assignStudentToTransport } = await import('../../lib/api');
-          await assignStudentToTransport(routeId, currentStudentId!);
-          (window as any).showToast?.('Bus join request submitted!', 'success');
+          const { requestTransport } = await import('../../lib/api');
+          await requestTransport(routeId, pickupInput);
+          (window as any).showToast?.('Transport request sent!', 'success');
           onRefresh?.();
         } catch (err: any) {
-          (window as any).showToast?.(err?.response?.data?.error || 'Request failed', 'error');
+          (window as any).showToast?.(err?.response?.data?.error || 'Failed to send request', 'error');
         } finally {
           setRequesting(null);
         }
       };
-      const [localSelectedWardId, setLocalSelectedWardId] = useState(currentStudentId || wards?.[0]?.id || "");
-      
-      React.useEffect(() => {
-        if (currentStudentId) setLocalSelectedWardId(currentStudentId);
-      }, [currentStudentId]);
 
-      const selectedWardId = currentStudentId || localSelectedWardId;
-      const myAssignments = allAssignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(selectedWardId));
+      const myAssignment = assignments.find(a => String(a.id) === String(currentStudentId));
 
       return (
-        <div className="space-y-10">
-          {role === 'PARENT' && wards && wards.length > 1 && (
-            <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-2.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm w-fit group hover:border-indigo-400 transition-colors mb-6">
-              <span className="text-[10px] font-black text-zinc-400 ml-2 uppercase tracking-[0.2em]">Select Ward:</span>
-              <select
-                value={selectedWardId}
-                onChange={(e) => {
-                  setLocalSelectedWardId(e.target.value);
-                  onWardSelect?.(e.target.value);
-                }}
-                className="bg-transparent text-sm font-black text-zinc-900 dark:text-white outline-none pr-4 cursor-pointer"
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">School Bus Service</h2>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Safe and reliable transport for your ward</p>
+            </div>
+            <Bus className="w-8 h-8 text-indigo-600" />
+          </div>
+
+          {myAssignment && (
+            <div className="p-6 bg-indigo-600 rounded-[2rem] text-white shadow-xl shadow-indigo-500/20">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <MapPin className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100 opacity-80">Current Status</p>
+                  <h3 className="text-lg font-black uppercase tracking-tight">Active Assignment</h3>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-white/10 rounded-2xl">
+                  <p className="text-[10px] font-bold uppercase mb-1 opacity-80">Route</p>
+                  <p className="font-bold">{myAssignment.route_name}</p>
+                </div>
+                <div className="p-4 bg-white/10 rounded-2xl">
+                  <p className="text-[10px] font-bold uppercase mb-1 opacity-80">Location</p>
+                  <p className="font-bold truncate">{myAssignment.transport_pickup_location || 'Main Gate'}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {role === 'PARENT' && (
+            <div className="flex items-center gap-3 p-4 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+              <User className="w-5 h-5 text-zinc-400" />
+              <select 
+                value={currentStudentId}
+                onChange={(e) => onWardSelect?.(e.target.value)}
+                className="bg-transparent border-none outline-none text-sm font-bold flex-1"
               >
-                {wards.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
+                {wards?.map(ward => (
+                  <option key={ward.id} value={ward.id}>{ward.name}</option>
+                ))}
               </select>
             </div>
           )}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Bus className="w-5 h-5 text-indigo-600" />
-              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">My Transport Assignment</h2>
-            </div>
-            
-            {myAssignments.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {myAssignments.map((a: any) => (
-                  <div key={a.id} className="p-6 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden group">
-                    <div className="relative z-10">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-1">Active Route</p>
-                          <h3 className="text-xl font-black text-zinc-900 dark:text-white">{a.route_name}</h3>
-                        </div>
-                        <span className={cn(
-                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                          a.transport_status === 'Pending' ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                        )}>
-                          {a.transport_status || 'Approved'}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-emerald-100 dark:border-emerald-800/50">
-                        <div>
-                          <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">Pricing</p>
-                          <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">{currency}{a.price || '0.00'}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">Effective Date</p>
-                          <p className="text-xs font-bold text-emerald-700/70 dark:text-emerald-400/60">{new Date().toLocaleDateString()}</p>
-                        </div>
-                      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(data || []).map(route => {
+              const isApplied = myAssignment?.route_id === route.id;
+              return (
+                <div key={route.id} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl group hover:border-indigo-500 transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center text-zinc-500 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 transition-colors">
+                      <Bus className="w-5 h-5" />
                     </div>
-                    <Bus className="absolute -right-6 -bottom-6 w-32 h-32 text-emerald-500/5 -rotate-12 group-hover:scale-110 transition-transform duration-700" />
+                    <span className="text-lg font-black text-indigo-600">{currency} {route.price}</span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2.5rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-                <Bus className="w-10 h-10 text-zinc-300 mx-auto mb-4" />
-                <p className="text-sm text-zinc-500 font-medium">You are not assigned to any transport route yet.</p>
-              </div>
-            )}
-          </div>
+                  <h4 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-1">{route.route_name}</h4>
+                  <p className="text-xs text-zinc-500 mb-6 flex items-center gap-2 font-medium">
+                    <Navigation className="w-3 h-3" />
+                    {route.driver_name || 'Driver TBD'} • {route.vehicle_number || 'Vehicle TBD'}
+                  </p>
 
-          <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-indigo-600" />
-              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Available Transport Routes</h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(data || []).map((route: any) => (
-                <div key={route.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm group hover:shadow-xl hover:border-indigo-500 transition-all duration-500 flex flex-col">
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-500">
-                      <Navigation className="w-6 h-6" />
+                  {isApplied ? (
+                    <div className="w-full py-3 bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 rounded-xl text-center text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/20">
+                      Already Assigned
                     </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Route Fare</p>
-                      <p className="text-xl font-black text-indigo-600">{currency}{route.price || '0.00'}</p>
+                  ) : (
+                    <div className="space-y-3">
+                      <input 
+                        type="text" 
+                        placeholder="Pickup Location (e.g. Landmark)"
+                        className="w-full px-4 py-2 text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                        onChange={(e) => setPickupInput(e.target.value)}
+                      />
+                      <button
+                        onClick={() => handleRequest(route.id)}
+                        disabled={requesting === route.id}
+                        className="w-full py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20"
+                      >
+                        {requesting === route.id ? 'Sending Request...' : 'Request to Join Route'}
+                      </button>
                     </div>
-                  </div>
-
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6 tracking-tight group-hover:text-indigo-600 transition-colors">{route.route_name}</h3>
-
-                  <div className="space-y-4 mb-8 flex-1">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                        <Users className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Assigned Driver</p>
-                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{route.driver_name || 'N/A'}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                        <MapPin className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Vehicle Reg</p>
-                        <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300 font-mono tracking-wider">{route.vehicle_number || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => handleRequest(route.id)}
-                    disabled={requesting === route.id}
-                    className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all shadow-xl disabled:opacity-50"
-                  >
-                    {requesting === route.id ? 'Processing...' : 'Request to Join'}
-                  </button>
+                  )}
                 </div>
-              ))}
-              {(data || []).length === 0 && (
-                <div className="col-span-full py-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-                  <p className="text-zinc-400 italic text-sm">No transport routes available at this time.</p>
-                </div>
-              )}
-            </div>
+              );
+            })}
           </div>
         </div>
       );
@@ -267,15 +216,40 @@ export const OperationsModules = {
               Manage Students
             </button>
           </div>
-          {viewMode === 'students' && (
-            <button 
-              onClick={() => setIsAddingStudent(true)}
-              className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Student to Route
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {viewMode === 'students' && assignments.filter(a => a.transport_status === 'Pending').length > 0 && (
+              <button 
+                onClick={async () => {
+                  const pending = assignments.filter(a => a.transport_status === 'Pending');
+                  if (!confirm(`Approve all ${pending.length} pending transport requests? This will generate invoices.`)) return;
+                  let successCount = 0;
+                  for (const a of pending) {
+                    try {
+                      await onApprove?.(a);
+                      successCount++;
+                    } catch (err) {
+                      console.error("Failed to approve transport in bulk:", err);
+                    }
+                  }
+                  (window as any).showToast?.(`Successfully approved ${successCount} requests!`, 'success');
+                  onRefresh?.();
+                }}
+                className="px-4 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Approve All Requests
+              </button>
+            )}
+            {viewMode === 'students' && (
+              <button 
+                onClick={() => setIsAddingStudent(true)}
+                className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Student to Route
+              </button>
+            )}
+          </div>
         </div>
 
         {viewMode === 'routes' ? (
@@ -406,7 +380,7 @@ export const OperationsModules = {
         ) : (
           <DataTable 
             title="Assigned Students"
-            data={allAssignments}
+            data={assignments}
             columns={[
               { header: 'Student Name', accessor: (item: any) => item.name, className: 'font-bold' },
               { header: 'Adm No.', accessor: (item: any) => item.admission_no },
@@ -431,11 +405,8 @@ export const OperationsModules = {
                         e.stopPropagation();
                         if (!confirm(`Approve transport request for ${item.name}?`)) return;
                         try {
-                          const { approveTransportRequest } = await import('../../lib/api');
-                          await approveTransportRequest(item.id);
-                          refreshAssignments();
+                          await onApprove?.(item);
                           onRefresh?.();
-                          (window as any).showToast?.('Request approved successfully!', 'success');
                         } catch (err: any) {
                           (window as any).showToast?.('Failed to approve request', 'error');
                         }
@@ -460,7 +431,6 @@ export const OperationsModules = {
                   const { unassignStudentFromTransport } = await import('../../lib/api');
                   await unassignStudentFromTransport(item.id);
                 }
-                refreshAssignments();
                 onRefresh?.();
                 (window as any).showToast?.(isPending ? 'Request rejected' : 'Student unassigned successfully!', 'success');
               } catch (err: any) {
@@ -493,7 +463,7 @@ export const OperationsModules = {
                   >
                     <option value="">Choose student...</option>
                     {(students || [])
-                      .filter(s => !allAssignments.find(a => a.id === s.id))
+                      .filter(s => !assignments.find(a => a.id === s.id))
                       .map(s => (
                         <option key={s.id} value={s.id}>{s.name} ({s.class})</option>
                       ))}
@@ -528,7 +498,6 @@ export const OperationsModules = {
                     try {
                       const { assignStudentToTransport } = await import('../../lib/api');
                       await assignStudentToTransport(rid, sid, loc);
-                      refreshAssignments();
                       onRefresh?.();
                       setIsAddingStudent(false);
                       (window as any).showToast?.('Student assigned successfully!', 'success');
@@ -547,7 +516,7 @@ export const OperationsModules = {
       </div>
     );
   },
-  Hostel: ({ role, currentStudentId, wards, onWardSelect, data, students, onSave, onDelete, onRefresh }: { role?: string, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], students?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
+  Hostel: ({ role, currentStudentId, wards, onWardSelect, data, assignments = [], students, onApprove, onSave, onDelete, onRefresh }: { role?: UserRole, currentStudentId?: string, wards?: Ward[], onWardSelect?: (id: string) => void, data?: any[], assignments?: any[], students?: any[], onApprove?: (assignment: any) => void, onSave?: (data: any) => void, onDelete?: (item: any) => void, onRefresh?: () => void }) => {
     const { currency, t } = useLanguage();
     const [viewingRoomsHostel, setViewingRoomsHostel] = useState<any | null>(null);
     const [hostelRooms, setHostelRooms] = useState<any[]>([]);
@@ -558,20 +527,9 @@ export const OperationsModules = {
     const [isLoadingStudents, setIsLoadingStudents] = useState(false);
 
     const [viewMode, setViewMode] = useState<'hostels' | 'residents'>('hostels');
-    const [allAssignments, setAllAssignments] = useState<any[]>([]);
     const [isAddingResident, setIsAddingResident] = useState(false);
     const [allRooms, setAllRooms] = useState<any[]>([]);
     const [hostelRequesting, setHostelRequesting] = useState<string | null>(null);
-
-    const refreshAssignments = async () => {
-      try {
-        const { fetchHostelAssignments } = await import('../../lib/api');
-        const res = await fetchHostelAssignments();
-        setAllAssignments(res);
-      } catch (err) {
-        console.error('Failed to fetch hostel assignments:', err);
-      }
-    };
 
     const fetchAllRooms = async () => {
       try {
@@ -584,7 +542,6 @@ export const OperationsModules = {
     };
 
     React.useEffect(() => {
-      refreshAssignments();
       if (role === 'STUDENT') fetchAllRooms();
     }, [viewMode]);
 
@@ -684,7 +641,7 @@ export const OperationsModules = {
     }, [currentStudentId]);
 
     const selectedWardId = currentStudentId || localSelectedWardId;
-    const myHostelAssignments = allAssignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(selectedWardId));
+    const myHostelAssignments = assignments.filter((a: any) => String(a.student_id || a.studentId || a.id) === String(selectedWardId));
 
     return (
       <div className="space-y-6">
@@ -704,116 +661,83 @@ export const OperationsModules = {
           </div>
         )}
         {role === 'STUDENT' || role === 'PARENT' ? (
-          <div className="space-y-10">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Home className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">My Hostel Assignment</h2>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Hostel & Residency</h2>
+                <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Safe and comfortable housing for your ward</p>
               </div>
-
-              {myHostelAssignments.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {myHostelAssignments.map((a: any) => (
-                    <div key={a.id} className="p-6 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden group">
-                      <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em] mb-1">Active Residency</p>
-                            <h3 className="text-xl font-black text-zinc-900 dark:text-white">{a.hostel_name} — Room {a.room_number}</h3>
-                          </div>
-                          <span className={cn(
-                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                            a.hostel_status === 'Pending' ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                          )}>
-                            {a.hostel_status || 'Approved'}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-emerald-100 dark:border-emerald-800/50">
-                          <div>
-                            <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">Pricing</p>
-                            <p className="text-lg font-black text-emerald-700 dark:text-emerald-400">{currency}{a.price || '0.00'}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-widest">Effective Date</p>
-                            <p className="text-xs font-bold text-emerald-700/70 dark:text-emerald-400/60">{new Date().toLocaleDateString()}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <Home className="absolute -right-6 -bottom-6 w-32 h-32 text-emerald-500/5 -rotate-12 group-hover:scale-110 transition-transform duration-700" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2.5rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-                  <Home className="w-10 h-10 text-zinc-300 mx-auto mb-4" />
-                  <p className="text-sm text-zinc-500 font-medium">You are not assigned to any hostel yet.</p>
-                </div>
-              )}
+              <Home className="w-8 h-8 text-indigo-600" />
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <Package className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Available Rooms</h2>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {allRooms.filter((r: any) => Number(r.student_count) < Number(r.capacity)).map((room: any) => (
-                  <div key={room.id} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm group hover:shadow-xl hover:border-indigo-500 transition-all duration-500 flex flex-col">
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform duration-500">
-                        <Home className="w-6 h-6" />
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Room Fare</p>
-                        <p className="text-xl font-black text-indigo-600">{currency}{room.price || '0.00'}</p>
-                      </div>
-                    </div>
-
-                    <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-1 tracking-tight group-hover:text-indigo-600 transition-colors">{room.hostel_name}</h3>
-                    <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-6">Room {room.room_number}</p>
-
-                    <div className="space-y-4 mb-8 flex-1">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                          <Users className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Availability</p>
-                          <p className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{Number(room.capacity) - Number(room.student_count)} Slots Left ({room.capacity} Total)</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={async () => {
-                        setHostelRequesting(room.id);
-                        try {
-                          const { assignStudentToRoom } = await import('../../lib/api');
-                          await assignStudentToRoom(room.id, currentStudentId!);
-                          (window as any).showToast?.('Hostel room request submitted!', 'success');
-                          refreshAssignments();
-                          fetchAllRooms();
-                          onRefresh?.();
-                        } catch (err: any) {
-                          (window as any).showToast?.(err?.response?.data?.error || 'Request failed', 'error');
-                        } finally {
-                          setHostelRequesting(null);
-                        }
-                      }}
-                      disabled={hostelRequesting === room.id}
-                      className="w-full py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all shadow-xl disabled:opacity-50"
-                    >
-                      {hostelRequesting === room.id ? 'Processing...' : 'Request to Join'}
-                    </button>
+            {assignments.find(a => String(a.id) === String(currentStudentId)) && (
+              <div className="p-6 bg-indigo-600 rounded-[2rem] text-white shadow-xl shadow-indigo-500/20">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
-                ))}
-                {allRooms.filter((r: any) => Number(r.student_count) < Number(r.capacity)).length === 0 && (
-                  <div className="col-span-full py-12 text-center bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800">
-                    <p className="text-zinc-400 italic text-sm">No available rooms at this time.</p>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100 opacity-80">Current Status</p>
+                    <h3 className="text-lg font-black uppercase tracking-tight">Active Residency</h3>
                   </div>
-                )}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/10 rounded-2xl">
+                    <p className="text-[10px] font-bold uppercase mb-1 opacity-80">Hostel</p>
+                    <p className="font-bold truncate">{assignments.find(a => String(a.id) === String(currentStudentId)).hostel_name}</p>
+                  </div>
+                  <div className="p-4 bg-white/10 rounded-2xl">
+                    <p className="text-[10px] font-bold uppercase mb-1 opacity-80">Room Number</p>
+                    <p className="font-bold">{assignments.find(a => String(a.id) === String(currentStudentId)).room_number}</p>
+                  </div>
+                </div>
               </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+              {allRooms.filter(r => Number(r.student_count) < Number(r.capacity)).map(room => {
+                const isAssigned = assignments.some(a => String(a.id) === String(currentStudentId) && a.room_id === room.id);
+                return (
+                  <div key={room.id} className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl group hover:border-indigo-500 transition-all">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="w-10 h-10 bg-zinc-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center text-zinc-500 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/30 group-hover:text-indigo-600 transition-colors">
+                        <Home className="w-5 h-5" />
+                      </div>
+                      <span className="text-lg font-black text-indigo-600">{currency} {room.price}</span>
+                    </div>
+                    <h4 className="font-black text-zinc-900 dark:text-white uppercase tracking-tight mb-1">{room.hostel_name}</h4>
+                    <p className="text-xs text-zinc-500 mb-6 flex items-center gap-2 font-medium">
+                      Room {room.room_number} • {room.capacity - room.student_count} Slots Available
+                    </p>
+
+                    {isAssigned ? (
+                      <div className="w-full py-3 bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 rounded-xl text-center text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/20">
+                        Current Residence
+                      </div>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          setHostelRequesting(room.id);
+                          try {
+                            const { assignStudentToRoom } = await import('../../lib/api');
+                            await assignStudentToRoom(room.id, currentStudentId!);
+                            (window as any).showToast?.('Residency request sent!', 'success');
+                            onRefresh?.();
+                          } catch (err: any) {
+                            (window as any).showToast?.(err?.response?.data?.error || 'Request failed', 'error');
+                          } finally {
+                            setHostelRequesting(null);
+                          }
+                        }}
+                        disabled={hostelRequesting === room.id}
+                        className="w-full py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20"
+                      >
+                        {hostelRequesting === room.id ? 'Processing...' : 'Request Residency'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -839,15 +763,40 @@ export const OperationsModules = {
                   Manage Residents
                 </button>
               </div>
-              {viewMode === 'residents' && (
-                <button 
-                  onClick={() => setIsAddingResident(true)}
-                  className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add Resident to Room
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {viewMode === 'residents' && assignments.filter(a => a.hostel_status === 'Pending').length > 0 && (
+                  <button 
+                    onClick={async () => {
+                      const pending = assignments.filter(a => a.hostel_status === 'Pending');
+                      if (!confirm(`Approve all ${pending.length} pending hostel requests? This will generate invoices.`)) return;
+                      let successCount = 0;
+                      for (const a of pending) {
+                        try {
+                          await onApprove?.(a);
+                          successCount++;
+                        } catch (err) {
+                          console.error("Failed to approve hostel in bulk:", err);
+                        }
+                      }
+                      (window as any).showToast?.(`Successfully approved ${successCount} requests!`, 'success');
+                      onRefresh?.();
+                    }}
+                    className="px-4 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Approve All Requests
+                  </button>
+                )}
+                {viewMode === 'residents' && (
+                  <button 
+                    onClick={() => setIsAddingResident(true)}
+                    className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg flex items-center gap-2"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Resident
+                  </button>
+                )}
+              </div>
             </div>
 
             {viewMode === 'hostels' ? (
@@ -965,7 +914,7 @@ export const OperationsModules = {
             ) : (
               <DataTable 
                 title="Current Residents"
-                data={allAssignments}
+                data={assignments}
                 columns={[
                   { header: 'Resident Name', accessor: (item: any) => item.name, className: 'font-bold' },
                   { header: 'Adm No.', accessor: (item: any) => item.admission_no },
@@ -990,11 +939,8 @@ export const OperationsModules = {
                             e.stopPropagation();
                             if (!confirm(`Approve hostel request for ${item.name}?`)) return;
                             try {
-                              const { approveHostelRequest } = await import('../../lib/api');
-                              await approveHostelRequest(item.id);
-                              refreshAssignments();
+                              await onApprove?.(item);
                               onRefresh?.();
-                              (window as any).showToast?.('Request approved successfully!', 'success');
                             } catch (err: any) {
                               (window as any).showToast?.('Failed to approve request', 'error');
                             }
@@ -1019,7 +965,6 @@ export const OperationsModules = {
                       const { unassignStudentFromRoom } = await import('../../lib/api');
                       await unassignStudentFromRoom(item.id);
                     }
-                    refreshAssignments();
                     onRefresh?.();
                     (window as any).showToast?.(isPending ? 'Request rejected' : 'Resident unassigned successfully!', 'success');
                   } catch (err: any) {
@@ -1262,7 +1207,7 @@ export const OperationsModules = {
                   >
                     <option value="">Choose student...</option>
                     {(students || [])
-                      .filter(s => !allAssignments.find(a => a.id === s.id))
+                      .filter(s => !assignments.find(a => a.id === s.id))
                       .map(s => (
                         <option key={s.id} value={s.id}>{s.name} ({s.class})</option>
                       ))}
@@ -1288,7 +1233,6 @@ export const OperationsModules = {
                     try {
                       const { assignStudentToRoom } = await import('../../lib/api');
                       await assignStudentToRoom(rid, sid);
-                      refreshAssignments();
                       onRefresh?.();
                       setIsAddingResident(false);
                       (window as any).showToast?.('Resident assigned successfully!', 'success');

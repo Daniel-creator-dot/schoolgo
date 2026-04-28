@@ -1509,6 +1509,29 @@ export const FinanceModules = {
               )}
             </button>
           </div>
+
+          {viewMode === 'requests' && requests.filter(r => r.status === 'Pending').length > 0 && (
+            <button
+              onClick={async () => {
+                if (!confirm(`Are you sure you want to approve all ${requests.filter(r => r.status === 'Pending').length} pending requests? This will also generate invoices for each.`)) return;
+                const pending = requests.filter(r => r.status === 'Pending');
+                let successCount = 0;
+                for (const req of pending) {
+                  try {
+                    await onSaveRequest?.({ ...req, status: 'Approved' });
+                    successCount++;
+                  } catch (err) {
+                    console.error("Failed to approve request in bulk:", err);
+                  }
+                }
+                (window as any).showToast?.(`Successfully approved ${successCount} requests!`, 'success');
+              }}
+              className="px-6 py-2 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+            >
+              <Check className="w-4 h-4" />
+              Approve All Pending
+            </button>
+          )}
         </div>
 
         {viewMode === 'inventory' ? (
@@ -3223,13 +3246,28 @@ export const FinanceModules = {
       </div>
     );
   },
-  FinancialReports: ({ invoices, payments, expenses, budgets }: { invoices?: any[], payments?: any[], expenses?: any[], budgets?: any[] }) => {
+  FinancialReports: ({ invoices, payments, expenses, budgets, inventorySales = [], transportAssignments = [], hostelAssignments = [] }: { invoices?: any[], payments?: any[], expenses?: any[], budgets?: any[], inventorySales?: any[], transportAssignments?: any[], hostelAssignments?: any[] }) => {
     const { t, currency } = useLanguage();
     const totalPayments = (payments || []).reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
     const totalInvoiced = (invoices || []).reduce((sum, i) => sum + parseFloat(i.amount || 0), 0);
     const totalExpenses = (expenses || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
     const netPosition = totalPayments - totalExpenses;
     const collectionRate = totalInvoiced > 0 ? (totalPayments / totalInvoiced) * 100 : 0;
+
+    const pendingInventoryRevenue = (inventorySales || [])
+      .filter(r => r.status === 'Pending')
+      .reduce((sum, r) => sum + (parseFloat(r.total_price || r.price) || 0), 0);
+
+    const pendingTransportRevenue = (transportAssignments || [])
+      .filter(a => a.transport_status === 'Pending')
+      .reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
+
+    const pendingHostelRevenue = (hostelAssignments || [])
+      .filter(a => a.hostel_status === 'Pending')
+      .reduce((sum, a) => sum + (parseFloat(a.price) || 0), 0);
+    
+    const projectedRevenue = pendingInventoryRevenue + pendingTransportRevenue + pendingHostelRevenue;
+    const totalPotentialRevenue = totalInvoiced + projectedRevenue;
 
     // Monthly Data Aggregation
     const last6Months = [...Array(6)].map((_, i) => {
@@ -3355,6 +3393,57 @@ export const FinanceModules = {
 
     return (
       <div className="space-y-6">
+        {/* Financial Health Section */}
+        <div className="p-8 bg-zinc-900 dark:bg-black rounded-[2.5rem] text-white overflow-hidden relative group">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent opacity-50 group-hover:opacity-70 transition-opacity" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-xl font-black uppercase tracking-tight mb-1">Financial Health Dashboard</h3>
+                <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Revenue Projection & Collection Analytics</p>
+              </div>
+              <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md">
+                <Target className="w-6 h-6 text-indigo-400" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Total Potential Revenue</p>
+                  <p className="text-lg font-black">{currency} {totalPotentialRevenue.toLocaleString()}</p>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-white transition-all duration-1000" style={{ width: '100%' }} />
+                </div>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase italic">Invoiced + Pending Requests</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em]">Actual Collections</p>
+                  <p className="text-lg font-black text-indigo-400">{currency} {totalPayments.toLocaleString()}</p>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${totalPotentialRevenue > 0 ? (totalPayments / totalPotentialRevenue) * 100 : 0}%` }} />
+                </div>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase italic">{totalPotentialRevenue > 0 ? Math.round((totalPayments / totalPotentialRevenue) * 100) : 0}% of potential realized</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <p className="text-[10px] font-bold text-amber-400 uppercase tracking-[0.2em]">Projected (Pending)</p>
+                  <p className="text-lg font-black text-amber-400">{currency} {projectedRevenue.toLocaleString()}</p>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-amber-500 transition-all duration-1000" style={{ width: `${totalPotentialRevenue > 0 ? (projectedRevenue / totalPotentialRevenue) * 100 : 0}%` }} />
+                </div>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase italic">Future income from open requests</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl">
             <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">{t('total_revenue')}</p>

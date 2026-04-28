@@ -824,6 +824,16 @@ export const rejectHostelRequest = async (studentId: string) => {
   return response.data;
 };
 
+export const requestTransport = async (routeId: string, pickupLocation: string) => {
+  const response = await api.post('/ops/transport/request', { route_id: routeId, pickup_location: pickupLocation });
+  return response.data;
+};
+
+export const requestHostel = async (hostelId: string) => {
+  const response = await api.post('/ops/hostels/request', { hostel_id: hostelId });
+  return response.data;
+};
+
 // Clubs
 export const fetchClubs = async () => {
   const response = await api.get('/ops/clubs');
