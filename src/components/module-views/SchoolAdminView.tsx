@@ -4375,6 +4375,8 @@ export const AcademicModules = {
   },
   ClassManagement: ({ data, staff = [], students = [], gradingScales = [], reportCardTemplates = [], role, onSave, onDelete }: { data?: any[], staff?: any[], students?: any[], gradingScales?: any[], reportCardTemplates?: ReportCardTemplate[], role?: UserRole, onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
     const [viewItem, setViewItem] = useState<any | null>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'graphical'>('graphical');
+    const [editingItem, setEditingItem] = useState<any | null>(null);
 
     const classColumns = role === 'STAFF'
       ? [
@@ -4408,123 +4410,167 @@ export const AcademicModules = {
 
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
-                <Users className="w-4 h-4" />
-              </div>
-              <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider">Total Classes</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
+              <GraduationCap className="w-6 h-6" />
             </div>
-            <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{data?.length || 0}</h3>
+            <div>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Classroom Directory</h2>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Manage class teachers, student capacities & promotion flows</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  viewMode === 'list' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                )}
+              >
+                <List className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('graphical')}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  viewMode === 'graphical' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                )}
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </button>
+            </div>
+            {onSave && role !== 'STAFF' && (
+              <button
+                onClick={() => setEditingItem({})}
+                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-200"
+              >
+                <Plus className="w-4 h-4" />
+                Add Class
+              </button>
+            )}
           </div>
         </div>
-        <DataTable
-          title="Class Management & Promotion Flow"
-          data={data || []}
-          onSave={onSave}
-          onDelete={onDelete}
-          onView={setViewItem}
-          renderForm={(item) => (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Class Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    defaultValue={item?.name}
-                    placeholder="e.g. Grade 10"
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+
+        {viewMode === 'list' ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider">Total Classes</p>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Section / Stream</label>
-                  <input
-                    type="text"
-                    name="section"
-                    defaultValue={item?.section}
-                    placeholder="e.g. A, Science, Blue"
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Class Teacher</label>
-                  <select
-                    name="class_teacher_id"
-                    defaultValue={item?.class_teacher_id}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">Assign Teacher</option>
-                    {staff.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Capacity</label>
-                  <input
-                    type="number"
-                    name="capacity"
-                    defaultValue={item?.capacity}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Promotion Rank (Order)</label>
-                  <input
-                    type="number"
-                    name="rank"
-                    defaultValue={item?.rank}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="e.g. 10 for Grade 10"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Promotes To</label>
-                  <select
-                    name="next_class_id"
-                    defaultValue={item?.next_class_id}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">End of Journey (None)</option>
-                    {data?.filter(c => c.id !== item?.id).map(c => (
-                      <option key={c.id} value={c.id}>{c.name} {c.section}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" />
-                    Report Card Template Assignment
-                  </label>
-                  <select
-                    name="report_card_template_id"
-                    defaultValue={item?.report_card_template_id}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-indigo-200 dark:border-indigo-900/50 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  >
-                    <option value="">-- No Active Template --</option>
-                    {reportCardTemplates?.map(t => (
-                      <option key={t.id} value={t.id}>{t.name} {t.is_default ? '(Default)' : ''}</option>
-                    ))}
-                  </select>
-                  <p className="text-[10px] text-zinc-400 uppercase tracking-wider mt-1.5">
-                    Assigning a template controls what grading columns teachers see for this class.
-                  </p>
-                </div>
+                <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{data?.length || 0}</h3>
               </div>
             </div>
-          )}
-          columns={classColumns}
-          onAdd={onSave ? () => { } : undefined}
-          onEdit={onSave ? () => { } : undefined}
-        />
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <DataTable
+                title="Class List"
+                data={data || []}
+                onSave={onSave}
+                onDelete={onDelete}
+                onView={setViewItem}
+                onEdit={onSave && role !== 'STAFF' ? (item) => setEditingItem(item) : undefined}
+                columns={classColumns}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {data?.map((cls) => {
+              const studentCount = students.filter((s: any) => s.class_id === cls.id).length;
+              return (
+                <div 
+                  key={cls.id}
+                  className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
+                >
+                  <div className="flex flex-col gap-6">
+                    {/* Class Icon & Title */}
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-4">
+                        <div className="w-16 h-16 rounded-[2rem] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none">
+                          <School className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{cls.name}</h3>
+                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mt-1">Section: {cls.section || 'N/A'}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest rounded-xl border border-emerald-100 dark:border-emerald-800/50">
+                          {studentCount} Students
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Teacher & Promotion Section */}
+                    <div className="space-y-4">
+                      <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-700/50 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm">
+                          <UserCheck className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Class Teacher</p>
+                          <p className="text-xs font-black text-zinc-900 dark:text-white uppercase truncate">
+                            {cls.class_teacher_name || 'Unassigned'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/50">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Promotion Flow</p>
+                          <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-black text-indigo-900 dark:text-indigo-100 uppercase">{cls.name}</span>
+                          <ArrowRight className="w-3 h-3 text-indigo-400" />
+                          <span className={cn(
+                            "text-[10px] font-black px-2 py-0.5 rounded-lg uppercase",
+                            cls.next_class_name ? "bg-white dark:bg-zinc-800 text-indigo-600 shadow-sm" : "text-indigo-300"
+                          )}>
+                            {cls.next_class_name || 'Alumni'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-2">
+                      <button 
+                        onClick={() => setViewItem(cls)}
+                        className="flex-1 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        Details
+                      </button>
+                      {onSave && role !== 'STAFF' && (
+                        <button 
+                          onClick={() => setEditingItem(cls)}
+                          className="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
+                        >
+                          <Settings className="w-4 h-4" />
+                        </button>
+                      )}
+                      {onDelete && role !== 'STAFF' && (
+                        <button 
+                          onClick={() => onDelete(cls)}
+                          className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
 
         <Modal
           isOpen={!!viewItem}
@@ -4606,11 +4652,127 @@ export const AcademicModules = {
             </div>
           )}
         </Modal>
+
+        <Modal
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          title={editingItem?.id ? "Edit Class" : "Add New Class"}
+        >
+          <form 
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const values: any = {};
+              formData.forEach((value, key) => {
+                values[key] = value;
+              });
+              if (onSave) {
+                await onSave({ ...editingItem, ...values });
+                setEditingItem(null);
+              }
+            }}
+            className="p-6 space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Class Name</label>
+                <input
+                  required
+                  type="text"
+                  name="name"
+                  defaultValue={editingItem?.name}
+                  placeholder="e.g. Grade 10"
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Section / Stream</label>
+                <input
+                  required
+                  type="text"
+                  name="section"
+                  defaultValue={editingItem?.section}
+                  placeholder="e.g. A, Science, Blue"
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Class Teacher</label>
+                <select
+                  name="class_teacher_id"
+                  defaultValue={editingItem?.class_teacher_id}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Assign Teacher</option>
+                  {staff.map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Capacity</label>
+                <input
+                  type="number"
+                  name="capacity"
+                  defaultValue={editingItem?.capacity}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Promotion Rank (Order)</label>
+                <input
+                  type="number"
+                  name="rank"
+                  defaultValue={editingItem?.rank}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g. 10 for Grade 10"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Promotes To</label>
+                <select
+                  name="next_class_id"
+                  defaultValue={editingItem?.next_class_id}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">End of Journey (None)</option>
+                  {data?.filter(c => c.id !== editingItem?.id).map(c => (
+                    <option key={c.id} value={c.id}>{c.name} {c.section}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setEditingItem(null)}
+                className="px-6 py-2 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-sm hover:bg-zinc-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-8 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all"
+              >
+                {editingItem?.id ? "Update Class" : "Create Class"}
+              </button>
+            </div>
+          </form>
+        </Modal>
       </div>
     );
   },
   SubjectManagement: ({ data, staff = [], classes = [], students = [], departments = [], currentStaff, role, onSave, onDelete }: { data?: any[], staff?: any[], classes?: any[], students?: any[], departments?: any[], currentStaff?: any, role?: UserRole, onSave?: (data: any) => void, onDelete?: (item: any) => void }) => {
     const [viewItem, setViewItem] = useState<any | null>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'graphical'>('graphical');
+    const [editingItem, setEditingItem] = useState<any | null>(null);
 
     const subjectColumns = role === 'STAFF'
       ? [
@@ -4628,137 +4790,174 @@ export const AcademicModules = {
 
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
-                <BookOpen className="w-4 h-4" />
-              </div>
-              <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider">Total Subjects</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
+              <BookOpen className="w-6 h-6" />
             </div>
-            <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{data?.length || 0}</h3>
+            <div>
+              <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">Curriculum Inventory</h2>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Manage subjects, teacher assignments & departmental links</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  viewMode === 'list' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                )}
+              >
+                <List className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setViewMode('graphical')}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  viewMode === 'graphical' ? "bg-white dark:bg-zinc-700 shadow-sm text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                )}
+              >
+                <LayoutGrid className="w-5 h-5" />
+              </button>
+            </div>
+            {onSave && role !== 'STAFF' && (
+              <button
+                onClick={() => setEditingItem({})}
+                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform shadow-lg shadow-indigo-200"
+              >
+                <Plus className="w-4 h-4" />
+                Add Subject
+              </button>
+            )}
           </div>
         </div>
-        <DataTable
-          title="Subject Management"
-          data={data || []}
-          onSave={onSave}
-          onDelete={onDelete}
-          onView={setViewItem}
-          renderForm={(item) => (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Subject Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    defaultValue={item?.name}
-                    placeholder="e.g. Mathematics"
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+
+        {viewMode === 'list' ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider">Total Subjects</p>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Subject Code (Optional)</label>
-                  <input
-                    type="text"
-                    name="code"
-                    defaultValue={item?.code}
-                    placeholder="e.g. MATH-101"
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  <p className="text-[10px] text-zinc-400">If left blank, a code will be auto-generated.</p>
-                </div>
+                <h3 className="text-3xl font-black text-zinc-900 dark:text-white">{data?.length || 0}</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Assigned Teacher</label>
-                  <select
-                    name="teacher_id"
-                    defaultValue={item?.teacher_id}
-                    onChange={(e) => {
-                      const teacherId = e.target.value;
-                      const selectedTeacher = staff.find((s: any) => s.id === teacherId);
-                      const form = e.target.closest('form');
-                      const deptSelect = form?.querySelector('select[name="department_id"]') as HTMLSelectElement;
-                      if (deptSelect && selectedTeacher?.department_id) {
-                        deptSelect.value = selectedTeacher.department_id;
-                      } else if (deptSelect && !teacherId) {
-                        deptSelect.value = "";
-                      }
-                    }}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">Select Teacher</option>
-                    {staff.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Assigned Classes (Select Multiple)</label>
-                  <div className="p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl max-h-40 overflow-y-auto space-y-2">
-                    {classes.map((c: any) => (
-                      <label key={c.id} className="flex items-center gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          name="class_ids"
-                          value={c.id}
-                          defaultChecked={item?.classes?.some((sc: any) => sc.id === c.id) || item?.class_id === c.id}
-                          className="w-4 h-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <span className="text-sm font-bold text-zinc-600 group-hover:text-zinc-900 transition-colors">{c.name} {c.section}</span>
-                      </label>
-                    ))}
+            </div>
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <DataTable
+                title="Subject List"
+                data={data || []}
+                onSave={onSave}
+                onDelete={onDelete}
+                onView={setViewItem}
+                onEdit={onSave && role !== 'STAFF' ? (item) => setEditingItem(item) : undefined}
+                columns={subjectColumns}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {data?.map((subject) => (
+              <div 
+                key={subject.id}
+                className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
+              >
+                <div className="flex flex-col gap-6">
+                  {/* Subject Icon & Title */}
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-4">
+                      <div className="w-16 h-16 rounded-[2rem] bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100 dark:border-indigo-800">
+                        <FileText className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{subject.name}</h3>
+                        <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mt-1">{subject.code || 'NO-CODE'}</p>
+                      </div>
+                    </div>
+                    <div className="px-3 py-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-xl text-[9px] font-black text-zinc-400 uppercase tracking-widest">
+                      {subject.department_name || 'General'}
+                    </div>
+                  </div>
+
+                  {/* Details Section */}
+                  <div className="space-y-4">
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-700/50 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center shadow-sm">
+                        <UserCheck className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Subject Teacher</p>
+                        <p className="text-xs font-black text-zinc-900 dark:text-white uppercase truncate">
+                          {subject.teacher_name || 'Unassigned'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest pl-1">Target Classes</p>
+                      <div className="flex flex-wrap gap-1.5 min-h-[2rem]">
+                        {subject.classes && subject.classes.length > 0 ? (
+                          subject.classes.map((cls: any) => (
+                            <div key={cls.id} className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[9px] font-black rounded-lg border border-indigo-100 dark:border-indigo-800/50 uppercase tracking-wider">
+                              {cls.name} {cls.section}
+                            </div>
+                          ))
+                        ) : (
+                          subject.class_name ? (
+                            <div className="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[9px] font-black rounded-lg border border-indigo-100 dark:border-indigo-800/50 uppercase tracking-wider">
+                              {subject.class_name} {subject.class_section}
+                            </div>
+                          ) : (
+                            <p className="text-[10px] text-zinc-400 italic pl-1">No classes assigned</p>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <button 
+                      onClick={() => setViewItem(subject)}
+                      className="flex-1 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      View Profile
+                    </button>
+                    {onSave && role !== 'STAFF' && (
+                      <button 
+                        onClick={() => setEditingItem(subject)}
+                        className="p-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors"
+                      >
+                        <Settings className="w-4 h-4" />
+                      </button>
+                    )}
+                    {onDelete && role !== 'STAFF' && (
+                      <button 
+                        onClick={() => onDelete(subject)}
+                        className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Department</label>
-                {role === 'HOD' ? (() => {
-                  const hodDeptId = departments.find((d: any) => d.hod_id === currentStaff?.id)?.id || currentStaff?.department_id;
-                  const displayDeptId = item?.department_id || hodDeptId;
-                  const deptName = departments.find((d: any) => d.id === displayDeptId)?.name || 'Your Department';
-                  return (
-                    <div className="relative">
-                      <input type="hidden" name="department_id" value={displayDeptId} />
-                      <input
-                        type="text"
-                        readOnly
-                        value={deptName}
-                        className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm font-bold text-zinc-500 dark:text-zinc-400 cursor-not-allowed"
-                      />
-                    </div>
-                  );
-                })() : (
-                  <select
-                    name="department_id"
-                    defaultValue={item?.department_id}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-400 dark:border-zinc-500 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map((d: any) => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </div>
-          )}
-          columns={subjectColumns}
-          onAdd={onSave ? () => { } : undefined}
-          onEdit={onSave ? () => { } : undefined}
-        />
+            ))}
+          </div>
+        )}
 
         <Modal
           isOpen={!!viewItem}
           onClose={() => setViewItem(null)}
-          title="Subject Details"
+          title="Subject Analysis"
           maxWidth="max-w-4xl"
         >
           {viewItem && (
-            <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
-              {/* Header */}
+            <div className="space-y-8 p-2">
               <div className="relative p-8 rounded-[2.5rem] overflow-hidden group border border-amber-100/80 dark:border-amber-900/30 bg-amber-50/40 dark:bg-amber-900/10 backdrop-blur-xl flex items-center gap-6">
                 <div className="absolute -right-12 -top-12 w-40 h-40 bg-amber-400/10 blur-3xl rounded-full pointer-events-none" />
                 <div className="w-20 h-20 rounded-[1.5rem] bg-amber-500 flex items-center justify-center shadow-xl shadow-amber-200 dark:shadow-none shrink-0 group-hover:scale-105 transition-transform duration-300">
@@ -4852,6 +5051,121 @@ export const AcademicModules = {
               )}
             </div>
           )}
+        </Modal>
+
+        <Modal
+          isOpen={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          title={editingItem?.id ? "Edit Subject" : "Add New Subject"}
+          maxWidth="max-w-4xl"
+        >
+          <form 
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const values: any = {};
+              formData.forEach((value, key) => {
+                if (key === 'class_ids') {
+                  if (!values[key]) values[key] = [];
+                  values[key].push(value);
+                } else {
+                  values[key] = value;
+                }
+              });
+              if (onSave) {
+                await onSave({ ...editingItem, ...values });
+                setEditingItem(null);
+              }
+            }}
+            className="p-6 space-y-6"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Subject Name</label>
+                <input
+                  required
+                  type="text"
+                  name="name"
+                  defaultValue={editingItem?.name}
+                  placeholder="e.g. Mathematics"
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Subject Code (Optional)</label>
+                <input
+                  type="text"
+                  name="code"
+                  defaultValue={editingItem?.code}
+                  placeholder="e.g. MATH-101"
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Assigned Teacher</label>
+                <select
+                  name="teacher_id"
+                  defaultValue={editingItem?.teacher_id}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Select Teacher</option>
+                  {staff.map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.role})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Department</label>
+                <select
+                  name="department_id"
+                  defaultValue={editingItem?.department_id}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((d: any) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Assigned Classes</label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl max-h-48 overflow-y-auto">
+                {classes.map((c: any) => (
+                  <label key={c.id} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      name="class_ids"
+                      value={c.id}
+                      defaultChecked={editingItem?.classes?.some((sc: any) => sc.id === c.id) || editingItem?.class_id === c.id}
+                      className="w-4 h-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span className="text-xs font-bold text-zinc-600 group-hover:text-zinc-900 transition-colors uppercase">{c.name} {c.section}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setEditingItem(null)}
+                className="px-6 py-2 border border-zinc-200 dark:border-zinc-700 rounded-xl font-bold text-sm hover:bg-zinc-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-8 py-2 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all"
+              >
+                {editingItem?.id ? "Update Subject" : "Create Subject"}
+              </button>
+            </div>
+          </form>
         </Modal>
       </div>
     );
