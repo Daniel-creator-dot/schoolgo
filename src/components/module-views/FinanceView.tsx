@@ -55,19 +55,43 @@ import { SearchableSelect, Modal } from '../UI';
 import { DocumentBuilder } from '../AdminModules';
 
 
-const getInvoiceHtml = (invoice: any, student: any, organization: any, currency: string, payments: any[]) => {
-  const invoiceAmount = parseFloat(invoice.amount || 0);
+const getInvoiceHtml = (invoiceOrInvoices: any | any[], student: any, organization: any, currency: string, payments: any[]) => {
+  const invoices = Array.isArray(invoiceOrInvoices) ? invoiceOrInvoices : [invoiceOrInvoices];
   const studentPays = (payments || []);
-  const paidForThis = studentPays
-    .filter((p: any) => String(p.invoice_id) === String(invoice.id) || String(p.invoiceId) === String(invoice.id))
-    .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
-  const balanceDue = invoiceAmount - paidForThis;
-  const isPaid = paidForThis >= invoiceAmount;
-  const isPartial = paidForThis > 0 && !isPaid;
-  const docTitle = isPaid ? 'RECEIPT' : 'INVOICE';
+  
+  let totalBilled = 0;
+  let totalPaid = 0;
+  
+  const rows = invoices.map(inv => {
+    const amount = parseFloat(inv.amount || 0);
+    const paid = studentPays
+      .filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id))
+      .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+    
+    totalBilled += amount;
+    totalPaid += paid;
+    
+    return `
+      <tr>
+        <td style="padding: 16px 12px; border-bottom: 1px solid #f1f5f9;">
+          <div style="font-weight: 700; color: #1e293b;">${inv.description || 'School Fees'}</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">${inv.academic_year || ''} - ${inv.term || ''}</div>
+          <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">ID: #${inv.id.split('-')[0].toUpperCase()}</div>
+        </td>
+        <td style="padding: 16px 12px; text-align: right; font-weight: 700; color: #1e293b; border-bottom: 1px solid #f1f5f9;">
+          ${currency} ${amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  const balanceDue = totalBilled - totalPaid;
+  const isPaid = balanceDue <= 0;
+  const isPartial = totalPaid > 0 && !isPaid;
+  
+  const docTitle = invoices.length > 1 ? 'CONSOLIDATED INVOICE' : (isPaid ? 'RECEIPT' : 'INVOICE');
   const statusLabel = isPaid ? 'PAID IN FULL' : isPartial ? 'PARTIAL PAYMENT' : 'PAYMENT DUE';
-  const accentGradient = isPaid ? 'linear-gradient(90deg, #10b981, #3b82f6)' : isPartial ? 'linear-gradient(90deg, #f59e0b, #3b82f6)' : 'linear-gradient(90deg, #f59e0b, #ef4444)';
-  const statusBadgeBg = isPaid ? '#dcfce7' : isPartial ? '#fef3c7' : '#fef3c7';
+  const statusBadgeBg = isPaid ? '#dcfce7' : '#fef3c7';
   const statusBadgeColor = isPaid ? '#10b981' : '#b45309';
   const statusBadgeBorder = isPaid ? '#bbf7d0' : '#fde68a';
 
@@ -82,7 +106,7 @@ const getInvoiceHtml = (invoice: any, student: any, organization: any, currency:
           </div>
           <div class="receipt-title">
             <h1>${docTitle}</h1>
-            <p>#${invoice.id.split('-')[0].toUpperCase()}</p>
+            <p>${invoices.length === 1 ? '#' + invoices[0].id.split('-')[0].toUpperCase() : 'Multiple'}</p>
             <div class="status-badge" style="background: ${statusBadgeBg}; color: ${statusBadgeColor}; border: 1px solid ${statusBadgeBorder}; font-size: 10px; padding: 4px 12px; border-radius: 999px; font-weight: 800;">${statusLabel}</div>
           </div>
         </div>
@@ -93,8 +117,8 @@ const getInvoiceHtml = (invoice: any, student: any, organization: any, currency:
             <p style="font-size: 12px; color: #64748b; margin-top: 2px;">Class: ${student?.class_name || 'N/A'}</p>
           </div>
           <div class="info-block" style="text-align: right;">
-            <label style="display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">${isPaid ? 'Payment Date' : 'Due Date'}</label>
-            <p style="margin: 0; font-weight: 700; color: #1e293b;">${new Date(isPaid ? (invoice.paid_at || new Date()) : invoice.due_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <label style="display: block; font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px;">Date Generated</label>
+            <p style="margin: 0; font-weight: 700; color: #1e293b;">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           </div>
         </div>
         <table style="width: 100%; border-collapse: collapse; margin-top: 24px;">
@@ -105,25 +129,17 @@ const getInvoiceHtml = (invoice: any, student: any, organization: any, currency:
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td style="padding: 16px 12px; border-bottom: 1px solid #f1f5f9;">
-                <div style="font-weight: 700; color: #1e293b;">${invoice.description || 'School Fees'}</div>
-                <div style="font-size: 12px; color: #64748b; margin-top: 4px;">${invoice.academic_year || ''} - ${invoice.term || ''}</div>
-              </td>
-              <td style="padding: 16px 12px; text-align: right; font-weight: 700; color: #1e293b; border-bottom: 1px solid #f1f5f9;">
-                ${currency} ${invoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </td>
-            </tr>
+            ${rows}
           </tbody>
         </table>
         <div style="margin-top: 32px; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
           <div style="display: flex; justify-content: space-between; padding: 16px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
             <span style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Billed</span>
-            <span style="font-size: 16px; font-weight: 800; color: #1e293b;">${currency} ${invoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span style="font-size: 16px; font-weight: 800; color: #1e293b;">${currency} ${totalBilled.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 16px 24px; background: #fff; border-bottom: 1px solid #e2e8f0;">
             <span style="font-size: 12px; color: #059669; font-weight: 700; text-transform: uppercase;">Amount Paid</span>
-            <span style="font-size: 16px; font-weight: 800; color: #059669;">${currency} ${paidForThis.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span style="font-size: 16px; font-weight: 800; color: #059669;">${currency} ${totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
           </div>
           <div style="display: flex; justify-content: space-between; padding: 16px 24px; background: ${isPaid ? '#f0fdf4' : '#fef2f2'};">
             <span style="font-size: 12px; color: ${isPaid ? '#059669' : '#dc2626'}; font-weight: 800; text-transform: uppercase;">${isPaid ? 'Fully Settled' : 'Balance Due'}</span>
@@ -648,10 +664,17 @@ export const FinanceModules = {
         let allHtml = '';
         targets.forEach(student => {
           const studentInvoices = (invoices || []).filter(inv => String(inv.student_id) === String(student.id));
-          if (studentInvoices.length > 0) {
-            // Print the most recent pending invoice or just the last one
-            const latest = studentInvoices.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-            allHtml += getInvoiceHtml(latest, student, organization, currency, payments || []);
+          // Filter to only outstanding (unpaid) invoices
+          const unpaidInvoices = studentInvoices.filter(inv => {
+            const amount = parseFloat(inv.amount || 0);
+            const paid = (payments || [])
+              .filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id))
+              .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+            return paid < amount;
+          });
+
+          if (unpaidInvoices.length > 0) {
+            allHtml += getInvoiceHtml(unpaidInvoices, student, organization, currency, payments || []);
           }
         });
 
