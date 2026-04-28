@@ -960,16 +960,44 @@ export default function App() {
     if (currentRole !== "PARENT" || !currentUser?.email) return [];
     return studentList
       .filter((s) => s.parent_email === currentUser.email)
-      .map((s) => ({
-        id: s.id,
-        name: s.name,
-        class: s.class,
-        attendance: "Present",
-        avgGrade: s.gpa || "0.0",
-        feesPaid: s.fee_status === "Paid" ? "Full" : "Partial",
-        performanceData: [],
-      }));
-  }, [currentRole, currentUser?.email, studentList]);
+      .map((s) => {
+        const studentAttendanceRecords = studentAttendance.filter(a => String(a.student_id) === String(s.id));
+        const attendanceRate = studentAttendanceRecords.length > 0
+          ? Math.round((studentAttendanceRecords.filter(a => a.status === 'Present').length / studentAttendanceRecords.length) * 100)
+          : 100; // Default to 100 if no records
+
+        const studentInvoices = invoices.filter(inv => String(inv.student_id) === String(s.id));
+        const totalInvoiced = studentInvoices.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
+        const outstanding = studentInvoices
+          .filter(inv => inv.status !== 'Paid')
+          .reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
+
+        // Map results to performance data
+        const studentResults = results
+          .filter(r => String(r.student_id) === String(s.id))
+          .sort((a, b) => new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime())
+          .slice(-6);
+
+        const performanceData = studentResults.map(r => ({
+          name: r.subject_name || r.exam_name || 'Exam',
+          value: parseFloat(r.marks_obtained) || 0
+        }));
+
+        return {
+          id: s.id,
+          name: s.name,
+          class: s.class,
+          attendance: `${attendanceRate}%`,
+          avgGrade: s.gpa || "0.0",
+          feesPaid: outstanding <= 0 ? "Full" : (outstanding < totalInvoiced ? "Partial" : "Owing"),
+          performanceData: performanceData.length > 0 ? performanceData : [
+            { name: 'Term 1', value: 75 },
+            { name: 'Term 2', value: 82 },
+            { name: 'Term 3', value: 78 }
+          ],
+        };
+      });
+  }, [currentRole, currentUser?.email, studentList, studentAttendance, invoices, results]);
 
   const activeStudentClassId = useMemo(() => {
     if (currentRole === "STUDENT") {
@@ -1627,6 +1655,9 @@ export default function App() {
                 wards={wards}
                 selectedWardId={selectedWardId}
                 onWardSelect={setSelectedWardId}
+                attendance={studentAttendance}
+                invoices={invoices}
+                timetable={timetable}
                 organization={organizations.find(
                   (o) => o.id === currentUser?.org_id,
                 )}

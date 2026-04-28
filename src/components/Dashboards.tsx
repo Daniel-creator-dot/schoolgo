@@ -1401,6 +1401,9 @@ export function ParentDashboard({
   wards = [],
   selectedWardId,
   onWardSelect,
+  attendance = [],
+  invoices = [],
+  timetable = [],
   organization,
   unreadMessagesCount = 0,
   onNavigate
@@ -1408,6 +1411,9 @@ export function ParentDashboard({
   wards?: any[],
   selectedWardId: string | null,
   onWardSelect: (id: string) => void,
+  attendance?: any[],
+  invoices?: any[],
+  timetable?: any[],
   organization?: any,
   unreadMessagesCount?: number,
   onNavigate?: (view: string) => void
@@ -1415,39 +1421,94 @@ export function ParentDashboard({
   const { currency, t } = useLanguage();
   const selectedWard = wards.find(w => w.id === selectedWardId) || wards[0];
 
-  if (!selectedWard) return null;
+  if (!selectedWard) return (
+    <div className="flex items-center justify-center h-[60vh]">
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto text-zinc-400">
+          <Users className="w-8 h-8" />
+        </div>
+        <p className="text-zinc-500 font-medium">{t('no_wards_found')}</p>
+      </div>
+    </div>
+  );
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  // Resolve outstanding fees for the selected ward
+  const outstandingFees = invoices
+    .filter(inv => String(inv.student_id) === String(selectedWard.id) && (inv.status === 'Pending' || inv.status === 'Overdue'))
+    .reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
 
   return (
-    <div className="space-y-8">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-8 pb-12"
+    >
       <MessageAlert count={unreadMessagesCount} onNavigate={onNavigate} />
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{t('parent_portal')}</h1>
-          <p className="text-zinc-500 mt-1">{t('monitoring_progress').replace('{name}', selectedWard.name)}</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 px-4 py-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest border-r border-zinc-200 dark:border-zinc-800 pr-3">
-              <Calendar className="w-4 h-4 text-indigo-600" />
-              {organization?.academic_year || '—'}
+
+      {/* Hero Welcome & Ward Selection */}
+      <motion.div variants={itemVariants} className="relative overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 md:p-12 shadow-sm">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+            <div className="relative">
+              <div className="w-32 h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden">
+                {selectedWard.profile_pic ? (
+                  <img
+                    src={selectedWard.profile_pic}
+                    alt={selectedWard.name}
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center rounded-2xl">
+                    <User className="w-16 h-16 text-indigo-400 dark:text-indigo-500" />
+                  </div>
+                )}
+              </div>
+              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-indigo-600 border-4 border-white dark:border-zinc-900 rounded-full flex items-center justify-center shadow-lg">
+                <GraduationCap className="w-5 h-5 text-white" />
+              </div>
             </div>
-            <div className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
-              {organization?.current_term || 'Term 1'}
+
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                <Zap className="w-3 h-3 text-amber-500" />
+                {t('parent_portal')} • {organization?.academic_year || '—'}
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 text-zinc-900 dark:text-white">
+                {selectedWard.name.split(' ')[0]}'s {t('progress')}
+              </h1>
+              <p className="text-zinc-500 dark:text-zinc-400 text-lg font-medium max-w-xl">
+                {t('monitoring_progress').replace('{name}', selectedWard.name)}. Currently in <span className="text-indigo-600 dark:text-indigo-400 font-bold">{selectedWard.class || 'Class'}</span>.
+              </p>
             </div>
           </div>
+
           {wards.length > 1 && (
-            <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-              <span className="text-xs font-bold text-zinc-500 ml-2 uppercase tracking-wider">{t('select_ward')}:</span>
-              <div className="flex gap-1">
+            <div className="flex flex-col gap-4">
+              <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest text-center lg:text-left">{t('switch_ward')}</p>
+              <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
                 {wards.map(ward => (
                   <button
                     key={ward.id}
                     onClick={() => onWardSelect(ward.id)}
                     className={cn(
-                      "px-4 py-2 rounded-xl text-sm font-bold transition-all",
+                      "px-6 py-3 rounded-2xl text-sm font-bold transition-all border active:scale-95",
                       selectedWardId === ward.id
-                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
-                        : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                        ? "bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/20"
+                        : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-indigo-500/50"
                     )}
                   >
                     {ward.name.split(' ')[0]}
@@ -1457,30 +1518,260 @@ export function ParentDashboard({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title={t('attendance')} value={selectedWard.attendance} change="+1%" trend="up" icon={ClipboardCheck} color="bg-emerald-600" />
-        <StatCard title={t('avg_grade')} value={selectedWard.avgGrade} change="0" trend="up" icon={TrendingUp} color="bg-indigo-600" />
-        <StatCard title={t('fees_paid')} value={selectedWard.feesPaid} change="0" trend="up" icon={Wallet} color="bg-blue-600" />
-        <StatCard title={t('notices')} value="3" change="+1" trend="up" icon={Bell} color="bg-amber-600" />
-      </div>
+      {/* Quick Stats Grid */}
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-emerald-600">
+            <ClipboardCheck className="w-6 h-6" />
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{selectedWard.attendance}</p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{t('attendance')}</p>
+            </div>
+            <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600">
+              {parseFloat(selectedWard.attendance) >= 90 ? 'Excellent' : 'Good'}
+            </div>
+          </div>
+        </div>
 
-      <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
-        <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">{t('academic_performance')}</h3>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={selectedWard.performanceData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#9ca3af' }} />
-              <Tooltip />
-              <Area type="monotone" dataKey="value" stroke="#4f46e5" fill="#4f46e5" fillOpacity={0.1} />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-indigo-600">
+            <TrendingUp className="w-6 h-6" />
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{selectedWard.avgGrade}</p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{t('avg_grade')}</p>
+            </div>
+            <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600">
+              GPA
+            </div>
+          </div>
+        </div>
+
+        <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-rose-600">
+            <Wallet className="w-6 h-6" />
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">{currency} {outstandingFees.toLocaleString()}</p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{t('outstanding')}</p>
+            </div>
+            <div className={cn(
+              "text-[10px] font-bold px-2 py-1 rounded-lg",
+              outstandingFees > 0 ? "bg-rose-50 dark:bg-rose-900/20 text-rose-600" : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600"
+            )}>
+              {outstandingFees > 0 ? 'Pending' : 'Cleared'}
+            </div>
+          </div>
+        </div>
+
+        <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-amber-600">
+            <Bell className="w-6 h-6" />
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">3</p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{t('notices')}</p>
+            </div>
+            <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600">
+              New
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          {/* Performance Chart */}
+          <motion.div variants={itemVariants} className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{t('academic_performance')}</h3>
+                <p className="text-sm text-zinc-500 font-medium">Recent subject results and assessment trends.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-indigo-600 rounded-full"></span>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Score %</span>
+              </div>
+            </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={selectedWard.performanceData}>
+                  <defs>
+                    <linearGradient id="parentColorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" opacity={0.5} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#fff', borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Area type="monotone" dataKey="value" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#parentColorValue)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          {/* Today's Schedule Timeline */}
+          <motion.div variants={itemVariants} className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{t('todays_schedule')}</h3>
+                <p className="text-sm text-zinc-500 font-medium">
+                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-0 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-100 dark:before:bg-zinc-800">
+              {(() => {
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const today = days[new Date().getDay()];
+                const wardSchedule = timetable?.filter((t: any) =>
+                  t.day_of_week === today && String(t.class_id) === String(selectedWard.class_id)
+                ).sort((a: any, b: any) => a.start_time.localeCompare(b.start_time)) || [];
+
+                if (wardSchedule.length === 0) {
+                  return (
+                    <div className="pl-16 py-4 text-zinc-500 text-sm italic">
+                      No classes scheduled for today.
+                    </div>
+                  );
+                }
+
+                return wardSchedule.map((item: any, i: number) => (
+                  <div key={i} className="relative pl-16 pb-8 last:pb-0 group">
+                    <div className="absolute left-4 top-1 w-4 h-4 rounded-full border-4 border-white dark:border-zinc-900 z-10 bg-indigo-600 transition-all group-hover:scale-125"></div>
+                    <div className="p-5 rounded-3xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-200 dark:hover:border-zinc-700 transition-all duration-300 shadow-sm hover:shadow-md">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">{item.start_time} - {item.end_time}</span>
+                          </div>
+                          <h4 className="text-lg font-bold text-zinc-900 dark:text-white">{item.subject_name || 'Subject'}</h4>
+                          <p className="text-xs text-zinc-500 mt-1">{item.teacher_name || 'Instructor'} • Room {item.room || 'N/A'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ));
+              })()}
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="space-y-8">
+          {/* Financial Overview Card */}
+          <motion.div variants={itemVariants} className="p-8 bg-zinc-900 rounded-[2.5rem] text-white overflow-hidden shadow-2xl relative group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-600/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-110 transition-transform"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/20">
+                  <CreditCard className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">{t('fee_status')}</h3>
+                  <p className="text-zinc-400 text-xs tracking-wide">Current billing overview</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('outstanding_balance')}</span>
+                    <span className="text-2xl font-black text-emerald-500">{currency} {outstandingFees.toLocaleString()}</span>
+                  </div>
+                  <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 transition-all duration-1000"
+                      style={{ width: outstandingFees > 0 ? '60%' : '100%' }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-400 font-medium">{t('payment_status')}</span>
+                    <span className="font-bold text-emerald-400">{selectedWard.feesPaid}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-400 font-medium">{t('next_due_date')}</span>
+                    <span className="font-bold">Next Month</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => onNavigate?.('Billing')}
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-emerald-600/40 active:scale-95 flex items-center justify-center gap-2"
+                >
+                  {t('pay_fees')}
+                  <ArrowUpRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Recent Notices */}
+          <motion.div variants={itemVariants} className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
+            <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-8">{t('notices')}</h3>
+            <div className="space-y-6">
+              {[
+                { title: 'Parent-Teacher Meeting', date: 'Mar 15', desc: 'Discussing the end-of-term results and next year targets.', category: 'Events' },
+                { title: 'School Trip Consent', date: 'Mar 10', desc: 'Please sign the digital consent form for the upcoming field trip.', category: 'Admin' },
+              ].map((item, i) => (
+                <div key={i} className="group cursor-pointer">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[8px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest px-2 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-md">
+                      {item.category}
+                    </span>
+                    <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{item.date}</span>
+                  </div>
+                  <h4 className="font-bold text-zinc-900 dark:text-white group-hover:text-indigo-600 transition-colors mb-1">{item.title}</h4>
+                  <p className="text-xs text-zinc-500 line-clamp-2 leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => onNavigate?.('Announcements')}
+              className="w-full mt-8 py-4 bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-2xl text-xs font-bold hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all border border-zinc-100 dark:border-zinc-800"
+            >
+              {t('view_all')}
+            </button>
+          </motion.div>
+
+          {/* Quick Contact Card */}
+          <motion.div variants={itemVariants} className="p-8 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-[2.5rem] shadow-sm">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-white dark:bg-zinc-900 rounded-2xl flex items-center justify-center shadow-sm text-indigo-600">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-black text-zinc-900 dark:text-white tracking-tight">{t('contact_teacher')}</h4>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Class Teacher</p>
+              </div>
+            </div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed mb-6">
+              Have questions about {selectedWard.name.split(' ')[0]}'s progress? Send a direct message to the class teacher.
+            </p>
+            <button
+              onClick={() => onNavigate?.('Messages')}
+              className="w-full py-3 bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold text-xs hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all border border-indigo-100 dark:border-indigo-800"
+            >
+              Send Message
+            </button>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
