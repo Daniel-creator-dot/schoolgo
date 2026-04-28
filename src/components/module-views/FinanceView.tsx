@@ -652,28 +652,40 @@ export const FinanceModules = {
         targets = targets.filter(s => bulkPrintConfig.selectedStudents.includes(s.id));
       }
 
-      if (targets.length === 0) {
-        (window as any).showToast?.('No students found for current selection.', 'warning');
+      const targetsWithDebt = targets.filter(student => {
+        const studentInvoices = (invoices || []).filter(inv => String(inv.student_id) === String(student.id));
+        return studentInvoices.some(inv => {
+          const amount = parseFloat(inv.amount || 0);
+          const status = (inv.status || '').toLowerCase().trim();
+          if (status === 'paid') return false;
+          const paid = (payments || [])
+            .filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id))
+            .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+          return paid < amount;
+        });
+      });
+
+      if (targetsWithDebt.length === 0) {
+        (window as any).showToast?.('No students with outstanding balances found in selection.', 'info');
         return;
       }
 
       const printWindow = window.open('', '_blank');
       if (printWindow) {
         let allHtml = '';
-        targets.forEach(student => {
+        targetsWithDebt.forEach(student => {
           const studentInvoices = (invoices || []).filter(inv => String(inv.student_id) === String(student.id));
-          // Filter to only outstanding (unpaid) invoices
           const unpaidInvoices = studentInvoices.filter(inv => {
             const amount = parseFloat(inv.amount || 0);
+            const status = (inv.status || '').toLowerCase().trim();
+            if (status === 'paid') return false;
             const paid = (payments || [])
               .filter((p: any) => String(p.invoice_id) === String(inv.id) || String(p.invoiceId) === String(inv.id))
               .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
             return paid < amount;
           });
-
-          if (unpaidInvoices.length > 0) {
-            allHtml += getInvoiceHtml(unpaidInvoices, student, organization, currency, payments || []);
-          }
+          
+          allHtml += getInvoiceHtml(unpaidInvoices, student, organization, currency, payments || []);
         });
 
         printWindow.document.write(`
