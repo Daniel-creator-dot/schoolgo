@@ -117,7 +117,7 @@ export const updateOrganization = async (req: AuthRequest, res: Response) => {
     'name', 'type', 'status', 'plan', 'language', 'timezone', 'email',
     'contact_number', 'address', 'custom_domain', 'logo_url', 'logo',
     'signature', 'default_leave_limit', 'default_leave_limit_unit', 'gemini_api_key',
-    'academic_year', 'current_term', 'admission_no_prefix', 'admission_no_suffix', 'admission_no_start_from', 'currency'
+    'academic_year', 'current_term', 'admission_no_prefix', 'admission_no_suffix', 'admission_no_start_from', 'currency', 'attendance_total_days'
   ];
 
   fields.forEach(field => {

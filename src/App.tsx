@@ -2174,6 +2174,8 @@ export default function App() {
             onWardSelect={setSelectedWardId}
             students={studentList}
             staffList={staffList}
+            organization={organizations.find((o) => o.id === currentUser?.org_id)}
+            onUpdateOrganization={(data: any) => handleEntitySave("organization", { ...data, id: currentUser?.org_id })}
             data={
               currentRole === "PARENT"
                 ? studentAttendance.filter(

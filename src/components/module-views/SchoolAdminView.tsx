@@ -52,7 +52,8 @@ import {
   X,
   Zap,
   Settings,
-  Briefcase
+  Briefcase,
+  Save
 } from 'lucide-react';
 import TimetableEntryModal from '../modals/TimetableEntryModal';
 import {
@@ -5573,8 +5574,30 @@ export const AcademicModules = {
       </div>
     );
   },
-  Attendance: ({ role, wards, selectedWardId: propSelectedWardId, onWardSelect, data = [], onSave, onDelete, students = [], staffList = [] }: { role?: UserRole, wards?: any[], selectedWardId?: string | null, onWardSelect?: (id: string) => void, data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[] }) => {
+  Attendance: ({ role, wards, selectedWardId: propSelectedWardId, onWardSelect, data = [], onSave, onDelete, students = [], staffList = [], organization, onUpdateOrganization }: { role?: UserRole, wards?: any[], selectedWardId?: string | null, onWardSelect?: (id: string) => void, data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[], organization?: any, onUpdateOrganization?: (data: any) => void }) => {
     const [viewingStudent, setViewingStudent] = useState<any>(null);
+    const [totalSchoolDays, setTotalSchoolDays] = useState(organization?.attendance_total_days || 22);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+      if (organization?.attendance_total_days !== undefined) {
+        setTotalSchoolDays(organization.attendance_total_days);
+      }
+    }, [organization?.attendance_total_days]);
+
+    const handleSaveSettings = async () => {
+      if (!onUpdateOrganization) return;
+      setIsSaving(true);
+      try {
+        await onUpdateOrganization({ attendance_total_days: totalSchoolDays });
+        setIsSettingsOpen(false);
+      } catch (err) {
+        console.error('Failed to save attendance settings:', err);
+      } finally {
+        setIsSaving(false);
+      }
+    };
 
     const availableMonths = useMemo(() => {
       if (!data || data.length === 0) {
@@ -5620,16 +5643,19 @@ export const AcademicModules = {
           (!selectedMonth || new Date(r.date).toLocaleString('default', { month: 'long', year: 'numeric' }) === selectedMonth)
         );
         const present = studentRecords.filter(r => r.status === 'Present').length;
-        const total = studentRecords.length;
-        const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+        
+        // Calculate based on total school days if provided, else fallback to records found
+        const denominator = totalSchoolDays > 0 ? totalSchoolDays : studentRecords.length;
+        const percentage = denominator > 0 ? Math.min(100, Math.round((present / denominator) * 100)) : 0;
+        const absent = totalSchoolDays > 0 ? Math.max(0, totalSchoolDays - present) : studentRecords.length - present;
         
         return {
           ...student,
           student_name: student.name,
           presentCount: present,
-          absentCount: total - present,
+          absentCount: absent,
           attendancePercentage: percentage,
-          totalRecords: total
+          totalRecords: denominator
         };
       });
     }, [students, data, selectedMonth, role, filteredData]);
@@ -5746,8 +5772,72 @@ export const AcademicModules = {
                 <option key={month} value={month}>{month}</option>
               ))}
             </select>
+            {(role === 'SCHOOL_ADMIN' || role === 'HOD') && (
+              <button
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                className={cn(
+                  "p-2.5 rounded-xl transition-all",
+                  isSettingsOpen ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-indigo-600 hover:border-indigo-200"
+                )}
+                title="Attendance Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
+
+        {isSettingsOpen && (
+          <div className="p-8 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-900/30 rounded-[2.5rem] shadow-xl shadow-indigo-500/5 space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/20 rounded-[1.5rem] flex items-center justify-center text-indigo-600 border border-indigo-100 dark:border-indigo-800/50">
+                <Settings className="w-7 h-7" />
+              </div>
+              <div>
+                <h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">Academic Attendance Settings</h4>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Configure term benchmarks for percentage calculations</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Total School Days for {selectedMonth}</label>
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <input
+                    type="number"
+                    value={totalSchoolDays}
+                    onChange={(e) => setTotalSchoolDays(parseInt(e.target.value) || 0)}
+                    className="w-full pl-11 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    placeholder="e.g. 22"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={isSaving}
+                  className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {isSaving ? 'Saving...' : 'Apply & Save to Cloud'}
+                </button>
+                <button
+                  onClick={() => setIsSettingsOpen(false)}
+                  className="px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-all"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-2xl">
+              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold leading-relaxed">
+                <span className="uppercase font-black mr-2">Pro Tip:</span> 
+                Setting this value ensures that students who miss days without being marked are correctly calculated as "Absent" relative to the full term.
+              </p>
+            </div>
+          </div>
+        )}
 
         <DataTable
           title={role === 'STAFF' ? "My Attendance Log" : "Attendance Log"}
