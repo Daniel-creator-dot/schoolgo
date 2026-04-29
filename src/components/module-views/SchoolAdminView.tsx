@@ -2777,7 +2777,7 @@ export const AdmitStudentView = ({
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none relative overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
         <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl" />
         <div className="relative z-10">
@@ -2792,11 +2792,11 @@ export const AdmitStudentView = ({
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="px-6 py-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-center">
+              <div className="flex-1 px-4 md:px-6 py-3 md:py-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-center">
                 <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Today</p>
                 <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{todayAdmitted}</p>
               </div>
-              <div className="px-6 py-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl text-center">
+              <div className="flex-1 px-4 md:px-6 py-3 md:py-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 rounded-2xl text-center">
                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Total</p>
                 <p className="text-2xl font-black text-indigo-700 dark:text-indigo-400">{students.length}</p>
               </div>
@@ -2804,7 +2804,7 @@ export const AdmitStudentView = ({
           </div>
 
           {/* Tab Switcher */}
-          <div className="flex items-center gap-2 p-1.5 bg-zinc-100/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-2xl w-fit mt-8 border border-zinc-200/50 dark:border-zinc-700/50">
+          <div className="flex flex-wrap items-center gap-2 p-1.5 bg-zinc-100/80 dark:bg-zinc-800/80 backdrop-blur-md rounded-2xl w-full sm:w-fit mt-8 border border-zinc-200/50 dark:border-zinc-700/50">
             <button
               onClick={() => setActiveTab('admit')}
               className={cn(
@@ -2832,7 +2832,7 @@ export const AdmitStudentView = ({
       </div>
 
       {activeTab === 'admit' ? (
-        <form key={editingInquiry?.id || 'new'} onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <form key={editingInquiry?.id || 'new'} onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {editingInquiry && (
             <div className="flex items-center justify-between p-4 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800 rounded-2xl">
               <div className="flex items-center gap-3">
@@ -2843,7 +2843,7 @@ export const AdmitStudentView = ({
             </div>
           )}
           {/* Purpose Toggle */}
-          <div className="flex items-center gap-3 p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-2xl w-fit">
+          <div className="flex flex-wrap items-center gap-3 p-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-2xl w-full sm:w-fit">
             <button type="button" onClick={() => setPurpose('admit')} className={cn("px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all", purpose === 'admit' ? "bg-indigo-600 text-white shadow-md" : "text-zinc-500 hover:text-zinc-700")}>
               Admit Now
             </button>
@@ -3091,14 +3091,14 @@ export const AdmitStudentView = ({
         </form>
       ) : (
         /* Bulk Import Tab */
-        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="text-center space-y-4 py-8">
             <div className="w-20 h-20 mx-auto bg-indigo-100 dark:bg-indigo-900/30 rounded-[2rem] flex items-center justify-center">
               <Upload className="w-10 h-10 text-indigo-600" />
             </div>
             <h3 className="text-2xl font-black text-zinc-900 dark:text-white">Bulk Student Import</h3>
             <p className="text-zinc-500 font-medium max-w-md mx-auto">Upload an Excel file with student data. Make sure columns include: Name, Class, Parent Name, Contact.</p>
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
               <button
                 type="button"
                 onClick={() => downloadStudentTemplate(classes)}
@@ -3120,7 +3120,7 @@ export const AdmitStudentView = ({
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
                 <p className="text-xs font-bold text-amber-800 dark:text-amber-300">Review {importPreviewItems.length} records below. Rows with unmatched classes will be skipped.</p>
               </div>
-              <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+              <div className="overflow-x-auto border border-zinc-200 dark:border-zinc-800 rounded-2xl">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-zinc-50 dark:bg-zinc-800">
                     <tr>
@@ -3160,7 +3160,7 @@ export const AdmitStudentView = ({
 
       {/* Table Section — conditional based on purpose */}
       {purpose === 'enquiry' ? (
-        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-black text-zinc-900 dark:text-white">Recent Enquiries</h3>
             <button
@@ -3170,7 +3170,7 @@ export const AdmitStudentView = ({
               <List className="w-3.5 h-3.5" /> View All
             </button>
           </div>
-          <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+          <div className="overflow-x-auto border border-zinc-200 dark:border-zinc-800 rounded-2xl">
             <table className="w-full text-left text-sm">
               <thead className="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
@@ -3227,9 +3227,9 @@ export const AdmitStudentView = ({
           </div>
         </div>
       ) : (
-        <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
+        <div className="bg-white dark:bg-zinc-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border border-zinc-200 dark:border-zinc-800 shadow-lg mt-8">
           <h3 className="text-xl font-black text-zinc-900 dark:text-white mb-6">Recently Admitted Students</h3>
-          <div className="overflow-hidden border border-zinc-200 dark:border-zinc-800 rounded-2xl">
+          <div className="overflow-x-auto border border-zinc-200 dark:border-zinc-800 rounded-2xl">
             <table className="w-full text-left text-sm">
               <thead className="bg-zinc-50 dark:bg-zinc-800">
                 <tr>
@@ -4027,7 +4027,7 @@ export const AcademicModules = {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
               <Building2 className="w-6 h-6" />
@@ -4037,7 +4037,7 @@ export const AcademicModules = {
               <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Manage academic & administrative departments</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
               <button
                 onClick={() => setViewMode('list')}
@@ -4071,7 +4071,7 @@ export const AcademicModules = {
         </div>
 
         {viewMode === 'list' ? (
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div className="bg-white dark:bg-zinc-900 p-4 md:p-6 rounded-[2rem] md:rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-x-auto">
             <DataTable
               title="Department List"
               data={data || []}
@@ -4130,7 +4130,7 @@ export const AcademicModules = {
             {data?.map((dept) => (
               <div 
                 key={dept.id}
-                className="group relative bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
+                className="group relative bg-white dark:bg-zinc-900 rounded-[2rem] md:rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-6 md:p-8 space-y-6 hover:border-indigo-500 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/10 hover:-translate-y-1"
               >
                 {/* Status indicator decoration */}
                 <div className="absolute top-8 right-8 w-12 h-12 bg-zinc-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center border border-zinc-100 dark:border-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity">
