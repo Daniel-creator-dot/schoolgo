@@ -1955,6 +1955,7 @@ export default function App() {
           <StaffHRModules.StaffProfile
             data={staffData?.profile || []}
             onSave={(data: any) => handleEntitySave("staff", data)}
+            onExitStaff={(data: any) => handleEntitySave("exit-management", data)}
           />
         ) : (
           <HRModules.StaffManagement

@@ -5,7 +5,7 @@ import {
   Layers, GraduationCap, BookOpen, Clock, Building2, User, Layout as LayoutIcon,
   Printer, ChevronLeft, ArrowLeft, MoreVertical, Edit2, ChevronDown, Award, Eye,
   CheckCircle2, AlertCircle, XCircle, Fingerprint, Camera, Loader2, ArrowRightCircle,
-  FileSpreadsheet, ShieldCheck, Mail, Phone, Briefcase, UserCheck
+  FileSpreadsheet, ShieldCheck, Mail, Phone, Briefcase, UserCheck, UserMinus
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { DataTable } from '../DataTable';
@@ -2256,10 +2256,19 @@ export const StaffAcademicModules = {
 };
 
 export const StaffHRModules = {
-  StaffProfile: ({ data, onSave }: { data: any[], onSave?: (data: any) => Promise<void> | void }) => {
+  StaffProfile: ({
+    data,
+    onSave,
+    onExitStaff,
+  }: {
+    data: any[];
+    onSave?: (data: any) => Promise<void> | void;
+    onExitStaff?: (data: any) => void;
+  }) => {
     const [viewItem, setViewItem] = useState<any | null>(null);
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState("overview");
     const [isEditing, setIsEditing] = useState(false);
+    const [exitingStaff, setExitingStaff] = useState<any>(null);
     
     useEffect(() => {
       if (data.length > 0 && !viewItem) {
@@ -2276,7 +2285,7 @@ export const StaffHRModules = {
 
       return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-2xl w-fit">
+          <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800/50 rounded-2xl w-full sm:w-fit overflow-x-auto no-scrollbar">
             {tabs.map(tab => (
               <button
                 key={tab.id}
@@ -2547,9 +2556,9 @@ export const StaffHRModules = {
             }
             return (
               <div className="space-y-6">
-                <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 p-8 shadow-sm text-left">
-                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 pb-8 border-b border-zinc-100 dark:border-zinc-800">
-                      <div className="flex items-center gap-6">
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl md:rounded-[2.5rem] p-4 md:p-8 shadow-sm text-left">
+                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8 pb-8 border-b border-zinc-100 dark:border-zinc-800">
+                      <div className="flex flex-col sm:flex-row items-center gap-6">
                          <div className="relative group">
                             <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-xl shadow-indigo-200 dark:shadow-none transition-transform group-hover:scale-105 duration-500">
                                {item?.name?.charAt(0) || 'U'}
@@ -2558,10 +2567,10 @@ export const StaffHRModules = {
                                <ShieldCheck className="w-4 h-4" />
                             </div>
                          </div>
-                         <div>
-                            <h2 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight -mb-1">{item?.name}</h2>
+                         <div className="text-center sm:text-left">
+                            <h2 className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight -mb-1">{item?.name}</h2>
                             <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">{item?.role} • {item?.staff_id}</p>
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
                                <span className={cn(
                                  "px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest",
                                  item?.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
@@ -2571,18 +2580,30 @@ export const StaffHRModules = {
                             </div>
                          </div>
                       </div>
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          setIsEditing(true);
-                          if (onEditRequest && item) onEditRequest(item);
-                        }}
-                        className="px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
-                      >
-                         <Edit2 className="w-4 h-4" />
-                         Edit Profile
-                      </button>
-                   </div>
+                       <div className="flex flex-wrap items-center justify-center lg:justify-end gap-2">
+                         <button 
+                           type="button"
+                           onClick={() => {
+                             setIsEditing(true);
+                             if (onEditRequest && item) onEditRequest(item);
+                           }}
+                           className="flex-1 sm:flex-none px-6 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
+                         >
+                            <Edit2 className="w-4 h-4" />
+                            Edit Profile
+                         </button>
+                         {onExitStaff && item?.status === "Active" && (
+                           <button 
+                             type="button"
+                             onClick={() => setExitingStaff(item)}
+                             className="flex-1 sm:flex-none px-6 py-3 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all shadow-rose-500/20"
+                           >
+                              <UserMinus className="w-4 h-4" />
+                              Exit Staff
+                           </button>
+                         )}
+                       </div>
+                    </div>
 
                    {renderProfileTabs(item)}
                 </div>
@@ -2607,6 +2628,79 @@ export const StaffHRModules = {
             }
           ]}
         />
+
+        <Modal
+          isOpen={!!exitingStaff}
+          onClose={() => setExitingStaff(null)}
+          title={`Initiate Exit — ${exitingStaff?.name}`}
+        >
+          <form
+            className="p-6 space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              onExitStaff?.({
+                staff_id: exitingStaff.id,
+                exit_date: formData.get("exit_date"),
+                reason: formData.get("reason"),
+                status: "Pending"
+              });
+              setExitingStaff(null);
+            }}
+          >
+            <div className="p-4 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30 rounded-2xl">
+              <p className="text-xs text-rose-700 dark:text-rose-400 font-bold">
+                You are initiating the exit process. This will create a record in Exit Management for administrative clearance.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">
+                  Last Working Day
+                </label>
+                <input
+                  type="date"
+                  name="exit_date"
+                  required
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">
+                  Reason for Exit
+                </label>
+                <select
+                  name="reason"
+                  required
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                >
+                  <option value="Resignation">Resignation</option>
+                  <option value="Retirement">Retirement</option>
+                  <option value="Contract Ended">Contract Ended</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setExitingStaff(null)}
+                className="px-6 py-2 rounded-xl text-sm font-bold text-zinc-500 hover:bg-zinc-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 shadow-lg shadow-rose-500/20 transition-all"
+              >
+                Initiate Exit
+              </button>
+            </div>
+          </form>
+        </Modal>
       </div>
     );
   }
