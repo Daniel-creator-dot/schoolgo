@@ -181,6 +181,47 @@ function PendingReferralAlert({ count, onNavigate }: { count: number, onNavigate
   );
 }
 
+const checkIsBirthdayTomorrow = (dob: string | Date) => {
+  if (!dob) return false;
+  const d = new Date(dob);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return d.getDate() === tomorrow.getDate() && d.getMonth() === tomorrow.getMonth();
+};
+
+function BirthdayAlert({ items }: { items: { name: string, role: string, isSelf?: boolean }[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="p-6 bg-gradient-to-br from-rose-500 to-pink-600 rounded-3xl shadow-lg shadow-rose-500/20 relative overflow-hidden group mb-6"
+    >
+      <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
+      <div className="relative flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center">
+            <Gift className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white uppercase tracking-tight">
+              {items.some(i => i.isSelf) ? "Happy Birthday in Advance!" : "Celebrations Tomorrow!"}
+            </h3>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {items.map((item, idx) => (
+                <span key={idx} className="text-rose-50 px-2 py-0.5 bg-white/10 rounded-lg text-xs font-bold border border-white/10">
+                  {item.isSelf ? "Your Birthday 🎂" : `${item.name} (${item.role})`}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export function SuperAdminDashboard({ stats, unreadMessagesCount = 0, onNavigate, organizations = [] }: { stats?: { totalOrganizations: string; activeSubscriptions: string; totalUsers: string; annualRevenue: string }, unreadMessagesCount?: number, onNavigate?: (view: string) => void, organizations?: any[] }) {
   const { currency, t } = useLanguage();
   const pendingCount = organizations.filter(o => o.status === 'Pending').length;
@@ -651,9 +692,28 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }, [organization?.expiry_date]);
 
+  const birthdayItems = useMemo(() => {
+    const list: { name: string, role: string }[] = [];
+    
+    (students || []).forEach(s => {
+      if (checkIsBirthdayTomorrow(s.date_of_birth)) {
+        list.push({ name: s.name, role: 'Student' });
+      }
+    });
+
+    (staffList || []).forEach(s => {
+      if (checkIsBirthdayTomorrow(s.date_of_birth)) {
+        list.push({ name: s.name, role: 'Staff' });
+      }
+    });
+
+    return list;
+  }, [students, staffList]);
+
   return (
     <div className="space-y-8">
       <MessageAlert count={unreadMessagesCount} onNavigate={onNavigate} />
+      <BirthdayAlert items={birthdayItems} />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{t('school_dashboard')}</h1>
@@ -1199,9 +1259,28 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
       .slice(0, 3)
     : [];
 
+  const birthdayItems = useMemo(() => {
+    const list: { name: string, role: string, isSelf?: boolean }[] = [];
+    
+    // Check self
+    if (checkIsBirthdayTomorrow(user?.date_of_birth)) {
+      list.push({ name: user.name || 'You', role: 'Staff', isSelf: true });
+    }
+
+    // Check students I teach
+    (staffData?.students || []).forEach((s: any) => {
+      if (checkIsBirthdayTomorrow(s.date_of_birth)) {
+        list.push({ name: s.name, role: 'Student' });
+      }
+    });
+
+    return list;
+  }, [user, staffData?.students]);
+
   return (
     <div className="space-y-8">
       <MessageAlert count={unreadMessagesCount} onNavigate={onNavigate} />
+      <BirthdayAlert items={birthdayItems} />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">{t('staff_portal')}</h1>
