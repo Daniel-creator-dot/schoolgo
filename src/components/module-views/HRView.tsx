@@ -1519,12 +1519,14 @@ export const HRModules = {
     departments = [],
     onSave,
     onDelete,
+    onExitStaff,
   }: {
     role?: UserRole;
     data: any[];
     departments?: any[];
     onSave?: (data: any) => void;
     onDelete?: (item: any) => void;
+    onExitStaff?: (data: any) => void;
   }) => {
     const { currency, t } = useLanguage();
     const [showSalary, setShowSalary] = useState(false);
@@ -1533,6 +1535,7 @@ export const HRModules = {
     const [activeTab, setActiveTab] = useState<string>("overview");
     const [editingStaff, setEditingStaff] = useState<any>(null);
     const [isEditingInModal, setIsEditingInModal] = useState(false);
+    const [exitingStaff, setExitingStaff] = useState<any>(null);
     const isStaff = role === "STAFF";
 
     const formatDateForInput = (dateStr: any) => {
@@ -1609,15 +1612,26 @@ export const HRModules = {
                 </div>
               </div>
             </div>
-            {forceOnEdit && (
-              <button
-                onClick={() => forceOnEdit(item)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
-              >
-                <Edit className="w-3.5 h-3.5" />
-                Edit Profile
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {forceOnEdit && (
+                <button
+                  onClick={() => forceOnEdit(item)}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  Edit Profile
+                </button>
+              )}
+              {onExitStaff && item.status === "Active" && (
+                <button
+                  onClick={() => setExitingStaff(item)}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-rose-600/20"
+                >
+                  <UserMinus className="w-3.5 h-3.5" />
+                  Exit Staff
+                </button>
+              )}
+            </div>
             {isStaff && (
               <button
                 onClick={() => setShowSalary(!showSalary)}
@@ -2293,6 +2307,18 @@ export const HRModules = {
                         >
                           <Edit className="w-4 h-4" />
                         </button>
+                        {onExitStaff && staff.status === "Active" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExitingStaff(staff);
+                            }}
+                            className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 rounded-lg transition-colors"
+                            title="Exit Management"
+                          >
+                            <UserMinus className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -2373,6 +2399,80 @@ export const HRModules = {
               )}
             </div>
           </Modal>
+
+          <Modal
+            isOpen={!!exitingStaff}
+            onClose={() => setExitingStaff(null)}
+            title={`Initiate Exit — ${exitingStaff?.name}`}
+          >
+            <form
+              className="p-6 space-y-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                onExitStaff?.({
+                  staff_id: exitingStaff.id,
+                  exit_date: formData.get("exit_date"),
+                  reason: formData.get("reason"),
+                  status: "Pending"
+                });
+                setExitingStaff(null);
+              }}
+            >
+              <div className="p-4 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30 rounded-2xl">
+                <p className="text-xs text-rose-700 dark:text-rose-400 font-bold">
+                  You are initiating the exit process for this staff member. This will create a record in Exit Management for final clearance.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">
+                    Last Working Day
+                  </label>
+                  <input
+                    type="date"
+                    name="exit_date"
+                    required
+                    defaultValue={new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">
+                    Reason for Exit
+                  </label>
+                  <select
+                    name="reason"
+                    required
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                  >
+                    <option value="Resignation">Resignation</option>
+                    <option value="Retirement">Retirement</option>
+                    <option value="Termination">Termination</option>
+                    <option value="Contract Ended">Contract Ended</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setExitingStaff(null)}
+                  className="px-6 py-2 rounded-xl text-sm font-bold text-zinc-500 hover:bg-zinc-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 shadow-lg shadow-rose-500/20 transition-all"
+                >
+                  Initiate Exit
+                </button>
+              </div>
+            </form>
+          </Modal>
         </div>
       );
     }
@@ -2450,6 +2550,80 @@ export const HRModules = {
             </>
           )}
         />
+
+        <Modal
+          isOpen={!!exitingStaff}
+          onClose={() => setExitingStaff(null)}
+          title={`Initiate Exit — ${exitingStaff?.name}`}
+        >
+          <form
+            className="p-6 space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              onExitStaff?.({
+                staff_id: exitingStaff.id,
+                exit_date: formData.get("exit_date"),
+                reason: formData.get("reason"),
+                status: "Pending"
+              });
+              setExitingStaff(null);
+            }}
+          >
+            <div className="p-4 bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30 rounded-2xl">
+              <p className="text-xs text-rose-700 dark:text-rose-400 font-bold">
+                You are initiating the exit process for this staff member. This will create a record in Exit Management for final clearance.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">
+                  Last Working Day
+                </label>
+                <input
+                  type="date"
+                  name="exit_date"
+                  required
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-zinc-500 uppercase tracking-widest">
+                  Reason for Exit
+                </label>
+                <select
+                  name="reason"
+                  required
+                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm"
+                >
+                  <option value="Resignation">Resignation</option>
+                  <option value="Retirement">Retirement</option>
+                  <option value="Termination">Termination</option>
+                  <option value="Contract Ended">Contract Ended</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setExitingStaff(null)}
+                className="px-6 py-2 rounded-xl text-sm font-bold text-zinc-500 hover:bg-zinc-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-rose-600 text-white rounded-xl text-sm font-bold hover:bg-rose-700 shadow-lg shadow-rose-500/20 transition-all"
+              >
+                Initiate Exit
+              </button>
+            </div>
+          </form>
+        </Modal>
       </div>
     );
   },

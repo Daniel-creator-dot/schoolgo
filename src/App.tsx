@@ -1961,16 +1961,9 @@ export default function App() {
             role={currentRole}
             data={staffData ? staffData.profile : staffList}
             departments={departments}
-            onSave={
-              currentRole === "STAFF"
-                ? undefined
-                : (data) => handleEntitySave("staff", data)
-            }
-            onDelete={
-              currentRole === "STAFF"
-                ? undefined
-                : (item) => handleEntityDelete("staff", item)
-            }
+            onSave={(data) => handleEntitySave("staff", data)}
+            onDelete={(item) => handleEntityDelete("staff", item)}
+            onExitStaff={(data) => handleEntitySave("exit-management", data)}
           />
         ),
 
