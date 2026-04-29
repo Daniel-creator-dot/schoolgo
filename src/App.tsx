@@ -1275,6 +1275,15 @@ export default function App() {
           result = isUpdate
             ? await updateExitRecord(data.id, data)
             : await createExitRecord(data);
+
+          // If exit is completed, deactivate staff
+          if (data.status === "Completed" && data.staff_id) {
+            try {
+              await updateStaff(data.staff_id, { status: "Inactive" });
+            } catch (err) {
+              console.error("Failed to deactivate staff on exit completion:", err);
+            }
+          }
           break;
         case "transport":
           result = isUpdate

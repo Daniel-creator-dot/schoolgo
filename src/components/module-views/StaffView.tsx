@@ -2678,8 +2678,6 @@ export const StaffHRModules = {
                 >
                   <option value="Resignation">Resignation</option>
                   <option value="Retirement">Retirement</option>
-                  <option value="Contract Ended">Contract Ended</option>
-                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>

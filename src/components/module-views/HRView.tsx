@@ -2449,9 +2449,6 @@ export const HRModules = {
                   >
                     <option value="Resignation">Resignation</option>
                     <option value="Retirement">Retirement</option>
-                    <option value="Termination">Termination</option>
-                    <option value="Contract Ended">Contract Ended</option>
-                    <option value="Other">Other</option>
                   </select>
                 </div>
               </div>
@@ -2600,9 +2597,6 @@ export const HRModules = {
                 >
                   <option value="Resignation">Resignation</option>
                   <option value="Retirement">Retirement</option>
-                  <option value="Termination">Termination</option>
-                  <option value="Contract Ended">Contract Ended</option>
-                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
@@ -5372,9 +5366,6 @@ export const HRModules = {
                 >
                   <option value="Resignation">{t('resignation')}</option>
                   <option value="Retirement">{t('retirement')}</option>
-                  <option value="Termination">{t('termination')}</option>
-                  <option value="Contract Ended">{t('contract_ended')}</option>
-                  <option value="Other">{t('other')}</option>
                 </select>
               </div>
               <div className="space-y-1.5">
