@@ -35,7 +35,8 @@ import {
   Send,
   History,
   ShoppingCart,
-  QrCode
+  QrCode,
+  Printer
 } from 'lucide-react';
 import { useLanguage } from '../lib/LanguageContext';
 import { cn } from '../lib/utils';
@@ -1338,8 +1339,27 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
         title={t('my_digital_id')}
         maxWidth="max-w-md"
       >
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          @media print {
+            body * { visibility: hidden; }
+            #staff-id-card-print, #staff-id-card-print * { visibility: visible; }
+            #staff-id-card-print {
+              position: fixed;
+              left: 50%;
+              top: 50%;
+              transform: translate(-50%, -50%);
+              width: 85.6mm;
+              height: 135mm;
+              padding: 20px;
+              border: 1px solid #e5e7eb;
+              border-radius: 2rem;
+              background: white;
+            }
+          }
+        `}} />
         <div className="p-8 flex flex-col items-center text-center space-y-6">
-          <div id="staff-id-card" className="w-full max-w-[280px] aspect-[1/1.58] bg-white border border-zinc-200 rounded-[2rem] shadow-2xl relative overflow-hidden flex flex-col p-6">
+          <div id="staff-id-card-print" className="w-full max-w-[300px] min-h-[480px] bg-white border border-zinc-200 rounded-[2rem] shadow-2xl relative overflow-hidden flex flex-col p-6 mx-auto">
             {/* Header */}
             <div className="flex items-center gap-3 mb-6 border-b border-zinc-100 pb-4">
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
@@ -1357,12 +1377,12 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
 
             {/* Profile */}
             <div className="flex flex-col items-center gap-4 flex-1">
-              <div className="w-32 h-32 rounded-3xl bg-zinc-50 border-4 border-white shadow-lg overflow-hidden flex-shrink-0">
+              <div className="w-28 h-28 rounded-3xl bg-zinc-50 border-4 border-white shadow-lg overflow-hidden flex-shrink-0">
                 {user?.profile_pic ? (
                   <img src={user.profile_pic} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-zinc-200">
-                    <User className="w-16 h-16" />
+                    <User className="w-12 h-12" />
                   </div>
                 )}
               </div>
@@ -1372,11 +1392,11 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
               </div>
 
               {/* QR Code */}
-              <div className="mt-4 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+              <div className="mt-4 p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(user?.email || user?.id)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(user?.email || user?.id)}&margin=0`}
                   alt="Staff QR Code"
-                  className="w-32 h-32 mix-blend-multiply"
+                  className="w-32 h-32"
                 />
                 <p className="text-[8px] font-black text-zinc-400 uppercase tracking-[0.3em] mt-3">{user?.email?.split('@')[0]}</p>
               </div>
@@ -1396,16 +1416,10 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
           
           <div className="flex flex-col gap-2 w-full">
             <button
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(user?.email || user?.id)}`;
-                link.download = `${user?.name || 'Staff'}_QR.png`;
-                link.target = '_blank';
-                link.click();
-              }}
+              onClick={() => window.print()}
               className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold transition-all hover:bg-indigo-700 flex items-center justify-center gap-2"
             >
-              <Download className="w-4 h-4" /> {t('download_qr')}
+              <Printer className="w-4 h-4" /> {t('print_full_card')}
             </button>
             <button
               onClick={() => setShowDigitalID(false)}
