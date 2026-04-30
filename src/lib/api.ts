@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../constants';
 import { Student, Inquiry, Application, Acceptance } from '../types';
+import { getFriendlyErrorMessage } from './errorHelper';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -25,6 +26,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Attach a user-friendly message to the error object
+    error.friendlyMessage = getFriendlyErrorMessage(error);
+
     // Exclude the login endpoint because a 401 there means invalid credentials,
     // which should be handled by the UI instead of forcing a page reload.
     const isLoginEndpoint = error.config && error.config.url === '/auth/login';

@@ -78,6 +78,7 @@ import PartnerLogin from "./components/PartnerLogin";
 import { API_BASE_URL } from "./constants";
 import QRAttendanceScanner from "./components/QRAttendanceScanner";
 import { cn } from "./lib/utils";
+import { getFriendlyErrorMessage } from "./lib/errorHelper";
 import {
   fetchStudentFeesSummary,
   fetchStudents,
@@ -1035,8 +1036,11 @@ export default function App() {
     }
   }, [currentRole, wards, selectedWardId]);
 
-  const showToast = (message: string, type: ToastType = "info") => {
-    setToast({ message, type });
+  const showToast = (message: any, type: ToastType = "info") => {
+    const finalMessage = (typeof message === 'object' && message !== null) 
+      ? (message.friendlyMessage || getFriendlyErrorMessage(message)) 
+      : message;
+    setToast({ message: finalMessage, type });
   };
 
   // Centralized CRUD Handlers
@@ -1322,10 +1326,7 @@ export default function App() {
       loadData();
       return result;
     } catch (err: any) {
-      showToast(
-        err.response?.data?.error || `Failed to save ${entityType}`,
-        "error",
-      );
+      showToast(err, "error");
       throw err;
     }
   };
@@ -1508,10 +1509,7 @@ export default function App() {
       showToast(`Record deleted successfully`, "success");
       loadData();
     } catch (err: any) {
-      showToast(
-        err.response?.data?.error || `Failed to delete record`,
-        "error",
-      );
+      showToast(err, "error");
     } finally {
       setDeleteConfirm({ isOpen: false, item: null, type: "none" });
     }

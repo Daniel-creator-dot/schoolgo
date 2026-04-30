@@ -162,7 +162,7 @@ export const AIModules = {
         (window as any).showToast?.('AI Forecast successfully generated!', 'success');
       } catch (err: any) {
         console.error('AI Analysis Error:', err);
-        (window as any).showToast?.(err.message || 'Failed to run AI analysis.', 'error');
+        (window as any).showToast?.(err, 'error');
       } finally {
         setIsAnalyzing(false);
       }

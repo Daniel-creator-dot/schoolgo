@@ -805,7 +805,7 @@ export const FinanceModules = {
         setIsBulkSMSModalOpen(false);
       } catch (error) {
         console.error('SMS send error:', error);
-        (window as any).showToast?.('Failed to send messages. Please try again.', 'error');
+        (window as any).showToast?.(error, 'error');
       } finally {
         setSmsSending(false);
       }
@@ -1021,7 +1021,7 @@ export const FinanceModules = {
         const records = await parseFeeExcel(file, bulkMode, students, feeStructures);
         setImportPreviewItems(records);
       } catch (err) {
-        (window as any).showToast?.('Failed to parse Excel file.', 'error');
+        (window as any).showToast?.('Could not read the Excel file. Please check the format and try again.', 'error');
       } finally {
         setIsImporting(false);
         if (e.target) e.target.value = '';
@@ -1069,7 +1069,7 @@ export const FinanceModules = {
         setImportPreviewItems([]);
         onRefreshTemplates?.(); // Refresh data
       } catch (err) {
-        (window as any).showToast?.('Some records failed to process.', 'error');
+        (window as any).showToast?.('Some records failed to process. Please check the imported data.', 'error');
       } finally {
         setIsImporting(false);
       }
@@ -2074,7 +2074,7 @@ export const FinanceModules = {
                             await onSaveRequest({ ...item, status: 'Approved' });
                             (window as any).showToast?.('Request approved and fulfilled!', 'success');
                           } catch (err) {
-                            (window as any).showToast?.('Failed to approve request', 'error');
+                            (window as any).showToast?.(err, 'error');
                           }
                         }}
                         className="p-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg transition-colors shadow-lg shadow-emerald-500/20"
@@ -2090,7 +2090,7 @@ export const FinanceModules = {
                             await onSaveRequest({ ...item, status: 'Rejected' });
                             (window as any).showToast?.('Request rejected', 'info');
                           } catch (err) {
-                            (window as any).showToast?.('Failed to reject request', 'error');
+                            (window as any).showToast?.(err, 'error');
                           }
                         }}
                         className="p-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-lg transition-colors shadow-lg shadow-rose-500/20"

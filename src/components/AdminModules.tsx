@@ -111,7 +111,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
       onRefresh?.();
     } catch (err) {
       console.error('Failed to create user:', err);
-      (window as any).showToast?.('Failed to create user', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -127,7 +127,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
       onRefresh?.();
     } catch (err) {
       console.error('Failed to delete user:', err);
-      (window as any).showToast?.('Failed to delete user', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -279,7 +279,7 @@ export function UsersManagement({ data, onRefresh, organizations = [] }: { data?
                   setNewPassword('zxcv123$$');
                 } catch (err) {
                   console.error('Failed to reset password:', err);
-                  (window as any).showToast?.('Failed to reset password', 'error');
+                  (window as any).showToast?.(err, 'error');
                 }
               }}
               className="px-6 py-2 bg-amber-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-amber-200"
@@ -451,7 +451,7 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
       onBack?.();
     } catch (err: any) {
       console.error(`Failed to ${isEdit ? 'update' : 'create'} organization:`, err);
-      (window as any).showToast?.(err.response?.data?.error || `Failed to ${isEdit ? 'update' : 'create'} organization`, 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -800,7 +800,7 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
       onRefresh?.();
     } catch (err) {
       console.error('Failed to save plan:', err);
-      (window as any).showToast?.('Failed to save plan', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -825,7 +825,7 @@ export function PlansManagement({ data, onAdd, onRefresh, systemModules = [] }: 
       onRefresh?.();
     } catch (err) {
       console.error('Failed to delete plan:', err);
-      (window as any).showToast?.('Failed to delete plan', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -1127,7 +1127,7 @@ export function SchoolBilling({
               }
             } catch (err: any) {
               console.error('>>> [Paystack] Verification failed:', err);
-              (window as any).showToast?.(`Verification Error: ${err.message}`, 'error');
+              (window as any).showToast?.(err, 'error');
             }
           })();
         },
@@ -1147,7 +1147,7 @@ export function SchoolBilling({
       handler.openIframe();
     } catch (err: any) {
       console.error('>>> [Paystack] Fatal error opening modal:', err);
-      (window as any).showToast?.(`Error: ${err.message}`, 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -1449,7 +1449,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
       onRefresh?.();
     } catch (err) {
       console.error('Failed to delete subscription:', err);
-      (window as any).showToast?.('Failed to delete subscription', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -1467,7 +1467,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
       onRefresh?.();
     } catch (err) {
       console.error('Failed to save subscription:', err);
-      (window as any).showToast?.('Failed to save subscription', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -1702,7 +1702,7 @@ export function SubscriptionPlans({ data, onRefresh, organizations = [], plans =
             onRefresh?.();
           } catch (err) {
             console.error('Failed to renew subscription:', err);
-            (window as any).showToast?.('Failed to renew subscription', 'error');
+            (window as any).showToast?.(err, 'error');
           }
         }} className="space-y-4">
           <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 mb-4">
@@ -1821,7 +1821,7 @@ export function ModuleManagement({ data, onRefresh }: { data?: any[], onRefresh?
       onRefresh?.();
     } catch (err) {
       console.error('Failed to toggle module:', err);
-      (window as any).showToast?.('Failed to toggle module', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -2107,7 +2107,7 @@ export function Messages({ students = [], staff = [], partners = [], subjects = 
         loadMessages();
       } else {
         const errData = await res.json().catch(() => ({}));
-        (window as any).showToast?.(errData.error || errData.message || 'Failed to send message', 'error');
+        (window as any).showToast?.(errData.error || 'Unable to send your message. Please try again.', 'error');
       }
     } catch (err) {
       console.error('Failed to send:', err);
@@ -2639,7 +2639,7 @@ export function Settings({ role }: { role?: UserRole }) {
       }
     } catch (err) {
       console.error('Failed to save Groq key:', err);
-      (window as any).showToast?.('Failed to save API key', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
   const handleSave = async () => {
@@ -2665,7 +2665,7 @@ export function Settings({ role }: { role?: UserRole }) {
 
     } catch (err) {
       console.error('Failed to update organization branding:', err);
-      (window as any).showToast?.('Failed to save changes', 'error');
+      (window as any).showToast?.(err, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -3262,7 +3262,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
       onRefresh?.();
     } catch (err) {
       console.error('Failed to save template:', err);
-      (window as any).showToast?.('Failed to save template', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -3279,7 +3279,7 @@ export function DocumentBuilder({ data = [], onRefresh, organization, lockedType
       onRefresh?.();
     } catch (err) {
       console.error('Failed to delete template:', err);
-      (window as any).showToast?.('Failed to delete template', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -3848,7 +3848,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
       setIsModalOpen(false);
       loadPartners();
     } catch (err: any) {
-      (window as any).showToast?.(err.response?.data?.error || 'Failed to save partner', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -3858,7 +3858,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
       (window as any).showToast?.(`${partner.name} approved!`, 'success');
       loadPartners();
     } catch (err) {
-      (window as any).showToast?.('Failed to approve partner', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -3869,7 +3869,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
       (window as any).showToast?.('Partner deleted!', 'success');
       loadPartners();
     } catch (err) {
-      (window as any).showToast?.('Failed to delete partner', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -3879,7 +3879,7 @@ export function PartnersManagement({ onRefresh }: { onRefresh?: () => void }) {
       await resetPartnerPassword(resetConfirm.partner.id);
       (window as any).showToast?.(`Password for ${resetConfirm.partner.name} reset to zxcv123$$`, 'success');
     } catch (err) {
-      (window as any).showToast?.('Failed to reset password', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -4107,7 +4107,7 @@ function PartnerRewardsModal({ partner, isOpen, onClose }: { partner: any, isOpe
       setFormData({ type: 'Certificate', title: '', description: '', criteria: '' });
       loadRewards();
     } catch (err) {
-      (window as any).showToast?.('Failed to award reward', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -4117,7 +4117,7 @@ function PartnerRewardsModal({ partner, isOpen, onClose }: { partner: any, isOpe
       (window as any).showToast?.('Reward revoked!', 'success');
       loadRewards();
     } catch (err) {
-      (window as any).showToast?.('Failed to revoke reward', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 

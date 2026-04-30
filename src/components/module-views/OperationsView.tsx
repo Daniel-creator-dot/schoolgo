@@ -64,7 +64,7 @@ export const OperationsModules = {
         if (document.getElementById('pickupLocation')) (document.getElementById('pickupLocation') as HTMLInputElement).value = '';
         onRefresh?.();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to assign student', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -76,7 +76,7 @@ export const OperationsModules = {
         (window as any).showToast?.('Student unassigned!', 'success');
         onRefresh?.();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to unassign student', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -89,7 +89,7 @@ export const OperationsModules = {
           (window as any).showToast?.('Transport request sent!', 'success');
           onRefresh?.();
         } catch (err: any) {
-          (window as any).showToast?.(err?.response?.data?.error || 'Failed to send request', 'error');
+          (window as any).showToast?.(err, 'error');
         } finally {
           setRequesting(null);
         }
@@ -408,7 +408,7 @@ export const OperationsModules = {
                           await onApprove?.(item);
                           onRefresh?.();
                         } catch (err: any) {
-                          (window as any).showToast?.('Failed to approve request', 'error');
+                          (window as any).showToast?.(err, 'error');
                         }
                       }}
                       className="px-2 py-1 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-[10px] font-bold transition-colors"
@@ -434,7 +434,7 @@ export const OperationsModules = {
                 onRefresh?.();
                 (window as any).showToast?.(isPending ? 'Request rejected' : 'Student unassigned successfully!', 'success');
               } catch (err: any) {
-                (window as any).showToast?.('Failed to unassign/reject', 'error');
+                (window as any).showToast?.(err, 'error');
               }
             }}
           />
@@ -502,7 +502,7 @@ export const OperationsModules = {
                       setIsAddingStudent(false);
                       (window as any).showToast?.('Student assigned successfully!', 'success');
                     } catch (err: any) {
-                      (window as any).showToast?.('Assignment failed', 'error');
+                      (window as any).showToast?.(err, 'error');
                     }
                   }}
                   className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg"
@@ -576,7 +576,7 @@ export const OperationsModules = {
         setHostelRooms(res);
         (window as any).showToast?.('Room saved successfully!', 'success');
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to save room', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -590,7 +590,7 @@ export const OperationsModules = {
         setHostelRooms(res);
         (window as any).showToast?.('Room deleted!', 'success');
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to delete room', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -618,7 +618,7 @@ export const OperationsModules = {
         (window as any).showToast?.('Student assigned and invoice generated!', 'success');
         onRefresh?.();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to assign student', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -630,7 +630,7 @@ export const OperationsModules = {
         (window as any).showToast?.('Student unassigned!', 'success');
         onRefresh?.();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to unassign student', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -724,7 +724,7 @@ export const OperationsModules = {
                             (window as any).showToast?.('Residency request sent!', 'success');
                             onRefresh?.();
                           } catch (err: any) {
-                            (window as any).showToast?.(err?.response?.data?.error || 'Request failed', 'error');
+                            (window as any).showToast?.(err, 'error');
                           } finally {
                             setHostelRequesting(null);
                           }
@@ -942,7 +942,7 @@ export const OperationsModules = {
                               await onApprove?.(item);
                               onRefresh?.();
                             } catch (err: any) {
-                              (window as any).showToast?.('Failed to approve request', 'error');
+                              (window as any).showToast?.(err, 'error');
                             }
                           }}
                           className="px-2 py-1 bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg text-[10px] font-bold transition-colors"
@@ -968,7 +968,7 @@ export const OperationsModules = {
                     onRefresh?.();
                     (window as any).showToast?.(isPending ? 'Request rejected' : 'Resident unassigned successfully!', 'success');
                   } catch (err: any) {
-                    (window as any).showToast?.('Failed to unassign/reject', 'error');
+                    (window as any).showToast?.(err, 'error');
                   }
                 }}
               />
@@ -1237,7 +1237,7 @@ export const OperationsModules = {
                       setIsAddingResident(false);
                       (window as any).showToast?.('Resident assigned successfully!', 'success');
                     } catch (err: any) {
-                      (window as any).showToast?.('Assignment failed', 'error');
+                      (window as any).showToast?.(err, 'error');
                     }
                   }}
                   className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-lg"
@@ -1269,7 +1269,7 @@ export const OperationsModules = {
         const parsed = await parseInventoryExcel(file);
         setPreviewData(parsed);
       } catch (err: any) {
-        (window as any).showToast?.('Failed to parse Inventory Excel.', 'error');
+        (window as any).showToast?.('Could not read the Excel file. Please check the format and try again.', 'error');
       } finally {
         setImporting(false);
         e.target.value = '';
@@ -1286,7 +1286,7 @@ export const OperationsModules = {
         setPreviewData(null);
         (window as any).showToast?.(`Successfully imported ${previewData.length} inventory items.`, 'success');
       } catch (err) {
-        (window as any).showToast?.('Error saving inventory items.', 'error');
+        (window as any).showToast?.('Something went wrong while saving inventory items. Please try again.', 'error');
       }
     };
 
@@ -1970,7 +1970,7 @@ export const OperationsModules = {
         refreshMemberships();
         onRefresh?.();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to join club', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -1982,7 +1982,7 @@ export const OperationsModules = {
         refreshMemberships();
         onRefresh?.();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to leave club', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -1993,7 +1993,7 @@ export const OperationsModules = {
         (window as any).showToast?.('Membership approved!', 'success');
         refreshMemberships();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to approve', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 

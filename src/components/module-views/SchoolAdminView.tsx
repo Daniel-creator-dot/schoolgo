@@ -1778,7 +1778,7 @@ export const AdmissionsModules = {
         const records = await parseStudentExcel(file, classes);
         setImportPreviewItems(records);
       } catch (err) {
-        (window as any).showToast?.('Failed to parse Excel file. Please use the provided template.', 'error');
+        (window as any).showToast?.('Could not read the Excel file. Please use the provided template.', 'error');
       } finally {
         setIsImporting(false);
         e.target.value = ''; // Reset input
@@ -2653,7 +2653,7 @@ export const AdmitStudentView = ({
       (window as any).showToast?.('Student enrolled successfully!', 'success');
       setEnrollModalItem(null);
     } catch (err: any) {
-      (window as any).showToast?.(err?.message || 'Enrollment failed', 'error');
+      (window as any).showToast?.(err, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -2731,9 +2731,8 @@ export const AdmitStudentView = ({
       setSelectedFeeIds([]);
       setShowOptional(false);
       setProfilePic(null);
-
     } catch (err: any) {
-      (window as any).showToast?.(err?.message || 'Operation failed', 'error');
+      (window as any).showToast?.(err, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -2748,7 +2747,7 @@ export const AdmitStudentView = ({
       const parsed = await parseStudentExcel(file, classes);
       setImportPreviewItems(parsed);
     } catch (err: any) {
-      (window as any).showToast?.('Failed to parse Excel file.', 'error');
+      (window as any).showToast?.('Could not read the Excel file. Please check the format.', 'error');
     } finally {
       setIsImporting(false);
       e.target.value = '';
@@ -2766,7 +2765,7 @@ export const AdmitStudentView = ({
       (window as any).showToast?.(`Successfully admitted ${valid.length} students!`, 'success');
       setImportPreviewItems([]);
     } catch (err) {
-      (window as any).showToast?.('Bulk admission failed.', 'error');
+      (window as any).showToast?.('Something went wrong during bulk admission. Please try again.', 'error');
     } finally {
       setIsImporting(false);
     }
@@ -3413,11 +3412,11 @@ export const AcademicModules = {
           onRefresh?.();
         } else {
           const error = await res.json();
-          (window as any).showToast?.(error.error || 'Manual promotion failed', 'error');
+          (window as any).showToast?.(error, 'error');
         }
       } catch (err) {
         console.error('Failed to process promotion:', err);
-        (window as any).showToast?.('Connection failed', 'error');
+        (window as any).showToast?.(err, 'error');
       } finally {
         setProcessing(false);
       }
@@ -6205,11 +6204,11 @@ export const AcademicModules = {
           (window as any).showToast?.(`Audit completed for ${data.length} students.`, 'success');
         } else {
           const error = await res.json();
-          (window as any).showToast?.(error.error || 'Audit failed', 'error');
+          (window as any).showToast?.(error, 'error');
         }
       } catch (err) {
         console.error('Failed to run audit:', err);
-        (window as any).showToast?.('Connection failed', 'error');
+        (window as any).showToast?.(err, 'error');
       } finally {
         setLoading(false);
       }
@@ -6258,7 +6257,7 @@ export const AcademicModules = {
           fetchRecords();
           onRefresh?.();
         } else {
-          (window as any).showToast?.(result.error || 'Promotion failed', 'error');
+          (window as any).showToast?.(result.error || 'Something went wrong with the promotion. Please try again.', 'error');
         }
       } catch (err) {
         console.error('Failed to process promotion:', err);
@@ -6298,11 +6297,11 @@ export const AcademicModules = {
           onRefresh?.();
         } else {
           const error = await res.json();
-          (window as any).showToast?.(error.error || 'Manual promotion failed', 'error');
+          (window as any).showToast?.(error, 'error');
         }
       } catch (err) {
         console.error('Failed to manually promote student:', err);
-        (window as any).showToast?.('Connection failed', 'error');
+        (window as any).showToast?.(err, 'error');
       } finally {
         setProcessing(false);
       }
@@ -8457,7 +8456,7 @@ export const ExamModules = {
                           (window as any).showToast?.('Remarks saved successfully!', 'success');
                         }
                       } catch (err: any) {
-                        (window as any).showToast?.(err.message || 'Error saving remarks', 'error');
+                        (window as any).showToast?.(err, 'error');
                       }
                     }}
                     className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"

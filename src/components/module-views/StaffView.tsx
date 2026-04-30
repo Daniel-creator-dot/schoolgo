@@ -62,7 +62,7 @@ export const StorageModules = {
         setFolders(res.data.folders || []);
         setFiles(res.data.files || []);
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to load drive', 'error');
+        (window as any).showToast?.(err, 'error');
       } finally {
         setLoading(false);
       }
@@ -82,7 +82,7 @@ export const StorageModules = {
         (window as any).showToast?.('Folder created successfully', 'success');
         fetchDriveData();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to create folder', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -104,7 +104,7 @@ export const StorageModules = {
           (window as any).showToast?.('File uploaded successfully', 'success');
           fetchDriveData();
         } catch (err: any) {
-          (window as any).showToast?.(err?.response?.data?.error || 'Failed to upload file', 'error');
+          (window as any).showToast?.(err, 'error');
         }
       };
       reader.readAsDataURL(file);
@@ -117,7 +117,7 @@ export const StorageModules = {
         (window as any).showToast?.('File deleted', 'success');
         fetchDriveData();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to delete file', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -129,7 +129,7 @@ export const StorageModules = {
         setMovingFile(null);
         fetchDriveData();
       } catch (err: any) {
-        (window as any).showToast?.(err?.response?.data?.error || 'Failed to move file', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -887,7 +887,7 @@ export const StaffAcademicModules = {
 
         setPreviewData(enriched);
       } catch (err: any) {
-        (window as any).showToast?.('Failed to parse Attendance Excel.', 'error');
+        (window as any).showToast?.('Could not read the attendance file. Please check the format and try again.', 'error');
       } finally {
         setImporting(false);
         e.target.value = '';
@@ -912,7 +912,7 @@ export const StaffAcademicModules = {
         setPreviewData(null);
         (window as any).showToast?.(`Successfully imported ${validRecords.length} attendance records.`, 'success');
       } catch (err) {
-        (window as any).showToast?.('Error saving attendance records.', 'error');
+        (window as any).showToast?.('Something went wrong while saving attendance. Please try again.', 'error');
       }
     };
 
@@ -1108,7 +1108,7 @@ export const StaffAcademicModules = {
 
         setPreviewData(enriched);
       } catch (err: any) {
-        (window as any).showToast?.('Failed to parse Excel file.', 'error');
+        (window as any).showToast?.('Could not read the Excel file. Please check the format and try again.', 'error');
       } finally {
         setImporting(false);
         e.target.value = ''; // Reset input
@@ -1468,7 +1468,7 @@ export const StaffAcademicModules = {
         await onSaveResults({ exam_id: selectedExamId, results: resultsArray });
       } catch (err: any) {
         console.error(err);
-        (window as any).showToast?.(err.message || 'Error saving results', 'error');
+        (window as any).showToast?.(err, 'error');
       }
     };
 
@@ -1842,7 +1842,7 @@ export const StaffAcademicModules = {
                         await onSaveResults({ type: 'terminal_remarks', results: resultsToSave });
                         (window as any).showToast?.('Remarks saved successfully!', 'success');
                       } catch (err: any) {
-                        (window as any).showToast?.(err.message || 'Error saving remarks', 'error');
+                        (window as any).showToast?.(err, 'error');
                       }
                     }}
                     className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
@@ -4245,11 +4245,11 @@ export const ELearningModules = {
           (window as any).showToast?.('Class scheduled successfully!', 'success');
         } else {
           const errData = await res.json();
-          (window as any).showToast?.(errData.error || 'Failed to schedule class', 'error');
+          (window as any).showToast?.(errData.error || 'Could not schedule the class. Please try again.', 'error');
         }
       } catch (err) {
         console.error(err);
-        (window as any).showToast?.('Connection error', 'error');
+        (window as any).showToast?.('Unable to connect to the server. Please check your internet connection.', 'error');
       }
     };
 

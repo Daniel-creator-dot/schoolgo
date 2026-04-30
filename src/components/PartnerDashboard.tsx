@@ -203,10 +203,10 @@ export default function PartnerDashboard() {
         await fetchDashboardData(); // Refresh to get new conversion rates and earnings
         (window as any).showToast?.('Settings saved successfully!', 'success');
       } else {
-        (window as any).showToast?.('Failed to save settings', 'error');
+        (window as any).showToast?.('Unable to save settings. Please try again.', 'error');
       }
     } catch (err) {
-      (window as any).showToast?.('Connection error', 'error');
+      (window as any).showToast?.('Unable to connect to the server. Please check your internet connection.', 'error');
     } finally {
       setPayoutLoading(false);
     }

@@ -80,10 +80,10 @@ export function Announcements({ role, students = [], staff = [], organization }:
         fetchData();
       } else {
         const error = await res.json();
-        (window as any).showToast?.(error.error || 'Failed to create announcement', 'error');
+        (window as any).showToast?.(error, 'error');
       }
     } catch (err) {
-      (window as any).showToast?.('An error occurred', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -106,10 +106,10 @@ export function Announcements({ role, students = [], staff = [], organization }:
         fetchData();
       } else {
         const error = await res.json();
-        (window as any).showToast?.(error.error || 'Failed to schedule meeting', 'error');
+        (window as any).showToast?.(error, 'error');
       }
     } catch (err) {
-      (window as any).showToast?.('An error occurred', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -126,7 +126,7 @@ export function Announcements({ role, students = [], staff = [], organization }:
         fetchData();
       }
     } catch (err) {
-      (window as any).showToast?.('An error occurred', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
@@ -143,7 +143,7 @@ export function Announcements({ role, students = [], staff = [], organization }:
         fetchData();
       }
     } catch (err) {
-      (window as any).showToast?.('An error occurred', 'error');
+      (window as any).showToast?.(err, 'error');
     }
   };
 
