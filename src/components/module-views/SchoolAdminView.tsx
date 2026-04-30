@@ -5585,6 +5585,8 @@ export const AcademicModules = {
     const [newHolidayName, setNewHolidayName] = useState('');
     const [countryCode, setCountryCode] = useState(organization?.country_code || '');
     const [isSyncingHolidays, setIsSyncingHolidays] = useState(false);
+    const [termStartDate, setTermStartDate] = useState(organization?.term_start_date ? new Date(organization.term_start_date).toISOString().split('T')[0] : '');
+    const [termEndDate, setTermEndDate] = useState(organization?.term_end_date ? new Date(organization.term_end_date).toISOString().split('T')[0] : '');
 
     const loadCalendarEvents = async () => {
       try {
@@ -5605,7 +5607,13 @@ export const AcademicModules = {
       if (organization?.country_code !== undefined) {
         setCountryCode(organization.country_code);
       }
-    }, [organization?.attendance_total_days, organization?.attendance_include_weekends, organization?.country_code]);
+      if (organization?.term_start_date !== undefined) {
+        setTermStartDate(organization.term_start_date ? new Date(organization.term_start_date).toISOString().split('T')[0] : '');
+      }
+      if (organization?.term_end_date !== undefined) {
+        setTermEndDate(organization.term_end_date ? new Date(organization.term_end_date).toISOString().split('T')[0] : '');
+      }
+    }, [organization?.attendance_total_days, organization?.attendance_include_weekends, organization?.country_code, organization?.term_start_date, organization?.term_end_date]);
 
     useEffect(() => {
       loadCalendarEvents();
@@ -5651,7 +5659,9 @@ export const AcademicModules = {
         await onUpdateOrganization({ 
           attendance_total_days: totalSchoolDays,
           attendance_include_weekends: includeWeekends,
-          country_code: countryCode
+          country_code: countryCode,
+          term_start_date: termStartDate,
+          term_end_date: termEndDate
         });
         setIsSettingsOpen(false);
         (window as any).showToast?.('Settings saved successfully', 'success');
@@ -5675,7 +5685,9 @@ export const AcademicModules = {
           await onUpdateOrganization({ 
             attendance_total_days: totalSchoolDays,
             attendance_include_weekends: includeWeekends,
-            country_code: countryCode
+            country_code: countryCode,
+            term_start_date: termStartDate,
+            term_end_date: termEndDate
           });
         }
 
@@ -5755,6 +5767,28 @@ export const AcademicModules = {
           }
         }
         dynamicDenominator = validDays;
+      } else if (termStartDate && termEndDate) {
+        const start = new Date(termStartDate);
+        const end = new Date(termEndDate);
+        let validDays = 0;
+        const curr = new Date(start);
+        
+        while (curr <= end) {
+          const dayOfWeek = curr.getDay();
+          const skipWeekend = !includeWeekends && (dayOfWeek === 0 || dayOfWeek === 6);
+          
+          if (!skipWeekend) {
+            const dateStr = curr.toISOString().split('T')[0];
+            const isHoliday = holidays.some(h => {
+              const hStart = h.start_date.split('T')[0];
+              const hEnd = h.end_date ? h.end_date.split('T')[0] : hStart;
+              return dateStr >= hStart && dateStr <= hEnd;
+            });
+            if (!isHoliday) validDays++;
+          }
+          curr.setDate(curr.getDate() + 1);
+        }
+        dynamicDenominator = validDays;
       }
 
       return students.map(student => {
@@ -5777,7 +5811,7 @@ export const AcademicModules = {
           totalRecords: denominator
         };
       });
-    }, [students, data, selectedMonth, role, filteredData, includeWeekends, holidays, totalSchoolDays]);
+    }, [students, data, selectedMonth, role, filteredData, includeWeekends, holidays, totalSchoolDays, termStartDate, termEndDate]);
 
     const stats = useMemo(() => {
       if (filteredData.length === 0) return { present: 0, absent: 0, percentage: 0 };
@@ -5962,6 +5996,30 @@ export const AcademicModules = {
                   Include Weekends in Working Days Calculation
                 </span>
               </label>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Term Start Date</label>
+                  <input
+                    type="date"
+                    value={termStartDate}
+                    onChange={(e) => setTermStartDate(e.target.value)}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Term End Date</label>
+                  <input
+                    type="date"
+                    value={termEndDate}
+                    onChange={(e) => setTermEndDate(e.target.value)}
+                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                </div>
+                <p className="md:col-span-2 text-[10px] text-zinc-400 font-medium italic">
+                  Note: Providing a term range automatically calculates "Entire Term" school days, excluding weekends and holidays.
+                </p>
+              </div>
 
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-end gap-3">
