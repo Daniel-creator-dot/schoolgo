@@ -5576,17 +5576,20 @@ export const AcademicModules = {
   },
   Attendance: ({ role, wards, selectedWardId: propSelectedWardId, onWardSelect, data = [], onSave, onDelete, students = [], staffList = [], organization, onUpdateOrganization }: { role?: UserRole, wards?: any[], selectedWardId?: string | null, onWardSelect?: (id: string) => void, data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[], organization?: any, onUpdateOrganization?: (data: any) => void }) => {
     const [viewingStudent, setViewingStudent] = useState<any>(null);
-    const [totalSchoolDays, setTotalSchoolDays] = useState(organization?.attendance_total_days || 22);
-    const [includeWeekends, setIncludeWeekends] = useState(organization?.attendance_include_weekends || false);
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
     const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
-    const [newHolidayDate, setNewHolidayDate] = useState('');
-    const [newHolidayName, setNewHolidayName] = useState('');
-    const [countryCode, setCountryCode] = useState(organization?.country_code || '');
     const [isSyncingHolidays, setIsSyncingHolidays] = useState(false);
-    const [termStartDate, setTermStartDate] = useState(organization?.term_start_date ? new Date(organization.term_start_date).toISOString().split('T')[0] : '');
-    const [termEndDate, setTermEndDate] = useState(organization?.term_end_date ? new Date(organization.term_end_date).toISOString().split('T')[0] : '');
+    const [selectedMonth, setSelectedMonth] = useState('Entire Term');
+    const [selectedWardId, setLocalSelectedWardId] = useState(propSelectedWardId || wards?.[0]?.id || "");
+
+
+    const loadCalendarEvents = async () => {
+      try {
+        const events = await fetchCalendarEvents();
+        setCalendarEvents(events || []);
+      } catch (err) {
+        console.error('Failed to load calendar events', err);
+      }
+    };
 
     const availableMonths = useMemo(() => {
       const monthsSet = new Set<string>();
@@ -5599,35 +5602,11 @@ export const AcademicModules = {
       return ['Entire Term', ...Array.from(monthsSet).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())];
     }, [data]);
 
-    const [selectedMonth, setSelectedMonth] = useState('Entire Term');
-    const [selectedWardId, setLocalSelectedWardId] = useState(propSelectedWardId || wards?.[0]?.id || "");
+    const termStartDate = organization?.term_start_date ? new Date(organization.term_start_date).toISOString().split('T')[0] : '';
+    const termEndDate = organization?.term_end_date ? new Date(organization.term_end_date).toISOString().split('T')[0] : '';
+    const totalSchoolDays = organization?.attendance_total_days || 0;
+    const includeWeekends = organization?.attendance_include_weekends || false;
 
-    const loadCalendarEvents = async () => {
-      try {
-        const events = await fetchCalendarEvents();
-        setCalendarEvents(events || []);
-      } catch (err) {
-        console.error('Failed to load calendar events', err);
-      }
-    };
-
-    useEffect(() => {
-      if (organization?.attendance_total_days !== undefined) {
-        setTotalSchoolDays(organization.attendance_total_days);
-      }
-      if (organization?.attendance_include_weekends !== undefined) {
-        setIncludeWeekends(organization.attendance_include_weekends);
-      }
-      if (organization?.country_code !== undefined) {
-        setCountryCode(organization.country_code);
-      }
-      if (organization?.term_start_date !== undefined) {
-        setTermStartDate(organization.term_start_date ? new Date(organization.term_start_date).toISOString().split('T')[0] : '');
-      }
-      if (organization?.term_end_date !== undefined) {
-        setTermEndDate(organization.term_end_date ? new Date(organization.term_end_date).toISOString().split('T')[0] : '');
-      }
-    }, [organization?.attendance_total_days, organization?.attendance_include_weekends, organization?.country_code, organization?.term_start_date, organization?.term_end_date]);
 
     useEffect(() => {
       loadCalendarEvents();
@@ -5662,90 +5641,9 @@ export const AcademicModules = {
       return validDays;
     }, [termStartDate, termEndDate, includeWeekends, holidays]);
 
-    useEffect(() => {
-      if (calculatedTermDays !== null && selectedMonth === 'Entire Term') {
-        setTotalSchoolDays(calculatedTermDays);
-      }
-    }, [calculatedTermDays, selectedMonth]);
+    // We no longer sync local state here, we rely on organization props directly.
 
-    const handleAddHoliday = async () => {
-      if (!newHolidayDate) return;
-      try {
-        await createCalendarEvent({
-          event_name: newHolidayName || 'School Holiday',
-          event_type: 'Holiday',
-          start_date: newHolidayDate,
-          end_date: newHolidayDate,
-          event_description: 'Added via Attendance Settings'
-        });
-        setNewHolidayDate('');
-        setNewHolidayName('');
-        await loadCalendarEvents();
-        (window as any).showToast?.('Holiday added to Academic Calendar', 'success');
-      } catch (err) {
-        (window as any).showToast?.(err, 'error');
-      }
-    };
-
-    const handleRemoveHoliday = async (id: string) => {
-      try {
-        await deleteCalendarEvent(id);
-        await loadCalendarEvents();
-        (window as any).showToast?.('Holiday removed', 'success');
-      } catch (err) {
-        (window as any).showToast?.(err, 'error');
-      }
-    };
-
-    const handleSaveSettings = async () => {
-      if (!onUpdateOrganization) return;
-      setIsSaving(true);
-      try {
-        await onUpdateOrganization({ 
-          attendance_total_days: totalSchoolDays,
-          attendance_include_weekends: includeWeekends,
-          country_code: countryCode,
-          term_start_date: termStartDate,
-          term_end_date: termEndDate
-        });
-        setIsSettingsOpen(false);
-        (window as any).showToast?.('Settings saved successfully', 'success');
-      } catch (err) {
-        console.error('Failed to save attendance settings:', err);
-        (window as any).showToast?.(err, 'error');
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    const handleSyncPublicHolidays = async () => {
-      if (!countryCode) {
-        (window as any).showToast?.('Please select a country first.', 'error');
-        return;
-      }
-      setIsSyncingHolidays(true);
-      try {
-        // Auto-save the country code to the database first
-        if (onUpdateOrganization) {
-          await onUpdateOrganization({ 
-            attendance_total_days: totalSchoolDays,
-            attendance_include_weekends: includeWeekends,
-            country_code: countryCode,
-            term_start_date: termStartDate,
-            term_end_date: termEndDate
-          });
-        }
-
-        const yearStr = selectedMonth === 'Entire Term' ? new Date().getFullYear().toString() : selectedMonth.split(' ')[1];
-        const res = await syncPublicHolidays(parseInt(yearStr) || new Date().getFullYear());
-        (window as any).showToast?.(res.message, 'success');
-        await loadCalendarEvents();
-      } catch (err) {
-        (window as any).showToast?.(err, 'error');
-      } finally {
-        setIsSyncingHolidays(false);
-      }
-    };
+    // Settings are now managed in global organization settings.
 
     useEffect(() => {
       if (propSelectedWardId) setLocalSelectedWardId(propSelectedWardId);
@@ -5947,194 +5845,12 @@ export const AcademicModules = {
                 <p className="text-sm font-black text-rose-700 dark:text-rose-400">{100 - stats.percentage}%</p>
               </div>
             </div>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-indigo-500 focus:z-10"
-            >
-              {availableMonths.map(month => (
-                <option key={month} value={month}>{month}</option>
-              ))}
-            </select>
-            {(role === 'SCHOOL_ADMIN' || role === 'HOD') && (
-              <button
-                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                className={cn(
-                  "p-2.5 rounded-xl transition-all",
-                  isSettingsOpen ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-indigo-600 hover:border-indigo-200"
-                )}
-                title="Attendance Settings"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
-            )}
           </div>
         </div>
 
-        {isSettingsOpen && (
-          <div className="p-8 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-900/30 rounded-[2.5rem] shadow-xl shadow-indigo-500/5 space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/20 rounded-[1.5rem] flex items-center justify-center text-indigo-600 border border-indigo-100 dark:border-indigo-800/50">
-                <Settings className="w-7 h-7" />
-              </div>
-              <div>
-                <h4 className="text-lg font-black text-zinc-900 dark:text-white uppercase tracking-tight">Academic Attendance Settings</h4>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Configure term benchmarks for percentage calculations</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                  Total School Days for {selectedMonth === 'Entire Term' ? 'the Entire Term' : selectedMonth}
-                  {calculatedTermDays !== null && selectedMonth === 'Entire Term' && (
-                    <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full text-[8px] normal-case">Auto-Calculated</span>
-                  )}
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <input
-                    type="number"
-                    value={totalSchoolDays}
-                    onChange={(e) => setTotalSchoolDays(parseInt(e.target.value) || 0)}
-                    className="w-full pl-11 pr-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                    placeholder="e.g. 22"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleSaveSettings}
-                  disabled={isSaving}
-                  className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
-                >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {isSaving ? 'Saving...' : 'Apply & Save to Cloud'}
-                </button>
-                <button
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="px-6 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-all"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        </div>
 
-            <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-6">
-              <label className="flex items-center gap-3 cursor-pointer group w-fit">
-                <input
-                  type="checkbox"
-                  checked={includeWeekends}
-                  onChange={(e) => setIncludeWeekends(e.target.checked)}
-                  className="w-5 h-5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-600 transition-colors cursor-pointer"
-                />
-                <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 transition-colors">
-                  Include Weekends in Working Days Calculation
-                </span>
-              </label>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Term Start Date</label>
-                  <input
-                    type="date"
-                    value={termStartDate}
-                    onChange={(e) => setTermStartDate(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Term End Date</label>
-                  <input
-                    type="date"
-                    value={termEndDate}
-                    onChange={(e) => setTermEndDate(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  />
-                </div>
-                <p className="md:col-span-2 text-[10px] text-zinc-400 font-medium italic">
-                  Note: Providing a term range automatically calculates "Entire Term" school days, excluding weekends and holidays.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-                  <div className="flex-1 space-y-2">
-                    <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Country for Public Holidays</label>
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                    >
-                      <option value="">Select a country...</option>
-                      <option value="GH">Ghana</option>
-                      <option value="NG">Nigeria</option>
-                      <option value="US">United States</option>
-                      <option value="GB">United Kingdom</option>
-                      <option value="KE">Kenya</option>
-                      <option value="ZA">South Africa</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={handleSyncPublicHolidays}
-                    disabled={!countryCode || isSyncingHolidays}
-                    className="w-full sm:w-auto px-6 py-2 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-xl font-bold text-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2 h-[42px]"
-                  >
-                    {isSyncingHolidays ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                    Sync National Holidays
-                  </button>
-                </div>
-
-                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1 block mt-4">Excluded Dates (Holidays)</label>
-                <div className="flex flex-col sm:flex-row items-center gap-3">
-                  <input
-                    type="date"
-                    value={newHolidayDate}
-                    onChange={(e) => setNewHolidayDate(e.target.value)}
-                    className="w-full sm:w-auto px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  />
-                  <input
-                    type="text"
-                    value={newHolidayName}
-                    onChange={(e) => setNewHolidayName(e.target.value)}
-                    placeholder="Holiday Name (e.g., Independence Day)"
-                    className="w-full flex-1 px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  />
-                  <button
-                    onClick={handleAddHoliday}
-                    disabled={!newHolidayDate}
-                    className="w-full sm:w-auto px-6 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-all disabled:opacity-50 h-[42px]"
-                  >
-                    Add Date
-                  </button>
-                </div>
-                
-                {holidays.length > 0 && (
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {holidays.map((h: any) => (
-                      <div key={h.id} className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 rounded-lg text-xs font-bold border border-rose-100 dark:border-rose-900/50">
-                        <span>{h.event_name} ({new Date(h.start_date).toLocaleDateString()})</span>
-                        <button onClick={() => handleRemoveHoliday(h.id)} className="hover:text-rose-800 dark:hover:text-rose-300">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <p className="text-[10px] text-zinc-400 font-medium italic mt-1">
-                  Dates added here are automatically synchronized with the Academic Calendar as holidays.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-2xl">
-              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold leading-relaxed">
-                <span className="uppercase font-black mr-2">Pro Tip:</span> 
-                Setting this value ensures that students who miss days without being marked are correctly calculated as "Absent" relative to the full term.
-              </p>
-            </div>
-          </div>
-        )}
 
         <DataTable
           title={role === 'STAFF' ? "My Attendance Log" : "Attendance Log"}

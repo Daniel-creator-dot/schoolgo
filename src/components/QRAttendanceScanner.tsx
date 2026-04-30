@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { markAttendanceByQR, fetchStudents } from '../lib/api';
+import { markAttendanceByQR, fetchStudents, fetchStaff } from '../lib/api';
 import { useLanguage } from '../lib/LanguageContext';
+import { cn } from '../lib/utils';
 import {
     Camera, CameraOff, CheckCircle, XCircle, AlertTriangle, Users, ChevronRight, QrCode, Loader2, Search, UserPlus
 } from 'lucide-react';
@@ -12,6 +13,7 @@ interface ScannedStudent {
     admission_no: string;
     time: string;
     status: 'success' | 'duplicate' | 'error';
+    type?: 'student' | 'staff';
     message?: string;
 }
 
@@ -24,24 +26,31 @@ export default function QRAttendanceScanner({ classes = [], onNavigate, onRefres
     const [processing, setProcessing] = useState(false);
     
     // Manual search state
-    const [allStudents, setAllStudents] = useState<any[]>([]);
+    const [allPeople, setAllPeople] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const lastScannedRef = useRef<string>('');
     const cooldownRef = useRef<boolean>(false);
 
-    // Fetch students for manual fallback
+    // Fetch students and staff for manual fallback
     useEffect(() => {
-        const loadStudents = async () => {
+        const loadData = async () => {
             try {
-                const data = await fetchStudents();
-                setAllStudents(data);
+                const [studentsData, staffData] = await Promise.all([
+                    fetchStudents(),
+                    fetchStaff()
+                ]);
+                const combined = [
+                    ...studentsData.map((s: any) => ({ ...s, type: 'student' })),
+                    ...staffData.map((s: any) => ({ ...s, type: 'staff', admission_no: 'Staff', admission_no_original: s.email }))
+                ];
+                setAllPeople(combined);
             } catch (err) {
-                console.error('Failed to load students:', err);
+                console.error('Failed to load data:', err);
             }
         };
-        loadStudents();
+        loadData();
     }, []);
 
     const handleScan = useCallback(async (decodedText: string) => {
@@ -65,6 +74,7 @@ export default function QRAttendanceScanner({ classes = [], onNavigate, onRefres
                 admission_no: result.admission_no,
                 time: new Date().toLocaleTimeString(),
                 status: 'success',
+                type: result.type
             };
             setScannedList(prev => [entry, ...prev]);
             setLastResult({ type: 'success', message: `✓ ${result.student_name} ${t('present').toLowerCase()}` });
@@ -95,9 +105,9 @@ export default function QRAttendanceScanner({ classes = [], onNavigate, onRefres
         }
     }, [selectedClass, t]);
 
-    const handleManualMark = async (student: any) => {
-        // Reuse the same logic but pass student admission no (fallback to ID)
-        await handleScan(student.admission_no || student.id);
+    const handleManualMark = async (person: any) => {
+        // Reuse the same logic but pass admission no or email for staff
+        await handleScan(person.type === 'staff' ? person.email : (person.admission_no || person.id));
         setSearchQuery(''); // Reset search
     };
 
@@ -184,12 +194,13 @@ export default function QRAttendanceScanner({ classes = [], onNavigate, onRefres
                         </div>
                         <div className="divide-y divide-zinc-100 dark:divide-zinc-800 max-h-[300px] overflow-y-auto">
                             {(() => {
-                                const filtered = allStudents.filter(s => {
+                                const filtered = allPeople.filter(s => {
                                     const matchesQuery = 
                                         s.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                        s.admission_no_original?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                         s.admission_no?.toLowerCase().includes(searchQuery.toLowerCase());
                                     
-                                    const matchesClass = selectedClass 
+                                    const matchesClass = selectedClass && s.type === 'student'
                                         ? String(s.class_id) === String(selectedClass)
                                         : true;
 
@@ -200,7 +211,9 @@ export default function QRAttendanceScanner({ classes = [], onNavigate, onRefres
                                     <div key={s.id} className="p-3 flex items-center justify-between hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-colors">
                                         <div className="min-w-0 flex-1 pr-4">
                                             <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">{s.name}</p>
-                                            <p className="text-xs text-zinc-500 truncate">{s.admission_no} • {s.class_name || t('no_class')} {s.class_section || ''}</p>
+                                            <p className="text-xs text-zinc-500 truncate">
+                                                {s.type === 'staff' ? 'Staff' : (s.admission_no || 'N/A')} • {s.type === 'staff' ? s.department_name : (s.class_name || t('no_class'))} {s.type === 'student' ? s.class_section : ''}
+                                            </p>
                                         </div>
                                         <button
                                             onClick={() => handleManualMark(s)}
@@ -339,7 +352,15 @@ export default function QRAttendanceScanner({ classes = [], onNavigate, onRefres
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">{s.name}</p>
-                                        <p className="text-xs text-zinc-400">{s.admission_no} • {s.time}</p>
+                                        <p className="text-xs text-zinc-400">
+                                            <span className={cn(
+                                                "mr-2 px-1.5 py-0.5 rounded text-[8px] font-black uppercase",
+                                                s.type === 'staff' ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30" : "bg-blue-100 text-blue-600 dark:bg-blue-900/30"
+                                            )}>
+                                                {s.type || 'student'}
+                                            </span>
+                                            {s.admission_no} • {s.time}
+                                        </p>
                                         {s.message && s.status !== 'success' && (
                                             <p className="text-[11px] text-zinc-400 mt-0.5">{s.message}</p>
                                         )}

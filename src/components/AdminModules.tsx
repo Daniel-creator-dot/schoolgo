@@ -393,7 +393,11 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
     plan: initialData?.plan || '',
     status: initialData?.status || 'Active',
     language: initialData?.language || 'en',
-    timezone: initialData?.timezone || 'GMT'
+    timezone: initialData?.timezone || 'GMT',
+    term_start_date: initialData?.term_start_date || '',
+    term_end_date: initialData?.term_end_date || '',
+    attendance_include_weekends: initialData?.attendance_include_weekends || false,
+    attendance_total_days: initialData?.attendance_total_days || 0
   });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logo' | 'signature') => {
@@ -444,7 +448,11 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
           plan: plans[0]?.name || '',
           status: 'Active',
           language: 'en',
-          timezone: 'GMT'
+          timezone: 'GMT',
+          term_start_date: '',
+          term_end_date: '',
+          attendance_include_weekends: false,
+          attendance_total_days: 0
         });
       }
       onRefresh?.();
@@ -630,8 +638,53 @@ function OrganizationForm({ initialData, isEdit = false, onRefresh, onBack }: { 
                 <option value="GMT">GMT (Accra, Abidjan)</option>
                 <option value="WAT">WAT (Lagos, Luanda)</option>
                 <option value="CAT">CAT (Harare, Kigali)</option>
-                <option value="EAT">EAT (Nairobi, Addis Ababa)</option>
               </select>
+            </div>
+          </div>
+
+          <div className="border-t border-zinc-100 dark:border-zinc-800 pt-6">
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">{t('academic_attendance_settings')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('term_start_date')}</label>
+                <input
+                  type="date"
+                  value={formData.term_start_date}
+                  onChange={(e) => setFormData({ ...formData, term_start_date: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('term_end_date')}</label>
+                <input
+                  type="date"
+                  value={formData.term_end_date}
+                  onChange={(e) => setFormData({ ...formData, term_end_date: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('total_school_days')}</label>
+                <input
+                  type="number"
+                  value={formData.attendance_total_days}
+                  onChange={(e) => setFormData({ ...formData, attendance_total_days: parseInt(e.target.value) || 0 })}
+                  placeholder="e.g. 90"
+                  className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="flex items-center gap-3 pt-8">
+                <input
+                  type="checkbox"
+                  id="include_weekends"
+                  checked={formData.attendance_include_weekends}
+                  onChange={(e) => setFormData({ ...formData, attendance_include_weekends: e.target.checked })}
+                  className="w-5 h-5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <label htmlFor="include_weekends" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                  {t('include_weekends_in_attendance')}
+                </label>
+              </div>
             </div>
           </div>
 

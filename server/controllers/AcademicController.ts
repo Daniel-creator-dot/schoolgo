@@ -266,7 +266,7 @@ export const markAttendanceByQR = async (req: AuthRequest, res: Response) => {
     const orgId = req.user.org_id;
     if (!qr_data) return res.status(400).json({ error: 'QR data is required' });
 
-    // Look up student by admission_no or id
+    // 1. Look up student by admission_no or id
     const studentResult = await pool.query(
       `SELECT id, name, admission_no, class_id FROM students 
        WHERE org_id = $1 AND (admission_no = $2 OR CAST(id AS TEXT) = $2)
@@ -274,46 +274,93 @@ export const markAttendanceByQR = async (req: AuthRequest, res: Response) => {
       [orgId, qr_data.trim()]
     );
 
-    if (studentResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Student not found. QR code may be invalid.' });
-    }
+    if (studentResult.rows.length > 0) {
+      const student = studentResult.rows[0];
 
-    const student = studentResult.rows[0];
+      // Optional class filter
+      if (class_id && String(student.class_id) !== String(class_id)) {
+        return res.status(400).json({ error: `Student "${student.name}" is not in the selected class.` });
+      }
 
-    // Optional class filter
-    if (class_id && String(student.class_id) !== String(class_id)) {
-      return res.status(400).json({ error: `Student "${student.name}" is not in the selected class.` });
-    }
+      // Check for duplicate attendance today
+      const today = new Date().toISOString().split('T')[0];
+      const existingResult = await pool.query(
+        `SELECT id FROM student_attendance 
+         WHERE org_id = $1 AND student_id = $2 AND date = $3`,
+        [orgId, student.id, today]
+      );
 
-    // Check for duplicate attendance today
-    const today = new Date().toISOString().split('T')[0];
-    const existingResult = await pool.query(
-      `SELECT id FROM student_attendance 
-       WHERE org_id = $1 AND student_id = $2 AND date = $3`,
-      [orgId, student.id, today]
-    );
+      if (existingResult.rows.length > 0) {
+        return res.status(409).json({
+          error: `${student.name} already marked present today.`,
+          student_name: student.name,
+          already_marked: true
+        });
+      }
 
-    if (existingResult.rows.length > 0) {
-      return res.status(409).json({
-        error: `${student.name} already marked present today.`,
+      // Create attendance record
+      const result = await pool.query(
+        'INSERT INTO student_attendance (org_id, student_id, status, remarks) VALUES ($1, $2, $3, $4) RETURNING *',
+        [orgId, student.id, status, 'Marked via QR scan']
+      );
+
+      await recordAuditLog(req.user.id, 'QR_ATTENDANCE', `Marked student ${student.name} (${student.admission_no}) as ${status} via QR scan`, orgId, req.ip || '');
+
+      return res.status(201).json({
+        ...result.rows[0],
         student_name: student.name,
-        already_marked: true
+        admission_no: student.admission_no,
+        type: 'student'
       });
     }
 
-    // Create attendance record
-    const result = await pool.query(
-      'INSERT INTO student_attendance (org_id, student_id, status, remarks) VALUES ($1, $2, $3, $4) RETURNING *',
-      [orgId, student.id, status, 'Marked via QR scan']
+    // 2. If no student found, look up staff by email or id
+    const staffResult = await pool.query(
+      `SELECT s.id, s.name, u.id as user_id FROM staff s
+       JOIN users u ON s.email = u.email
+       WHERE s.org_id = $1 AND (s.email = $2 OR CAST(s.id AS TEXT) = $2)
+       LIMIT 1`,
+      [orgId, qr_data.trim()]
     );
 
-    await recordAuditLog(req.user.id, 'QR_ATTENDANCE', `Marked ${student.name} (${student.admission_no}) as ${status} via QR scan`, orgId, req.ip || '');
+    if (staffResult.rows.length > 0) {
+      const staff = staffResult.rows[0];
+      const today = new Date().toISOString().split('T')[0];
+      const now = new Date().toLocaleTimeString('en-GB', { hour12: false });
 
-    res.status(201).json({
-      ...result.rows[0],
-      student_name: student.name,
-      admission_no: student.admission_no
-    });
+      // Check for duplicate attendance today
+      const existingResult = await pool.query(
+        `SELECT id FROM staff_attendance 
+         WHERE org_id = $1 AND user_id = $2 AND date = $3`,
+        [orgId, staff.user_id, today]
+      );
+
+      if (existingResult.rows.length > 0) {
+        return res.status(409).json({
+          error: `${staff.name} already marked present today.`,
+          student_name: staff.name, // reusing field name for frontend compatibility
+          already_marked: true
+        });
+      }
+
+      // Create staff attendance record
+      const result = await pool.query(
+        'INSERT INTO staff_attendance (org_id, user_id, status, clock_in) VALUES ($1, $2, $3, $4) RETURNING *',
+        [orgId, staff.user_id, status, now]
+      );
+
+      await recordAuditLog(req.user.id, 'QR_ATTENDANCE', `Marked staff ${staff.name} as ${status} via QR scan`, orgId, req.ip || '');
+
+      return res.status(201).json({
+        ...result.rows[0],
+        student_name: staff.name,
+        admission_no: 'Staff',
+        type: 'staff'
+      });
+    }
+
+    return res.status(404).json({ error: 'Person not found. QR code may be invalid.' });
+
   } catch (err: any) {
     console.error('QR attendance error:', err);
     res.status(500).json({ error: err.message });

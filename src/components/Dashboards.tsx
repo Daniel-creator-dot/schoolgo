@@ -35,7 +35,7 @@ import {
   Send,
   History,
   ShoppingCart,
-  Plus
+  QrCode
 } from 'lucide-react';
 import { useLanguage } from '../lib/LanguageContext';
 import { cn } from '../lib/utils';
@@ -1225,6 +1225,8 @@ export function HODDashboard({ data, staffList = [], departments = [], organizat
 
 export function StaffDashboard({ staffData, user, organization, onNavigate, staffList = [], departments = [], unreadMessagesCount = 0, onUpdateOrganization }: { staffData?: any, user?: any, organization?: any, onNavigate?: (view: string) => void, staffList?: any[], departments?: any[], unreadMessagesCount?: number, onUpdateOrganization?: (data: any) => void }) {
   const { t } = useLanguage();
+  const [showDigitalID, setShowDigitalID] = useState(false);
+
 
   const stats = {
     classes: staffData?.classes?.length || 0,
@@ -1310,7 +1312,110 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
           color="bg-amber-600"
           onClick={() => onNavigate?.('Performance')}
         />
+        <div 
+          onClick={() => setShowDigitalID(true)}
+          className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-600/5 rounded-full -translate-y-12 translate-x-12 -z-0"></div>
+          <div className="relative z-10">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-indigo-600">
+              <QrCode className="w-6 h-6" />
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{t('digital_id')}</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">{t('show_to_scan')}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-indigo-600 transition-colors" />
+            </div>
+          </div>
+        </div>
       </div>
+
+      <Modal
+        isOpen={showDigitalID}
+        onClose={() => setShowDigitalID(false)}
+        title={t('my_digital_id')}
+        maxWidth="max-w-md"
+      >
+        <div className="p-8 flex flex-col items-center text-center space-y-6">
+          <div id="staff-id-card" className="w-full max-w-[280px] aspect-[1/1.58] bg-white border border-zinc-200 rounded-[2rem] shadow-2xl relative overflow-hidden flex flex-col p-6">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6 border-b border-zinc-100 pb-4">
+              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
+                {organization?.logo ? (
+                  <img src={organization.logo} alt="Logo" className="w-full h-full object-contain p-1" />
+                ) : (
+                  <School className="w-6 h-6 text-white" />
+                )}
+              </div>
+              <div className="text-left min-w-0">
+                <h4 className="text-[10px] font-black text-zinc-900 uppercase leading-tight truncate">{organization?.name || 'BytzGo Academy'}</h4>
+                <p className="text-[6px] font-bold text-zinc-500 uppercase tracking-widest">{t('staff_id_card')}</p>
+              </div>
+            </div>
+
+            {/* Profile */}
+            <div className="flex flex-col items-center gap-4 flex-1">
+              <div className="w-32 h-32 rounded-3xl bg-zinc-50 border-4 border-white shadow-lg overflow-hidden flex-shrink-0">
+                {user?.profile_pic ? (
+                  <img src={user.profile_pic} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-200">
+                    <User className="w-16 h-16" />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-black text-zinc-900 uppercase leading-tight">{user?.name}</p>
+                <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">{user?.role?.replace('_', ' ') || 'Staff'}</p>
+              </div>
+
+              {/* QR Code */}
+              <div className="mt-4 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(user?.email || user?.id)}`}
+                  alt="Staff QR Code"
+                  className="w-32 h-32 mix-blend-multiply"
+                />
+                <p className="text-[8px] font-black text-zinc-400 uppercase tracking-[0.3em] mt-3">{user?.email?.split('@')[0]}</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-6 pt-4 border-t border-zinc-100">
+              <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{t('scan_for_attendance')}</p>
+            </div>
+            
+            <div className="absolute bottom-0 right-0 left-0 h-2 bg-indigo-600"></div>
+          </div>
+          
+          <p className="text-sm text-zinc-500 px-4">
+            {t('staff_id_desc')}
+          </p>
+          
+          <div className="flex flex-col gap-2 w-full">
+            <button
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(user?.email || user?.id)}`;
+                link.download = `${user?.name || 'Staff'}_QR.png`;
+                link.target = '_blank';
+                link.click();
+              }}
+              className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold transition-all hover:bg-indigo-700 flex items-center justify-center gap-2"
+            >
+              <Download className="w-4 h-4" /> {t('download_qr')}
+            </button>
+            <button
+              onClick={() => setShowDigitalID(false)}
+              className="w-full py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-2xl font-bold transition-all hover:bg-zinc-200"
+            >
+              {t('close')}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Appraisal Score Detail */}
       {latestReview && (
