@@ -55,7 +55,8 @@ import {
   Briefcase,
   Save,
   Send,
-  BellRing
+  BellRing,
+  LogOut
 } from 'lucide-react';
 import TimetableEntryModal from '../modals/TimetableEntryModal';
 import {
@@ -3524,12 +3525,24 @@ export const AcademicModules = {
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                       <h3 className="text-4xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{item.name}</h3>
                       {(role === 'SCHOOL_ADMIN' || role === 'SUPER_ADMIN') && item.status !== 'Alumni' && (
-                        <button
-                          onClick={() => setManualPromoStudent(item)}
-                          className="flex items-center gap-2 px-6 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl hover:scale-105 active:scale-95 transition-all font-black text-xs shadow-xl uppercase tracking-widest shrink-0"
-                        >
-                          <TrendingUp className="w-4 h-4" /> Promote
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to withdraw ${item.name}? This will remove them from active student lists.`)) {
+                                onSave?.({ ...item, status: 'Withdrawn' });
+                              }
+                            }}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl hover:bg-red-100 hover:scale-105 active:scale-95 transition-all font-black text-xs shadow-sm uppercase tracking-widest shrink-0 border border-red-100 dark:border-red-800"
+                          >
+                            <LogOut className="w-4 h-4" /> Withdraw
+                          </button>
+                          <button
+                            onClick={() => setManualPromoStudent(item)}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl hover:scale-105 active:scale-95 transition-all font-black text-xs shadow-xl uppercase tracking-widest shrink-0"
+                          >
+                            <TrendingUp className="w-4 h-4" /> Promote
+                          </button>
+                        </div>
                       )}
                     </div>
 
