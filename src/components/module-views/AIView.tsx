@@ -186,7 +186,7 @@ export const AIModules = {
 
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100 dark:shadow-none">
               <TrendingUp className="w-6 h-6" />
@@ -325,7 +325,7 @@ export const AIModules = {
           </div>
         ) : (
           <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/50 dark:bg-zinc-800/20">
+            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-zinc-50/50 dark:bg-zinc-800/20">
               <div>
                 <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                   <Users className="w-5 h-5 text-indigo-600" />
@@ -407,7 +407,7 @@ export const AIModules = {
   },
   PatternDetection: () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">AI Pattern Detection</h2>
           <p className="text-zinc-500">Automated identification of attendance and behavioral anomalies.</p>
