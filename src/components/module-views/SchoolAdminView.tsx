@@ -5588,6 +5588,20 @@ export const AcademicModules = {
     const [termStartDate, setTermStartDate] = useState(organization?.term_start_date ? new Date(organization.term_start_date).toISOString().split('T')[0] : '');
     const [termEndDate, setTermEndDate] = useState(organization?.term_end_date ? new Date(organization.term_end_date).toISOString().split('T')[0] : '');
 
+    const availableMonths = useMemo(() => {
+      const monthsSet = new Set<string>();
+      (data || []).forEach(item => {
+        if (item.date) {
+          const d = new Date(item.date);
+          monthsSet.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+        }
+      });
+      return ['Entire Term', ...Array.from(monthsSet).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())];
+    }, [data]);
+
+    const [selectedMonth, setSelectedMonth] = useState('Entire Term');
+    const [selectedWardId, setLocalSelectedWardId] = useState(propSelectedWardId || wards?.[0]?.id || "");
+
     const loadCalendarEvents = async () => {
       try {
         const events = await fetchCalendarEvents();
@@ -5622,6 +5636,37 @@ export const AcademicModules = {
     const holidays = useMemo(() => {
       return calendarEvents.filter(e => e.event_type === 'Holiday');
     }, [calendarEvents]);
+
+    const calculatedTermDays = useMemo(() => {
+      if (!termStartDate || !termEndDate) return null;
+      const start = new Date(termStartDate);
+      const end = new Date(termEndDate);
+      if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return null;
+      
+      let validDays = 0;
+      const curr = new Date(start);
+      while (curr <= end) {
+        const dayOfWeek = curr.getDay();
+        const skipWeekend = !includeWeekends && (dayOfWeek === 0 || dayOfWeek === 6);
+        if (!skipWeekend) {
+          const dateStr = curr.toISOString().split('T')[0];
+          const isHoliday = holidays.some(h => {
+            const hStart = h.start_date.split('T')[0];
+            const hEnd = h.end_date ? h.end_date.split('T')[0] : hStart;
+            return dateStr >= hStart && dateStr <= hEnd;
+          });
+          if (!isHoliday) validDays++;
+        }
+        curr.setDate(curr.getDate() + 1);
+      }
+      return validDays;
+    }, [termStartDate, termEndDate, includeWeekends, holidays]);
+
+    useEffect(() => {
+      if (calculatedTermDays !== null && selectedMonth === 'Entire Term') {
+        setTotalSchoolDays(calculatedTermDays);
+      }
+    }, [calculatedTermDays, selectedMonth]);
 
     const handleAddHoliday = async () => {
       if (!newHolidayDate) return;
@@ -5701,20 +5746,6 @@ export const AcademicModules = {
         setIsSyncingHolidays(false);
       }
     };
-
-    const availableMonths = useMemo(() => {
-      const monthsSet = new Set<string>();
-      (data || []).forEach(item => {
-        if (item.date) {
-          const d = new Date(item.date);
-          monthsSet.add(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
-        }
-      });
-      return ['Entire Term', ...Array.from(monthsSet).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())];
-    }, [data]);
-
-    const [selectedMonth, setSelectedMonth] = useState('Entire Term');
-    const [selectedWardId, setLocalSelectedWardId] = useState(propSelectedWardId || wards?.[0]?.id || "");
 
     useEffect(() => {
       if (propSelectedWardId) setLocalSelectedWardId(propSelectedWardId);
@@ -5954,7 +5985,12 @@ export const AcademicModules = {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Total School Days for {selectedMonth === 'Entire Term' ? 'the Entire Term' : selectedMonth}</label>
+                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                  Total School Days for {selectedMonth === 'Entire Term' ? 'the Entire Term' : selectedMonth}
+                  {calculatedTermDays !== null && selectedMonth === 'Entire Term' && (
+                    <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full text-[8px] normal-case">Auto-Calculated</span>
+                  )}
+                </label>
                 <div className="relative">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <input
