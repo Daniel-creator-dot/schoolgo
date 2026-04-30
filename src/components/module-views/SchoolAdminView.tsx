@@ -8279,13 +8279,13 @@ export const ExamModules = {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">Target Class</label>
                     <select
                       value={selectedClassRemarksId}
                       onChange={(e) => setSelectedClassRemarksId(e.target.value)}
                       className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-[1.5rem] font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
                     >
                       <option value="">-- Select Class to Audit --</option>
+                      <option value="all">ALL CLASSES (School-wide)</option>
                       {classes.map((c: any) => (
                         <option key={c.id} value={c.id}>{c.name} {c.section || ''}</option>
                       ))}
@@ -8293,10 +8293,23 @@ export const ExamModules = {
                   </div>
 
                   {selectedClassRemarksId && (() => {
-                    const classStudents = students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId));
-                    const classSubjects = subjects.filter((sub: any) => String(sub.class_id) === String(selectedClassRemarksId));
-                    const totalExpected = classStudents.length * classSubjects.length;
-                    const classResults = summarizedResults.filter((r: any) => String(r.class_id) === String(selectedClassRemarksId));
+                    const isAll = selectedClassRemarksId === 'all';
+                    const classStudents = isAll ? students : students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId));
+                    const classSubjects = isAll ? subjects : subjects.filter((sub: any) => String(sub.class_id) === String(selectedClassRemarksId));
+                    
+                    // Total Expected: For each class, students in that class * subjects for that class
+                    let totalExpected = 0;
+                    if (isAll) {
+                      classes.forEach((c: any) => {
+                        const sCount = students.filter((s: any) => String(s.class_id) === String(c.id)).length;
+                        const subCount = subjects.filter((sub: any) => String(sub.class_id) === String(c.id)).length;
+                        totalExpected += sCount * subCount;
+                      });
+                    } else {
+                      totalExpected = classStudents.length * classSubjects.length;
+                    }
+
+                    const classResults = isAll ? summarizedResults : summarizedResults.filter((r: any) => String(r.class_id) === String(selectedClassRemarksId));
                     const completeness = totalExpected > 0 ? (classResults.length / totalExpected) * 100 : 0;
                     
                     return (
@@ -8360,26 +8373,27 @@ export const ExamModules = {
                         </p>
                       </div>
 
-                      <button
+                        <button
                         disabled={!selectedClassRemarksId || isBroadcasting}
                         onClick={async () => {
-                          const classStudents = students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId));
-                          const parentContacts = Array.from(new Set(classStudents.map((s: any) => s.contact).filter(Boolean)));
+                          const isAll = selectedClassRemarksId === 'all';
+                          const targetStudents = isAll ? students : students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId));
+                          const parentContacts = Array.from(new Set(targetStudents.map((s: any) => s.contact).filter(Boolean)));
                           
                           if (parentContacts.length === 0) {
-                            (window as any).showToast?.("No parent contacts found for this class.", "error");
+                            (window as any).showToast?.("No parent contacts found for selection.", "error");
                             return;
                           }
 
                           if ((smsSettings?.balance || 0) < parentContacts.length) {
-                            (window as any).showToast?.("Insufficient SMS credits to broadcast to this class.", "error");
+                            (window as any).showToast?.(`Insufficient SMS credits (${smsSettings?.balance || 0}) to broadcast to ${parentContacts.length} parents.`, "error");
                             return;
                           }
 
-                          if (!window.confirm(`Broadcast SMS to ${parentContacts.length} parents?`)) return;
+                          if (!window.confirm(`Broadcast SMS to ${parentContacts.length} parents across ${isAll ? 'all classes' : 'the selected class'}?`)) return;
 
                           setIsBroadcasting(true);
-                          setBroadcastProgress(10);
+                          setBroadcastProgress(0);
                           
                           try {
                             const messages = parentContacts.map(contact => ({
@@ -8387,8 +8401,14 @@ export const ExamModules = {
                               message: `Dear Parent, your ward's academic results for ${selectedTerm} have been successfully uploaded. Please check the portal to view the performance.`
                             }));
 
-                            await sendBulkSMS({ messages });
-                            setBroadcastProgress(100);
+                            // Split into chunks if there are many contacts to avoid payload limits
+                            const chunkSize = 100;
+                            for (let i = 0; i < messages.length; i += chunkSize) {
+                              const chunk = messages.slice(i, i + chunkSize);
+                              await sendBulkSMS({ messages: chunk });
+                              setBroadcastProgress(Math.round(((i + chunk.length) / messages.length) * 100));
+                            }
+
                             (window as any).showToast?.(`Broadcast sent successfully to ${parentContacts.length} parents!`, "success");
                           } catch (err: any) {
                             (window as any).showToast?.(err?.message || "Broadcast failed", "error");
@@ -8426,9 +8446,11 @@ export const ExamModules = {
 
                   {selectedClassRemarksId && (
                     <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 p-6">
-                      <h5 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-4">Target Recipients ({students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId)).length})</h5>
+                      <h5 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-4">
+                        Target Recipients ({selectedClassRemarksId === 'all' ? students.length : students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId)).length})
+                      </h5>
                       <div className="max-h-[150px] overflow-y-auto space-y-2 pr-2">
-                        {students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId)).map((s: any) => (
+                        {(selectedClassRemarksId === 'all' ? students : students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId))).map((s: any) => (
                           <div key={s.id} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
                             <span className="text-[11px] font-bold text-zinc-600">{s.name}</span>
                             <span className="text-[10px] font-mono text-zinc-400">{s.contact || 'No Contact'}</span>
