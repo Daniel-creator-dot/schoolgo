@@ -74,6 +74,7 @@ import { API_BASE_URL } from '../../constants';
 import { useLanguage } from '../../lib/LanguageContext';
 import { downloadStudentTemplate, parseStudentExcel } from '../../lib/excel';
 import { Download, FileUp } from 'lucide-react';
+import { fetchCalendarEvents, createCalendarEvent, deleteCalendarEvent } from '../../lib/api';
 
 const SectionEditor: React.FC<{ section: ReportCardSection, onUpdate: (s: ReportCardSection) => void, onRemove: () => void }> = ({ section, onUpdate, onRemove }) => {
   return (
@@ -5576,23 +5577,81 @@ export const AcademicModules = {
   Attendance: ({ role, wards, selectedWardId: propSelectedWardId, onWardSelect, data = [], onSave, onDelete, students = [], staffList = [], organization, onUpdateOrganization }: { role?: UserRole, wards?: any[], selectedWardId?: string | null, onWardSelect?: (id: string) => void, data?: any[], onSave?: (data: any) => void, onDelete?: (item: any) => void, students?: any[], staffList?: any[], organization?: any, onUpdateOrganization?: (data: any) => void }) => {
     const [viewingStudent, setViewingStudent] = useState<any>(null);
     const [totalSchoolDays, setTotalSchoolDays] = useState(organization?.attendance_total_days || 22);
+    const [includeWeekends, setIncludeWeekends] = useState(organization?.attendance_include_weekends || false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
+    const [newHolidayDate, setNewHolidayDate] = useState('');
+    const [newHolidayName, setNewHolidayName] = useState('');
+
+    const loadCalendarEvents = async () => {
+      try {
+        const events = await fetchCalendarEvents();
+        setCalendarEvents(events || []);
+      } catch (err) {
+        console.error('Failed to load calendar events', err);
+      }
+    };
 
     useEffect(() => {
       if (organization?.attendance_total_days !== undefined) {
         setTotalSchoolDays(organization.attendance_total_days);
       }
-    }, [organization?.attendance_total_days]);
+      if (organization?.attendance_include_weekends !== undefined) {
+        setIncludeWeekends(organization.attendance_include_weekends);
+      }
+    }, [organization?.attendance_total_days, organization?.attendance_include_weekends]);
+
+    useEffect(() => {
+      loadCalendarEvents();
+    }, []);
+
+    const holidays = useMemo(() => {
+      return calendarEvents.filter(e => e.event_type === 'Holiday');
+    }, [calendarEvents]);
+
+    const handleAddHoliday = async () => {
+      if (!newHolidayDate) return;
+      try {
+        await createCalendarEvent({
+          event_name: newHolidayName || 'School Holiday',
+          event_type: 'Holiday',
+          start_date: newHolidayDate,
+          end_date: newHolidayDate,
+          event_description: 'Added via Attendance Settings'
+        });
+        setNewHolidayDate('');
+        setNewHolidayName('');
+        await loadCalendarEvents();
+        (window as any).showToast?.('Holiday added to Academic Calendar', 'success');
+      } catch (err) {
+        (window as any).showToast?.(err, 'error');
+      }
+    };
+
+    const handleRemoveHoliday = async (id: string) => {
+      try {
+        await deleteCalendarEvent(id);
+        await loadCalendarEvents();
+        (window as any).showToast?.('Holiday removed', 'success');
+      } catch (err) {
+        (window as any).showToast?.(err, 'error');
+      }
+    };
 
     const handleSaveSettings = async () => {
       if (!onUpdateOrganization) return;
       setIsSaving(true);
       try {
-        await onUpdateOrganization({ attendance_total_days: totalSchoolDays });
+        await onUpdateOrganization({ 
+          attendance_total_days: totalSchoolDays,
+          attendance_include_weekends: includeWeekends 
+        });
         setIsSettingsOpen(false);
+        (window as any).showToast?.('Settings saved successfully', 'success');
       } catch (err) {
         console.error('Failed to save attendance settings:', err);
+        (window as any).showToast?.(err, 'error');
       } finally {
         setIsSaving(false);
       }
@@ -5634,6 +5693,37 @@ export const AcademicModules = {
     const aggregatedData = useMemo(() => {
       if (role !== 'SCHOOL_ADMIN' && role !== 'HOD') return filteredData;
 
+      let dynamicDenominator = totalSchoolDays;
+
+      if (selectedMonth !== 'Entire Term') {
+        const [monthName, yearStr] = selectedMonth.split(' ');
+        const monthIndex = new Date(`${monthName} 1, 2000`).getMonth();
+        const year = parseInt(yearStr);
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+        
+        let validDays = 0;
+        for (let i = 1; i <= daysInMonth; i++) {
+          const d = new Date(year, monthIndex, i);
+          const dayOfWeek = d.getDay();
+          
+          if (!includeWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+            continue;
+          }
+
+          const dateStr = d.toISOString().split('T')[0];
+          const isHoliday = holidays.some(h => {
+             const start = h.start_date.split('T')[0];
+             const end = h.end_date ? h.end_date.split('T')[0] : start;
+             return dateStr >= start && dateStr <= end;
+          });
+
+          if (!isHoliday) {
+            validDays++;
+          }
+        }
+        dynamicDenominator = validDays;
+      }
+
       return students.map(student => {
         const studentRecords = (data || []).filter(r => 
           String(r.student_id) === String(student.id) &&
@@ -5641,10 +5731,9 @@ export const AcademicModules = {
         );
         const present = studentRecords.filter(r => r.status === 'Present').length;
         
-        // Calculate based on total school days if provided, else fallback to records found
-        const denominator = totalSchoolDays > 0 ? totalSchoolDays : studentRecords.length;
+        const denominator = dynamicDenominator > 0 ? dynamicDenominator : (totalSchoolDays > 0 ? totalSchoolDays : studentRecords.length);
         const percentage = denominator > 0 ? Math.min(100, Math.round((present / denominator) * 100)) : 0;
-        const absent = totalSchoolDays > 0 ? Math.max(0, totalSchoolDays - present) : studentRecords.length - present;
+        const absent = denominator > 0 ? Math.max(0, denominator - present) : studentRecords.length - present;
         
         return {
           ...student,
@@ -5655,7 +5744,7 @@ export const AcademicModules = {
           totalRecords: denominator
         };
       });
-    }, [students, data, selectedMonth, role, filteredData]);
+    }, [students, data, selectedMonth, role, filteredData, includeWeekends, holidays, totalSchoolDays]);
 
     const stats = useMemo(() => {
       if (filteredData.length === 0) return { present: 0, absent: 0, percentage: 0 };
@@ -5827,6 +5916,63 @@ export const AcademicModules = {
                 </button>
               </div>
             </div>
+
+            <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-6">
+              <label className="flex items-center gap-3 cursor-pointer group w-fit">
+                <input
+                  type="checkbox"
+                  checked={includeWeekends}
+                  onChange={(e) => setIncludeWeekends(e.target.checked)}
+                  className="w-5 h-5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-600 transition-colors cursor-pointer"
+                />
+                <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 transition-colors">
+                  Include Weekends in Working Days Calculation
+                </span>
+              </label>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Excluded Dates (Holidays)</label>
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <input
+                    type="date"
+                    value={newHolidayDate}
+                    onChange={(e) => setNewHolidayDate(e.target.value)}
+                    className="w-full sm:w-auto px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                  <input
+                    type="text"
+                    value={newHolidayName}
+                    onChange={(e) => setNewHolidayName(e.target.value)}
+                    placeholder="Holiday Name (e.g., Independence Day)"
+                    className="w-full flex-1 px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  />
+                  <button
+                    onClick={handleAddHoliday}
+                    disabled={!newHolidayDate}
+                    className="w-full sm:w-auto px-6 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-all disabled:opacity-50"
+                  >
+                    Add Date
+                  </button>
+                </div>
+                
+                {holidays.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {holidays.map((h: any) => (
+                      <div key={h.id} className="flex items-center gap-2 px-3 py-1.5 bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 rounded-lg text-xs font-bold border border-rose-100 dark:border-rose-900/50">
+                        <span>{h.event_name} ({new Date(h.start_date).toLocaleDateString()})</span>
+                        <button onClick={() => handleRemoveHoliday(h.id)} className="hover:text-rose-800 dark:hover:text-rose-300">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[10px] text-zinc-400 font-medium italic mt-1">
+                  Dates added here are automatically synchronized with the Academic Calendar as holidays.
+                </p>
+              </div>
+            </div>
+
             <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 rounded-2xl">
               <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold leading-relaxed">
                 <span className="uppercase font-black mr-2">Pro Tip:</span> 
