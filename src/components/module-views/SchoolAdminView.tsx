@@ -8195,25 +8195,25 @@ export const ExamModules = {
 
     return (
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-6 rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none">
-              <ClipboardCheck className="w-6 h-6" />
+        <div className="flex flex-col gap-4 bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200 dark:shadow-none shrink-0">
+              <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <h2 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">Academic Results</h2>
-              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{performanceGroupBy} summary — {(organization as any)?.academic_year || '2025/2026'}</p>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight truncate">Academic Results</h2>
+              <p className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest truncate">{performanceGroupBy} summary — {(organization as any)?.academic_year || '2025/2026'}</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4">
+            <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl sm:rounded-2xl border border-zinc-200 dark:border-zinc-700 w-full sm:w-auto overflow-x-auto no-scrollbar">
               <button
                 onClick={() => {
                   setPerformanceGroupBy('class');
                   setShowBroadcaster(false);
                 }}
                 className={cn(
-                  "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                  "px-4 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
                   performanceGroupBy === 'class' ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
                 )}
               >
@@ -8225,7 +8225,7 @@ export const ExamModules = {
                   setShowBroadcaster(false);
                 }}
                 className={cn(
-                  "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                  "px-4 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
                   performanceGroupBy === 'subject' ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
                 )}
               >
@@ -8233,7 +8233,7 @@ export const ExamModules = {
               </button>
             </div>
 
-            <div className="flex items-center gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+            <div className="flex items-center gap-1 sm:gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl sm:rounded-2xl border border-zinc-200 dark:border-zinc-700 w-full sm:w-auto overflow-x-auto no-scrollbar">
               <button
                 onClick={() => {
                   setShowTopPerformers(false);
@@ -8241,11 +8241,11 @@ export const ExamModules = {
                   setShowBroadcaster(false);
                 }}
                 className={cn(
-                  "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                  (!showTopPerformers && !showClassRemarks) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
+                  "px-3 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                  (!showTopPerformers && !showClassRemarks && !showBroadcaster) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
                 )}
               >
-                Performance Summary
+                Summary
               </button>
               {((role as any) === 'SCHOOL_ADMIN' || (role as any) === 'HOD') && (
                 <button
@@ -8255,14 +8255,13 @@ export const ExamModules = {
                     setShowBroadcaster(false);
                   }}
                   className={cn(
-                    "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                    "px-3 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1.5",
                     showTopPerformers ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    <Trophy className="w-3.5 h-3.5" />
-                    Top Performance
-                  </div>
+                  <Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span className="hidden sm:inline">Top Performance</span>
+                  <span className="sm:hidden">Top</span>
                 </button>
               )}
               {classes.some((c: any) => {
@@ -8292,11 +8291,11 @@ export const ExamModules = {
                       setShowBroadcaster(false);
                     }}
                     className={cn(
-                      "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                      "px-3 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
                       (showClassRemarks && !showTopPerformers && !showBroadcaster) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
                     )}
                   >
-                    Class Remarks
+                    Remarks
                   </button>
                 )}
               {((role as any) === 'SCHOOL_ADMIN' || (role as any) === 'HOD') && (
@@ -8307,14 +8306,13 @@ export const ExamModules = {
                     setShowTopPerformers(false);
                   }}
                   className={cn(
-                    "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                    "px-3 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1.5",
                     showBroadcaster ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    <Send className="w-3.5 h-3.5" />
-                    Broadcaster
-                  </div>
+                  <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span className="hidden sm:inline">Broadcaster</span>
+                  <span className="sm:hidden">SMS</span>
                 </button>
               )}
             </div>
@@ -8323,27 +8321,27 @@ export const ExamModules = {
 
         {showBroadcaster ? (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <div className="space-y-1">
-                  <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight uppercase">Result Broadcaster</h3>
-                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Audit completeness and notify parents via SMS.</p>
+                  <h3 className="text-lg sm:text-2xl font-black text-zinc-900 dark:text-white tracking-tight uppercase">Result Broadcaster</h3>
+                  <p className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest">Audit completeness and notify parents via SMS.</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/50">
+                  <div className="p-3 sm:p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl sm:rounded-2xl border border-indigo-100 dark:border-indigo-800/50">
                     <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">SMS Balance</p>
-                    <p className="text-xl font-black text-zinc-900 dark:text-white">{smsSettings?.balance || 0} Units</p>
+                    <p className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white">{smsSettings?.balance || 0} Units</p>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <select
                       value={selectedClassRemarksId}
                       onChange={(e) => setSelectedClassRemarksId(e.target.value)}
-                      className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-[1.5rem] font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                      className="w-full px-4 sm:px-6 py-3 sm:py-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl sm:rounded-[1.5rem] font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm"
                     >
                       <option value="">-- Select Class to Audit --</option>
                       <option value="all">ALL CLASSES (School-wide)</option>
@@ -8374,9 +8372,9 @@ export const ExamModules = {
                     const completeness = totalExpected > 0 ? (classResults.length / totalExpected) * 100 : 0;
                     
                     return (
-                      <div className="p-8 bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 space-y-6">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">Class Readiness</h4>
+                      <div className="p-4 sm:p-8 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl sm:rounded-[2rem] border border-zinc-100 dark:border-zinc-800 space-y-4 sm:space-y-6">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-xs sm:text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">Class Readiness</h4>
                           <span className={cn(
                             "px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
                             completeness === 100 ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
@@ -8395,12 +8393,12 @@ export const ExamModules = {
                           />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                          <div className="p-3 sm:p-4 bg-white dark:bg-zinc-900 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800">
                             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Uploaded</p>
                             <p className="text-lg font-black text-zinc-900 dark:text-white">{classResults.length}</p>
                           </div>
-                          <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                          <div className="p-3 sm:p-4 bg-white dark:bg-zinc-900 rounded-xl sm:rounded-2xl border border-zinc-100 dark:border-zinc-800">
                             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Expected</p>
                             <p className="text-lg font-black text-zinc-900 dark:text-white">{totalExpected}</p>
                           </div>
@@ -8420,14 +8418,14 @@ export const ExamModules = {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="p-8 bg-indigo-600 rounded-[2.5rem] text-white space-y-6 shadow-xl shadow-indigo-200 dark:shadow-none relative overflow-hidden">
+                  <div className="p-4 sm:p-8 bg-indigo-600 rounded-xl sm:rounded-[2.5rem] text-white space-y-4 sm:space-y-6 shadow-xl shadow-indigo-200 dark:shadow-none relative overflow-hidden">
                     <div className="relative z-10 space-y-4">
                       <div className="flex items-center gap-3">
                         <BellRing className="w-6 h-6" />
                         <h4 className="text-lg font-black uppercase tracking-tight">Broadcast Message</h4>
                       </div>
                       
-                      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                      <div className="bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100 mb-2">Sample Template</p>
                         <p className="text-sm font-medium leading-relaxed italic">
                           "Dear Parent, your ward's academic results for {selectedTerm} have been successfully uploaded to the portal. Please log in to view the performance."
@@ -8481,7 +8479,7 @@ export const ExamModules = {
                           }
                         }}
                         className={cn(
-                          "w-full py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-lg transition-all flex items-center justify-center gap-3",
+                          "w-full py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] shadow-lg transition-all flex items-center justify-center gap-2 sm:gap-3",
                           (!selectedClassRemarksId || isBroadcasting) 
                             ? "bg-white/20 text-white/50 cursor-not-allowed" 
                             : "bg-white text-indigo-600 hover:bg-indigo-50 hover:-translate-y-1 active:translate-y-0"
@@ -8506,7 +8504,7 @@ export const ExamModules = {
                   </div>
 
                   {selectedClassRemarksId && (
-                    <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 p-6">
+                    <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-xl sm:rounded-[2rem] border border-zinc-100 dark:border-zinc-800 p-4 sm:p-6">
                       <h5 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-4">
                         Target Recipients ({selectedClassRemarksId === 'all' ? students.length : students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId)).length})
                       </h5>
@@ -8531,7 +8529,7 @@ export const ExamModules = {
                 <h3 className="text-2xl font-black uppercase tracking-tight">Top Performers Record</h3>
                 <p className="text-indigo-100 font-medium text-sm">Recognizing excellence across all classes and subjects.</p>
               </div>
-              <div className="flex flex-wrap items-center gap-4 relative z-10">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-3 sm:gap-4 relative z-10">
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20">
                   <Calendar className="w-4 h-4 opacity-70" />
                   <select
@@ -8574,7 +8572,7 @@ export const ExamModules = {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8">
               {(() => {
                 const resultsToShow = [];
                 const calKeys = Object.keys(topPerformersRecord).filter(k => {
