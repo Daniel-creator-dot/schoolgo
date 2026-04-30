@@ -552,6 +552,48 @@ export const ReportCardPreview = ({ template, organization, student, onClose }: 
             ))}
           </div>
 
+          {/* Promotion Status */}
+          {currentStudent.promotionStatus && (
+            <div
+              className="mt-8 p-6 rounded-2xl border-2 flex items-center gap-4"
+              style={{
+                backgroundColor: currentStudent.promotionStatus === 'Promoted' || currentStudent.promotionStatus === 'Manually Promoted'
+                  ? '#ecfdf5' : currentStudent.promotionStatus === 'Alumni' ? '#eff6ff' : '#fef2f2',
+                borderColor: currentStudent.promotionStatus === 'Promoted' || currentStudent.promotionStatus === 'Manually Promoted'
+                  ? '#86efac' : currentStudent.promotionStatus === 'Alumni' ? '#93c5fd' : '#fca5a5'
+              }}
+            >
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  backgroundColor: currentStudent.promotionStatus === 'Promoted' || currentStudent.promotionStatus === 'Manually Promoted'
+                    ? '#dcfce7' : currentStudent.promotionStatus === 'Alumni' ? '#dbeafe' : '#fee2e2'
+                }}
+              >
+                {currentStudent.promotionStatus === 'Promoted' || currentStudent.promotionStatus === 'Manually Promoted'
+                  ? <TrendingUp className="w-6 h-6" style={{ color: '#16a34a' }} />
+                  : currentStudent.promotionStatus === 'Alumni'
+                    ? <GraduationCap className="w-6 h-6" style={{ color: '#2563eb' }} />
+                    : <AlertCircle className="w-6 h-6" style={{ color: '#dc2626' }} />}
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest" style={{
+                  color: currentStudent.promotionStatus === 'Promoted' || currentStudent.promotionStatus === 'Manually Promoted'
+                    ? '#16a34a' : currentStudent.promotionStatus === 'Alumni' ? '#2563eb' : '#dc2626'
+                }}>
+                  {currentStudent.promotionStatus === 'Promoted' || currentStudent.promotionStatus === 'Manually Promoted'
+                    ? `Promoted to ${currentStudent.promotedTo || 'Next Class'}`
+                    : currentStudent.promotionStatus === 'Alumni'
+                      ? 'Graduated — Alumni'
+                      : 'Retained — Repeat Year'}
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-widest mt-1" style={{ color: '#71717a' }}>
+                  Academic Year: {currentStudent.academicYear || '—'}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Footer */}
           <div className="pt-12 flex justify-between items-end border-t border-zinc-100 dark:border-zinc-800 mt-12">
             <div className="space-y-2">
@@ -7862,6 +7904,7 @@ export const ExamModules = {
     const [isBroadcasting, setIsBroadcasting] = useState(false);
     const [broadcastProgress, setBroadcastProgress] = useState(0);
     const [smsSettings, setSMSSettings] = useState<any>(null);
+    const [promotionRecords, setPromotionRecords] = useState<any[]>([]);
 
     useEffect(() => {
       const loadSMS = async () => {
@@ -7874,6 +7917,24 @@ export const ExamModules = {
       };
       if (showBroadcaster) loadSMS();
     }, [showBroadcaster]);
+
+    useEffect(() => {
+      const loadPromotionRecords = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const res = await fetch(`${API_BASE_URL}/academic/promotion/records`, {
+            headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setPromotionRecords(data);
+          }
+        } catch (err) {
+          console.error('Failed to fetch promotion records:', err);
+        }
+      };
+      loadPromotionRecords();
+    }, []);
 
     const hodDeptId = useMemo(() => {
       if (role !== 'HOD') return null;
@@ -8837,6 +8898,7 @@ export const ExamModules = {
                         if (!item) return;
 
                         const rankData = overallClassRanks[item.class_id]?.[item.student_id];
+                        const promoRecord = promotionRecords.find((pr: any) => String(pr.student_id) === String(item.student_id));
                         const formattedStudent = {
                           name: item.student_name,
                           id: item.admission_no || item.student_id || String(item.id).slice(0, 8),
@@ -8847,6 +8909,8 @@ export const ExamModules = {
                           classPosition: rankData ? `${rankData.rank}${['st', 'nd', 'rd'][rankData.rank - 1] || 'th'} / ${rankData.count}` : '—',
                           rankPercentile: rankData?.percentile || '—',
                           attendance: '—',
+                          promotionStatus: promoRecord?.status || null,
+                          promotedTo: promoRecord?.next_class_name || promoRecord?.to_class_name || null,
                           results: termResults.map(sr => ({
                             subject: sr.subject_name,
                             classScore: sr.caScore,
@@ -8918,6 +8982,7 @@ export const ExamModules = {
                               const studentResults = summarizedResults.filter(sr => sr.student_id === r.student_id && String(sr.class_id) === String(r.class_id));
                               const rankData = overallClassRanks[r.class_id]?.[r.student_id];
                               const terminalRemarkData = results.find((res: any) => String(res.student_id) === String(r.student_id) && res.type === 'terminal_remark');
+                              const promoRecord = promotionRecords.find((pr: any) => String(pr.student_id) === String(r.student_id));
                               setShowReportCard({
                                 name: r.student_name,
                                 id: r.admission_no || r.student_id || String(r.id).slice(0, 8),
@@ -8930,6 +8995,8 @@ export const ExamModules = {
                                 attendance: '—',
                                 teacherRemark: terminalRemarkData?.teacher_remark || '',
                                 principalRemark: terminalRemarkData?.principal_remark || '',
+                                promotionStatus: promoRecord?.status || null,
+                                promotedTo: promoRecord?.next_class_name || promoRecord?.to_class_name || null,
                                 results: studentResults.map(sr => ({
                                   subject: sr.subject_name,
                                   classScore: sr.caScore,
