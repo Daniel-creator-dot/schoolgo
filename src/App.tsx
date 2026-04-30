@@ -3245,6 +3245,8 @@ export default function App() {
 
       "Folder Management": <StorageModules.FolderManagement />,
       "Reports Central": <ReportsView />,
+      "Attendance Audit": <ReportsView initialType="attendance" />,
+      "Financial Audit": <ReportsView initialType="finance" />,
       "Student Portfolio": <PortfolioView role={currentRole} />,
       "Portfolio Upload": <PortfolioUpload />,
 

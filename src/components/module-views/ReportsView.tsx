@@ -16,9 +16,13 @@ import { fetchDetailedAttendanceReport, fetchDetailedFinanceReport } from '../..
 import { DataTable } from '../DataTable';
 import { cn } from '../../lib/utils';
 
-const ReportsView: React.FC = () => {
+interface ReportsViewProps {
+  initialType?: 'attendance' | 'finance';
+}
+
+const ReportsView: React.FC<ReportsViewProps> = ({ initialType }) => {
   const [loading, setLoading] = useState(false);
-  const [reportType, setReportType] = useState<'attendance' | 'finance' | 'student' | null>(null);
+  const [reportType, setReportType] = useState<'attendance' | 'finance' | 'student' | null>(initialType || null);
   const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [reportData, setReportData] = useState<any[]>([]);
@@ -42,6 +46,13 @@ const ReportsView: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Auto-generate report if initialType is provided
+  React.useEffect(() => {
+    if (initialType) {
+      generateReport(initialType);
+    }
+  }, [initialType]);
 
   const handlePrint = () => {
     window.print();
