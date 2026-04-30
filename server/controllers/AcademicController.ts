@@ -343,6 +343,11 @@ export const markAttendanceByQR = async (req: AuthRequest, res: Response) => {
         });
       }
 
+      // SECURITY FIX: Prevent self-marking
+      if (String(req.user.id) === String(staff.user_id)) {
+        return res.status(403).json({ error: "Security Restriction: You cannot mark your own attendance." });
+      }
+
       // Create staff attendance record
       const result = await pool.query(
         'INSERT INTO staff_attendance (org_id, user_id, status, clock_in) VALUES ($1, $2, $3, $4) RETURNING *',
