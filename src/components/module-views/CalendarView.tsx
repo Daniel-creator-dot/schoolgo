@@ -20,6 +20,8 @@ export function CalendarView({ role }: { role: string }) {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[]>([]);
+  const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null);
   
   const isAdmin = role === 'SCHOOL_ADMIN' || role === 'SUPER_ADMIN';
 
@@ -210,68 +212,121 @@ export function CalendarView({ role }: { role: string }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-7 gap-px bg-zinc-100 dark:bg-zinc-800 rounded-3xl overflow-hidden border-4 border-zinc-100 dark:border-zinc-800">
-            {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-              <div key={day} className="bg-zinc-50 dark:bg-zinc-800/80 py-4 text-center text-xs font-black text-zinc-400 uppercase tracking-[0.2em]">
-                {day.slice(0, 3)}
-              </div>
-            ))}
-            {days.map((day, idx) => {
-              const currentDayStr = day ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
-              const dayEvents = events.filter(e => {
-                 const start = e.start_date.split('T')[0];
-                 const end = e.end_date ? e.end_date.split('T')[0] : start;
-                 return currentDayStr && currentDayStr >= start && currentDayStr <= end;
-              });
-
-              const isToday = new Date().toISOString().split('T')[0] === currentDayStr;
-
-              return (
-                <div key={idx} className={cn(
-                  "bg-white dark:bg-zinc-900 min-h-[140px] p-3 transition-all hover:bg-zinc-50 dark:hover:bg-zinc-800/50",
-                  !day && "bg-zinc-50/50 dark:bg-zinc-800/20"
-                )}>
-                  {day && (
-                    <div className="h-full flex flex-col">
-                      <div className="flex justify-start mb-2">
-                        <span className={cn(
-                          "inline-flex items-center justify-center w-8 h-8 rounded-full text-base font-bold",
-                          isToday ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none" : "text-zinc-400 dark:text-zinc-500"
-                        )}>
-                          {day}
-                        </span>
-                      </div>
-                      <div className="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar pr-1">
-                        {dayEvents.map(event => (
-                          <div 
-                            key={event.id}
-                            title={event.event_name + (event.event_description ? ": " + event.event_description : "")}
-                            className={cn(
-                              "px-2.5 py-1.5 text-[10px] font-bold rounded-xl whitespace-normal leading-[1.2] shadow-sm border transition-transform hover:scale-105 cursor-default",
-                              event.event_type === 'Holiday' ? "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-900/50" :
-                              event.event_type === 'Exam' ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50" :
-                              event.event_type === 'Meeting' ? "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50" :
-                              "bg-indigo-50 text-indigo-600 border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-900/50"
-                            )}
-                          >
-                            <span className="flex items-start gap-1.5">
-                              <span className={cn(
-                                "w-1.5 h-1.5 rounded-full mt-1 shrink-0",
-                                event.event_type === 'Holiday' ? "bg-rose-600" :
-                                event.event_type === 'Exam' ? "bg-amber-600" :
-                                "bg-indigo-600"
-                              )} />
-                              <span>{event.event_name}</span>
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+          <div className="overflow-x-auto -mx-4 sm:mx-0 pb-4 custom-scrollbar">
+            <div className="min-w-[600px] md:min-w-0 grid grid-cols-7 gap-px bg-zinc-200 dark:bg-zinc-800 rounded-[2rem] overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-inner">
+              {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+                <div key={day} className="bg-zinc-50 dark:bg-zinc-800/80 py-4 text-center text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">
+                  {day.slice(0, 3)}
                 </div>
-              );
-            })}
+              ))}
+              {days.map((day, idx) => {
+                const currentDayStr = day ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
+                const dayEvents = events.filter(e => {
+                   const start = e.start_date.split('T')[0];
+                   const end = e.end_date ? e.end_date.split('T')[0] : start;
+                   return currentDayStr && currentDayStr >= start && currentDayStr <= end;
+                });
+
+                const isToday = new Date().toISOString().split('T')[0] === currentDayStr;
+                const isSelected = selectedDateStr === currentDayStr;
+
+                return (
+                  <div 
+                    key={idx} 
+                    onClick={() => {
+                      if (day) {
+                        setSelectedDateStr(currentDayStr);
+                        setSelectedDayEvents(dayEvents);
+                      }
+                    }}
+                    className={cn(
+                      "bg-white dark:bg-zinc-900 min-h-[120px] md:min-h-[140px] p-2 md:p-3 transition-all cursor-pointer relative group",
+                      !day ? "bg-zinc-50/50 dark:bg-zinc-800/20 cursor-default" : "hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10",
+                      isSelected && "ring-2 ring-inset ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20"
+                    )}
+                  >
+                    {day && (
+                      <div className="h-full flex flex-col">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className={cn(
+                            "inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full text-sm md:text-base font-bold transition-all",
+                            isToday ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none" : 
+                            isSelected ? "text-indigo-600 font-black scale-110" : "text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600"
+                          )}>
+                            {day}
+                          </span>
+                          {dayEvents.length > 0 && (
+                            <div className="md:hidden flex gap-0.5">
+                              {dayEvents.slice(0, 3).map(e => (
+                                <div key={e.id} className={cn(
+                                  "w-1.5 h-1.5 rounded-full",
+                                  e.event_type === 'Holiday' ? "bg-rose-500" : "bg-indigo-500"
+                                )} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar pr-1 hidden md:block">
+                          {dayEvents.map(event => (
+                            <div 
+                              key={event.id}
+                              title={event.event_name + (event.event_description ? ": " + event.event_description : "")}
+                              className={cn(
+                                "px-2.5 py-1.5 text-[10px] font-bold rounded-xl whitespace-normal leading-[1.2] shadow-sm border transition-all hover:translate-x-1",
+                                event.event_type === 'Holiday' ? "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-900/50" :
+                                event.event_type === 'Exam' ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50" :
+                                event.event_type === 'Meeting' ? "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50" :
+                                "bg-indigo-50 text-indigo-600 border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-900/50"
+                              )}
+                            >
+                              <span className="flex items-start gap-1.5">
+                                <span className={cn(
+                                  "w-1.5 h-1.5 rounded-full mt-1 shrink-0",
+                                  event.event_type === 'Holiday' ? "bg-rose-600" :
+                                  event.event_type === 'Exam' ? "bg-amber-600" :
+                                  "bg-indigo-600"
+                                )} />
+                                <span>{event.event_name}</span>
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
+
+          {selectedDateStr && selectedDayEvents.length > 0 && (
+            <div className="mt-8 p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-bottom-4 duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">
+                  Events for {new Date(selectedDateStr).toLocaleDateString(undefined, { dateStyle: 'full' })}
+                </h4>
+                <button onClick={() => setSelectedDateStr(null)} className="text-zinc-400 hover:text-zinc-600 text-[10px] font-bold uppercase">Clear</button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {selectedDayEvents.map(event => (
+                  <div key={event.id} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm flex gap-4 items-start">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                      event.event_type === 'Holiday' ? "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400" :
+                      event.event_type === 'Exam' ? "bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400" :
+                      "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400"
+                    )}>
+                      {event.event_type === 'Holiday' ? <Plus className="w-5 h-5 rotate-45" /> : <Info className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-zinc-900 dark:text-white leading-tight">{event.event_name}</p>
+                      <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{event.event_description || 'No description provided.'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           <div className="mt-8 flex flex-wrap gap-4 items-center text-xs text-zinc-500 font-bold uppercase tracking-widest">
             <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-rose-500" /> Holiday</span>
