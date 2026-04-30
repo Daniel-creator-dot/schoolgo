@@ -5665,11 +5665,20 @@ export const AcademicModules = {
 
     const handleSyncPublicHolidays = async () => {
       if (!countryCode) {
-        (window as any).showToast?.('Please select a country first and save settings.', 'error');
+        (window as any).showToast?.('Please select a country first.', 'error');
         return;
       }
       setIsSyncingHolidays(true);
       try {
+        // Auto-save the country code to the database first
+        if (onUpdateOrganization) {
+          await onUpdateOrganization({ 
+            attendance_total_days: totalSchoolDays,
+            attendance_include_weekends: includeWeekends,
+            country_code: countryCode
+          });
+        }
+
         const yearStr = selectedMonth === 'Entire Term' ? new Date().getFullYear().toString() : selectedMonth.split(' ')[1];
         const res = await syncPublicHolidays(parseInt(yearStr) || new Date().getFullYear());
         (window as any).showToast?.(res.message, 'success');
