@@ -2639,6 +2639,7 @@ export const HRModules = {
         data={data}
         onSave={onSave}
         onDelete={onDelete}
+        hideExport={true}
         columns={[
           {
             header: "Staff Name",
@@ -2664,7 +2665,6 @@ export const HRModules = {
             ),
           },
         ]}
-        onAdd={onSave ? () => { } : undefined}
       />
     );
   },

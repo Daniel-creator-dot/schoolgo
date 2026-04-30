@@ -32,6 +32,7 @@ interface DataTableProps<T> {
   onRefresh?: () => void;
   detailsMaxWidth?: string;
   actions?: React.ReactNode;
+  hideExport?: boolean;
 }
 
 export function DataTable<T extends { id: string | number }>({
@@ -55,6 +56,7 @@ export function DataTable<T extends { id: string | number }>({
   onRefresh,
   detailsMaxWidth,
   actions,
+  hideExport = false,
   ...props
 }: DataTableProps<T> & { modalTitle?: string; addLabel?: string }) {
   const { t } = useLanguage();
@@ -174,9 +176,11 @@ export function DataTable<T extends { id: string | number }>({
             <p className="text-sm text-zinc-500">{t('manage_records')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
-              <Download className="w-5 h-5" />
-            </button>
+            {!hideExport && (
+              <button className="p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
+                <Download className="w-5 h-5" />
+              </button>
+            )}
             {actions}
             {onAdd && (
               <button
