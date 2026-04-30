@@ -76,7 +76,6 @@ import LandingPage from "./components/LandingPage";
 import Login from "./components/Login";
 import PartnerLogin from "./components/PartnerLogin";
 import { API_BASE_URL } from "./constants";
-import ReportsView from "./components/module-views/ReportsView";
 import PortfolioView from "./components/module-views/PortfolioView";
 import PortfolioUpload from "./components/module-views/PortfolioUpload";
 import QRAttendanceScanner from "./components/QRAttendanceScanner";
@@ -3244,9 +3243,6 @@ export default function App() {
       "My Drive": <StorageModules.MyDrive />,
 
       "Folder Management": <StorageModules.FolderManagement />,
-      "Reports Central": <ReportsView />,
-      "Attendance Audit": <ReportsView initialType="attendance" />,
-      "Financial Audit": <ReportsView initialType="finance" />,
       "Student Portfolio": <PortfolioView role={currentRole} />,
       "Portfolio Upload": <PortfolioUpload />,
 

@@ -183,18 +183,6 @@ export const NAVIGATION_CONFIG: NavItem[] = [
     ]
   },
 
-  // ANALYTICS & REPORTS
-  {
-    title: 'Analytics & Reports',
-    icon: TrendingUp,
-    roles: ['SCHOOL_ADMIN', 'HR', 'FINANCE', 'HOD'],
-    children: [
-      { title: 'Reports Central', href: 'Reports Central', roles: ['SCHOOL_ADMIN', 'HR', 'FINANCE', 'HOD'], icon: FileText },
-      { title: 'Attendance Audit', href: 'Reports Central', roles: ['SCHOOL_ADMIN', 'HR'], icon: ClipboardCheck },
-      { title: 'Financial Audit', href: 'Reports Central', roles: ['SCHOOL_ADMIN', 'FINANCE'], icon: Wallet },
-    ]
-  },
-
   // LIBRARY
   {
     title: 'Library',
