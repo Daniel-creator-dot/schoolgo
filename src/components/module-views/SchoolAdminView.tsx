@@ -74,7 +74,7 @@ import { API_BASE_URL } from '../../constants';
 import { useLanguage } from '../../lib/LanguageContext';
 import { downloadStudentTemplate, parseStudentExcel } from '../../lib/excel';
 import { Download, FileUp } from 'lucide-react';
-import { fetchCalendarEvents, createCalendarEvent, deleteCalendarEvent } from '../../lib/api';
+import { fetchCalendarEvents, createCalendarEvent, deleteCalendarEvent, syncPublicHolidays } from '../../lib/api';
 
 const SectionEditor: React.FC<{ section: ReportCardSection, onUpdate: (s: ReportCardSection) => void, onRemove: () => void }> = ({ section, onUpdate, onRemove }) => {
   return (
@@ -5583,6 +5583,8 @@ export const AcademicModules = {
     const [calendarEvents, setCalendarEvents] = useState<any[]>([]);
     const [newHolidayDate, setNewHolidayDate] = useState('');
     const [newHolidayName, setNewHolidayName] = useState('');
+    const [countryCode, setCountryCode] = useState(organization?.country_code || '');
+    const [isSyncingHolidays, setIsSyncingHolidays] = useState(false);
 
     const loadCalendarEvents = async () => {
       try {
@@ -5600,7 +5602,10 @@ export const AcademicModules = {
       if (organization?.attendance_include_weekends !== undefined) {
         setIncludeWeekends(organization.attendance_include_weekends);
       }
-    }, [organization?.attendance_total_days, organization?.attendance_include_weekends]);
+      if (organization?.country_code !== undefined) {
+        setCountryCode(organization.country_code);
+      }
+    }, [organization?.attendance_total_days, organization?.attendance_include_weekends, organization?.country_code]);
 
     useEffect(() => {
       loadCalendarEvents();
@@ -5645,7 +5650,8 @@ export const AcademicModules = {
       try {
         await onUpdateOrganization({ 
           attendance_total_days: totalSchoolDays,
-          attendance_include_weekends: includeWeekends 
+          attendance_include_weekends: includeWeekends,
+          country_code: countryCode
         });
         setIsSettingsOpen(false);
         (window as any).showToast?.('Settings saved successfully', 'success');
@@ -5654,6 +5660,24 @@ export const AcademicModules = {
         (window as any).showToast?.(err, 'error');
       } finally {
         setIsSaving(false);
+      }
+    };
+
+    const handleSyncPublicHolidays = async () => {
+      if (!countryCode) {
+        (window as any).showToast?.('Please select a country first and save settings.', 'error');
+        return;
+      }
+      setIsSyncingHolidays(true);
+      try {
+        const yearStr = selectedMonth === 'Entire Term' ? new Date().getFullYear().toString() : selectedMonth.split(' ')[1];
+        const res = await syncPublicHolidays(parseInt(yearStr) || new Date().getFullYear());
+        (window as any).showToast?.(res.message, 'success');
+        await loadCalendarEvents();
+      } catch (err) {
+        (window as any).showToast?.(err, 'error');
+      } finally {
+        setIsSyncingHolidays(false);
       }
     };
 
@@ -5930,8 +5954,35 @@ export const AcademicModules = {
                 </span>
               </label>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Excluded Dates (Holidays)</label>
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                  <div className="flex-1 space-y-2">
+                    <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1">Country for Public Holidays</label>
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    >
+                      <option value="">Select a country...</option>
+                      <option value="GH">Ghana</option>
+                      <option value="NG">Nigeria</option>
+                      <option value="US">United States</option>
+                      <option value="GB">United Kingdom</option>
+                      <option value="KE">Kenya</option>
+                      <option value="ZA">South Africa</option>
+                    </select>
+                  </div>
+                  <button
+                    onClick={handleSyncPublicHolidays}
+                    disabled={!countryCode || isSyncingHolidays}
+                    className="w-full sm:w-auto px-6 py-2 bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-xl font-bold text-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all disabled:opacity-50 flex items-center justify-center gap-2 h-[42px]"
+                  >
+                    {isSyncingHolidays ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    Sync National Holidays
+                  </button>
+                </div>
+
+                <label className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] ml-1 block mt-4">Excluded Dates (Holidays)</label>
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   <input
                     type="date"
@@ -5949,7 +6000,7 @@ export const AcademicModules = {
                   <button
                     onClick={handleAddHoliday}
                     disabled={!newHolidayDate}
-                    className="w-full sm:w-auto px-6 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-all disabled:opacity-50"
+                    className="w-full sm:w-auto px-6 py-2 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-xl font-bold text-sm hover:bg-zinc-200 transition-all disabled:opacity-50 h-[42px]"
                   >
                     Add Date
                   </button>

@@ -59,3 +59,58 @@ export const deleteEvent = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const syncPublicHolidays = async (req: AuthRequest, res: Response) => {
+  try {
+    const org_id = req.user.org_id;
+    const { year } = req.body;
+    const targetYear = year || new Date().getFullYear();
+
+    // Get country code
+    const orgResult = await pool.query('SELECT country_code FROM organizations WHERE id = $1', [org_id]);
+    const countryCode = orgResult.rows[0]?.country_code;
+
+    if (!countryCode) {
+      return res.status(400).json({ error: 'Please configure your Country in the organization settings first.' });
+    }
+
+    // Fetch from Nager.Date API
+    const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${targetYear}/${countryCode}`);
+    if (!response.ok) {
+      return res.status(400).json({ error: 'Failed to fetch public holidays from external provider.' });
+    }
+
+    const holidays = await response.json();
+    let syncedCount = 0;
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      for (const h of holidays) {
+        // Check if already exists to avoid duplicates
+        const existing = await client.query(
+          'SELECT id FROM academic_calendar WHERE org_id = $1 AND start_date = $2 AND event_name = $3',
+          [org_id, h.date, `Public Holiday: ${h.name}`]
+        );
+
+        if (existing.rows.length === 0) {
+          await client.query(
+            'INSERT INTO academic_calendar (event_name, event_description, start_date, end_date, event_type, org_id) VALUES ($1, $2, $3, $4, $5, $6)',
+            [`Public Holiday: ${h.name}`, `${h.localName} - Synced automatically`, h.date, h.date, 'Holiday', org_id]
+          );
+          syncedCount++;
+        }
+      }
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+
+    res.json({ message: `Successfully synced ${syncedCount} new public holidays.` });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

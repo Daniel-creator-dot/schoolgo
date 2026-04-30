@@ -968,6 +968,11 @@ export const deleteCalendarEvent = async (id: string) => {
   return response.data;
 };
 
+export const syncPublicHolidays = async (year?: number) => {
+  const response = await api.post('/academic/calendar/sync-holidays', { year });
+  return response.data;
+};
+
 
 export const createResult = async (data: any) => {
   const response = await api.post('/results', data);

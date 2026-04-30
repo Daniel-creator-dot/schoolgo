@@ -143,6 +143,8 @@ router.get('/academic/calendar', AcademicCalendarController.getEvents);
 router.post('/academic/calendar', checkRole(['SCHOOL_ADMIN']), AcademicCalendarController.createEvent);
 router.patch('/academic/calendar/:id', checkRole(['SCHOOL_ADMIN']), AcademicCalendarController.updateEvent);
 router.delete('/academic/calendar/:id', checkRole(['SCHOOL_ADMIN']), AcademicCalendarController.deleteEvent);
+router.post('/academic/calendar/sync-holidays', checkRole(['SCHOOL_ADMIN']), AcademicCalendarController.syncPublicHolidays);
+
 
 // PROMOTION & GRADUATION
 router.get('/academic/promotion/settings', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), PromotionController.getPromotionSettings);
