@@ -245,23 +245,23 @@ export function CalendarView({ role }: { role: string }) {
                         {dayEvents.map(event => (
                           <div 
                             key={event.id}
-                            title={event.event_description}
+                            title={event.event_name + (event.event_description ? ": " + event.event_description : "")}
                             className={cn(
-                              "px-2.5 py-1.5 text-[10px] font-bold rounded-xl truncate shadow-sm border transition-transform hover:scale-105 cursor-default",
+                              "px-2.5 py-1.5 text-[10px] font-bold rounded-xl whitespace-normal leading-[1.2] shadow-sm border transition-transform hover:scale-105 cursor-default",
                               event.event_type === 'Holiday' ? "bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-900/50" :
                               event.event_type === 'Exam' ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900/50" :
                               event.event_type === 'Meeting' ? "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50" :
                               "bg-indigo-50 text-indigo-600 border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-900/50"
                             )}
                           >
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-start gap-1.5">
                               <span className={cn(
-                                "w-1 h-1 rounded-full",
+                                "w-1.5 h-1.5 rounded-full mt-1 shrink-0",
                                 event.event_type === 'Holiday' ? "bg-rose-600" :
                                 event.event_type === 'Exam' ? "bg-amber-600" :
                                 "bg-indigo-600"
                               )} />
-                              {event.event_name}
+                              <span>{event.event_name}</span>
                             </span>
                           </div>
                         ))}
