@@ -2048,6 +2048,19 @@ export async function init() {
 
     // Ensure missing columns we diagnosed earlier
     await client.query(`
+      CREATE TABLE IF NOT EXISTS student_portfolio (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+        teacher_id UUID REFERENCES staff(id),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        file_url TEXT,
+        org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
       DO $$
       BEGIN
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'payroll' AND column_name = 'user_id') THEN

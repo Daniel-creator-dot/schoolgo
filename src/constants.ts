@@ -42,7 +42,8 @@ import {
   ShoppingCart,
   Ruler,
   Layout,
-  QrCode
+  QrCode,
+  Image as ImageIcon
 } from 'lucide-react';
 
 import { UserRole, NavItem } from './types';
@@ -108,6 +109,8 @@ export const NAVIGATION_CONFIG: NavItem[] = [
       { title: 'Promotion & Graduation', href: 'Promotion & Graduation', roles: ['SCHOOL_ADMIN'], icon: TrendingUp },
       { title: 'Alumni Management', href: 'Alumni Management', roles: ['SCHOOL_ADMIN'], icon: GraduationCap },
       { title: 'Student ID Cards', href: 'Student ID Cards', roles: ['SCHOOL_ADMIN'], icon: CreditCard },
+      { title: 'Portfolio Upload', href: 'Portfolio Upload', roles: ['STAFF', 'HOD', 'SCHOOL_ADMIN'], icon: Plus },
+      { title: 'Student Portfolio', href: 'Student Portfolio', roles: ['STUDENT', 'PARENT', 'SCHOOL_ADMIN', 'STAFF'], icon: ImageIcon },
     ]
   },
   // EXAMS & RESULTS
@@ -177,6 +180,18 @@ export const NAVIGATION_CONFIG: NavItem[] = [
       { title: 'Announcements', href: 'Announcements', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
       { title: 'Messages', href: 'Messages', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: MessageSquare },
       { title: 'Notifications', href: 'Notifications', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
+    ]
+  },
+
+  // ANALYTICS & REPORTS
+  {
+    title: 'Analytics & Reports',
+    icon: TrendingUp,
+    roles: ['SCHOOL_ADMIN', 'HR', 'FINANCE', 'HOD'],
+    children: [
+      { title: 'Reports Central', href: 'Reports Central', roles: ['SCHOOL_ADMIN', 'HR', 'FINANCE', 'HOD'], icon: FileText },
+      { title: 'Attendance Audit', href: 'Reports Central', roles: ['SCHOOL_ADMIN', 'HR'], icon: ClipboardCheck },
+      { title: 'Financial Audit', href: 'Reports Central', roles: ['SCHOOL_ADMIN', 'FINANCE'], icon: Wallet },
     ]
   },
 

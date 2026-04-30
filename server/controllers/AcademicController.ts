@@ -798,3 +798,82 @@ export const deleteBehaviorIncident = async (req: AuthRequest, res: Response) =>
     res.status(500).json({ error: err.message });
   }
 };
+
+// PORTFOLIO
+export const getPortfolioItems = async (req: AuthRequest, res: Response) => {
+  try {
+    const { org_id, role, id } = req.user;
+    let result;
+
+    if (role === 'PARENT') {
+      // Find students for this parent
+      const parentEmail = (await pool.query('SELECT email FROM users WHERE id = $1', [id])).rows[0]?.email;
+      result = await pool.query(`
+        SELECT p.*, s.name as student_name, st.name as teacher_name
+        FROM student_portfolio p
+        JOIN students s ON p.student_id = s.id
+        LEFT JOIN staff st ON p.teacher_id = st.id
+        WHERE s.parent_email = $1 AND p.org_id = $2
+        ORDER BY p.created_at DESC
+      `, [parentEmail, org_id]);
+    } else if (role === 'STUDENT') {
+      result = await pool.query(`
+        SELECT p.*, s.name as student_name, st.name as teacher_name
+        FROM student_portfolio p
+        JOIN students s ON p.student_id = s.id
+        LEFT JOIN staff st ON p.teacher_id = st.id
+        WHERE s.user_id = $1 AND p.org_id = $2
+        ORDER BY p.created_at DESC
+      `, [id, org_id]);
+    } else if (role === 'SUPER_ADMIN') {
+      result = await pool.query(`
+        SELECT p.*, s.name as student_name, st.name as teacher_name
+        FROM student_portfolio p
+        JOIN students s ON p.student_id = s.id
+        LEFT JOIN staff st ON p.teacher_id = st.id
+        ORDER BY p.created_at DESC
+      `);
+    } else {
+      result = await pool.query(`
+        SELECT p.*, s.name as student_name, st.name as teacher_name
+        FROM student_portfolio p
+        JOIN students s ON p.student_id = s.id
+        LEFT JOIN staff st ON p.teacher_id = st.id
+        WHERE p.org_id = $1
+        ORDER BY p.created_at DESC
+      `, [org_id]);
+    }
+
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const createPortfolioItem = async (req: AuthRequest, res: Response) => {
+  const { student_id, title, description, file_url } = req.body;
+  try {
+    const orgId = req.user.org_id;
+    const teacherIdResult = await pool.query('SELECT id FROM staff WHERE email = (SELECT email FROM users WHERE id = $1)', [req.user.id]);
+    const teacher_id = teacherIdResult.rows[0]?.id || null;
+
+    const result = await pool.query(
+      'INSERT INTO student_portfolio (org_id, student_id, teacher_id, title, description, file_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [orgId, student_id, teacher_id, title, description, file_url]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deletePortfolioItem = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const orgId = req.user.org_id;
+    await pool.query('DELETE FROM student_portfolio WHERE id = $1 AND org_id = $2', [id, orgId]);
+    res.json({ message: 'Portfolio item deleted' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

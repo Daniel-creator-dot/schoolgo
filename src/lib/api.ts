@@ -1310,3 +1310,30 @@ export const markAttendanceByQR = async (data: { qr_data: string; status?: strin
   const response = await api.post('/academic/attendance/qr-scan', data);
   return response.data;
 };
+
+// PORTFOLIO
+export const fetchPortfolioItems = async () => {
+  const response = await api.get('/portfolio');
+  return response.data;
+};
+
+export const createPortfolioItem = async (data: any) => {
+  const response = await api.post('/portfolio', data);
+  return response.data;
+};
+
+export const deletePortfolioItem = async (id: string) => {
+  const response = await api.delete(`/portfolio/${id}`);
+  return response.data;
+};
+
+// REPORTS
+export const fetchDetailedAttendanceReport = async (startDate: string, endDate: string) => {
+  const response = await api.get(`/reports/attendance?start_date=${startDate}&end_date=${endDate}`);
+  return response.data;
+};
+
+export const fetchDetailedFinanceReport = async (startDate: string, endDate: string) => {
+  const response = await api.get(`/reports/finance?start_date=${startDate}&end_date=${endDate}`);
+  return response.data;
+};

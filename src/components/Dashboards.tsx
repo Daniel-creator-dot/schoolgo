@@ -36,7 +36,8 @@ import {
   History,
   ShoppingCart,
   QrCode,
-  Printer
+  Printer,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useLanguage } from '../lib/LanguageContext';
 import { cn } from '../lib/utils';
@@ -1757,7 +1758,7 @@ export function ParentDashboard({
       </motion.div>
 
       {/* Quick Stats Grid */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-indigo-600">
             <TrendingUp className="w-6 h-6" />
@@ -1802,6 +1803,21 @@ export function ParentDashboard({
             </div>
             <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-600">
               Update
+            </div>
+          </div>
+        </div>
+
+        <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => onNavigate?.('Student Portfolio')}>
+          <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-purple-600">
+            <ImageIcon className="w-6 h-6" />
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">View</p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">Portfolio</p>
+            </div>
+            <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600">
+              Projects
             </div>
           </div>
         </div>
@@ -2489,8 +2505,16 @@ export function StudentDashboard({
           { label: t('current_gpa'), value: student?.gpa || '0.0', icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20', trend: 'Academic' },
           { label: t('outstanding_fees'), value: `${currency} ${outstandingFees.toLocaleString()}`, icon: Wallet, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', trend: outstandingFees > 0 ? 'Pending' : 'Cleared' },
           { label: t('upcoming_exams'), value: '0', icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', trend: 'View Schedule' },
+          { label: 'My Portfolio', value: 'View', icon: ImageIcon, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20', trend: 'Achievements', onClick: () => onNavigate?.('Student Portfolio') },
         ].map((stat, i) => (
-          <div key={i} className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div 
+            key={i} 
+            onClick={stat.onClick}
+            className={cn(
+              "group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+              stat.onClick && "cursor-pointer"
+            )}
+          >
             <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform", stat.bg, stat.color)}>
               <stat.icon className="w-6 h-6" />
             </div>

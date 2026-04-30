@@ -575,4 +575,13 @@ router.post('/drive/files', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'ST
 router.delete('/drive/files/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF']), DriveController.deleteFile);
 router.patch('/drive/files/:id/move', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF']), DriveController.moveFile);
 
+// PORTFOLIO
+router.get('/portfolio', AcademicController.getPortfolioItems);
+router.post('/portfolio', checkRole(['STAFF', 'SCHOOL_ADMIN', 'HOD']), AcademicController.createPortfolioItem);
+router.delete('/portfolio/:id', checkRole(['STAFF', 'SCHOOL_ADMIN', 'HOD']), AcademicController.deletePortfolioItem);
+
+// REPORTS
+router.get('/reports/attendance', checkRole(['SCHOOL_ADMIN', 'HR']), HRController.getDetailedAttendanceReport);
+router.get('/reports/finance', checkRole(['SCHOOL_ADMIN', 'FINANCE']), FinanceController.getDetailedFinanceReport);
+
 export default router;

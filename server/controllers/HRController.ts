@@ -1479,3 +1479,32 @@ export const getHODDashboardStats = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getDetailedAttendanceReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const { org_id } = req.user;
+    const { start_date, end_date } = req.query;
+
+    const result = await pool.query(`
+      SELECT 
+        s.name as staff_name, 
+        s.email,
+        d.name as department_name,
+        COUNT(CASE WHEN a.status = 'Present' THEN 1 END) as present_days,
+        COUNT(CASE WHEN a.status = 'Absent' THEN 1 END) as absent_days,
+        COUNT(CASE WHEN a.status = 'On Leave' THEN 1 END) as leave_days,
+        COUNT(*) as total_days
+      FROM staff s
+      LEFT JOIN departments d ON s.department_id = d.id
+      JOIN users u ON (s.email = u.email OR s.user_id = u.id)
+      JOIN staff_attendance a ON u.id = a.user_id
+      WHERE s.org_id = $1 AND a.date BETWEEN $2 AND $3
+      GROUP BY s.id, s.name, s.email, d.name
+      ORDER BY d.name, s.name
+    `, [org_id, start_date || '1970-01-01', end_date || '2100-01-01']);
+
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};

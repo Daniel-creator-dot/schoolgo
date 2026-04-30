@@ -729,3 +729,43 @@ export const getStudentFeesSummary = async (req: AuthRequest, res: Response) => 
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getDetailedFinanceReport = async (req: AuthRequest, res: Response) => {
+  try {
+    const { org_id } = req.user;
+    const { start_date, end_date } = req.query;
+
+    const incomeRes = await pool.query(`
+      SELECT 
+        p.date,
+        s.name as student_name,
+        c.name as class_name,
+        p.amount,
+        p.method,
+        p.transaction_id
+      FROM payments p
+      JOIN students s ON p.student_id = s.id
+      LEFT JOIN classes c ON s.class_id = c.id
+      WHERE p.org_id = $1 AND p.date BETWEEN $2 AND $3
+      ORDER BY p.date DESC
+    `, [org_id, start_date || '1970-01-01', end_date || '2100-01-01']);
+
+    const expenseRes = await pool.query(`
+      SELECT 
+        date,
+        category,
+        amount,
+        description
+      FROM expenses
+      WHERE org_id = $1 AND date BETWEEN $2 AND $3
+      ORDER BY date DESC
+    `, [org_id, start_date || '1970-01-01', end_date || '2100-01-01']);
+
+    res.json({
+      income: incomeRes.rows,
+      expenses: expenseRes.rows
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
