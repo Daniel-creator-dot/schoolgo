@@ -53,7 +53,9 @@ import {
   Zap,
   Settings,
   Briefcase,
-  Save
+  Save,
+  Send,
+  BellRing
 } from 'lucide-react';
 import TimetableEntryModal from '../modals/TimetableEntryModal';
 import {
@@ -74,7 +76,7 @@ import { API_BASE_URL } from '../../constants';
 import { useLanguage } from '../../lib/LanguageContext';
 import { downloadStudentTemplate, parseStudentExcel } from '../../lib/excel';
 import { Download, FileUp } from 'lucide-react';
-import { fetchCalendarEvents, createCalendarEvent, deleteCalendarEvent, syncPublicHolidays } from '../../lib/api';
+import { fetchCalendarEvents, createCalendarEvent, deleteCalendarEvent, syncPublicHolidays, sendBulkSMS, fetchSMSSettings } from '../../lib/api';
 
 const SectionEditor: React.FC<{ section: ReportCardSection, onUpdate: (s: ReportCardSection) => void, onRemove: () => void }> = ({ section, onUpdate, onRemove }) => {
   return (
@@ -7856,6 +7858,22 @@ export const ExamModules = {
     const [terminalRemarks, setTerminalRemarks] = useState<Record<string, { teacher_remark: string, principal_remark?: string }>>({});
     const [selectedAcademicYear, setSelectedAcademicYear] = useState((organization as any)?.academic_year || "");
     const [selectedTerm, setSelectedTerm] = useState((organization as any)?.current_term || "");
+    const [showBroadcaster, setShowBroadcaster] = useState(false);
+    const [isBroadcasting, setIsBroadcasting] = useState(false);
+    const [broadcastProgress, setBroadcastProgress] = useState(0);
+    const [smsSettings, setSMSSettings] = useState<any>(null);
+
+    useEffect(() => {
+      const loadSMS = async () => {
+        try {
+          const settings = await fetchSMSSettings();
+          setSMSSettings(settings);
+        } catch (err) {
+          console.error("Failed to load SMS settings", err);
+        }
+      };
+      if (showBroadcaster) loadSMS();
+    }, [showBroadcaster]);
 
     const hodDeptId = useMemo(() => {
       if (role !== 'HOD') return null;
@@ -8129,7 +8147,10 @@ export const ExamModules = {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700">
               <button
-                onClick={() => setPerformanceGroupBy('class')}
+                onClick={() => {
+                  setPerformanceGroupBy('class');
+                  setShowBroadcaster(false);
+                }}
                 className={cn(
                   "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                   performanceGroupBy === 'class' ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
@@ -8138,7 +8159,10 @@ export const ExamModules = {
                 By Class
               </button>
               <button
-                onClick={() => setPerformanceGroupBy('subject')}
+                onClick={() => {
+                  setPerformanceGroupBy('subject');
+                  setShowBroadcaster(false);
+                }}
                 className={cn(
                   "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
                   performanceGroupBy === 'subject' ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
@@ -8153,6 +8177,7 @@ export const ExamModules = {
                 onClick={() => {
                   setShowTopPerformers(false);
                   setShowClassRemarks(false);
+                  setShowBroadcaster(false);
                 }}
                 className={cn(
                   "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
@@ -8166,6 +8191,7 @@ export const ExamModules = {
                   onClick={() => {
                     setShowTopPerformers(true);
                     setShowClassRemarks(false);
+                    setShowBroadcaster(false);
                   }}
                   className={cn(
                     "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
@@ -8202,20 +8228,220 @@ export const ExamModules = {
                     onClick={() => {
                       setShowClassRemarks(true);
                       setShowTopPerformers(false);
+                      setShowBroadcaster(false);
                     }}
                     className={cn(
                       "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                      (showClassRemarks && !showTopPerformers) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
+                      (showClassRemarks && !showTopPerformers && !showBroadcaster) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
                     )}
                   >
                     Class Remarks
                   </button>
                 )}
+              {((role as any) === 'SCHOOL_ADMIN' || (role as any) === 'HOD') && (
+                <button
+                  onClick={() => {
+                    setShowBroadcaster(true);
+                    setShowClassRemarks(false);
+                    setShowTopPerformers(false);
+                  }}
+                  className={cn(
+                    "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                    showBroadcaster ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Send className="w-3.5 h-3.5" />
+                    Broadcaster
+                  </div>
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {showTopPerformers ? (
+        {showBroadcaster ? (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight uppercase">Result Broadcaster</h3>
+                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Audit completeness and notify parents via SMS.</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-800/50">
+                    <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">SMS Balance</p>
+                    <p className="text-xl font-black text-zinc-900 dark:text-white">{smsSettings?.balance || 0} Units</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">Target Class</label>
+                    <select
+                      value={selectedClassRemarksId}
+                      onChange={(e) => setSelectedClassRemarksId(e.target.value)}
+                      className="w-full px-6 py-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-[1.5rem] font-bold outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    >
+                      <option value="">-- Select Class to Audit --</option>
+                      {classes.map((c: any) => (
+                        <option key={c.id} value={c.id}>{c.name} {c.section || ''}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedClassRemarksId && (() => {
+                    const classStudents = students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId));
+                    const classSubjects = subjects.filter((sub: any) => String(sub.class_id) === String(selectedClassRemarksId));
+                    const totalExpected = classStudents.length * classSubjects.length;
+                    const classResults = summarizedResults.filter((r: any) => String(r.class_id) === String(selectedClassRemarksId));
+                    const completeness = totalExpected > 0 ? (classResults.length / totalExpected) * 100 : 0;
+                    
+                    return (
+                      <div className="p-8 bg-zinc-50 dark:bg-zinc-800/50 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">Class Readiness</h4>
+                          <span className={cn(
+                            "px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                            completeness === 100 ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                          )}>
+                            {completeness.toFixed(1)}% Ready
+                          </span>
+                        </div>
+                        
+                        <div className="h-3 w-full bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+                          <div 
+                            className={cn(
+                              "h-full transition-all duration-1000",
+                              completeness === 100 ? "bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]" : "bg-indigo-500"
+                            )}
+                            style={{ width: `${completeness}%` }}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Uploaded</p>
+                            <p className="text-lg font-black text-zinc-900 dark:text-white">{classResults.length}</p>
+                          </div>
+                          <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">Expected</p>
+                            <p className="text-lg font-black text-zinc-900 dark:text-white">{totalExpected}</p>
+                          </div>
+                        </div>
+
+                        {completeness < 100 && (
+                          <div className="p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30 rounded-2xl flex gap-3">
+                            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                            <p className="text-[11px] font-medium text-amber-800 dark:text-amber-200 leading-relaxed">
+                              Some results are still missing. We recommend broadcasting only when 100% of results are uploaded to avoid parental confusion.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div className="space-y-6">
+                  <div className="p-8 bg-indigo-600 rounded-[2.5rem] text-white space-y-6 shadow-xl shadow-indigo-200 dark:shadow-none relative overflow-hidden">
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <BellRing className="w-6 h-6" />
+                        <h4 className="text-lg font-black uppercase tracking-tight">Broadcast Message</h4>
+                      </div>
+                      
+                      <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100 mb-2">Sample Template</p>
+                        <p className="text-sm font-medium leading-relaxed italic">
+                          "Dear Parent, your ward's academic results for {selectedTerm} have been successfully uploaded to the portal. Please log in to view the performance."
+                        </p>
+                      </div>
+
+                      <button
+                        disabled={!selectedClassRemarksId || isBroadcasting}
+                        onClick={async () => {
+                          const classStudents = students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId));
+                          const parentContacts = Array.from(new Set(classStudents.map((s: any) => s.contact).filter(Boolean)));
+                          
+                          if (parentContacts.length === 0) {
+                            (window as any).showToast?.("No parent contacts found for this class.", "error");
+                            return;
+                          }
+
+                          if ((smsSettings?.balance || 0) < parentContacts.length) {
+                            (window as any).showToast?.("Insufficient SMS credits to broadcast to this class.", "error");
+                            return;
+                          }
+
+                          if (!window.confirm(`Broadcast SMS to ${parentContacts.length} parents?`)) return;
+
+                          setIsBroadcasting(true);
+                          setBroadcastProgress(10);
+                          
+                          try {
+                            const messages = parentContacts.map(contact => ({
+                              recipient: contact as string,
+                              message: `Dear Parent, your ward's academic results for ${selectedTerm} have been successfully uploaded. Please check the portal to view the performance.`
+                            }));
+
+                            await sendBulkSMS({ messages });
+                            setBroadcastProgress(100);
+                            (window as any).showToast?.(`Broadcast sent successfully to ${parentContacts.length} parents!`, "success");
+                          } catch (err: any) {
+                            (window as any).showToast?.(err?.message || "Broadcast failed", "error");
+                          } finally {
+                            setTimeout(() => {
+                              setIsBroadcasting(false);
+                              setBroadcastProgress(0);
+                            }, 2000);
+                          }
+                        }}
+                        className={cn(
+                          "w-full py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-lg transition-all flex items-center justify-center gap-3",
+                          (!selectedClassRemarksId || isBroadcasting) 
+                            ? "bg-white/20 text-white/50 cursor-not-allowed" 
+                            : "bg-white text-indigo-600 hover:bg-indigo-50 hover:-translate-y-1 active:translate-y-0"
+                        )}
+                      >
+                        {isBroadcasting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Broadcasting {broadcastProgress}%
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            Launch Broadcast
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <div className="absolute -right-10 -bottom-10 opacity-10">
+                      <Send className="w-48 h-48 rotate-12" />
+                    </div>
+                  </div>
+
+                  {selectedClassRemarksId && (
+                    <div className="bg-zinc-50 dark:bg-zinc-800/30 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 p-6">
+                      <h5 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-4">Target Recipients ({students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId)).length})</h5>
+                      <div className="max-h-[150px] overflow-y-auto space-y-2 pr-2">
+                        {students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId)).map((s: any) => (
+                          <div key={s.id} className="flex items-center justify-between p-3 bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                            <span className="text-[11px] font-bold text-zinc-600">{s.name}</span>
+                            <span className="text-[10px] font-mono text-zinc-400">{s.contact || 'No Contact'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : showTopPerformers ? (
           <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-indigo-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl shadow-indigo-200 dark:shadow-none">
               <div className="relative z-10 space-y-2">
