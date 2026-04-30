@@ -1406,8 +1406,6 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
             <div className="mt-6 pt-4 border-t border-zinc-100">
               <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{t('scan_for_attendance')}</p>
             </div>
-            
-            <div className="absolute bottom-0 right-0 left-0 h-2 bg-indigo-600"></div>
           </div>
           
           <p className="text-sm text-zinc-500 px-4">
