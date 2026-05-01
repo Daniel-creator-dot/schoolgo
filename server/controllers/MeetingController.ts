@@ -35,10 +35,11 @@ export const getMeetings = async (req: AuthRequest, res: Response) => {
         query += ` AND (
           m.target_audience = 'ALL' 
           OR m.target_audience = 'PARENT'
-          OR (m.target_audience = 'CLASS' AND m.class_id IN (SELECT class_id FROM students WHERE parent_email = (SELECT email FROM users WHERE id = $${params.length + 1})))
+          OR (m.target_audience = 'CLASS' AND m.class_id IN (SELECT class_id FROM students WHERE parent_email = $${params.length + 1}))
         )`;
-        params.push(user_id);
+        params.push(req.user.email);
       } else {
+
         query += ` AND (m.target_audience = 'ALL' OR m.target_audience = $2)`;
         params.push(role);
       }

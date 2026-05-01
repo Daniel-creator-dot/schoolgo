@@ -15,10 +15,10 @@ export const getAnnouncements = async (req: AuthRequest, res: Response) => {
       const student = await pool.query('SELECT class_id FROM students WHERE id = $1', [user_id]);
       if (student.rows.length) userClassId = student.rows[0].class_id;
     } else if (role === 'PARENT') {
-      // For parents, we might want to show announcements for ANY of their wards' classes
-      const parentWards = await pool.query('SELECT class_id FROM students WHERE parent_email = (SELECT email FROM users WHERE id = $1)', [user_id]);
-      // This is a bit complex for a single value, maybe we'll handle it in the query
+      // For parents, we use their email (from token) to find their wards
+      const parentWards = await pool.query('SELECT class_id FROM students WHERE parent_email = $1', [req.user.email]);
     }
+
 
     let query = `
       SELECT a.*, u.name as sender_name, u.role as sender_role, c.name as class_name
@@ -42,10 +42,11 @@ export const getAnnouncements = async (req: AuthRequest, res: Response) => {
         query += ` AND (
           a.target_audience = 'ALL' 
           OR a.target_audience = 'PARENT'
-          OR (a.target_audience = 'CLASS' AND a.class_id IN (SELECT class_id FROM students WHERE parent_email = (SELECT email FROM users WHERE id = $${params.length + 1})))
+          OR (a.target_audience = 'CLASS' AND a.class_id IN (SELECT class_id FROM students WHERE parent_email = $${params.length + 1}))
         )`;
-        params.push(user_id);
+        params.push(req.user.email);
       } else {
+
         query += ` AND (a.target_audience = 'ALL' OR a.target_audience = $2)`;
         params.push(role);
       }

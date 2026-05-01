@@ -802,12 +802,11 @@ export const deleteBehaviorIncident = async (req: AuthRequest, res: Response) =>
 // PORTFOLIO
 export const getPortfolioItems = async (req: AuthRequest, res: Response) => {
   try {
-    const { org_id, role, id } = req.user;
+    const { org_id, role, id, email } = req.user;
     let result;
 
     if (role === 'PARENT') {
-      // Find students for this parent
-      const parentEmail = (await pool.query('SELECT email FROM users WHERE id = $1', [id])).rows[0]?.email;
+      // Parents use their email (from token) to find portfolio items for all their children
       result = await pool.query(`
         SELECT p.*, s.name as student_name, st.name as teacher_name
         FROM student_portfolio p
@@ -815,16 +814,18 @@ export const getPortfolioItems = async (req: AuthRequest, res: Response) => {
         LEFT JOIN staff st ON p.teacher_id = st.id
         WHERE s.parent_email = $1 AND p.org_id = $2
         ORDER BY p.created_at DESC
-      `, [parentEmail, org_id]);
+      `, [email, org_id]);
     } else if (role === 'STUDENT') {
+      // Students use their own ID (from token) to see their own portfolio
       result = await pool.query(`
         SELECT p.*, s.name as student_name, st.name as teacher_name
         FROM student_portfolio p
         JOIN students s ON p.student_id = s.id
         LEFT JOIN staff st ON p.teacher_id = st.id
-        WHERE s.user_id = $1 AND p.org_id = $2
+        WHERE s.id = $1 AND p.org_id = $2
         ORDER BY p.created_at DESC
       `, [id, org_id]);
+
     } else if (role === 'SUPER_ADMIN') {
       result = await pool.query(`
         SELECT p.*, s.name as student_name, st.name as teacher_name
