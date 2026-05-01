@@ -91,12 +91,13 @@ const PortfolioView: React.FC<{ role: string }> = ({ role }) => {
           {items.map((item) => (
             <div key={item.id} className={cn(
               "group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex",
-              viewMode === 'grid' ? 'flex-col' : 'flex-row h-48'
+              viewMode === 'grid' ? 'flex-col' : 'flex-col md:flex-row md:h-48'
             )}>
               <div className={cn(
                 "relative overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0",
-                viewMode === 'grid' ? 'aspect-video w-full' : 'w-72 h-full'
+                viewMode === 'grid' ? 'aspect-video w-full' : 'aspect-video w-full md:w-72 md:h-full'
               )}>
+
                 {item.file_url ? (
                   <img 
                     src={item.file_url} 
