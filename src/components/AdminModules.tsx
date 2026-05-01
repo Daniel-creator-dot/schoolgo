@@ -3016,9 +3016,33 @@ export function Settings({ role }: { role?: UserRole }) {
           {role === 'SCHOOL_ADMIN' && (
             <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
               <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                SMS Configuration
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Default Sender ID</label>
+                  <input
+                    type="text"
+                    maxLength={11}
+                    value={organization?.sms_sender_id || ''}
+                    onChange={(e) => setOrganization({ ...organization, sms_sender_id: e.target.value.toUpperCase() })}
+                    placeholder="e.g., OMNISCHOOL"
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold tracking-wider"
+                  />
+                  <p className="text-[10px] text-zinc-500 italic">This ID will appear as the sender of your school's SMS messages. Max 11 characters.</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {role === 'SCHOOL_ADMIN' && (
+            <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
+              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
                 <User className="w-4 h-4" />
                 Admission Number Configuration
               </h3>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Prefix</label>

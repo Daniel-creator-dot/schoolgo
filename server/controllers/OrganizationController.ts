@@ -117,8 +117,9 @@ export const updateOrganization = async (req: AuthRequest, res: Response) => {
     'name', 'type', 'status', 'plan', 'language', 'timezone', 'email',
     'contact_number', 'address', 'custom_domain', 'logo_url', 'logo',
     'signature', 'default_leave_limit', 'default_leave_limit_unit', 'gemini_api_key',
-    'academic_year', 'current_term', 'admission_no_prefix', 'admission_no_suffix', 'admission_no_start_from', 'currency', 'attendance_total_days', 'attendance_include_weekends', 'country_code', 'term_start_date', 'term_end_date'
+    'academic_year', 'current_term', 'admission_no_prefix', 'admission_no_suffix', 'admission_no_start_from', 'currency', 'attendance_total_days', 'attendance_include_weekends', 'country_code', 'term_start_date', 'term_end_date', 'sms_sender_id'
   ];
+
 
   fields.forEach(field => {
     if (req.body[field] !== undefined) {
@@ -610,19 +611,24 @@ export const resetUserPassword = async (req: AuthRequest, res: Response) => {
 
 export const getSMSSettings = async (req: AuthRequest, res: Response) => {
   try {
-    // Get the global SMS config from a dedicated 'system' organization or just the first superadmin one
-    const result = await pool.query("SELECT sms_api_config FROM organizations WHERE type = 'Superadmin' LIMIT 1");
-    res.json(result.rows[0]?.sms_api_config || {});
+    const configRes = await pool.query("SELECT setting_value FROM system_settings WHERE setting_key = 'sms_gateway_config'");
+    const balanceRes = await pool.query("SELECT setting_value FROM system_settings WHERE setting_key = 'platform_sms_balance'");
+    
+    res.json({
+      config: configRes.rows[0]?.setting_value || {},
+      platform_balance: parseInt(balanceRes.rows[0]?.setting_value || '0')
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 };
 
+
 export const updateSMSSettings = async (req: AuthRequest, res: Response) => {
   const { custom_url, api_key, sender_id } = req.body;
   try {
     const config = JSON.stringify({ custom_url, api_key, sender_id });
-    await pool.query("UPDATE organizations SET sms_api_config = $1 WHERE type = 'Superadmin'", [config]);
+    await pool.query("UPDATE system_settings SET setting_value = $1, updated_at = CURRENT_TIMESTAMP WHERE setting_key = 'sms_gateway_config'", [config]);
     await recordAuditLog(req.user.id, 'UPDATE_SMS_SETTINGS', `Updated global SMS API settings`, req.user.org_id, req.ip || '');
     res.json({ message: 'SMS settings updated successfully' });
   } catch (err: any) {
@@ -630,26 +636,55 @@ export const updateSMSSettings = async (req: AuthRequest, res: Response) => {
   }
 };
 
+export const topUpPlatformSMS = async (req: AuthRequest, res: Response) => {
+  const { amount } = req.body;
+  try {
+    const result = await pool.query(
+      "UPDATE system_settings SET setting_value = (COALESCE(setting_value::text, '0')::int + $1)::text::jsonb, updated_at = CURRENT_TIMESTAMP WHERE setting_key = 'platform_sms_balance' RETURNING setting_value",
+      [amount]
+    );
+    await recordAuditLog(req.user.id, 'PLATFORM_SMS_TOPUP', `Topped up platform SMS pool by ${amount} units`, req.user.org_id, req.ip || '');
+    res.json({ message: 'Platform SMS pool topped up', new_balance: parseInt(result.rows[0].setting_value) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 export const distributeSMS = async (req: AuthRequest, res: Response) => {
   const { org_id, amount, price } = req.body;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
-    // 1. Get current balance
+    // 1. Check platform balance
+    const platformRes = await client.query("SELECT setting_value FROM system_settings WHERE setting_key = 'platform_sms_balance'");
+    const platformBalance = parseInt(platformRes.rows[0]?.setting_value || '0');
+
+    if (platformBalance < amount) {
+      throw new Error(`Insufficient platform SMS balance. Available: ${platformBalance}`);
+    }
+
+    // 2. Get current organization balance
     const orgRes = await client.query('SELECT sms_balance FROM organizations WHERE id = $1', [org_id]);
     if (orgRes.rows.length === 0) throw new Error('Organization not found');
 
     const prevBalance = orgRes.rows[0].sms_balance || 0;
     const newBalance = prevBalance + amount;
 
-    // 2. Update balance and price
+    // 3. Update organization balance and price
     await client.query(
       'UPDATE organizations SET sms_balance = $1, sms_unit_price = $2 WHERE id = $3',
       [newBalance, price, org_id]
     );
 
-    // 3. Record transaction
+    // 4. Deduct from platform balance
+    await client.query(
+      "UPDATE system_settings SET setting_value = (setting_value::text::int - $1)::text::jsonb, updated_at = CURRENT_TIMESTAMP WHERE setting_key = 'platform_sms_balance'",
+      [amount]
+    );
+
+    // 5. Record transaction
     await client.query(
       'INSERT INTO sms_transactions (org_id, type, amount, previous_balance, new_balance, description) VALUES ($1, $2, $3, $4, $5, $6)',
       [org_id, 'Distribution', amount, prevBalance, newBalance, `Superadmin distributed ${amount} SMS credits`]
@@ -666,6 +701,7 @@ export const distributeSMS = async (req: AuthRequest, res: Response) => {
     client.release();
   }
 };
+
 
 // SMS PURCHASE VIA PAYSTACK
 export const verifySMSPurchase = async (req: AuthRequest, res: Response) => {
@@ -719,12 +755,26 @@ export const verifySMSPurchase = async (req: AuthRequest, res: Response) => {
       throw new Error('Payment amount is too small to purchase any SMS units.');
     }
 
+    // 4. Check platform balance
+    const platformRes = await client.query("SELECT setting_value FROM system_settings WHERE setting_key = 'platform_sms_balance'");
+    const platformBalance = parseInt(platformRes.rows[0]?.setting_value || '0');
+
+    if (platformBalance < smsUnits) {
+      throw new Error(`Insufficient platform SMS pool. Please contact system administrator.`);
+    }
+
     const newBalance = prevBalance + smsUnits;
 
-    // 4. Credit SMS balance
+    // 5. Credit SMS balance
     await client.query('UPDATE organizations SET sms_balance = $1 WHERE id = $2', [newBalance, orgId]);
 
-    // 5. Record transaction
+    // 6. Deduct from platform balance
+    await client.query(
+      "UPDATE system_settings SET setting_value = (setting_value::text::int - $1)::text::jsonb, updated_at = CURRENT_TIMESTAMP WHERE setting_key = 'platform_sms_balance'",
+      [smsUnits]
+    );
+
+    // 7. Record transaction
     await client.query(
       'INSERT INTO sms_transactions (org_id, type, amount, previous_balance, new_balance, description) VALUES ($1, $2, $3, $4, $5, $6)',
       [orgId, 'Purchase', smsUnits, prevBalance, newBalance, `Purchased ${smsUnits} SMS units via Paystack. Ref: ${reference}. Paid: ${paidAmount}`]
@@ -749,6 +799,7 @@ export const verifySMSPurchase = async (req: AuthRequest, res: Response) => {
     client.release();
   }
 };
+
 
 // SMS TRANSACTION HISTORY
 export const getSMSTransactions = async (req: AuthRequest, res: Response) => {

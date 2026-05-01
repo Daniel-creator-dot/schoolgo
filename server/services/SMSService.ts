@@ -1,27 +1,28 @@
 import pool from '../db.ts';
 
 export interface SMSConfig {
-    url: string;
+    custom_url: string;
     api_key: string;
     sender_id: string;
 }
 
 export class SMSService {
     /**
-     * Fetches the centralized SMS API configuration from the Superadmin record.
+     * Fetches the centralized SMS API configuration from the system_settings table.
      * All schools use this centralized configuration to route through the custom gateway.
      */
     private static async getSuperAdminConfig(): Promise<SMSConfig | null> {
         try {
             const result = await pool.query(
-                "SELECT sms_api_config FROM organizations WHERE name = 'Superadmin' LIMIT 1"
+                "SELECT setting_value FROM system_settings WHERE setting_key = 'sms_gateway_config'"
             );
-            return result.rows[0]?.sms_api_config || null;
+            return result.rows[0]?.setting_value || null;
         } catch (err) {
             console.error('Failed to fetch SMS config:', err);
             return null;
         }
     }
+
 
     /**
      * Sends an SMS and deducts credits from the organization's balance.
@@ -36,7 +37,7 @@ export class SMSService {
 
             // 1. Fetch organization balance and unit price
             const orgResult = await client.query(
-                "SELECT sms_balance, sms_unit_price FROM organizations WHERE id = $1",
+                "SELECT sms_balance, sms_unit_price, sms_sender_id FROM organizations WHERE id = $1",
                 [org_id]
             );
 
@@ -52,17 +53,20 @@ export class SMSService {
 
             // 2. Fetch Superadmin Gateway Configuration
             const config = await this.getSuperAdminConfig();
-            if (!config || !config.url) {
+            if (!config || !config.custom_url) {
                 throw new Error('SMS Gateway not configured in Superadmin settings');
             }
 
             // 3. Prepare and send the SMS via the custom gateway
             // The gateway URL supports placeholders: {to}, {message}, {api_key}, {sender_id}
-            let finalUrl = config.url
+            const senderId = orgResult.rows[0].sms_sender_id || config.sender_id || '';
+            
+            let finalUrl = config.custom_url
                 .replace(/{to}/g, encodeURIComponent(to))
                 .replace(/{message}/g, encodeURIComponent(message))
                 .replace(/{api_key}/g, encodeURIComponent(config.api_key || ''))
-                .replace(/{sender_id}/g, encodeURIComponent(config.sender_id || ''));
+                .replace(/{sender_id}/g, encodeURIComponent(senderId));
+
 
             console.log(`[SMS] Dispatching to custom gateway: ${finalUrl.split('?')[0]}...`);
 

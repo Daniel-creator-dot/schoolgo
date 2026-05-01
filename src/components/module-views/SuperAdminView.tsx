@@ -375,16 +375,72 @@ export const SuperAdminModules = {
         },
       ]}
     />
-  ),
-
-  SMSSettings: ({ config, onSave }: { config: any, onSave: (data: any) => Promise<void> }) => {
+  ),  SMSSettings: ({ data, onSave, onTopUp }: { data: any, onSave: (data: any) => Promise<void>, onTopUp: (amount: number) => Promise<void> }) => {
     const [saving, setSaving] = React.useState(false);
+    const [toppingUp, setToppingUp] = React.useState(false);
+    const config = data?.config || {};
+    const platformBalance = data?.platform_balance || 0;
 
     return (
-      <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-top-4">
+      <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-top-4 pb-12">
+        {/* Platform Pool Balance Card */}
+        <div className="p-8 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[2.5rem] text-white shadow-2xl shadow-indigo-200 dark:shadow-none overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-white/20 backdrop-blur-md">
+                  <Sparkles className="w-5 h-5 text-indigo-100" />
+                </div>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-indigo-100">Master Platform Pool</h3>
+              </div>
+              <div>
+                <p className="text-5xl font-black tracking-tighter">{platformBalance.toLocaleString()}</p>
+                <p className="text-xs font-bold text-indigo-200 uppercase tracking-widest mt-1">Total Available Credits</p>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white/10 backdrop-blur-xl rounded-[2rem] border border-white/20 w-full md:w-80">
+              <form className="space-y-4" onSubmit={async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const amount = parseInt(formData.get('amount') as string);
+                if (amount <= 0) return;
+                
+                setToppingUp(true);
+                try {
+                  await onTopUp(amount);
+                  (e.target as HTMLFormElement).reset();
+                } finally {
+                  setToppingUp(false);
+                }
+              }}>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-indigo-200">Replenish Pool (Units)</label>
+                  <input
+                    type="number"
+                    name="amount"
+                    placeholder="e.g. 10000"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm font-bold placeholder:text-white/40 outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={toppingUp}
+                  className="w-full py-3 bg-white text-indigo-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 active:scale-95 transition-all shadow-xl"
+                >
+                  {toppingUp ? "Processing..." : "Add Credits"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
         <div className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
           <div className="flex items-center gap-6 mb-8">
-            <div className="w-16 h-16 rounded-[2rem] bg-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-indigo-200 dark:shadow-none">
+            <div className="w-16 h-16 rounded-[2rem] bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400">
               <Settings className="w-8 h-8" />
             </div>
             <div>
@@ -483,3 +539,4 @@ export const SuperAdminModules = {
     );
   }
 };
+

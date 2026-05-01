@@ -1279,6 +1279,12 @@ export const distributeSMS = async (data: { org_id: string, amount: number, pric
   return response.data;
 };
 
+export const topUpPlatformSMS = async (amount: number) => {
+  const response = await api.post('/sms/top-up-platform', { amount });
+  return response.data;
+};
+
+
 export const verifySMSPurchase = async (reference: string) => {
   const response = await api.post('/sms/verify-purchase', { reference });
   return response.data;

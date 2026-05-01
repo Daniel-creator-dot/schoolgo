@@ -65,7 +65,8 @@ import { SuperAdminModules } from "./components/module-views/SuperAdminView";
 import {
   distributeSMS,
   updateSMSSettings,
-  fetchSMSSettings
+  fetchSMSSettings,
+  topUpPlatformSMS
 } from "./lib/api";
 import { StudentModules } from "./components/module-views/StudentView";
 import { CalendarView } from "./components/module-views/CalendarView";
@@ -1548,6 +1549,18 @@ export default function App() {
     }
   };
 
+  const handleTopUpPlatformSMS = async (amount: number) => {
+    try {
+      await topUpPlatformSMS(amount);
+      showToast(`Successfully added ${amount} units to platform pool!`, "success");
+      const settings = await fetchSMSSettings();
+      setSmsSettings(settings);
+    } catch (err: any) {
+      showToast(err.response?.data?.error || "Failed to top up platform SMS", "error");
+    }
+  };
+
+
 
   useEffect(() => {
     (window as any).showToast = showToast;
@@ -1844,10 +1857,12 @@ export default function App() {
       ),
       "SMS Settings": (
         <SuperAdminModules.SMSSettings
-          config={smsSettings}
+          data={smsSettings}
           onSave={handleUpdateSMSSettings}
+          onTopUp={handleTopUpPlatformSMS}
         />
       ),
+
       "Subscription Plan": <ChoosePlan />,
       Receipts: <ReceiptsManagement data={receipts} />,
 
