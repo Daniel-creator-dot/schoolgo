@@ -514,6 +514,7 @@ export default function App() {
           : Promise.resolve(null),
         fetch(`${API_BASE_URL}/announcements`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.ok ? res.json() : []),
         fetch(`${API_BASE_URL}/meetings`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(res => res.ok ? res.json() : []),
+        currentRole === 'SUPER_ADMIN' ? fetchSMSSettings() : Promise.resolve(null),
       ]);
 
       const assignIfFulfilled = (index: number, setter: (val: any) => void) => {
@@ -601,6 +602,7 @@ export default function App() {
       assignIfFulfilled(50, setHodStats);
       assignIfFulfilled(51, setAnnouncements);
       assignIfFulfilled(52, setMeetings);
+      assignIfFulfilled(53, setSmsSettings);
     } catch (err) {
       console.error("Failed to load data from backend:", err);
     } finally {
@@ -1855,13 +1857,19 @@ export default function App() {
           onBack={() => setCurrentView("Organizations")}
         />
       ),
-      "SMS Settings": (
+      "SMS Settings": smsSettings ? (
         <SuperAdminModules.SMSSettings
           data={smsSettings}
           onSave={handleUpdateSMSSettings}
           onTopUp={handleTopUpPlatformSMS}
         />
+      ) : (
+        <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-500 font-bold animate-pulse uppercase text-xs tracking-widest">Loading Gateway Settings...</p>
+        </div>
       ),
+
 
       "Subscription Plan": <ChoosePlan />,
       Receipts: <ReceiptsManagement data={receipts} />,
