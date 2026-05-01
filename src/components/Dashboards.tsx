@@ -1697,11 +1697,11 @@ export function ParentDashboard({
       <MessageAlert count={unreadMessagesCount} onNavigate={onNavigate} />
 
       {/* Hero Welcome & Ward Selection */}
-      <motion.div variants={itemVariants} className="relative overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 md:p-12 shadow-sm">
+      <motion.div variants={itemVariants} className="relative overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-12 shadow-sm">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8 text-center md:text-left">
             <div className="relative">
-              <div className="w-32 h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden">
                 {selectedWard.profile_pic ? (
                   <img
                     src={selectedWard.profile_pic}
@@ -1710,28 +1710,29 @@ export function ParentDashboard({
                   />
                 ) : (
                   <div className="w-full h-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center rounded-2xl">
-                    <User className="w-16 h-16 text-indigo-400 dark:text-indigo-500" />
+                    <User className="w-12 h-12 md:w-16 md:h-16 text-indigo-400 dark:text-indigo-500" />
                   </div>
                 )}
               </div>
-              <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-indigo-600 border-4 border-white dark:border-zinc-900 rounded-full flex items-center justify-center shadow-lg">
-                <GraduationCap className="w-5 h-5 text-white" />
+              <div className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 w-8 h-8 md:w-10 md:h-10 bg-indigo-600 border-4 border-white dark:border-zinc-900 rounded-full flex items-center justify-center shadow-lg">
+                <GraduationCap className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
             </div>
 
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 rounded-full text-[10px] font-bold uppercase tracking-widest mb-3 md:mb-4 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400">
                 <Zap className="w-3 h-3 text-amber-500" />
                 {t('parent_portal')} • {organization?.academic_year || '—'}
               </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 text-zinc-900 dark:text-white">
+              <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 text-zinc-900 dark:text-white">
                 {selectedWard.name.split(' ')[0]}'s {t('progress')}
               </h1>
-              <p className="text-zinc-500 dark:text-zinc-400 text-lg font-medium max-w-xl">
+              <p className="text-zinc-500 dark:text-zinc-400 text-sm md:text-lg font-medium max-w-xl leading-relaxed">
                 {t('monitoring_progress').replace('{name}', selectedWard.name)}. Currently in <span className="text-indigo-600 dark:text-indigo-400 font-bold">{selectedWard.class || 'Class'}</span>.
               </p>
             </div>
           </div>
+
 
           {wards.length > 1 && (
             <div className="flex flex-col gap-4">
@@ -1826,18 +1827,18 @@ export function ParentDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           {/* Performance Chart */}
-          <motion.div variants={itemVariants} className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
-            <div className="flex items-center justify-between mb-8">
+          <motion.div variants={itemVariants} className="p-5 md:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[2.5rem] shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div>
-                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{t('academic_performance')}</h3>
-                <p className="text-sm text-zinc-500 font-medium">Recent subject results and assessment trends.</p>
+                <h3 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{t('academic_performance')}</h3>
+                <p className="text-xs md:text-sm text-zinc-500 font-medium">Recent subject results and assessment trends.</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 bg-indigo-600 rounded-full"></span>
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Score %</span>
+                <span className="w-2 h-2 md:w-3 md:h-3 bg-indigo-600 rounded-full"></span>
+                <span className="text-[8px] md:text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Score %</span>
               </div>
             </div>
-            <div className="h-[300px]">
+            <div className="h-[200px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={selectedWard.performanceData}>
                   <defs>
@@ -1859,15 +1860,16 @@ export function ParentDashboard({
           </motion.div>
 
           {/* Today's Schedule Timeline */}
-          <motion.div variants={itemVariants} className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
+          <motion.div variants={itemVariants} className="p-5 md:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[2.5rem] shadow-sm">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{t('todays_schedule')}</h3>
-                <p className="text-sm text-zinc-500 font-medium">
+                <h3 className="text-xl md:text-2xl font-black text-zinc-900 dark:text-white tracking-tight">{t('todays_schedule')}</h3>
+                <p className="text-xs md:text-sm text-zinc-500 font-medium">
                   {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
               </div>
             </div>
+
 
             <div className="space-y-0 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-0.5 before:bg-zinc-100 dark:before:bg-zinc-800">
               {(() => {
@@ -1908,7 +1910,7 @@ export function ParentDashboard({
 
         <div className="space-y-8">
           {/* Financial Overview Card */}
-          <motion.div variants={itemVariants} className="p-8 bg-zinc-900 rounded-[2.5rem] text-white overflow-hidden shadow-2xl relative group">
+          <motion.div variants={itemVariants} className="p-6 md:p-8 bg-zinc-900 rounded-[2rem] md:rounded-[2.5rem] text-white overflow-hidden shadow-2xl relative group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-600/20 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-110 transition-transform"></div>
             <div className="relative z-10">
               <div className="flex items-center gap-4 mb-8">
@@ -1916,16 +1918,16 @@ export function ParentDashboard({
                   <CreditCard className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">{t('fee_status')}</h3>
-                  <p className="text-zinc-400 text-xs tracking-wide">Current billing overview</p>
+                  <h3 className="text-lg md:text-xl font-bold">{t('fee_status')}</h3>
+                  <p className="text-zinc-400 text-[10px] md:text-xs tracking-wide">Current billing overview</p>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between items-end mb-2">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('outstanding_balance')}</span>
-                    <span className="text-2xl font-black text-emerald-500">{currency} {outstandingFees.toLocaleString()}</span>
+                    <span className="text-[8px] md:text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('outstanding_balance')}</span>
+                    <span className="text-xl md:text-2xl font-black text-emerald-500">{currency} {outstandingFees.toLocaleString()}</span>
                   </div>
                   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                     <div
@@ -1936,11 +1938,11 @@ export function ParentDashboard({
                 </div>
 
                 <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-3">
-                  <div className="flex justify-between text-xs">
+                  <div className="flex justify-between text-[10px] md:text-xs">
                     <span className="text-zinc-400 font-medium">{t('payment_status')}</span>
                     <span className="font-bold text-emerald-400">{selectedWard.feesPaid}</span>
                   </div>
-                  <div className="flex justify-between text-xs">
+                  <div className="flex justify-between text-[10px] md:text-xs">
                     <span className="text-zinc-400 font-medium">{t('next_due_date')}</span>
                     <span className="font-bold">{nextInvoice ? new Date(nextInvoice.due_date).toLocaleDateString() : 'N/A'}</span>
                   </div>
@@ -1951,8 +1953,9 @@ export function ParentDashboard({
           </motion.div>
 
           {/* Recent Notices */}
-          <motion.div variants={itemVariants} className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
-            <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-8">{t('notices')}</h3>
+          <motion.div variants={itemVariants} className="p-6 md:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[2.5rem] shadow-sm">
+            <h3 className="text-lg md:text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-8">{t('notices')}</h3>
+
             <div className="space-y-6">
               {[...wardAnnouncements, ...wardMeetings].length === 0 ? (
                 <p className="text-xs text-zinc-500 italic">No recent notices.</p>
@@ -2446,10 +2449,10 @@ export function StudentDashboard({
     >
       <MessageAlert count={unreadMessagesCount} onNavigate={onNavigate} />
       {/* Hero Welcome Section */}
-      <motion.div variants={itemVariants} className="relative overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-8 md:p-12 shadow-sm">
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+      <motion.div variants={itemVariants} className="relative overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-12 shadow-sm">
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-8">
           <div className="relative">
-            <div className="w-32 h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden">
+            <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-800 p-1 border border-zinc-200 dark:border-zinc-700 shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 overflow-hidden">
               {(student?.profile_pic || student?.previous_school_profile_pic || user?.profile_pic) ? (
                 <img
                   src={student?.profile_pic || student?.previous_school_profile_pic || user?.profile_pic}
@@ -2459,26 +2462,27 @@ export function StudentDashboard({
                 />
               ) : (
                 <div className="w-full h-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center rounded-2xl">
-                  <User className="w-16 h-16 text-zinc-400 dark:text-zinc-500" />
+                  <User className="w-12 h-12 md:w-16 md:h-16 text-zinc-400 dark:text-zinc-500" />
                 </div>
               )}
             </div>
-            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-emerald-500 border-4 border-white dark:border-zinc-900 rounded-full flex items-center justify-center shadow-lg">
-              <CheckCircle className="w-5 h-5 text-white" />
+            <div className="absolute -bottom-1 -right-1 md:-bottom-2 md:-right-2 w-8 h-8 md:w-10 md:h-10 bg-emerald-500 border-4 border-white dark:border-zinc-900 rounded-full flex items-center justify-center shadow-lg">
+              <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-white" />
             </div>
           </div>
 
           <div className="text-center md:text-left flex-1">
-            <div className="inline-flex items-center gap-2 px-0 py-1 bg-transparent rounded-full text-[10px] font-bold uppercase tracking-widest mb-4 border-none text-zinc-600 dark:text-zinc-400">
+            <div className="inline-flex items-center gap-2 px-0 py-1 bg-transparent rounded-full text-[10px] font-bold uppercase tracking-widest mb-3 md:mb-4 border-none text-zinc-600 dark:text-zinc-400">
               <Zap className="w-3 h-3 text-amber-500" />
               {t('academic_year')} {organization?.academic_year || '—'}
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 text-zinc-900 dark:text-white">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight mb-2 text-zinc-900 dark:text-white">
               {t('welcome_back')}, {student?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'Student'}!
             </h1>
-            <p className="text-zinc-500 dark:text-zinc-400 text-lg font-medium max-w-xl">
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm md:text-lg font-medium max-w-xl leading-relaxed">
               You're doing great! Your attendance is at <span className="text-indigo-600 dark:text-indigo-400 font-bold">{attendanceRate}%</span> and your profile is <span className="text-indigo-600 dark:text-indigo-400 font-bold">up to date</span>.
             </p>
+
 
             <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-start">
               <button
