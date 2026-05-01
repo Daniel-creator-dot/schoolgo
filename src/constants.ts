@@ -109,8 +109,8 @@ export const NAVIGATION_CONFIG: NavItem[] = [
       { title: 'Promotion & Graduation', href: 'Promotion & Graduation', roles: ['SCHOOL_ADMIN'], icon: TrendingUp },
       { title: 'Alumni Management', href: 'Alumni Management', roles: ['SCHOOL_ADMIN'], icon: GraduationCap },
       { title: 'Student ID Cards', href: 'Student ID Cards', roles: ['SCHOOL_ADMIN'], icon: CreditCard },
-      { title: 'Portfolio Upload', href: 'Portfolio Upload', roles: ['STAFF', 'HOD', 'SCHOOL_ADMIN'], icon: Plus },
-      { title: 'Student Portfolio', href: 'Student Portfolio', roles: ['STUDENT', 'PARENT', 'SCHOOL_ADMIN', 'STAFF'], icon: ImageIcon },
+      { title: 'Gallery Upload', href: 'Gallery Upload', roles: ['STAFF', 'HOD', 'SCHOOL_ADMIN'], icon: Plus },
+      { title: 'Gallery', href: 'Gallery', roles: ['STUDENT', 'PARENT', 'SCHOOL_ADMIN', 'STAFF'], icon: ImageIcon },
     ]
   },
   // EXAMS & RESULTS

@@ -42,12 +42,13 @@ const PortfolioUpload: React.FC = () => {
     setLoading(true);
     try {
       await createPortfolioItem({
-        student_id: selectedStudent.id,
+        student_id: selectedStudent === 'all' ? null : selectedStudent.id,
         title,
         description,
         file_url: fileUrl || 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop'
       });
-      (window as any).showToast?.("Portfolio item uploaded successfully!", "success");
+
+      (window as any).showToast?.("Gallery item published successfully!", "success");
       setTitle('');
       setDescription('');
       setFileUrl('');
@@ -74,8 +75,8 @@ const PortfolioUpload: React.FC = () => {
           <Plus className="w-8 h-8" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold">New Portfolio Entry</h1>
-          <p className="text-white/80">Highlight student achievements and progress with photos and notes.</p>
+          <h1 className="text-3xl font-bold">New Gallery Entry</h1>
+          <p className="text-white/80">Highlight achievements and moments with photos and notes.</p>
         </div>
       </div>
 
@@ -95,6 +96,28 @@ const PortfolioUpload: React.FC = () => {
             </div>
           </div>
           <div className="max-h-[400px] overflow-y-auto space-y-2 p-4 pt-0 custom-scrollbar">
+            {/* Special "All Students" option */}
+            <div 
+              className={cn(
+                "flex items-center p-3 rounded-xl cursor-pointer transition-all border",
+                selectedStudent === 'all' 
+                  ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 shadow-sm' 
+                  : 'hover:bg-zinc-50 dark:hover:bg-zinc-800 border-transparent'
+              )}
+              onClick={() => setSelectedStudent('all')}
+            >
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mr-3 shrink-0 shadow-lg shadow-purple-200 dark:shadow-none">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate text-zinc-900 dark:text-white">All Students</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">School-Wide Gallery</p>
+              </div>
+              {selectedStudent === 'all' && (
+                <Check className="w-4 h-4 text-purple-600 ml-auto" />
+              )}
+            </div>
+
             {filteredStudents.length > 0 ? filteredStudents.map(student => (
               <div 
                 key={student.id}
@@ -121,13 +144,14 @@ const PortfolioUpload: React.FC = () => {
               <p className="text-center py-8 text-sm text-zinc-500 italic">No students found</p>
             )}
           </div>
+
         </div>
 
         {/* Upload Form */}
         <div className="md:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
           <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30">
             <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Achievement Details</h3>
-            <p className="text-xs text-zinc-500 mt-1">Fill in the details for the student's portfolio.</p>
+            <p className="text-xs text-zinc-500 mt-1">Fill in the details for the gallery entry.</p>
           </div>
           <div className="p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -174,7 +198,7 @@ const PortfolioUpload: React.FC = () => {
                   disabled={loading}
                   className="w-full h-14 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 dark:shadow-none transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
                 >
-                  {loading ? "Processing..." : "Publish to Portfolio"}
+                  {loading ? "Processing..." : "Publish to Gallery"}
                 </button>
               </div>
             </form>

@@ -53,8 +53,8 @@ const PortfolioView: React.FC<{ role: string }> = ({ role }) => {
     <div className="space-y-6 p-6 pb-20 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">Student Progress Portfolio</h1>
-          <p className="text-zinc-500 mt-1">A visual journey of academic and extra-curricular growth</p>
+          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">School Gallery</h1>
+          <p className="text-zinc-500 mt-1">A visual showcase of achievements, moments and school-wide pride</p>
         </div>
         <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
           <button 
@@ -134,8 +134,13 @@ const PortfolioView: React.FC<{ role: string }> = ({ role }) => {
               
               <div className="flex-1 p-6 flex flex-col min-w-0">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 text-[10px] font-bold uppercase tracking-wider border border-purple-100 dark:border-purple-800">
-                    {item.student_name}
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                    item.student_name 
+                      ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 border-purple-100 dark:border-purple-800"
+                      : "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 border-indigo-100 dark:border-indigo-800"
+                  )}>
+                    {item.student_name || 'School Wide'}
                   </span>
                   <div className="flex items-center text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
                     <Clock className="w-3 h-3 mr-1" />

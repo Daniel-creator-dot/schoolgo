@@ -3266,8 +3266,8 @@ export default function App() {
       "My Drive": <StorageModules.MyDrive />,
 
       "Folder Management": <StorageModules.FolderManagement />,
-      "Student Portfolio": <PortfolioView role={currentRole} />,
-      "Portfolio Upload": <PortfolioUpload />,
+      "Gallery": <PortfolioView role={currentRole} />,
+      "Gallery Upload": <PortfolioUpload />,
 
       Departments: (
         <AcademicModules.DepartmentManagement

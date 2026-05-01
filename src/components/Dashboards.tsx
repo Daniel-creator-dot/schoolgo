@@ -1315,7 +1315,7 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
           onClick={() => onNavigate?.('Performance')}
         />
         <div 
-          onClick={() => onNavigate?.('Student Portfolio')}
+          onClick={() => onNavigate?.('Gallery')}
           className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-purple-600/5 rounded-full -translate-y-12 translate-x-12 -z-0"></div>
@@ -1326,7 +1326,7 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">View Gallery</p>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">Student Portfolio</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">School Gallery</p>
               </div>
               <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-purple-600 transition-colors" />
             </div>
@@ -1827,14 +1827,14 @@ export function ParentDashboard({
           </div>
         </div>
 
-        <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => onNavigate?.('Student Portfolio')}>
+        <div className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer" onClick={() => onNavigate?.('Gallery')}>
           <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-purple-600">
             <ImageIcon className="w-6 h-6" />
           </div>
           <div className="flex items-end justify-between">
             <div>
               <p className="text-2xl md:text-3xl font-black text-zinc-900 dark:text-white tracking-tight">View</p>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">Portfolio</p>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">Gallery</p>
             </div>
             <div className="text-[10px] font-bold px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600">
               Projects
@@ -2528,7 +2528,7 @@ export function StudentDashboard({
           { label: t('current_gpa'), value: student?.gpa || '0.0', icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50 dark:bg-indigo-900/20', trend: 'Academic' },
           { label: t('outstanding_fees'), value: `${currency} ${outstandingFees.toLocaleString()}`, icon: Wallet, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-900/20', trend: outstandingFees > 0 ? 'Pending' : 'Cleared' },
           { label: t('upcoming_exams'), value: '0', icon: FileText, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20', trend: 'View Schedule' },
-          { label: 'My Portfolio', value: 'View', icon: ImageIcon, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20', trend: 'Achievements', onClick: () => onNavigate?.('Student Portfolio') },
+          { label: 'Gallery', value: 'View', icon: ImageIcon, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20', trend: 'Achievements', onClick: () => onNavigate?.('Gallery') },
         ].map((stat, i) => (
           <div 
             key={i} 

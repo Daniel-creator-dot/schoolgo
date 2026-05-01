@@ -809,7 +809,7 @@ export const getPortfolioItems = async (req: AuthRequest, res: Response) => {
       result = await pool.query(`
         SELECT p.*, s.name as student_name, st.name as teacher_name
         FROM student_portfolio p
-        JOIN students s ON p.student_id = s.id
+        LEFT JOIN students s ON p.student_id = s.id
         LEFT JOIN staff st ON p.teacher_id = st.id
         ORDER BY p.created_at DESC
       `);
@@ -818,7 +818,7 @@ export const getPortfolioItems = async (req: AuthRequest, res: Response) => {
       result = await pool.query(`
         SELECT p.*, s.name as student_name, st.name as teacher_name
         FROM student_portfolio p
-        JOIN students s ON p.student_id = s.id
+        LEFT JOIN students s ON p.student_id = s.id
         LEFT JOIN staff st ON p.teacher_id = st.id
         WHERE p.org_id = $1
         ORDER BY p.created_at DESC
@@ -841,7 +841,7 @@ export const createPortfolioItem = async (req: AuthRequest, res: Response) => {
 
     const result = await pool.query(
       'INSERT INTO student_portfolio (org_id, student_id, teacher_id, title, description, file_url) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-      [orgId, student_id, teacher_id, title, description, file_url]
+      [orgId, student_id || null, teacher_id, title, description, file_url]
     );
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
