@@ -1315,7 +1315,26 @@ export function StaffDashboard({ staffData, user, organization, onNavigate, staf
           onClick={() => onNavigate?.('Performance')}
         />
         <div 
+          onClick={() => onNavigate?.('Student Portfolio')}
+          className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
+        >
+          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-600/5 rounded-full -translate-y-12 translate-x-12 -z-0"></div>
+          <div className="relative z-10">
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform text-purple-600">
+              <ImageIcon className="w-6 h-6" />
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">View Gallery</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-1">Student Portfolio</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-zinc-300 group-hover:text-purple-600 transition-colors" />
+            </div>
+          </div>
+        </div>
+        <div 
           onClick={() => setShowDigitalID(true)}
+
           className="group p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden relative"
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-600/5 rounded-full -translate-y-12 translate-x-12 -z-0"></div>
