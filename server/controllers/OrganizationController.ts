@@ -823,3 +823,79 @@ export const getSMSTransactions = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// BIRTHDAY CRON JOB
+import { SMSService } from '../services/SMSService.ts';
+
+export const checkBirthdays = async (req: Request, res: Response) => {
+  // Security check for Render Cron Job
+  const cronSecret = process.env.CRON_SECRET_KEY;
+  const clientSecret = req.headers['x-cron-auth'];
+
+  if (cronSecret && clientSecret !== cronSecret) {
+    return res.status(401).json({ error: 'Unauthorized cron request' });
+  }
+
+  try {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1; // JS months are 0-indexed
+
+    // 1. Find all students and staff celebrating birthdays today
+    const birthdayQuery = `
+      SELECT id, name, contact as phone, org_id, 'student' as type FROM students 
+      WHERE EXTRACT(DAY FROM date_of_birth) = $1 AND EXTRACT(MONTH FROM date_of_birth) = $2
+      UNION ALL
+      SELECT id, name, phone, org_id, 'staff' as type FROM staff 
+      WHERE EXTRACT(DAY FROM date_of_birth) = $1 AND EXTRACT(MONTH FROM date_of_birth) = $2
+    `;
+
+    const birthdayPeople = await pool.query(birthdayQuery, [day, month]);
+
+    if (birthdayPeople.rows.length === 0) {
+      return res.json({ message: 'No birthdays today' });
+    }
+
+    const results: any[] = [];
+
+    // 2. Process each birthday
+    for (const person of birthdayPeople.rows) {
+      if (!person.phone) continue;
+
+      try {
+        // Fetch org name for the message
+        const orgRes = await pool.query("SELECT name FROM organizations WHERE id = $1", [person.org_id]);
+        const schoolName = orgRes.rows[0]?.name || 'Your School';
+
+        const message = `Happy Birthday ${person.name}! 🎂 We wish you a wonderful day filled with joy and success. From all of us at ${schoolName}.`;
+        
+        // Use the SMSService to send (handles balance and gateway)
+        const smsResult = await SMSService.sendSMS(person.org_id, person.phone, message);
+        
+        results.push({
+          name: person.name,
+          org_id: person.org_id,
+          status: smsResult.success ? 'SENT' : 'FAILED',
+          error: smsResult.success ? null : smsResult.message
+        });
+      } catch (err: any) {
+        results.push({
+          name: person.name,
+          org_id: person.org_id,
+          status: 'ERROR',
+          error: err.message
+        });
+      }
+    }
+
+    res.json({
+      processed: birthdayPeople.rows.length,
+      details: results
+    });
+
+  } catch (err: any) {
+    console.error('[CRON] Birthday check failed:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+

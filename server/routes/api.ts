@@ -102,6 +102,10 @@ router.post('/sms/verify-purchase', checkRole(['SCHOOL_ADMIN']), OrganizationCon
 
 router.get('/sms/transactions', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getSMSTransactions);
 
+// CRON JOBS
+router.post('/cron/check-birthdays', OrganizationController.checkBirthdays);
+
+
 // ACADEMIC
 router.get('/academic/departments', HRController.getDepartments);
 router.post('/academic/departments', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), HRController.createDepartment);
