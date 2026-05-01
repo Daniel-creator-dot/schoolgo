@@ -802,31 +802,10 @@ export const deleteBehaviorIncident = async (req: AuthRequest, res: Response) =>
 // PORTFOLIO
 export const getPortfolioItems = async (req: AuthRequest, res: Response) => {
   try {
-    const { org_id, role, id, email } = req.user;
+    const { org_id, role } = req.user;
     let result;
 
-    if (role === 'PARENT') {
-      // Parents use their email (from token) to find portfolio items for all their children
-      result = await pool.query(`
-        SELECT p.*, s.name as student_name, st.name as teacher_name
-        FROM student_portfolio p
-        JOIN students s ON p.student_id = s.id
-        LEFT JOIN staff st ON p.teacher_id = st.id
-        WHERE s.parent_email = $1 AND p.org_id = $2
-        ORDER BY p.created_at DESC
-      `, [email, org_id]);
-    } else if (role === 'STUDENT') {
-      // Students use their own ID (from token) to see their own portfolio
-      result = await pool.query(`
-        SELECT p.*, s.name as student_name, st.name as teacher_name
-        FROM student_portfolio p
-        JOIN students s ON p.student_id = s.id
-        LEFT JOIN staff st ON p.teacher_id = st.id
-        WHERE s.id = $1 AND p.org_id = $2
-        ORDER BY p.created_at DESC
-      `, [id, org_id]);
-
-    } else if (role === 'SUPER_ADMIN') {
+    if (role === 'SUPER_ADMIN') {
       result = await pool.query(`
         SELECT p.*, s.name as student_name, st.name as teacher_name
         FROM student_portfolio p
@@ -835,6 +814,7 @@ export const getPortfolioItems = async (req: AuthRequest, res: Response) => {
         ORDER BY p.created_at DESC
       `);
     } else {
+      // Everyone else (Staff, Admin, Student, Parent) sees all items within their organization
       result = await pool.query(`
         SELECT p.*, s.name as student_name, st.name as teacher_name
         FROM student_portfolio p
@@ -844,6 +824,7 @@ export const getPortfolioItems = async (req: AuthRequest, res: Response) => {
         ORDER BY p.created_at DESC
       `, [org_id]);
     }
+
 
     res.json(result.rows);
   } catch (err: any) {
