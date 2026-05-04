@@ -2920,6 +2920,57 @@ export function Settings({ role }: { role?: UserRole }) {
           {role === 'SCHOOL_ADMIN' && (
             <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
               <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                {t('academic_attendance_settings')}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('term_start_date')}</label>
+                  <input
+                    type="date"
+                    value={organization?.term_start_date || ''}
+                    onChange={(e) => setOrganization({ ...organization, term_start_date: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('term_end_date')}</label>
+                  <input
+                    type="date"
+                    value={organization?.term_end_date || ''}
+                    onChange={(e) => setOrganization({ ...organization, term_end_date: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('total_school_days')}</label>
+                  <input
+                    type="number"
+                    value={organization?.attendance_total_days || 0}
+                    onChange={(e) => setOrganization({ ...organization, attendance_total_days: parseInt(e.target.value) || 0 })}
+                    placeholder="e.g. 90"
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-8">
+                  <input
+                    type="checkbox"
+                    id="include_weekends"
+                    checked={organization?.attendance_include_weekends || false}
+                    onChange={(e) => setOrganization({ ...organization, attendance_include_weekends: e.target.checked })}
+                    className="w-5 h-5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <label htmlFor="include_weekends" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                    {t('include_weekends_in_attendance')}
+                  </label>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {role === 'SCHOOL_ADMIN' && (
+            <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
+              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
                 Promotion Configuration
               </h3>
