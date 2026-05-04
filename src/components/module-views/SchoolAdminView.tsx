@@ -8441,7 +8441,7 @@ export const ExamModules = {
                       <div className="bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100 mb-2">Sample Template</p>
                         <p className="text-sm font-medium leading-relaxed italic">
-                          "Dear Parent, your ward's academic results for {selectedTerm} have been successfully uploaded to the portal. Please log in to view the performance."
+                          "Dear Parent, your ward's results for {selectedTerm} are ready. View here: {window.location.origin}/?view=Result&token=..."
                         </p>
                       </div>
 
@@ -8450,28 +8450,36 @@ export const ExamModules = {
                         onClick={async () => {
                           const isAll = selectedClassRemarksId === 'all';
                           const targetStudents = isAll ? students : students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId));
-                          const parentContacts = Array.from(new Set(targetStudents.map((s: any) => s.contact).filter(Boolean)));
+                          const studentsWithContact = targetStudents.filter((s: any) => s.contact);
                           
-                          if (parentContacts.length === 0) {
-                            (window as any).showToast?.("No parent contacts found for selection.", "error");
+                          if (studentsWithContact.length === 0) {
+                            (window as any).showToast?.("No students with parent contacts found for selection.", "error");
                             return;
                           }
 
-                          if ((smsSettings?.balance || 0) < parentContacts.length) {
-                            (window as any).showToast?.(`Insufficient SMS credits (${smsSettings?.balance || 0}) to broadcast to ${parentContacts.length} parents.`, "error");
+                          if ((smsSettings?.balance || 0) < studentsWithContact.length) {
+                            (window as any).showToast?.(`Insufficient SMS credits (${smsSettings?.balance || 0}) to broadcast to ${studentsWithContact.length} students.`, "error");
                             return;
                           }
 
-                          if (!window.confirm(`Broadcast SMS to ${parentContacts.length} parents across ${isAll ? 'all classes' : 'the selected class'}?`)) return;
+                          if (!window.confirm(`Broadcast SMS to ${studentsWithContact.length} parents across ${isAll ? 'all classes' : 'the selected class'}?`)) return;
 
                           setIsBroadcasting(true);
                           setBroadcastProgress(0);
                           
                           try {
-                            const messages = parentContacts.map(contact => ({
-                              recipient: contact as string,
-                              message: `Dear Parent, your ward's academic results for ${selectedTerm} have been successfully uploaded. Please check the portal to view the performance.`
-                            }));
+                            const messages = targetStudents
+                              .filter((s: any) => s.contact)
+                              .map((s: any) => {
+                                const token = btoa(`${s.id}|${selectedTerm}|${selectedAcademicYear}|${currentUser?.org_id || (organization as any)?.id}`);
+                                const link = `${window.location.origin}/?view=Result&token=${token}`;
+                                return {
+                                  recipient: s.contact as string,
+                                  message: `Dear Parent, your ward ${s.name}'s results for ${selectedTerm} are ready. View here: ${link}`
+                                };
+                              });
+
+                            const uniqueRecipientsCount = new Set(messages.map(m => m.recipient)).size;
 
                             // Split into chunks if there are many contacts to avoid payload limits
                             const chunkSize = 100;
@@ -8481,7 +8489,7 @@ export const ExamModules = {
                               setBroadcastProgress(Math.round(((i + chunk.length) / messages.length) * 100));
                             }
 
-                            (window as any).showToast?.(`Broadcast sent successfully to ${parentContacts.length} parents!`, "success");
+                            (window as any).showToast?.(`Broadcast sent successfully to ${uniqueRecipientsCount} parents!`, "success");
                           } catch (err: any) {
                             (window as any).showToast?.(err?.message || "Broadcast failed", "error");
                           } finally {

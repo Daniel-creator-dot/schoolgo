@@ -396,3 +396,74 @@ export const syncELearningMarks = async (req: AuthRequest, res: Response) => {
   }
 };
 
+
+export const getPublicReportCardData = async (req: express.Request, res: Response) => {
+  const { token } = req.params;
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const [studentId, term, year, orgId] = decoded.split('|');
+
+    if (!studentId || !orgId) {
+      return res.status(400).json({ error: 'Invalid token' });
+    }
+
+    const client = await pool.connect();
+    try {
+      // 1. Fetch Student & Organization
+      const studentRes = await client.query(`
+        SELECT s.*, c.name as class_name, c.id as class_id, c.report_card_template_id
+        FROM students s
+        LEFT JOIN classes c ON s.class_id = c.id
+        WHERE s.id = $1 AND s.org_id = $2
+      `, [studentId, orgId]);
+
+      if (studentRes.rows.length === 0) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+      const student = studentRes.rows[0];
+
+      const orgRes = await client.query('SELECT * FROM organizations WHERE id = $1', [orgId]);
+      const organization = orgRes.rows[0];
+
+      // 2. Fetch Results for the specific term/year
+      const resultsRes = await client.query(`
+        SELECT r.*, e.subject, e.type as exam_type, e.date as exam_date, s.name as subject_name
+        FROM results r
+        JOIN exams e ON r.exam_id = e.id
+        LEFT JOIN subjects s ON e.subject_id = s.id
+        WHERE r.student_id = $1 AND r.org_id = $2 AND e.term = $3 AND e.academic_year = $4
+      `, [studentId, orgId, term, year]);
+
+      // 3. Fetch Report Card Template
+      let template = null;
+      if (student.report_card_template_id) {
+        const tmplRes = await client.query('SELECT * FROM report_card_templates WHERE id = $1', [student.report_card_template_id]);
+        template = tmplRes.rows[0];
+      }
+
+      // 4. Fetch Grading Scale
+      const classRes = await client.query('SELECT grading_scale_id FROM classes WHERE id = $1', [student.class_id]);
+      let gradingScale = null;
+      if (classRes.rows[0]?.grading_scale_id) {
+        const scaleRes = await client.query('SELECT * FROM grading_scales WHERE id = $1', [classRes.rows[0].grading_scale_id]);
+        const levelsRes = await client.query('SELECT * FROM grading_scale_levels WHERE scale_id = $1 ORDER BY min_score DESC', [classRes.rows[0].grading_scale_id]);
+        gradingScale = { ...scaleRes.rows[0], levels: levelsRes.rows };
+      }
+
+      res.json({
+        student,
+        organization,
+        results: resultsRes.rows,
+        template,
+        gradingScale,
+        term,
+        year
+      });
+    } finally {
+      client.release();
+    }
+  } catch (err: any) {
+    console.error('Public Result Fetch Error:', err);
+    res.status(500).json({ error: 'Failed to retrieve results' });
+  }
+};
