@@ -21,13 +21,15 @@ const PortfolioUpload: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [fileUrls, setFileUrls] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadStudents();
+    // Cleanup previews on unmount
+    return () => previews.forEach(url => URL.revokeObjectURL(url));
   }, []);
 
   const loadStudents = async () => {
@@ -39,47 +41,23 @@ const PortfolioUpload: React.FC = () => {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
 
-    if (!supabase) {
-      return (window as any).showToast?.("Supabase storage not configured. Please add environment variables.", "error");
-    }
+    const newFiles = files.filter(f => f.type.startsWith('image/'));
+    const newPreviews = newFiles.map(f => URL.createObjectURL(f));
 
-    setUploading(true);
-    const newUrls: string[] = [];
+    setSelectedFiles(prev => [...prev, ...newFiles]);
+    setPreviews(prev => [...prev, ...newPreviews]);
+    
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
-    try {
-      for (const file of files) {
-        if (!file.type.startsWith('image/')) continue;
-
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-        const filePath = fileName;
-
-        const { data, error } = await supabase.storage
-          .from('portfolio')
-          .upload(filePath, file);
-
-        if (error) throw error;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('portfolio')
-          .getPublicUrl(filePath);
-
-        newUrls.push(publicUrl);
-      }
-
-      setFileUrls(prev => [...prev, ...newUrls]);
-      (window as any).showToast?.(`Uploaded ${newUrls.length} image(s)!`, "success");
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      (window as any).showToast?.(error.message || "Failed to upload images", "error");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+  const removeFile = (index: number) => {
+    URL.revokeObjectURL(previews[index]);
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,23 +67,53 @@ const PortfolioUpload: React.FC = () => {
 
     setLoading(true);
     try {
-      // Store URLs as a JSON string or comma-separated list
-      const combinedUrls = fileUrls.length > 0 ? JSON.stringify(fileUrls) : '';
+      const uploadedUrls: string[] = [];
+
+      // Only upload if we have a Supabase client and files
+      if (selectedFiles.length > 0) {
+        if (!supabase) throw new Error("Supabase storage not configured.");
+
+        for (const file of selectedFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+          
+          const { data, error } = await supabase.storage
+            .from('portfolio')
+            .upload(fileName, file);
+
+          if (error) throw error;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('portfolio')
+            .getPublicUrl(fileName);
+
+          uploadedUrls.push(publicUrl);
+        }
+      }
+
+      const combinedUrls = uploadedUrls.length > 0 
+        ? JSON.stringify(uploadedUrls) 
+        : 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop';
 
       await createPortfolioItem({
         student_id: selectedStudent === 'all' ? null : selectedStudent.id,
         title,
         description,
-        file_url: combinedUrls || 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop'
+        file_url: combinedUrls
       });
 
       (window as any).showToast?.("Gallery entry published successfully!", "success");
+      
+      // Reset form
       setTitle('');
       setDescription('');
-      setFileUrls([]);
+      previews.forEach(url => URL.revokeObjectURL(url));
+      setSelectedFiles([]);
+      setPreviews([]);
       setSelectedStudent(null);
-    } catch (error) {
-      (window as any).showToast?.("Failed to upload portfolio item", "error");
+    } catch (error: any) {
+      console.error('Submit error:', error);
+      (window as any).showToast?.(error.message || "Failed to publish item", "error");
     } finally {
       setLoading(false);
     }
@@ -226,7 +234,6 @@ const PortfolioUpload: React.FC = () => {
                   onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
-
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase text-zinc-500 tracking-wider">Gallery Images</label>
                 <input 
@@ -237,24 +244,23 @@ const PortfolioUpload: React.FC = () => {
                   ref={fileInputRef}
                   onChange={handleFileChange}
                 />
-                
                 <div 
                   className={cn(
                     "relative group cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden transition-all duration-300",
-                    fileUrls.length > 0 ? "border-purple-500/30 p-4" : "border-zinc-200 dark:border-zinc-800 h-40 hover:border-purple-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                    previews.length > 0 ? "border-purple-500/30 p-4" : "border-zinc-200 dark:border-zinc-800 h-40 hover:border-purple-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                   )}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  {fileUrls.length > 0 ? (
+                  {previews.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {fileUrls.map((url, idx) => (
+                      {previews.map((url, idx) => (
                         <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group/item shadow-sm">
                           <img src={url} className="w-full h-full object-cover" alt={`Preview ${idx}`} />
                           <button 
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setFileUrls(prev => prev.filter((_, i) => i !== idx));
+                              removeFile(idx);
                             }}
                             className="absolute top-2 right-2 p-1.5 bg-rose-500 text-white rounded-lg opacity-0 group-hover/item:opacity-100 transition-opacity shadow-lg"
                           >
@@ -269,22 +275,13 @@ const PortfolioUpload: React.FC = () => {
                     </div>
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                      {uploading ? (
-                        <>
-                          <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
-                          <p className="text-sm font-medium text-zinc-500">Uploading to storage...</p>
-                        </>
-                      ) : (
-                        <>
-                          <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                            <ImageIcon className="w-8 h-8 text-zinc-400 group-hover:text-purple-500" />
-                          </div>
-                          <div className="text-center">
-                            <p className="text-sm font-bold text-zinc-900 dark:text-white">Click to upload photos</p>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-tighter mt-0.5">PNG, JPG, WEBP (Multiple allowed)</p>
-                          </div>
-                        </>
-                      )}
+                      <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                        <ImageIcon className="w-8 h-8 text-zinc-400 group-hover:text-purple-500" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white">Click to select photos</p>
+                        <p className="text-[10px] text-zinc-500 uppercase tracking-tighter mt-0.5">PNG, JPG, WEBP (Multiple allowed)</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -293,10 +290,15 @@ const PortfolioUpload: React.FC = () => {
               <div className="pt-4">
                 <button 
                   type="submit" 
-                  disabled={loading || uploading}
+                  disabled={loading}
                   className="w-full h-14 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 dark:shadow-none transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
                 >
-                  {loading ? "Processing..." : "Publish to Gallery"}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Publishing & Uploading...
+                    </span>
+                  ) : "Publish to Gallery"}
                 </button>
               </div>
             </form>
