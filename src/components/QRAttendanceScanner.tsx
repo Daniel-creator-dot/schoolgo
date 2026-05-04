@@ -106,8 +106,11 @@ export default function QRAttendanceScanner({ classes = [], onNavigate, onRefres
     }, [selectedClass, t]);
 
     const handleManualMark = async (person: any) => {
-        // Reuse the same logic but pass admission no or email for staff
-        await handleScan(person.type === 'staff' ? person.email : (person.admission_no || person.id));
+        // Reuse the same logic but pass email or id for staff
+        const qrData = person.type === 'staff' ? (person.email || person.id) : (person.admission_no || person.id);
+        if (qrData) {
+            await handleScan(qrData);
+        }
         setSearchQuery(''); // Reset search
     };
 

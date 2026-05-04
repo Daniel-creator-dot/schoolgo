@@ -315,10 +315,16 @@ export const markAttendanceByQR = async (req: AuthRequest, res: Response) => {
     }
 
     // 2. If no student found, look up staff by email or id
+    // We prioritize users table since staff_attendance requires user_id
     const staffResult = await pool.query(
-      `SELECT s.id, s.name, u.id as user_id FROM staff s
-       JOIN users u ON s.email = u.email
-       WHERE s.org_id = $1 AND (s.email = $2 OR CAST(s.id AS TEXT) = $2)
+      `SELECT u.id as user_id, COALESCE(s.name, u.name) as name, s.id as staff_id 
+       FROM users u
+       LEFT JOIN staff s ON LOWER(u.email) = LOWER(s.email) AND s.org_id = u.org_id
+       WHERE u.org_id = $1 AND (
+         LOWER(u.email) = LOWER($2) OR 
+         CAST(u.id AS TEXT) = $2 OR 
+         (s.id IS NOT NULL AND CAST(s.id AS TEXT) = $2)
+       )
        LIMIT 1`,
       [orgId, qr_data.trim()]
     );
