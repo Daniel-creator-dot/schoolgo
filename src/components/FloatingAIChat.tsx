@@ -4,6 +4,7 @@ import { Bot, X, Send, Minus, Maximize2, MessageSquare, Sparkles, User } from 'l
 import { GoogleGenAI } from "@google/genai";
 import { cn } from '../lib/utils';
 import { safeAiFetch } from '../lib/aiUtils';
+import { generateAIResponse } from '../lib/api';
 import { API_BASE_URL } from '../constants';
 
 
@@ -48,26 +49,13 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          prompt,
-          systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
-        })
+      const result = await generateAIResponse(prompt, {
+        systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
       });
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
 
       const aiMessage: Message = {
         role: 'ai',
-        content: result.data?.text || "I'm sorry, I couldn't process that request.",
+        content: result?.text || "I'm sorry, I couldn't process that request.",
         timestamp: new Date()
       };
 

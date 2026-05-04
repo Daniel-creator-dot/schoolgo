@@ -74,7 +74,10 @@ import {
   awardPartnerReward,
   fetchPartnerRewards,
   deletePartnerReward,
-  syncPublicHolidays
+  syncPublicHolidays,
+  saveAIKey,
+  fetchAIKeys,
+  generateAIResponse
 } from '../lib/api';
 import { API_BASE_URL, PAYSTACK_PUBLIC_KEY } from '../constants';
 
@@ -2619,40 +2622,28 @@ export function Settings({ role }: { role?: UserRole }) {
               logo: org.logo || '',
               signature: org.signature || ''
             });
-            // Check if backend AI is configured
-            const token = localStorage.getItem('token');
-
-            // Diagnostics: Check if AI routes even exist
-            const testRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/test`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (testRes.status === 404) {
-              setAiStatus('outdated');
-            } else if (testRes.ok) {
+            // Diagnostics: Check if AI routes even exist using axios instance
+            try {
+              const testRes = await generateAIResponse('ping');
+              setIsAiConfigured(true);
               setAiStatus('active');
-            } else {
-              setAiStatus('error');
+            } catch (err: any) {
+              if (err.response?.status === 503) {
+                setIsAiConfigured(false);
+                setAiStatus('active'); // Route exists but key is missing
+              } else if (err.response?.status === 404) {
+                setAiStatus('outdated');
+              } else {
+                setAiStatus('error');
+              }
             }
 
-            const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ prompt: 'ping' })
-            });
-            setIsAiConfigured(res.status !== 503);
-
-            // Fetch Groq Key separately
-            const keyRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/keys`, {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            if (keyRes.ok) {
-              const keys = await keyRes.json();
+            // Fetch Groq Key separately using axios instance
+            try {
+              const keys = await fetchAIKeys();
               if (keys.length > 0) setGroqKey(keys[0].api_key);
+            } catch (err) {
+              console.error('Failed to fetch AI keys:', err);
             }
           } catch (err) {
             console.error('Failed to fetch organization:', err);
@@ -2684,31 +2675,23 @@ export function Settings({ role }: { role?: UserRole }) {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/keys`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ api_key: trimmedKey })
-      });
-      if (res.ok) {
-        setGroqKey(trimmedKey);
-        if (organization) {
-          setOrganization({ ...organization, gemini_api_key: trimmedKey });
-        }
-        (window as any).showToast?.('Groq API Key saved successfully!', 'success');
-        // Refresh AI configuration status
-        const configRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ prompt: 'ping' })
-        });
-        setIsAiConfigured(configRes.status !== 503);
-      } else {
-        throw new Error('Failed to save key');
+      await saveAIKey(trimmedKey);
+      setGroqKey(trimmedKey);
+      if (organization) {
+        setOrganization({ ...organization, gemini_api_key: trimmedKey });
       }
-    } catch (err) {
+      (window as any).showToast?.('Groq API Key saved successfully!', 'success');
+      
+      // Refresh AI configuration status using axios instance
+      try {
+        await generateAIResponse('ping');
+        setIsAiConfigured(true);
+      } catch (err: any) {
+        setIsAiConfigured(err.response?.status !== 503);
+      }
+    } catch (err: any) {
       console.error('Failed to save Groq key:', err);
-      (window as any).showToast?.(err, 'error');
+      (window as any).showToast?.(err.friendlyMessage || 'Failed to save key', 'error');
     }
   };
   const handleSave = async () => {

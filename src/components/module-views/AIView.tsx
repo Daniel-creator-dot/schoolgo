@@ -16,6 +16,11 @@ import {
 import { cn } from '../../lib/utils';
 import { DataTable } from '../DataTable';
 import { safeAiFetch, extractJsonFromAiResponse } from '../../lib/aiUtils';
+import { 
+  fetchAIInsights, 
+  saveAIInsights, 
+  generateAIResponse 
+} from '../../lib/api';
 import { API_BASE_URL } from '../../constants';
 
 
@@ -48,16 +53,10 @@ export const AIModules = {
 
     const fetchStoredInsights = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/ai/insights?type=performance`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.insights) setAiInsights(data.insights);
-          if (data.predictions) setStudentPredictions(data.predictions);
-          if (data.last_updated) setLastUpdated(data.last_updated);
-        }
+        const data = await fetchAIInsights();
+        if (data.insights) setAiInsights(data.insights);
+        if (data.predictions) setStudentPredictions(data.predictions);
+        if (data.last_updated) setLastUpdated(data.last_updated);
       } catch (err) {
         console.error('Failed to fetch stored insights:', err);
       }
@@ -65,18 +64,10 @@ export const AIModules = {
 
     const saveGeneratedInsights = async (insights: any[], predictions: any) => {
       try {
-        const token = localStorage.getItem('token');
-        await fetch(`${API_BASE_URL}/ai/insights`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            type: 'performance',
-            insights,
-            predictions
-          })
+        await saveAIInsights({
+          type: 'performance',
+          insights,
+          predictions
         });
         setLastUpdated(new Date().toISOString());
       } catch (err) {
@@ -128,25 +119,21 @@ export const AIModules = {
         
         Respond ONLY with the JSON object. No conversational text. No preamble.`;
 
-        const token = localStorage.getItem('token');
-        const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ 
-            prompt, 
-            systemPrompt: "You are a senior education consultant. Analyze student scores and predict their final outcomes. Respond only with JSON.",
-            model: 'llama-3.3-70b-versatile'
-          })
+        const result = await generateAIResponse(prompt, { 
+          systemPrompt: "You are a senior education consultant. Analyze student scores and predict their final outcomes. Respond only with JSON.",
+          model: 'llama-3.3-70b-versatile'
         });
+        
+        // Wrap result to match expected safeAiFetch format if necessary, 
+        // but generateAIResponse returns data directly. 
+        // We'll normalize it here.
+        const normalizedResult = { success: true, data: result };
 
-        if (!result.success) {
-          throw new Error(result.error);
+        if (!normalizedResult.success) {
+          throw new Error('AI analysis failed');
         }
 
-        const aiText = result.data?.text || "{}";
+        const aiText = normalizedResult.data?.text || "{}";
         const parsed = extractJsonFromAiResponse(aiText);
 
         if (!parsed || (!parsed.insights && !parsed.predictions)) {
@@ -478,26 +465,13 @@ export const AIModules = {
       setIsLoading(true);
 
       try {
-        const token = localStorage.getItem('token');
-        const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            prompt,
-            systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
-          })
+        const result = await generateAIResponse(prompt, {
+          systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
         });
-
-        if (!result.success) {
-          throw new Error(result.error);
-        }
 
         const aiMessage = {
           role: 'ai',
-          content: result.data?.text || "I'm sorry, I couldn't process that request.",
+          content: result?.text || "I'm sorry, I couldn't process that request.",
           timestamp: new Date()
         };
 

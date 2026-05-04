@@ -1256,8 +1256,6 @@ export const markMessageRead = async (id: string) => {
   return response.data;
 };
 
-export default api;
-
 // SMS
 export const fetchSMSSettings = async () => {
   const response = await api.get('/sms/settings');
@@ -1364,3 +1362,31 @@ export const fetchDetailedFinanceReport = async (startDate: string, endDate: str
   const response = await api.get(`/reports/finance?start_date=${startDate}&end_date=${endDate}`);
   return response.data;
 };
+
+// AI & SMART FEATURES
+export const saveAIKey = async (apiKey: string) => {
+  const response = await api.post('/ai/keys', { api_key: apiKey });
+  return response.data;
+};
+
+export const fetchAIKeys = async () => {
+  const response = await api.get('/ai/keys');
+  return response.data;
+};
+
+export const generateAIResponse = async (prompt: string, context?: any) => {
+  const response = await api.post('/ai/generate', { prompt, context });
+  return response.data;
+};
+
+export const fetchAIInsights = async () => {
+  const response = await api.get('/ai/insights');
+  return response.data;
+};
+
+export const saveAIInsights = async (data: any) => {
+  const response = await api.post('/ai/insights', data);
+  return response.data;
+};
+
+export default api;
