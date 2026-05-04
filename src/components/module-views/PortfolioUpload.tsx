@@ -43,6 +43,10 @@ const PortfolioUpload: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!supabase) {
+      return (window as any).showToast?.("Supabase storage not configured. Please add environment variables.", "error");
+    }
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
       return (window as any).showToast?.("Please upload an image file", "error");
