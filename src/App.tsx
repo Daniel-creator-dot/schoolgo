@@ -79,6 +79,7 @@ import PartnerLogin from "./components/PartnerLogin";
 import { API_BASE_URL } from "./constants";
 import PortfolioView from "./components/module-views/PortfolioView";
 import PortfolioUpload from "./components/module-views/PortfolioUpload";
+import WhistleblowerView from "./components/module-views/WhistleblowerView";
 import QRAttendanceScanner from "./components/QRAttendanceScanner";
 import { cn } from "./lib/utils";
 import { getFriendlyErrorMessage } from "./lib/errorHelper";
@@ -3268,6 +3269,7 @@ export default function App() {
       "Folder Management": <StorageModules.FolderManagement />,
       "Gallery": <PortfolioView role={currentRole} />,
       "Gallery Upload": <PortfolioUpload />,
+      "Whistle Blower": <WhistleblowerView role={currentRole} />,
 
       Departments: (
         <AcademicModules.DepartmentManagement

@@ -1332,6 +1332,27 @@ export const deletePortfolioItem = async (id: string) => {
   const response = await api.delete(`/portfolio/${id}`);
   return response.data;
 };
+// REPORTS
+// WHISTLEBLOWER
+export const fetchWhistleblowerReports = async () => {
+  const response = await api.get('/whistleblower');
+  return response.data;
+};
+
+export const createWhistleblowerReport = async (data: { title: string; description: string; category?: string; urgency?: string }) => {
+  const response = await api.post('/whistleblower', data);
+  return response.data;
+};
+
+export const updateWhistleblowerStatus = async (id: string, status: string) => {
+  const response = await api.patch(`/whistleblower/${id}`, { status });
+  return response.data;
+};
+
+export const deleteWhistleblowerReport = async (id: string) => {
+  const response = await api.delete(`/whistleblower/${id}`);
+  return response.data;
+};
 
 // REPORTS
 export const fetchDetailedAttendanceReport = async (startDate: string, endDate: string) => {

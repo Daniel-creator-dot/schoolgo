@@ -43,7 +43,8 @@ import {
   Ruler,
   Layout,
   QrCode,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Flag
 } from 'lucide-react';
 
 import { UserRole, NavItem } from './types';
@@ -180,6 +181,7 @@ export const NAVIGATION_CONFIG: NavItem[] = [
       { title: 'Announcements', href: 'Announcements', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
       { title: 'Messages', href: 'Messages', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'PARENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: MessageSquare },
       { title: 'Notifications', href: 'Notifications', roles: ['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD', 'STAFF', 'STUDENT', 'FINANCE', 'BUS_DRIVER', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE'], icon: Bell },
+      { title: 'Whistle Blower', href: 'Whistle Blower', roles: ['STAFF', 'HOD', 'SCHOOL_ADMIN'], icon: Flag },
     ]
   },
 
