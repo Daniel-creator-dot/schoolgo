@@ -37,6 +37,7 @@ import {
   TrendingUp,
   Palette,
   RotateCw,
+  RefreshCw,
   Bot
 } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -72,7 +73,8 @@ import {
   resetUserPassword,
   awardPartnerReward,
   fetchPartnerRewards,
-  deletePartnerReward
+  deletePartnerReward,
+  syncPublicHolidays
 } from '../lib/api';
 import { API_BASE_URL, PAYSTACK_PUBLIC_KEY } from '../constants';
 
@@ -2589,6 +2591,20 @@ export function Settings({ role }: { role?: UserRole }) {
   });
   const [groqKey, setGroqKey] = useState('');
   const [aiStatus, setAiStatus] = useState<'checking' | 'active' | 'outdated' | 'error'>('checking');
+  const [isSyncingHolidays, setIsSyncingHolidays] = useState(false);
+
+  const handleSyncHolidays = async () => {
+    setIsSyncingHolidays(true);
+    try {
+      await syncPublicHolidays();
+      (window as any).showToast?.('National holidays synced successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to sync holidays:', err);
+      (window as any).showToast?.('Failed to sync holidays. Please try again.', 'error');
+    } finally {
+      setIsSyncingHolidays(false);
+    }
+  };
 
   useEffect(() => {
     const loadOrg = async () => {
@@ -2919,10 +2935,20 @@ export function Settings({ role }: { role?: UserRole }) {
 
           {role === 'SCHOOL_ADMIN' && (
             <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
-              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                {t('academic_attendance_settings')}
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {t('academic_attendance_settings')}
+                </h3>
+                <button
+                  onClick={handleSyncHolidays}
+                  disabled={isSyncingHolidays}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={cn("w-3 h-3", isSyncingHolidays && "animate-spin")} />
+                  {isSyncingHolidays ? 'Syncing...' : 'Sync National Holidays'}
+                </button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('term_start_date')}</label>
