@@ -66,16 +66,35 @@ const PortfolioView: React.FC<{ role: string }> = ({ role }) => {
     }
   };
 
+  const getFlattenedItems = () => {
+    return items.flatMap(item => {
+      try {
+        if (item.file_url?.startsWith('[')) {
+          const urls = JSON.parse(item.file_url);
+          if (Array.isArray(urls)) {
+            return urls.map((url, idx) => ({ ...item, file_url: url, subIndex: idx, totalInGroup: urls.length }));
+          }
+        }
+      } catch (e) {}
+      return [{ ...item, subIndex: 0, totalInGroup: 1 }];
+    });
+  };
+
+  const flattenedItems = getFlattenedItems();
+
   const handleNextSlide = useCallback(() => {
-    setCurrentSlide(prev => (prev + 1) % items.length);
-  }, [items.length]);
+    setCurrentSlide(prev => (prev + 1) % flattenedItems.length);
+  }, [flattenedItems.length]);
 
   const handlePrevSlide = useCallback(() => {
-    setCurrentSlide(prev => (prev - 1 + items.length) % items.length);
-  }, [items.length]);
+    setCurrentSlide(prev => (prev - 1 + flattenedItems.length) % flattenedItems.length);
+  }, [flattenedItems.length]);
 
-  const startSlideshow = (index = 0) => {
-    setCurrentSlide(index);
+  const startSlideshow = (indexInItems = 0) => {
+    // Find the first occurrence of this item in the flattened list
+    const itemToFind = items[indexInItems];
+    const flatIndex = flattenedItems.findIndex(f => f.id === itemToFind.id);
+    setCurrentSlide(flatIndex >= 0 ? flatIndex : 0);
     setSlideshowActive(true);
     setIsAutoPlaying(true);
   };
@@ -83,6 +102,8 @@ const PortfolioView: React.FC<{ role: string }> = ({ role }) => {
   if (loading) {
     return <div className="p-8 text-center animate-pulse text-zinc-500">Loading amazing achievements...</div>;
   }
+
+  const currentItem = flattenedItems[currentSlide];
 
   return (
     <div className="space-y-6 p-6 pb-20 max-w-7xl mx-auto">
@@ -144,20 +165,48 @@ const PortfolioView: React.FC<{ role: string }> = ({ role }) => {
                 viewMode === 'grid' ? 'aspect-video w-full' : 'aspect-video w-full md:w-72 md:h-full'
               )}>
 
-                {item.file_url ? (
-                  <img 
-                    src={item.file_url} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    onError={(e) => {
-                      (e.target as any).src = 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop';
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-zinc-300">
-                    <FileText className="w-12 h-12" />
-                  </div>
-                )}
+                {(() => {
+                  let displayUrl = item.file_url;
+                  let isArray = false;
+                  let count = 0;
+                  
+                  try {
+                    if (item.file_url?.startsWith('[')) {
+                      const urls = JSON.parse(item.file_url);
+                      if (Array.isArray(urls)) {
+                        displayUrl = urls[0];
+                        isArray = true;
+                        count = urls.length;
+                      }
+                    }
+                  } catch (e) {}
+
+                  return (
+                    <>
+                      {displayUrl ? (
+                        <img 
+                          src={displayUrl} 
+                          alt={item.title} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          onError={(e) => {
+                            (e.target as any).src = 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=1000&auto=format&fit=crop';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-zinc-300">
+                          <FileText className="w-12 h-12" />
+                        </div>
+                      )}
+                      
+                      {isArray && count > 1 && (
+                        <div className="absolute top-4 left-4 px-2.5 py-1 bg-black/60 backdrop-blur-md text-white text-[10px] font-black rounded-lg border border-white/20 flex items-center gap-1.5 z-10 shadow-lg">
+                          <ImageIcon className="w-3 h-3" />
+                          {count} PHOTOS
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                   <div className="flex gap-2 w-full">
                     <button 
@@ -221,7 +270,7 @@ const PortfolioView: React.FC<{ role: string }> = ({ role }) => {
       )}
 
       {/* Slideshow Modal */}
-      {slideshowActive && items.length > 0 && (
+      {slideshowActive && flattenedItems.length > 0 && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-xl animate-in fade-in duration-300">
           <div className="absolute top-6 right-6 flex items-center gap-4 z-10">
             <button 
@@ -248,27 +297,32 @@ const PortfolioView: React.FC<{ role: string }> = ({ role }) => {
           <div className="w-full h-full flex items-center justify-center p-12">
             <div className="relative max-w-5xl w-full max-h-full aspect-video rounded-3xl overflow-hidden shadow-2xl shadow-purple-500/20">
               <img 
-                src={items[currentSlide]?.file_url} 
-                alt={items[currentSlide]?.title} 
+                src={currentItem?.file_url} 
+                alt={currentItem?.title} 
                 className="w-full h-full object-contain animate-in zoom-in-95 duration-500"
               />
               <div className="absolute bottom-0 inset-x-0 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="px-2 py-0.5 bg-purple-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
-                    {items[currentSlide]?.student_name || 'School Wide'}
+                    {currentItem?.student_name || 'School Wide'}
                   </span>
+                  {currentItem?.totalInGroup > 1 && (
+                    <span className="px-2 py-0.5 bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
+                      Photo {currentItem.subIndex + 1} of {currentItem.totalInGroup}
+                    </span>
+                  )}
                   <span className="text-white/60 text-[10px] font-bold uppercase tracking-widest">
-                    {new Date(items[currentSlide]?.created_at).toLocaleDateString()}
+                    {new Date(currentItem?.created_at).toLocaleDateString()}
                   </span>
                 </div>
-                <h2 className="text-3xl font-black text-white">{items[currentSlide]?.title}</h2>
-                <p className="text-white/70 mt-2 line-clamp-2 max-w-3xl">{items[currentSlide]?.description}</p>
+                <h2 className="text-3xl font-black text-white">{currentItem?.title}</h2>
+                <p className="text-white/70 mt-2 line-clamp-2 max-w-3xl">{currentItem?.description}</p>
                 <div className="mt-4 flex items-center text-white/50 text-[10px] font-bold uppercase tracking-widest gap-2">
-                   <span>Slide {currentSlide + 1} of {items.length}</span>
+                   <span>Slide {currentSlide + 1} of {flattenedItems.length}</span>
                    <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-purple-500 transition-all duration-500" 
-                        style={{ width: `${((currentSlide + 1) / items.length) * 100}%` }}
+                        style={{ width: `${((currentSlide + 1) / flattenedItems.length) * 100}%` }}
                       />
                    </div>
                 </div>
