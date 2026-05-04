@@ -601,7 +601,11 @@ export default function Layout({
         )}
       </AnimatePresence>
 
-      <FloatingAIChat organization={organization} />
+      <FloatingAIChat 
+        organization={organization} 
+        currentUser={currentUser}
+        currentRole={currentRole}
+      />
     </div>
   );
 }

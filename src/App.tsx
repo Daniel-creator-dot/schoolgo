@@ -3314,6 +3314,8 @@ export default function App() {
       "Ask AI": (
         <AIModules.AIChatbot
           organization={organizations.find((o) => o.id === currentUser?.org_id)}
+          currentUser={currentUser}
+          role={currentRole}
         />
       ),
 

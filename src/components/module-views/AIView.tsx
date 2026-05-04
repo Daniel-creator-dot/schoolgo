@@ -438,17 +438,26 @@ export const AIModules = {
       </div>
     </div>
   ),
-  AIChatbot: ({ organization }: { organization?: any }) => {
-    const [messages, setMessages] = React.useState<any[]>([
-      {
-        role: 'ai',
-        content: "Hello! I'm your OmniPortal AI assistant. How can I help you today? I can help with student records, financial reports, or system configurations.",
-        timestamp: new Date()
-      }
-    ]);
+  AIChatbot: ({ organization, currentUser, role }: { organization?: any, currentUser?: any, role?: string }) => {
+    const [messages, setMessages] = React.useState<any[]>([]);
     const [input, setInput] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
     const scrollRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+      if (messages.length === 0) {
+        const userName = currentUser?.name || currentUser?.full_name || 'User';
+        const roleName = role ? role.replace(/_/g, ' ').toLowerCase() : 'user';
+        
+        setMessages([
+          {
+            role: 'ai',
+            content: `Hello ${userName}! I'm your OmniPortal AI assistant. I see you are logged in as a ${roleName}. How can I help you manage ${organization?.name || 'your school'} today?`,
+            timestamp: new Date()
+          }
+        ]);
+      }
+    }, [currentUser, role, organization]);
 
     React.useEffect(() => {
       if (scrollRef.current) {
@@ -466,7 +475,10 @@ export const AIModules = {
 
       try {
         const result = await generateAIResponse(prompt, {
-          systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
+          systemPrompt: `You are OmniAI, a helpful assistant for OmniPortal school management system. 
+          You are currently assisting ${currentUser?.name || 'a user'} who is logged in as a ${role || 'user'}. 
+          The school is ${organization?.name || 'OmniPortal'}.
+          Keep responses concise, professional, and aware of the user's role.`
         });
 
         const aiMessage = {
