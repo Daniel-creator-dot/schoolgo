@@ -56,7 +56,7 @@ const PortfolioUpload: React.FC = () => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `portfolio/${fileName}`;
+      const filePath = fileName; // Simplified path
 
       const { data, error } = await supabase.storage
         .from('portfolio')
