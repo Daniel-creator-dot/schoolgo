@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Upload, 
   Plus, 
@@ -7,10 +7,13 @@ import {
   Search,
   User,
   GraduationCap,
-  Sparkles
+  Sparkles,
+  Image as ImageIcon,
+  Loader2
 } from "lucide-react";
 import { fetchStudents, createPortfolioItem } from '../../lib/api';
 import { cn } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
 
 const PortfolioUpload: React.FC = () => {
   const [students, setStudents] = useState<any[]>([]);
@@ -20,6 +23,8 @@ const PortfolioUpload: React.FC = () => {
   const [description, setDescription] = useState('');
   const [fileUrl, setFileUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadStudents();
@@ -31,6 +36,41 @@ const PortfolioUpload: React.FC = () => {
       setStudents(data);
     } catch (error) {
       (window as any).showToast?.("Failed to load students", "error");
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return (window as any).showToast?.("Please upload an image file", "error");
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `portfolio/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('portfolio')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('portfolio')
+        .getPublicUrl(filePath);
+
+      setFileUrl(publicUrl);
+      (window as any).showToast?.("Image uploaded to storage!", "success");
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      (window as any).showToast?.(error.message || "Failed to upload image", "error");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -177,25 +217,73 @@ const PortfolioUpload: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase text-zinc-500 tracking-wider">Attachment URL (Photo/Document)</label>
-                <div className="flex gap-2">
-                  <input 
-                    type="url"
-                    placeholder="https://..." 
-                    value={fileUrl}
-                    onChange={(e) => setFileUrl(e.target.value)}
-                    className="flex-1 px-4 py-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-mono text-xs focus:ring-2 focus:ring-purple-500 outline-none text-zinc-900 dark:text-white"
-                  />
-                  <button type="button" className="p-3 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-                    <Upload className="w-5 h-5 text-zinc-500" />
-                  </button>
+                <label className="text-xs font-bold uppercase text-zinc-500 tracking-wider">Gallery Image</label>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                />
+                
+                <div 
+                  className={cn(
+                    "relative group cursor-pointer border-2 border-dashed rounded-2xl overflow-hidden transition-all duration-300",
+                    fileUrl ? "border-purple-500/50 h-64" : "border-zinc-200 dark:border-zinc-800 h-40 hover:border-purple-500/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                  )}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {fileUrl ? (
+                    <>
+                      <img src={fileUrl} className="w-full h-full object-cover" alt="Preview" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="bg-white text-black px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
+                          <Upload className="w-4 h-4" /> Change Image
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                      {uploading ? (
+                        <>
+                          <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+                          <p className="text-sm font-medium text-zinc-500">Uploading to storage...</p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                            <ImageIcon className="w-8 h-8 text-zinc-400 group-hover:text-purple-500" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-bold text-zinc-900 dark:text-white">Click to upload photo</p>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-tighter mt-0.5">PNG, JPG, WEBP (Max 5MB)</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {/* Legacy URL Fallback */}
+                {fileUrl && (
+                  <div className="mt-2 p-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-800 rounded-xl flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500 shrink-0" />
+                    <p className="text-[10px] font-mono text-zinc-500 truncate">{fileUrl}</p>
+                    <button 
+                      type="button" 
+                      onClick={(e) => { e.stopPropagation(); setFileUrl(''); }}
+                      className="ml-auto p-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-md transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5 text-zinc-400" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="pt-4">
                 <button 
                   type="submit" 
-                  disabled={loading}
+                  disabled={loading || uploading}
                   className="w-full h-14 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-lg rounded-2xl shadow-lg shadow-purple-200 dark:shadow-none transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
                 >
                   {loading ? "Processing..." : "Publish to Gallery"}

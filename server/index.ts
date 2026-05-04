@@ -45,7 +45,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start Server Immediately to prevent Render Timeout
 app.listen(PORT, () => {
   console.log(`Deep backend server is running on http://localhost:${PORT}`);
-  
+
   // Initialize Database in the background
   initDb()
     .then(() => {
