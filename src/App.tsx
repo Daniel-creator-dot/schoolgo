@@ -3808,7 +3808,7 @@ export default function App() {
             </button>
           </div>
           <div className="flex-1 overflow-auto">
-            {FinanceModules.FeeHistoryPreview ? (
+            {FinanceModules.FeeHistoryPreview && (
               <FinanceModules.FeeHistoryPreview data={publicResultData} />
             )}
           </div>
