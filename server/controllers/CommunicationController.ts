@@ -264,3 +264,54 @@ export const markMessageRead = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const sendBulkSMS = async (req: AuthRequest, res: Response) => {
+  try {
+    const { messages } = req.body;
+    const org_id = req.user.org_id;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'No messages provided' });
+    }
+
+    // Check balance first
+    const orgBalance = await pool.query('SELECT sms_balance FROM organizations WHERE id = $1', [org_id]);
+    const balance = orgBalance.rows[0]?.sms_balance || 0;
+
+    if (balance < messages.length) {
+      return res.status(400).json({ 
+        error: `Insufficient SMS balance. Required: ${messages.length}, Available: ${balance}` 
+      });
+    }
+
+    let sent = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const msg of messages) {
+      try {
+        const result = await SMSService.sendSMS(org_id, msg.recipient, msg.message);
+        if (result.success) {
+          sent++;
+        } else {
+          failed++;
+          errors.push(`${msg.recipient}: ${result.message}`);
+        }
+      } catch (err: any) {
+        failed++;
+        errors.push(`${msg.recipient}: ${err.message}`);
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      sent, 
+      failed, 
+      total: messages.length,
+      errors: errors.length > 0 ? errors.slice(0, 10) : undefined // Cap errors at 10
+    });
+  } catch (err: any) {
+    console.error('sendBulkSMS error:', err);
+    res.status(500).json({ error: err.message });
+  }
+};

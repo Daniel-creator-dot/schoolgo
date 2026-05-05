@@ -101,6 +101,7 @@ router.post('/sms/settings', checkRole(['SUPER_ADMIN']), OrganizationController.
 router.post('/sms/top-up-platform', checkRole(['SUPER_ADMIN']), OrganizationController.topUpPlatformSMS);
 router.post('/sms/distribute', checkRole(['SUPER_ADMIN']), OrganizationController.distributeSMS);
 router.post('/sms/verify-purchase', checkRole(['SCHOOL_ADMIN']), OrganizationController.verifySMSPurchase);
+router.post('/sms/send-bulk', checkRole(['SCHOOL_ADMIN', 'HOD']), CommunicationController.sendBulkSMS);
 
 router.get('/sms/transactions', checkRole(['SCHOOL_ADMIN', 'SUPER_ADMIN']), OrganizationController.getSMSTransactions);
 
