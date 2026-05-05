@@ -269,11 +269,28 @@ export function DataTable<T extends { id: string | number }>({
                               setDropdownPosition(null);
                             } else {
                               const rect = e.currentTarget.getBoundingClientRect();
+                              const dropdownWidth = 192; // w-48
+                              const dropdownEstimatedHeight = 200;
+                              const margin = 8;
+
+                              // Calculate left: prefer right-aligned to button, but clamp within viewport
+                              let left = rect.right - dropdownWidth;
+                              if (left < margin) {
+                                left = margin;
+                              }
+                              if (left + dropdownWidth > window.innerWidth - margin) {
+                                left = window.innerWidth - dropdownWidth - margin;
+                              }
+
+                              // Calculate top: prefer below button, flip above if it overflows viewport bottom
+                              let top = rect.bottom;
+                              if (top + dropdownEstimatedHeight > window.innerHeight - margin) {
+                                top = rect.top - dropdownEstimatedHeight;
+                                if (top < margin) top = margin; // last resort: pin to top
+                              }
+
                               setActiveDropdown(item.id);
-                              setDropdownPosition({
-                                top: rect.bottom + window.scrollY,
-                                left: rect.right - 192 // w-48 is 192px
-                              });
+                              setDropdownPosition({ top, left });
                             }
                           }}
                           className="p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
