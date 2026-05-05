@@ -314,6 +314,7 @@ export default function App() {
   const [isSMSPanelOpen, setIsSMSPanelOpen] = useState(false);
   const [publicResultData, setPublicResultData] = useState<any>(null);
   const [isPublicLoading, setIsPublicLoading] = useState(false);
+  const [publicError, setPublicError] = useState<string | null>(null);
 
   const params = useMemo(() => new URLSearchParams(window.location.search), [window.location.search]);
   const view = params.get('view');
@@ -338,9 +339,13 @@ export default function App() {
             } else {
               console.error("Invalid result data:", data);
             }
+          } else {
+            const errorData = await res.json().catch(() => ({}));
+            setPublicError(errorData.error || "Could not find the requested record.");
           }
         } catch (err) {
           console.error("Failed to load public results:", err);
+          setPublicError("A connection error occurred. Please check your internet.");
         } finally {
           setIsPublicLoading(false);
         }
@@ -363,9 +368,13 @@ export default function App() {
             } else {
               console.error("Invalid fee history data:", data);
             }
+          } else {
+            const errorData = await res.json().catch(() => ({}));
+            setPublicError(errorData.error || "Could not find the requested financial record.");
           }
         } catch (err) {
           console.error("Failed to load public fee history:", err);
+          setPublicError("A connection error occurred while retrieving fee history.");
         } finally {
           setIsPublicLoading(false);
         }
@@ -3859,6 +3868,29 @@ export default function App() {
             student={formattedStudent} 
             onClose={() => setPublicResultData(null)} 
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (publicError) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-8">
+        <div className="bg-white dark:bg-zinc-900 p-8 rounded-[2rem] shadow-2xl border border-zinc-200 dark:border-zinc-800 text-center max-w-md animate-in zoom-in duration-300">
+          <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-2xl flex items-center justify-center text-rose-600 mx-auto mb-6">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-2 uppercase">Record Error</h2>
+          <p className="text-zinc-500 font-medium mb-8">{publicError}</p>
+          <button 
+            onClick={() => {
+              setPublicError(null);
+              setShowLanding(true);
+            }} 
+            className="w-full px-8 py-4 bg-indigo-600 text-white rounded-2xl text-sm font-black uppercase tracking-widest shadow-lg shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 transition-all active:scale-95"
+          >
+            Go to Home
+          </button>
         </div>
       </div>
     );
