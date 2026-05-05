@@ -439,9 +439,10 @@ export const FinanceModules = {
             header: 'Amount',
             accessor: (item) => `${currency} ${parseFloat(item.amount).toLocaleString()}`
           },
-          { header: 'Period', accessor: 'period' },
+          { header: 'Period', accessor: 'period', className: 'hidden sm:table-cell' },
           {
             header: 'Assigned Classes',
+            className: 'hidden md:table-cell',
             accessor: (item) => (
               <div className="flex flex-wrap gap-1 max-w-[200px]">
                 {item.assigned_classes && Array.isArray(item.assigned_classes) && item.assigned_classes.length > 0 ? (
@@ -787,7 +788,7 @@ export const FinanceModules = {
         message += `\nView history: ${publicLink}`;
 
         return {
-          recipient: student.contact || '',
+          recipient: student.contact || student.secondary_parent_contact || '',
           message: message
         };
       }).filter(m => m.recipient);
@@ -1167,9 +1168,9 @@ export const FinanceModules = {
           columns={[
             { header: 'Student', accessor: 'name', className: 'font-bold' },
             { header: 'Class', accessor: 'class_name' },
-            { header: 'Total Invoiced', accessor: (item: any) => `${currency} ${parseFloat(item.total_invoiced || 0).toLocaleString()}` },
-            { header: 'Total Paid', accessor: (item: any) => `${currency} ${parseFloat(item.total_paid || 0).toLocaleString()}` },
-            { header: 'Scholarships', accessor: (item: any) => `${currency} ${parseFloat(item.total_scholarships || 0).toLocaleString()}` },
+            { header: 'Total Invoiced', accessor: (item: any) => `${currency} ${parseFloat(item.total_invoiced || 0).toLocaleString()}`, className: 'hidden lg:table-cell' },
+            { header: 'Total Paid', accessor: (item: any) => `${currency} ${parseFloat(item.total_paid || 0).toLocaleString()}`, className: 'hidden md:table-cell' },
+            { header: 'Scholarships', accessor: (item: any) => `${currency} ${parseFloat(item.total_scholarships || 0).toLocaleString()}`, className: 'hidden lg:table-cell' },
             {
               header: 'Outstanding',
               accessor: (item: any) => (
@@ -1388,18 +1389,18 @@ export const FinanceModules = {
           maxWidth="max-w-2xl"
         >
           <div className="space-y-6">
-            <div className="p-6 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-[2rem] flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 flex items-center justify-center text-emerald-600 shadow-sm">
-                  <MessageSquare className="w-6 h-6" />
+            <div className="p-4 sm:p-6 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 rounded-2xl sm:rounded-[2rem] flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white dark:bg-zinc-900 flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
+                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Available Balance</p>
-                  <p className="text-2xl font-black text-zinc-900 dark:text-white leading-none mt-1">{organization?.sms_balance || 0} Credits</p>
+                  <p className="text-[9px] sm:text-[10px] font-black text-emerald-600 uppercase tracking-widest">Available Balance</p>
+                  <p className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white leading-none mt-1">{organization?.sms_balance || 0} Credits</p>
                 </div>
               </div>
               <button 
-                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200 dark:shadow-none"
+                className="w-full sm:w-auto px-6 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200 dark:shadow-none"
                 onClick={() => {
                   setIsBulkSMSModalOpen(false);
                   onNavigate?.('Dashboard');
@@ -1412,7 +1413,7 @@ export const FinanceModules = {
             <div className="space-y-4 p-2">
               <div className="p-4 bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 rounded-2xl">
                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Recipient Group</p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {(['all', 'class', 'selected'] as const).map((mode) => (
                     <button
                       key={mode}
@@ -3967,24 +3968,24 @@ export const FinanceModules = {
       <div className="bg-zinc-50 dark:bg-zinc-900/20 p-4 md:p-8 min-h-screen">
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           {/* Header */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-12 shadow-2xl border border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-3xl rounded-full -mr-20 -mt-20" />
-            <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-              <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800">
+            <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 sm:gap-8">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full sm:w-auto">
+                <div className="w-20 h-20 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0">
                   {organization?.logo ? (
                     <img src={organization.logo} className="w-full h-full object-contain p-2" />
                   ) : (
                     <School className="w-10 h-10" />
                   )}
                 </div>
-                <div>
-                  <h1 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{student?.name}</h1>
-                  <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">{student?.class_name || 'N/A'}</p>
+                <div className="text-center sm:text-left">
+                  <h1 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{student?.name}</h1>
+                  <p className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-widest">{student?.class_name || 'N/A'}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">Organization</p>
+              <div className="text-center md:text-right w-full md:w-auto pt-4 md:pt-0 border-t md:border-none border-zinc-100 dark:border-zinc-800">
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">Organization</p>
                 <p className="text-sm font-bold text-indigo-600 uppercase">{organization?.name}</p>
               </div>
             </div>
