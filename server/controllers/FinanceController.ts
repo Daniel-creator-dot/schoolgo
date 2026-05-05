@@ -769,3 +769,71 @@ export const getDetailedFinanceReport = async (req: AuthRequest, res: Response) 
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getPublicFeeHistoryData = async (req: express.Request, res: Response) => {
+  const { token } = req.params;
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const [studentId, orgId] = decoded.split('|');
+
+    if (!studentId || !orgId) {
+      return res.status(400).json({ error: 'Invalid token' });
+    }
+
+    const client = await pool.connect();
+    try {
+      // 1. Fetch Student & Organization
+      const studentRes = await client.query(`
+        SELECT s.*, c.name as class_name, c.id as class_id
+        FROM students s
+        LEFT JOIN classes c ON s.class_id = c.id
+        WHERE s.id = $1 AND s.org_id = $2
+      `, [studentId, orgId]);
+
+      if (studentRes.rows.length === 0) {
+        return res.status(404).json({ error: 'Student not found' });
+      }
+      const student = studentRes.rows[0];
+
+      const orgRes = await client.query('SELECT * FROM organizations WHERE id = $1', [orgId]);
+      const organization = orgRes.rows[0];
+
+      // 2. Fetch Invoices
+      const invoicesRes = await client.query(`
+        SELECT i.* 
+        FROM invoices i 
+        WHERE i.student_id = $1 AND i.org_id = $2
+        ORDER BY i.created_at DESC
+      `, [studentId, orgId]);
+
+      // 3. Fetch Payments
+      const paymentsRes = await client.query(`
+        SELECT p.* 
+        FROM payments p 
+        WHERE p.student_id = $1 AND p.org_id = $2
+        ORDER BY p.date DESC
+      `, [studentId, orgId]);
+
+      // 4. Fetch Scholarships
+      const scholarshipsRes = await client.query(`
+        SELECT s.*, ty.name as type_name, ty.amount as type_amount
+        FROM scholarships s
+        LEFT JOIN scholarship_types ty ON s.type_id = ty.id
+        WHERE s.student_id = $1 AND s.org_id = $2 AND s.status = 'Active'
+      `, [studentId, orgId]);
+
+      res.json({
+        student,
+        organization,
+        invoices: invoicesRes.rows,
+        payments: paymentsRes.rows,
+        scholarships: scholarshipsRes.rows
+      });
+    } finally {
+      client.release();
+    }
+  } catch (err: any) {
+    console.error('Public Fee History Fetch Error:', err);
+    res.status(500).json({ error: 'Failed to retrieve fee history' });
+  }
+};

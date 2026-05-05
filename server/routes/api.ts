@@ -35,6 +35,7 @@ router.post('/auth/partner/login', PartnerController.login);
 router.post('/auth/partner/register', PartnerController.register);
 router.post('/demo-request', OrganizationController.requestDemo);
 router.get('/public/report-card/:token', ExamController.getPublicReportCardData);
+router.get('/public/fee-history/:token', FinanceController.getPublicFeeHistoryData);
 
 
 // PROTECTED ROUTES

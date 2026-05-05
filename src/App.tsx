@@ -345,6 +345,27 @@ export default function App() {
       return;
     }
 
+    if (view === 'FeeHistory' && pubToken) {
+      const loadPublicFeeHistory = async () => {
+        setIsPublicLoading(true);
+        try {
+          const res = await fetch(`${API_BASE_URL}/public/fee-history/${pubToken}`);
+          if (res.ok) {
+            const data = await res.json();
+            setPublicResultData({ ...data, isFeeHistory: true });
+            setShowLanding(false);
+            setShowLogin(false);
+          }
+        } catch (err) {
+          console.error("Failed to load public fee history:", err);
+        } finally {
+          setIsPublicLoading(false);
+        }
+      };
+      loadPublicFeeHistory();
+      return;
+    }
+
     if (token && user) {
       setCurrentUser(user);
       setCurrentRole(user.role);
@@ -3753,6 +3774,25 @@ export default function App() {
   }
 
   if (publicResultData) {
+    if (publicResultData.isFeeHistory) {
+      return (
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
+          <div className="p-4 flex justify-between items-center bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
+            <h2 className="text-lg font-black tracking-tight text-indigo-600">OFFICIAL FEE STATEMENT</h2>
+            <button 
+              onClick={() => setPublicResultData(null)}
+              className="p-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl text-zinc-500 transition-colors"
+            >
+              <ShieldCheck className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <FinanceModules.FeeHistoryPreview data={publicResultData} />
+          </div>
+        </div>
+      );
+    }
+
     const { student, results, organization, template, gradingScale, term, year } = publicResultData;
     
     // Prepare student object for ReportCardPreview

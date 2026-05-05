@@ -31,7 +31,8 @@ import {
   Check,
   X,
   MessageSquare,
-  Send
+  Send,
+  School
 } from 'lucide-react';
 import { sendBulkSMS } from '../../lib/api';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -773,12 +774,17 @@ export const FinanceModules = {
           .reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
         
         const balance = totalBilled - totalPaid;
+
+        const token = btoa(`${student.id}|${organization?.id}`);
+        const publicLink = `${window.location.origin}/?view=FeeHistory&token=${token}`;
         
         let message = smsMessageTemplate
           .replace('{{STUDENT_NAME}}', student.name)
           .replace('{{AMOUNT_OWING}}', balance.toLocaleString(undefined, { minimumFractionDigits: 2 }))
           .replace('{{CURRENCY}}', currency)
           .replace('{{SCHOOL_NAME}}', organization?.name || 'the School');
+
+        message += `\nView history: ${publicLink}`;
 
         return {
           recipient: student.contact || '',
@@ -3942,6 +3948,129 @@ export const FinanceModules = {
                   </div>
                 </div>
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  },
+  FeeHistoryPreview: ({ data }: { data: any }) => {
+    const { student, organization, invoices = [], payments = [], scholarships = [] } = data;
+    const { t, currency } = useLanguage();
+
+    const totalBilled = invoices.reduce((sum: number, inv: any) => sum + parseFloat(inv.amount || 0), 0);
+    const totalPaid = payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
+    const totalScholarships = scholarships.reduce((sum: number, s: any) => sum + parseFloat(s.amount || s.type_amount || 0), 0);
+    const balanceDue = totalBilled - totalPaid - totalScholarships;
+
+    return (
+      <div className="bg-zinc-50 dark:bg-zinc-900/20 p-4 md:p-8 min-h-screen">
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {/* Header */}
+          <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-3xl rounded-full -mr-20 -mt-20" />
+            <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800">
+                  {organization?.logo ? (
+                    <img src={organization.logo} className="w-full h-full object-contain p-2" />
+                  ) : (
+                    <School className="w-10 h-10" />
+                  )}
+                </div>
+                <div>
+                  <h1 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{student?.name}</h1>
+                  <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">{student?.class_name || 'N/A'}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">Organization</p>
+                <p className="text-sm font-bold text-indigo-600 uppercase">{organization?.name}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Total Invoiced</p>
+              <p className="text-2xl font-black text-zinc-900 dark:text-white">{currency} {totalBilled.toLocaleString()}</p>
+            </div>
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Total Paid</p>
+              <p className="text-2xl font-black text-emerald-600">{currency} {totalPaid.toLocaleString()}</p>
+            </div>
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Scholarships</p>
+              <p className="text-2xl font-black text-indigo-600">{currency} {totalScholarships.toLocaleString()}</p>
+            </div>
+            <div className={cn(
+              "p-6 rounded-[2rem] border shadow-xl transition-all",
+              balanceDue <= 0 ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-800" : "bg-rose-50 border-rose-200 dark:bg-rose-900/10 dark:border-rose-800"
+            )}>
+              <p className={cn("text-[10px] font-black uppercase tracking-widest mb-2", balanceDue <= 0 ? "text-emerald-600" : "text-rose-600")}>Outstanding</p>
+              <p className={cn("text-2xl font-black", balanceDue <= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400")}>
+                {currency} {balanceDue.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Invoices */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-500" />
+                Invoices History
+              </h3>
+              <div className="space-y-3">
+                {invoices.length > 0 ? invoices.map((inv: any) => (
+                  <div key={inv.id} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 hover:border-indigo-200 transition-colors shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-bold text-zinc-900 dark:text-white">{inv.description || 'School Fees'}</h4>
+                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{new Date(inv.created_at).toLocaleDateString()}</p>
+                      </div>
+                      <span className={cn(
+                        "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest",
+                        inv.status === 'Paid' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                      )}>{inv.status}</span>
+                    </div>
+                    <p className="text-lg font-black text-zinc-900 dark:text-white">{currency} {parseFloat(inv.amount).toLocaleString()}</p>
+                  </div>
+                )) : (
+                  <div className="p-8 text-center text-zinc-400 italic bg-white dark:bg-zinc-900 rounded-3xl border border-dashed border-zinc-200">
+                    No invoices recorded.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Payments */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-emerald-500" />
+                Payments History
+              </h3>
+              <div className="space-y-3">
+                {payments.length > 0 ? payments.map((p: any) => (
+                  <div key={p.id} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 hover:border-emerald-200 transition-colors shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-bold text-zinc-900 dark:text-white">Payment Received</h4>
+                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{new Date(p.date || p.created_at).toLocaleDateString()} • {p.method}</p>
+                      </div>
+                      <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600">
+                        <Check className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <p className="text-lg font-black text-emerald-600">{currency} {parseFloat(p.amount).toLocaleString()}</p>
+                  </div>
+                )) : (
+                  <div className="p-8 text-center text-zinc-400 italic bg-white dark:bg-zinc-900 rounded-3xl border border-dashed border-zinc-200">
+                    No payments recorded.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
