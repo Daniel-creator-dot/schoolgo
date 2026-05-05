@@ -132,7 +132,7 @@ export const createAnnouncement = async (req: AuthRequest, res: Response) => {
 
       // Send SMS (async)
       const smsMessage = `${title.toUpperCase()}\n${content}`;
-      Promise.all((phones as string[]).map(phone => SMSService.sendSMS(org_id as string, phone, smsMessage)))
+      SMSService.sendSMSMany(org_id as string, phones as string[], smsMessage)
         .catch(err => console.error('Bulk SMS sending error:', err));
     }
 

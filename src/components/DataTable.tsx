@@ -118,11 +118,15 @@ export function DataTable<T extends { id: string | number }>({
     setDropdownStyles({ position: 'fixed', top, left, visibility: 'visible' });
   }, [anchorRect, activeDropdown]);
 
-  // Close dropdown on click outside
+  // Close dropdown on click outside or scroll
   React.useEffect(() => {
-    const handleClickOutside = () => setActiveDropdown(null);
-    window.addEventListener('click', handleClickOutside);
-    return () => window.removeEventListener('click', handleClickOutside);
+    const handleClose = () => setActiveDropdown(null);
+    window.addEventListener('click', handleClose);
+    window.addEventListener('scroll', handleClose, true); // Capture scroll events from any parent
+    return () => {
+      window.removeEventListener('click', handleClose);
+      window.removeEventListener('scroll', handleClose, true);
+    };
   }, []);
   const filteredData = (data || []).filter(item => {
     if (!searchTerm) return true;
