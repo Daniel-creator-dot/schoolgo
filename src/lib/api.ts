@@ -1256,8 +1256,6 @@ export const markMessageRead = async (id: string) => {
   return response.data;
 };
 
-export default api;
-
 // SMS
 export const fetchSMSSettings = async () => {
   const response = await api.get('/sms/settings');
@@ -1332,6 +1330,27 @@ export const deletePortfolioItem = async (id: string) => {
   const response = await api.delete(`/portfolio/${id}`);
   return response.data;
 };
+// REPORTS
+// WHISTLEBLOWER
+export const fetchWhistleblowerReports = async () => {
+  const response = await api.get('/whistleblower');
+  return response.data;
+};
+
+export const createWhistleblowerReport = async (data: { title: string; description: string; category?: string; urgency?: string }) => {
+  const response = await api.post('/whistleblower', data);
+  return response.data;
+};
+
+export const updateWhistleblowerStatus = async (id: string, status: string) => {
+  const response = await api.patch(`/whistleblower/${id}`, { status });
+  return response.data;
+};
+
+export const deleteWhistleblowerReport = async (id: string) => {
+  const response = await api.delete(`/whistleblower/${id}`);
+  return response.data;
+};
 
 // REPORTS
 export const fetchDetailedAttendanceReport = async (startDate: string, endDate: string) => {
@@ -1343,3 +1362,31 @@ export const fetchDetailedFinanceReport = async (startDate: string, endDate: str
   const response = await api.get(`/reports/finance?start_date=${startDate}&end_date=${endDate}`);
   return response.data;
 };
+
+// AI & SMART FEATURES
+export const saveAIKey = async (apiKey: string) => {
+  const response = await api.post('/ai/keys', { api_key: apiKey });
+  return response.data;
+};
+
+export const fetchAIKeys = async () => {
+  const response = await api.get('/ai/keys');
+  return response.data;
+};
+
+export const generateAIResponse = async (prompt: string, context?: any) => {
+  const response = await api.post('/ai/generate', { prompt, context });
+  return response.data;
+};
+
+export const fetchAIInsights = async () => {
+  const response = await api.get('/ai/insights');
+  return response.data;
+};
+
+export const saveAIInsights = async (data: any) => {
+  const response = await api.post('/ai/insights', data);
+  return response.data;
+};
+
+export default api;

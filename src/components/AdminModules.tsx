@@ -37,6 +37,7 @@ import {
   TrendingUp,
   Palette,
   RotateCw,
+  RefreshCw,
   Bot
 } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -72,7 +73,11 @@ import {
   resetUserPassword,
   awardPartnerReward,
   fetchPartnerRewards,
-  deletePartnerReward
+  deletePartnerReward,
+  syncPublicHolidays,
+  saveAIKey,
+  fetchAIKeys,
+  generateAIResponse
 } from '../lib/api';
 import { API_BASE_URL, PAYSTACK_PUBLIC_KEY } from '../constants';
 
@@ -2589,6 +2594,20 @@ export function Settings({ role }: { role?: UserRole }) {
   });
   const [groqKey, setGroqKey] = useState('');
   const [aiStatus, setAiStatus] = useState<'checking' | 'active' | 'outdated' | 'error'>('checking');
+  const [isSyncingHolidays, setIsSyncingHolidays] = useState(false);
+
+  const handleSyncHolidays = async () => {
+    setIsSyncingHolidays(true);
+    try {
+      await syncPublicHolidays();
+      (window as any).showToast?.('National holidays synced successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to sync holidays:', err);
+      (window as any).showToast?.('Failed to sync holidays. Please try again.', 'error');
+    } finally {
+      setIsSyncingHolidays(false);
+    }
+  };
 
   useEffect(() => {
     const loadOrg = async () => {
@@ -2603,40 +2622,28 @@ export function Settings({ role }: { role?: UserRole }) {
               logo: org.logo || '',
               signature: org.signature || ''
             });
-            // Check if backend AI is configured
-            const token = localStorage.getItem('token');
-
-            // Diagnostics: Check if AI routes even exist
-            const testRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/test`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (testRes.status === 404) {
-              setAiStatus('outdated');
-            } else if (testRes.ok) {
+            // Diagnostics: Check if AI routes even exist using axios instance
+            try {
+              const testRes = await generateAIResponse('ping');
+              setIsAiConfigured(true);
               setAiStatus('active');
-            } else {
-              setAiStatus('error');
+            } catch (err: any) {
+              if (err.response?.status === 503) {
+                setIsAiConfigured(false);
+                setAiStatus('active'); // Route exists but key is missing
+              } else if (err.response?.status === 404) {
+                setAiStatus('outdated');
+              } else {
+                setAiStatus('error');
+              }
             }
 
-            const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({ prompt: 'ping' })
-            });
-            setIsAiConfigured(res.status !== 503);
-
-            // Fetch Groq Key separately
-            const keyRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/keys`, {
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
-            if (keyRes.ok) {
-              const keys = await keyRes.json();
+            // Fetch Groq Key separately using axios instance
+            try {
+              const keys = await fetchAIKeys();
               if (keys.length > 0) setGroqKey(keys[0].api_key);
+            } catch (err) {
+              console.error('Failed to fetch AI keys:', err);
             }
           } catch (err) {
             console.error('Failed to fetch organization:', err);
@@ -2668,31 +2675,23 @@ export function Settings({ role }: { role?: UserRole }) {
       return;
     }
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/keys`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ api_key: trimmedKey })
-      });
-      if (res.ok) {
-        setGroqKey(trimmedKey);
-        if (organization) {
-          setOrganization({ ...organization, gemini_api_key: trimmedKey });
-        }
-        (window as any).showToast?.('Groq API Key saved successfully!', 'success');
-        // Refresh AI configuration status
-        const configRes = await fetch(`${(window as any).API_BASE_URL || '/api'}/ai/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ prompt: 'ping' })
-        });
-        setIsAiConfigured(configRes.status !== 503);
-      } else {
-        throw new Error('Failed to save key');
+      await saveAIKey(trimmedKey);
+      setGroqKey(trimmedKey);
+      if (organization) {
+        setOrganization({ ...organization, gemini_api_key: trimmedKey });
       }
-    } catch (err) {
+      (window as any).showToast?.('Groq API Key saved successfully!', 'success');
+      
+      // Refresh AI configuration status using axios instance
+      try {
+        await generateAIResponse('ping');
+        setIsAiConfigured(true);
+      } catch (err: any) {
+        setIsAiConfigured(err.response?.status !== 503);
+      }
+    } catch (err: any) {
       console.error('Failed to save Groq key:', err);
-      (window as any).showToast?.(err, 'error');
+      (window as any).showToast?.(err.friendlyMessage || 'Failed to save key', 'error');
     }
   };
   const handleSave = async () => {
@@ -2912,6 +2911,67 @@ export function Settings({ role }: { role?: UserRole }) {
                     className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
                   />
                   <p className="text-[10px] text-zinc-500 italic">Used to authenticate requests from the portal to your device.</p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {role === 'SCHOOL_ADMIN' && (
+            <section className="space-y-4 pt-8 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {t('academic_attendance_settings')}
+                </h3>
+                <button
+                  onClick={handleSyncHolidays}
+                  disabled={isSyncingHolidays}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-100 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={cn("w-3 h-3", isSyncingHolidays && "animate-spin")} />
+                  {isSyncingHolidays ? 'Syncing...' : 'Sync National Holidays'}
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('term_start_date')}</label>
+                  <input
+                    type="date"
+                    value={organization?.term_start_date || ''}
+                    onChange={(e) => setOrganization({ ...organization, term_start_date: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('term_end_date')}</label>
+                  <input
+                    type="date"
+                    value={organization?.term_end_date || ''}
+                    onChange={(e) => setOrganization({ ...organization, term_end_date: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">{t('total_school_days')}</label>
+                  <input
+                    type="number"
+                    value={organization?.attendance_total_days || 0}
+                    onChange={(e) => setOrganization({ ...organization, attendance_total_days: parseInt(e.target.value) || 0 })}
+                    placeholder="e.g. 90"
+                    className="w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="flex items-center gap-3 pt-8">
+                  <input
+                    type="checkbox"
+                    id="include_weekends"
+                    checked={organization?.attendance_include_weekends || false}
+                    onChange={(e) => setOrganization({ ...organization, attendance_include_weekends: e.target.checked })}
+                    className="w-5 h-5 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <label htmlFor="include_weekends" className="text-sm font-bold text-zinc-700 dark:text-zinc-300">
+                    {t('include_weekends_in_attendance')}
+                  </label>
                 </div>
               </div>
             </section>

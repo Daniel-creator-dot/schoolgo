@@ -33,7 +33,7 @@ export function Announcements({ role, students = [], staff = [], organization }:
     location: ''
   });
 
-  const canManage = role === 'SUPER_ADMIN' || role === 'SCHOOL_ADMIN';
+  const canManage = role === 'SUPER_ADMIN' || role === 'SCHOOL_ADMIN' || role === 'HOD';
 
   const fetchData = async () => {
     setIsLoading(true);

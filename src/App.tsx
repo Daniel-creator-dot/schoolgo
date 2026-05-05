@@ -48,6 +48,7 @@ import {
   AdmissionsModules,
   ExamModules,
   AdmitStudentView,
+  ReportCardPreview,
 } from "./components/module-views/SchoolAdminView";
 import { FinanceModules } from "./components/module-views/FinanceView";
 import { HRModules } from "./components/module-views/HRView";
@@ -79,6 +80,7 @@ import PartnerLogin from "./components/PartnerLogin";
 import { API_BASE_URL } from "./constants";
 import PortfolioView from "./components/module-views/PortfolioView";
 import PortfolioUpload from "./components/module-views/PortfolioUpload";
+import WhistleblowerView from "./components/module-views/WhistleblowerView";
 import QRAttendanceScanner from "./components/QRAttendanceScanner";
 import { cn } from "./lib/utils";
 import { getFriendlyErrorMessage } from "./lib/errorHelper";
@@ -310,10 +312,39 @@ export default function App() {
   const [editingOrganization, setEditingOrganization] = useState<any>(null);
   const [smsSettings, setSmsSettings] = useState<any>(null);
   const [isSMSPanelOpen, setIsSMSPanelOpen] = useState(false);
+  const [publicResultData, setPublicResultData] = useState<any>(null);
+  const [isPublicLoading, setIsPublicLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || "null");
+    
+    // Check for public result viewing link
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    const pubToken = params.get('token');
+
+    if (view === 'Result' && pubToken) {
+      const loadPublicResult = async () => {
+        setIsPublicLoading(true);
+        try {
+          const res = await fetch(`${API_BASE_URL}/public/report-card/${pubToken}`);
+          if (res.ok) {
+            const data = await res.json();
+            setPublicResultData(data);
+            setShowLanding(false);
+            setShowLogin(false);
+          }
+        } catch (err) {
+          console.error("Failed to load public results:", err);
+        } finally {
+          setIsPublicLoading(false);
+        }
+      };
+      loadPublicResult();
+      return;
+    }
+
     if (token && user) {
       setCurrentUser(user);
       setCurrentRole(user.role);
@@ -3268,6 +3299,7 @@ export default function App() {
       "Folder Management": <StorageModules.FolderManagement />,
       "Gallery": <PortfolioView role={currentRole} />,
       "Gallery Upload": <PortfolioUpload />,
+      "Whistle Blower": <WhistleblowerView role={currentRole} />,
 
       Departments: (
         <AcademicModules.DepartmentManagement
@@ -3282,6 +3314,8 @@ export default function App() {
       "Ask AI": (
         <AIModules.AIChatbot
           organization={organizations.find((o) => o.id === currentUser?.org_id)}
+          currentUser={currentUser}
+          role={currentRole}
         />
       ),
 
@@ -3705,6 +3739,55 @@ export default function App() {
       )
     );
   };
+
+  if (isPublicLoading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-8">
+        <div className="w-16 h-16 bg-indigo-600 rounded-3xl flex items-center justify-center animate-pulse mb-6">
+          <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+        <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">Retrieving Official Result...</h2>
+        <p className="text-zinc-500 font-medium text-center">Please wait while we secure your ward's performance data.</p>
+      </div>
+    );
+  }
+
+  if (publicResultData) {
+    const { student, results, organization, template, gradingScale, term, year } = publicResultData;
+    
+    // Prepare student object for ReportCardPreview
+    const formattedStudent = {
+      ...student,
+      results: results.map((r: any) => ({
+        subject: r.subject_name || r.subject,
+        classScore: (r.score_details as any)?.showClassScore || 0,
+        examScore: (r.score_details as any)?.showExamScore || 0,
+        score: r.score,
+        grade: r.grade,
+        rank: '—',
+        remark: r.remark || '—'
+      }))
+    };
+
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4 sm:p-8">
+        <div className="w-full max-w-5xl bg-white dark:bg-zinc-900 rounded-[3rem] shadow-2xl shadow-indigo-200/50 dark:shadow-none overflow-hidden relative">
+          <button 
+            onClick={() => setPublicResultData(null)}
+            className="absolute top-8 right-8 z-50 p-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-2xl text-zinc-500 transition-colors"
+          >
+            <Calendar className="w-5 h-5" />
+          </button>
+          <ReportCardPreview 
+            template={template} 
+            organization={organization} 
+            student={formattedStudent} 
+            onClose={() => setPublicResultData(null)} 
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (showLanding)
     return (

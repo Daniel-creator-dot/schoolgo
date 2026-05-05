@@ -4,6 +4,7 @@ import { Bot, X, Send, Minus, Maximize2, MessageSquare, Sparkles, User } from 'l
 import { GoogleGenAI } from "@google/genai";
 import { cn } from '../lib/utils';
 import { safeAiFetch } from '../lib/aiUtils';
+import { generateAIResponse } from '../lib/api';
 import { API_BASE_URL } from '../constants';
 
 
@@ -13,19 +14,28 @@ interface Message {
   timestamp: Date;
 }
 
-export function FloatingAIChat({ organization }: { organization?: any }) {
+export function FloatingAIChat({ organization, currentUser, currentRole }: { organization?: any, currentUser?: any, currentRole?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'ai',
-      content: "Hello! I'm OmniAI, your school management assistant. How can I help you today?",
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      const userName = currentUser?.name || currentUser?.full_name || 'User';
+      const roleName = currentRole ? currentRole.replace(/_/g, ' ').toLowerCase() : 'user';
+      
+      setMessages([
+        {
+          role: 'ai',
+          content: `Hello ${userName}! I'm OmniAI, your ${roleName} assistant for ${organization?.name || 'OmniPortal'}. How can I help you today?`,
+          timestamp: new Date()
+        }
+      ]);
+    }
+  }, [currentUser, currentRole, organization]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -48,26 +58,16 @@ export function FloatingAIChat({ organization }: { organization?: any }) {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          prompt,
-          systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
-        })
+      const result = await generateAIResponse(prompt, {
+        systemPrompt: `You are OmniAI, a helpful assistant for OmniPortal school management system. 
+        You are currently assisting ${currentUser?.name || 'a user'} who is logged in as a ${currentRole || 'user'}. 
+        The school is ${organization?.name || 'OmniPortal'}.
+        Keep responses concise, professional, and aware of the user's role.`
       });
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
 
       const aiMessage: Message = {
         role: 'ai',
-        content: result.data?.text || "I'm sorry, I couldn't process that request.",
+        content: result?.text || "I'm sorry, I couldn't process that request.",
         timestamp: new Date()
       };
 

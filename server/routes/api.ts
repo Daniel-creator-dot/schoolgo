@@ -21,6 +21,7 @@ import * as DriveController from '../controllers/DriveController.ts';
 import * as MeetingController from '../controllers/MeetingController.ts';
 import * as AIController from '../controllers/AIController.ts';
 import * as ClubsController from '../controllers/ClubsController.ts';
+import * as WhistleblowerController from '../controllers/WhistleblowerController.ts';
 import { verifyToken, checkRole } from '../middleware/auth.ts';
 import pool from '../db.ts';
 import bcrypt from 'bcryptjs';
@@ -33,6 +34,7 @@ router.post('/auth/register', AuthController.register);
 router.post('/auth/partner/login', PartnerController.login);
 router.post('/auth/partner/register', PartnerController.register);
 router.post('/demo-request', OrganizationController.requestDemo);
+router.get('/public/report-card/:token', ExamController.getPublicReportCardData);
 
 
 // PROTECTED ROUTES
@@ -561,12 +563,12 @@ router.delete('/document-templates/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN
 
 // COMMUNICATION (ANNOUNCEMENTS & MESSAGES)
 router.get('/announcements', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'STAFF', 'STUDENT', 'PARENT']), CommunicationController.getAnnouncements);
-router.post('/announcements', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), CommunicationController.createAnnouncement);
-router.delete('/announcements/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), CommunicationController.deleteAnnouncement);
+router.post('/announcements', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD']), CommunicationController.createAnnouncement);
+router.delete('/announcements/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD']), CommunicationController.deleteAnnouncement);
 
 router.get('/meetings', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'STAFF', 'STUDENT', 'PARENT']), MeetingController.getMeetings);
-router.post('/meetings', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), MeetingController.createMeeting);
-router.delete('/meetings/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN']), MeetingController.deleteMeeting);
+router.post('/meetings', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD']), MeetingController.createMeeting);
+router.delete('/meetings/:id', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'HOD']), MeetingController.deleteMeeting);
 
 router.get('/messages', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'STAFF', 'STUDENT', 'PARENT']), CommunicationController.getMessages);
 router.get('/messages/unread-count', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 'STAFF', 'STUDENT', 'PARENT']), CommunicationController.getUnreadMessageCount);
@@ -585,6 +587,12 @@ router.patch('/drive/files/:id/move', checkRole(['SUPER_ADMIN', 'SCHOOL_ADMIN', 
 router.get('/portfolio', AcademicController.getPortfolioItems);
 router.post('/portfolio', checkRole(['STAFF', 'SCHOOL_ADMIN', 'HOD']), AcademicController.createPortfolioItem);
 router.delete('/portfolio/:id', checkRole(['STAFF', 'SCHOOL_ADMIN', 'HOD']), AcademicController.deletePortfolioItem);
+
+// WHISTLEBLOWER (Anonymous Reports)
+router.get('/whistleblower', checkRole(['SCHOOL_ADMIN']), WhistleblowerController.getReports);
+router.post('/whistleblower', checkRole(['STAFF', 'HOD', 'SCHOOL_ADMIN']), WhistleblowerController.createReport);
+router.patch('/whistleblower/:id', checkRole(['SCHOOL_ADMIN']), WhistleblowerController.updateReportStatus);
+router.delete('/whistleblower/:id', checkRole(['SCHOOL_ADMIN']), WhistleblowerController.deleteReport);
 
 // REPORTS
 router.get('/reports/attendance', checkRole(['SCHOOL_ADMIN', 'HR']), HRController.getDetailedAttendanceReport);

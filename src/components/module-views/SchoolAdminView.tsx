@@ -8218,35 +8218,9 @@ export const ExamModules = {
               <p className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest truncate">{performanceGroupBy} summary — {(organization as any)?.academic_year || '2025/2026'}</p>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-2 sm:gap-4">
-            <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl sm:rounded-2xl border border-zinc-200 dark:border-zinc-700 w-full sm:w-auto overflow-x-auto no-scrollbar">
-              <button
-                onClick={() => {
-                  setPerformanceGroupBy('class');
-                  setShowBroadcaster(false);
-                }}
-                className={cn(
-                  "px-4 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                  performanceGroupBy === 'class' ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
-                )}
-              >
-                By Class
-              </button>
-              <button
-                onClick={() => {
-                  setPerformanceGroupBy('subject');
-                  setShowBroadcaster(false);
-                }}
-                className={cn(
-                  "px-4 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                  performanceGroupBy === 'subject' ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
-                )}
-              >
-                By Subject
-              </button>
-            </div>
-
-            <div className="flex items-center gap-1 sm:gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl sm:rounded-2xl border border-zinc-200 dark:border-zinc-700 w-full sm:w-auto overflow-x-auto no-scrollbar">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            {/* Primary View Tabs */}
+            <div className="flex items-center p-1.5 bg-zinc-100/80 dark:bg-zinc-800/80 backdrop-blur-xl rounded-[1.25rem] sm:rounded-[2rem] border border-zinc-200/50 dark:border-zinc-700/50 overflow-x-auto no-scrollbar scroll-smooth w-full lg:w-auto shadow-inner">
               <button
                 onClick={() => {
                   setShowTopPerformers(false);
@@ -8254,12 +8228,16 @@ export const ExamModules = {
                   setShowBroadcaster(false);
                 }}
                 className={cn(
-                  "px-3 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                  (!showTopPerformers && !showClassRemarks && !showBroadcaster) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
+                  "flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3 rounded-[1rem] sm:rounded-[1.5rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
+                  (!showTopPerformers && !showClassRemarks && !showBroadcaster) 
+                    ? "bg-white dark:bg-zinc-700 shadow-[0_8px_20px_-4px_rgba(79,70,229,0.1)] dark:shadow-none text-indigo-600 scale-105" 
+                    : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-white/50 dark:hover:bg-zinc-700/30"
                 )}
               >
+                <ClipboardCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Summary
               </button>
+              
               {((role as any) === 'SCHOOL_ADMIN' || (role as any) === 'HOD') && (
                 <button
                   onClick={() => {
@@ -8268,49 +8246,41 @@ export const ExamModules = {
                     setShowBroadcaster(false);
                   }}
                   className={cn(
-                    "px-3 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1.5",
-                    showTopPerformers ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
+                    "flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3 rounded-[1rem] sm:rounded-[1.5rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
+                    showTopPerformers 
+                      ? "bg-white dark:bg-zinc-700 shadow-[0_8px_20px_-4px_rgba(79,70,229,0.1)] dark:shadow-none text-indigo-600 scale-105" 
+                      : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-white/50 dark:hover:bg-zinc-700/30"
                   )}
                 >
-                  <Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  <span className="hidden sm:inline">Top Performance</span>
-                  <span className="sm:hidden">Top</span>
+                  <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Top Performance
                 </button>
               )}
+
               {classes.some((c: any) => {
                 const tcId = String(c.class_teacher_id || '').toLowerCase();
                 const uId = String(currentUser?.id || '').toLowerCase();
-                const uStaffId = String(currentUser?.staff_id || '').toLowerCase();
-                const uUid = String(currentUser?.uid || '').toLowerCase();
-                const uUserId = String(currentUser?.user_id || '').toLowerCase();
                 const uEmail = String(currentUser?.email || '').toLowerCase().trim();
-                const uName = String(currentUser?.name || '').toLowerCase().trim();
-                const tcName = String(c.class_teacher || c.teacher_name || '').toLowerCase().trim();
-
-                return tcId && (
-                  tcId === uId ||
-                  tcId === uStaffId ||
-                  tcId === uUid ||
-                  tcId === uUserId ||
-                  tcId === uEmail ||
-                  (uName && tcName && tcName.includes(uName)) ||
-                  (uName && tcId === uName)
-                );
+                return tcId && (tcId === uId || tcId === uEmail);
               }) && (
-                  <button
-                    onClick={() => {
-                      setShowClassRemarks(true);
-                      setShowTopPerformers(false);
-                      setShowBroadcaster(false);
-                    }}
-                    className={cn(
-                      "px-3 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                      (showClassRemarks && !showTopPerformers && !showBroadcaster) ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
-                    )}
-                  >
-                    Remarks
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    setShowClassRemarks(true);
+                    setShowTopPerformers(false);
+                    setShowBroadcaster(false);
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3 rounded-[1rem] sm:rounded-[1.5rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
+                    (showClassRemarks && !showTopPerformers && !showBroadcaster) 
+                      ? "bg-white dark:bg-zinc-700 shadow-[0_8px_20px_-4px_rgba(79,70,229,0.1)] dark:shadow-none text-indigo-600 scale-105" 
+                      : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-white/50 dark:hover:bg-zinc-700/30"
+                  )}
+                >
+                  <ArrowRightCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Remarks
+                </button>
+              )}
+
               {((role as any) === 'SCHOOL_ADMIN' || (role as any) === 'HOD') && (
                 <button
                   onClick={() => {
@@ -8319,16 +8289,41 @@ export const ExamModules = {
                     setShowTopPerformers(false);
                   }}
                   className={cn(
-                    "px-3 sm:px-6 py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1.5",
-                    showBroadcaster ? "bg-white dark:bg-zinc-700 shadow-lg text-indigo-600" : "text-zinc-500 hover:text-zinc-700"
+                    "flex items-center gap-2 px-5 sm:px-8 py-2.5 sm:py-3 rounded-[1rem] sm:rounded-[1.5rem] text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-300 whitespace-nowrap",
+                    showBroadcaster 
+                      ? "bg-white dark:bg-zinc-700 shadow-[0_8px_20px_-4px_rgba(79,70,229,0.1)] dark:shadow-none text-indigo-600 scale-105" 
+                      : "text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-white/50 dark:hover:bg-zinc-700/30"
                   )}
                 >
-                  <Send className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  <span className="hidden sm:inline">Broadcaster</span>
-                  <span className="sm:hidden">SMS</span>
+                  <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  Broadcaster
                 </button>
               )}
             </div>
+
+            {/* Secondary Grouping Toggle */}
+            {!showBroadcaster && !showTopPerformers && !showClassRemarks && (
+              <div className="flex items-center gap-2 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl border border-zinc-200/50 dark:border-zinc-700/50 w-full lg:w-auto self-end lg:self-center">
+                <button
+                  onClick={() => setPerformanceGroupBy('class')}
+                  className={cn(
+                    "flex-1 lg:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                    performanceGroupBy === 'class' ? "bg-white dark:bg-zinc-700 shadow-md text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                  )}
+                >
+                  By Class
+                </button>
+                <button
+                  onClick={() => setPerformanceGroupBy('subject')}
+                  className={cn(
+                    "flex-1 lg:flex-none px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                    performanceGroupBy === 'subject' ? "bg-white dark:bg-zinc-700 shadow-md text-indigo-600" : "text-zinc-400 hover:text-zinc-600"
+                  )}
+                >
+                  By Subject
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -8441,7 +8436,7 @@ export const ExamModules = {
                       <div className="bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100 mb-2">Sample Template</p>
                         <p className="text-sm font-medium leading-relaxed italic">
-                          "Dear Parent, your ward's academic results for {selectedTerm} have been successfully uploaded to the portal. Please log in to view the performance."
+                          "Dear Parent, your ward's results for {selectedTerm} are ready. View here: {window.location.origin}/?view=Result&token=..."
                         </p>
                       </div>
 
@@ -8450,28 +8445,36 @@ export const ExamModules = {
                         onClick={async () => {
                           const isAll = selectedClassRemarksId === 'all';
                           const targetStudents = isAll ? students : students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId));
-                          const parentContacts = Array.from(new Set(targetStudents.map((s: any) => s.contact).filter(Boolean)));
+                          const studentsWithContact = targetStudents.filter((s: any) => s.contact);
                           
-                          if (parentContacts.length === 0) {
-                            (window as any).showToast?.("No parent contacts found for selection.", "error");
+                          if (studentsWithContact.length === 0) {
+                            (window as any).showToast?.("No students with parent contacts found for selection.", "error");
                             return;
                           }
 
-                          if ((smsSettings?.balance || 0) < parentContacts.length) {
-                            (window as any).showToast?.(`Insufficient SMS credits (${smsSettings?.balance || 0}) to broadcast to ${parentContacts.length} parents.`, "error");
+                          if ((smsSettings?.balance || 0) < studentsWithContact.length) {
+                            (window as any).showToast?.(`Insufficient SMS credits (${smsSettings?.balance || 0}) to broadcast to ${studentsWithContact.length} students.`, "error");
                             return;
                           }
 
-                          if (!window.confirm(`Broadcast SMS to ${parentContacts.length} parents across ${isAll ? 'all classes' : 'the selected class'}?`)) return;
+                          if (!window.confirm(`Broadcast SMS to ${studentsWithContact.length} parents across ${isAll ? 'all classes' : 'the selected class'}?`)) return;
 
                           setIsBroadcasting(true);
                           setBroadcastProgress(0);
                           
                           try {
-                            const messages = parentContacts.map(contact => ({
-                              recipient: contact as string,
-                              message: `Dear Parent, your ward's academic results for ${selectedTerm} have been successfully uploaded. Please check the portal to view the performance.`
-                            }));
+                            const messages = targetStudents
+                              .filter((s: any) => s.contact)
+                              .map((s: any) => {
+                                const token = btoa(`${s.id}|${selectedTerm}|${selectedAcademicYear}|${currentUser?.org_id || (organization as any)?.id}`);
+                                const link = `${window.location.origin}/?view=Result&token=${token}`;
+                                return {
+                                  recipient: s.contact as string,
+                                  message: `Dear Parent, your ward ${s.name}'s results for ${selectedTerm} are ready. View here: ${link}`
+                                };
+                              });
+
+                            const uniqueRecipientsCount = new Set(messages.map(m => m.recipient)).size;
 
                             // Split into chunks if there are many contacts to avoid payload limits
                             const chunkSize = 100;
@@ -8481,7 +8484,7 @@ export const ExamModules = {
                               setBroadcastProgress(Math.round(((i + chunk.length) / messages.length) * 100));
                             }
 
-                            (window as any).showToast?.(`Broadcast sent successfully to ${parentContacts.length} parents!`, "success");
+                            (window as any).showToast?.(`Broadcast sent successfully to ${uniqueRecipientsCount} parents!`, "success");
                           } catch (err: any) {
                             (window as any).showToast?.(err?.message || "Broadcast failed", "error");
                           } finally {
@@ -8703,34 +8706,33 @@ export const ExamModules = {
             </div>
 
             {selectedClassRemarksId && (
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 text-left text-[10px] font-black uppercase tracking-widest text-zinc-500">Student Name</th>
-                      <th className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 text-left text-[10px] font-black uppercase tracking-widest text-zinc-500">Teacher's Remark</th>
-                      <th className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 text-left text-[10px] font-black uppercase tracking-widest text-zinc-500">Principal's Suggestion</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId)).map((student: any) => (
-                      <tr key={student.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors">
-                        <td className="p-4 border-b border-zinc-100 dark:border-zinc-800">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 text-xs font-bold">
-                              {student.name.charAt(0)}
-                            </div>
-                            <span className="text-sm font-bold text-zinc-900 dark:text-white">{student.name}</span>
-                          </div>
-                        </td>
-                        <td className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  {students.filter((s: any) => String(s.class_id) === String(selectedClassRemarksId)).map((student: any) => (
+                    <div key={student.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                      <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                        <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 text-sm font-black">
+                          {student.name.charAt(0)}
+                        </div>
+                        <div>
+                          <span className="text-sm font-black text-zinc-900 dark:text-white tracking-tight">{student.name}</span>
+                          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">Terminal Record</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                            Teacher's Remark
+                          </label>
                           <select
                             value={terminalRemarks[student.id]?.teacher_remark || ''}
                             onChange={(e) => setTerminalRemarks(prev => ({
                               ...prev,
                               [student.id]: { ...(prev[student.id] || {}), teacher_remark: e.target.value }
                             }))}
-                            className="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 mb-2"
+                            className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500"
                           >
                             <option value="">-- Choose Template --</option>
                             {remarkTemplates?.map((rt: any) => {
@@ -8749,10 +8751,15 @@ export const ExamModules = {
                               [student.id]: { ...(prev[student.id] || {}), teacher_remark: e.target.value }
                             }))}
                             placeholder="Enter detailed remark..."
-                            className="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
+                            className="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
                           />
-                        </td>
-                        <td className="p-4 border-b border-zinc-100 dark:border-zinc-800">
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Principal's Suggestion
+                          </label>
                           <textarea
                             value={terminalRemarks[student.id]?.principal_remark || ''}
                             onChange={(e) => setTerminalRemarks(prev => ({
@@ -8760,14 +8767,14 @@ export const ExamModules = {
                               [student.id]: { ...(prev[student.id] || {}), principal_remark: e.target.value }
                             }))}
                             placeholder="Principal's remark suggestion..."
-                            className="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
+                            className="w-full p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 min-h-[126px]"
                           />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <div className="p-6 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 flex justify-end">
                   <button
                     onClick={async () => {
                       const resultsToSave = students
@@ -8795,9 +8802,10 @@ export const ExamModules = {
                         (window as any).showToast?.(err, 'error');
                       }
                     }}
-                    className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 dark:shadow-none"
+                    className="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
                   >
-                    Submit Terminal Remarks
+                    <ClipboardCheck className="w-4 h-4" />
+                    Submit Remarks
                   </button>
                 </div>
               </div>
@@ -8809,7 +8817,7 @@ export const ExamModules = {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {performanceSummaryGroups.map((group: any) => (
-                    <div key={group.id} className="group p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm hover:shadow-xl hover:border-indigo-200 dark:hover:border-indigo-900/40 transition-all duration-500 relative overflow-hidden">
+                    <div key={group.id} className="group p-6 sm:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] sm:rounded-[2.5rem] shadow-sm hover:shadow-xl hover:border-indigo-200 dark:hover:border-indigo-900/40 transition-all duration-500 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-bl-[5rem] -mr-16 -mt-16 group-hover:scale-125 transition-transform duration-700" />
 
                       <div className="relative space-y-6">

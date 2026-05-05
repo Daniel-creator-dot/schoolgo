@@ -16,6 +16,11 @@ import {
 import { cn } from '../../lib/utils';
 import { DataTable } from '../DataTable';
 import { safeAiFetch, extractJsonFromAiResponse } from '../../lib/aiUtils';
+import { 
+  fetchAIInsights, 
+  saveAIInsights, 
+  generateAIResponse 
+} from '../../lib/api';
 import { API_BASE_URL } from '../../constants';
 
 
@@ -48,16 +53,10 @@ export const AIModules = {
 
     const fetchStoredInsights = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_BASE_URL}/ai/insights?type=performance`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.insights) setAiInsights(data.insights);
-          if (data.predictions) setStudentPredictions(data.predictions);
-          if (data.last_updated) setLastUpdated(data.last_updated);
-        }
+        const data = await fetchAIInsights();
+        if (data.insights) setAiInsights(data.insights);
+        if (data.predictions) setStudentPredictions(data.predictions);
+        if (data.last_updated) setLastUpdated(data.last_updated);
       } catch (err) {
         console.error('Failed to fetch stored insights:', err);
       }
@@ -65,18 +64,10 @@ export const AIModules = {
 
     const saveGeneratedInsights = async (insights: any[], predictions: any) => {
       try {
-        const token = localStorage.getItem('token');
-        await fetch(`${API_BASE_URL}/ai/insights`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            type: 'performance',
-            insights,
-            predictions
-          })
+        await saveAIInsights({
+          type: 'performance',
+          insights,
+          predictions
         });
         setLastUpdated(new Date().toISOString());
       } catch (err) {
@@ -128,25 +119,21 @@ export const AIModules = {
         
         Respond ONLY with the JSON object. No conversational text. No preamble.`;
 
-        const token = localStorage.getItem('token');
-        const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ 
-            prompt, 
-            systemPrompt: "You are a senior education consultant. Analyze student scores and predict their final outcomes. Respond only with JSON.",
-            model: 'llama-3.3-70b-versatile'
-          })
+        const result = await generateAIResponse(prompt, { 
+          systemPrompt: "You are a senior education consultant. Analyze student scores and predict their final outcomes. Respond only with JSON.",
+          model: 'llama-3.3-70b-versatile'
         });
+        
+        // Wrap result to match expected safeAiFetch format if necessary, 
+        // but generateAIResponse returns data directly. 
+        // We'll normalize it here.
+        const normalizedResult = { success: true, data: result };
 
-        if (!result.success) {
-          throw new Error(result.error);
+        if (!normalizedResult.success) {
+          throw new Error('AI analysis failed');
         }
 
-        const aiText = result.data?.text || "{}";
+        const aiText = normalizedResult.data?.text || "{}";
         const parsed = extractJsonFromAiResponse(aiText);
 
         if (!parsed || (!parsed.insights && !parsed.predictions)) {
@@ -451,17 +438,26 @@ export const AIModules = {
       </div>
     </div>
   ),
-  AIChatbot: ({ organization }: { organization?: any }) => {
-    const [messages, setMessages] = React.useState<any[]>([
-      {
-        role: 'ai',
-        content: "Hello! I'm your OmniPortal AI assistant. How can I help you today? I can help with student records, financial reports, or system configurations.",
-        timestamp: new Date()
-      }
-    ]);
+  AIChatbot: ({ organization, currentUser, role }: { organization?: any, currentUser?: any, role?: string }) => {
+    const [messages, setMessages] = React.useState<any[]>([]);
     const [input, setInput] = React.useState('');
     const [isLoading, setIsLoading] = React.useState(false);
     const scrollRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+      if (messages.length === 0) {
+        const userName = currentUser?.name || currentUser?.full_name || 'User';
+        const roleName = role ? role.replace(/_/g, ' ').toLowerCase() : 'user';
+        
+        setMessages([
+          {
+            role: 'ai',
+            content: `Hello ${userName}! I'm your OmniPortal AI assistant. I see you are logged in as a ${roleName}. How can I help you manage ${organization?.name || 'your school'} today?`,
+            timestamp: new Date()
+          }
+        ]);
+      }
+    }, [currentUser, role, organization]);
 
     React.useEffect(() => {
       if (scrollRef.current) {
@@ -478,26 +474,16 @@ export const AIModules = {
       setIsLoading(true);
 
       try {
-        const token = localStorage.getItem('token');
-        const result = await safeAiFetch(`${API_BASE_URL}/ai/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            prompt,
-            systemPrompt: "You are OmniAI, a helpful assistant for OmniPortal school management system. Keep responses concise and professional."
-          })
+        const result = await generateAIResponse(prompt, {
+          systemPrompt: `You are OmniAI, a helpful assistant for OmniPortal school management system. 
+          You are currently assisting ${currentUser?.name || 'a user'} who is logged in as a ${role || 'user'}. 
+          The school is ${organization?.name || 'OmniPortal'}.
+          Keep responses concise, professional, and aware of the user's role.`
         });
-
-        if (!result.success) {
-          throw new Error(result.error);
-        }
 
         const aiMessage = {
           role: 'ai',
-          content: result.data?.text || "I'm sorry, I couldn't process that request.",
+          content: result?.text || "I'm sorry, I couldn't process that request.",
           timestamp: new Date()
         };
 

@@ -12,9 +12,18 @@ dotenv.config();
 console.log('>>> [BOOTSTRAP] Environment variables loaded.');
 
 const app = express();
+app.set('trust proxy', 1);
+
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 204
+}));
+
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
-app.use(cors());
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Use project-relative path for uploads to ensure it works across environment (dev/dist)
@@ -45,7 +54,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start Server Immediately to prevent Render Timeout
 app.listen(PORT, () => {
   console.log(`Deep backend server is running on http://localhost:${PORT}`);
-  
+
   // Initialize Database in the background
   initDb()
     .then(() => {
