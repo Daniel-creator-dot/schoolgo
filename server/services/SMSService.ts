@@ -68,13 +68,23 @@ export class SMSService {
                 .replace(/{sender_id}/g, encodeURIComponent(senderId));
 
 
-            console.log(`[SMS] Dispatching to custom gateway: ${finalUrl.split('?')[0]}...`);
+            console.log(`[SMS] Dispatching to: ${finalUrl.substring(0, 120)}...`);
+            console.log(`[SMS] Recipient: ${to} | Sender ID: ${senderId}`);
 
             const response = await fetch(finalUrl);
+            const responseText = await response.text();
+
+            console.log(`[SMS] Gateway response (${response.status}): ${responseText.substring(0, 500)}`);
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`SMS Gateway Error (${response.status}): ${errorText}`);
+                throw new Error(`SMS Gateway Error (${response.status}): ${responseText}`);
+            }
+
+            // Check for common error patterns in the response body
+            // Many SMS gateways return 200 but include error info in the body
+            const lowerResp = responseText.toLowerCase();
+            if (lowerResp.includes('"error"') || lowerResp.includes('invalid') || lowerResp.includes('failed') || lowerResp.includes('insufficient')) {
+                console.warn(`[SMS] Gateway returned 200 but response may indicate failure: ${responseText.substring(0, 300)}`);
             }
 
             // 4. Deduct 1 credit from balance
@@ -83,11 +93,11 @@ export class SMSService {
                 [org_id]
             );
 
-            // 5. Log transaction audit
+            // 5. Log transaction audit with gateway response
             await client.query(
                 `INSERT INTO sms_transactions (org_id, type, amount, status, details)
          VALUES ($1, 'DEDUCTION', 1, 'SUCCESS', $2)`,
-                [org_id, `SMS sent to ${to}. Remaining balance: ${updateResult.rows[0].sms_balance}`]
+                [org_id, `SMS sent to ${to}. Gateway: ${responseText.substring(0, 200)}. Balance: ${updateResult.rows[0].sms_balance}`]
             );
 
             await client.query('COMMIT');
