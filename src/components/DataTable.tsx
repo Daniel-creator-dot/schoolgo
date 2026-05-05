@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../lib/LanguageContext';
 import { Search, Filter, Plus, ChevronLeft, ChevronRight, MoreVertical, Download, Trash2, Edit, Eye } from 'lucide-react';
@@ -89,7 +89,34 @@ export function DataTable<T extends { id: string | number }>({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(initialItemsPerPage);
   const [activeDropdown, setActiveDropdown] = useState<string | number | null>(null);
-  const [dropdownPosition, setDropdownPosition] = useState<{ top: number, left: number } | null>(null);
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [dropdownStyles, setDropdownStyles] = useState<React.CSSProperties>({ position: 'fixed', visibility: 'hidden' });
+
+  // Reposition dropdown after it renders so we can measure its actual height
+  useLayoutEffect(() => {
+    if (!dropdownRef.current || !anchorRect) return;
+    const dd = dropdownRef.current;
+    const ddRect = dd.getBoundingClientRect();
+    const margin = 8;
+    const gap = 4;
+
+    // Left: prefer right-aligned to button, clamp within viewport
+    let left = anchorRect.right - ddRect.width;
+    if (left < margin) left = margin;
+    if (left + ddRect.width > window.innerWidth - margin) {
+      left = window.innerWidth - ddRect.width - margin;
+    }
+
+    // Top: prefer below button, flip above if it would overflow
+    let top = anchorRect.bottom + gap;
+    if (top + ddRect.height > window.innerHeight - margin) {
+      top = anchorRect.top - ddRect.height - gap;
+      if (top < margin) top = margin;
+    }
+
+    setDropdownStyles({ position: 'fixed', top, left, visibility: 'visible' });
+  }, [anchorRect, activeDropdown]);
 
   // Close dropdown on click outside
   React.useEffect(() => {
@@ -266,31 +293,13 @@ export function DataTable<T extends { id: string | number }>({
                             e.stopPropagation();
                             if (activeDropdown === item.id) {
                               setActiveDropdown(null);
-                              setDropdownPosition(null);
+                              setAnchorRect(null);
+                              setDropdownStyles({ position: 'fixed', visibility: 'hidden' });
                             } else {
                               const rect = e.currentTarget.getBoundingClientRect();
-                              const dropdownWidth = 192; // w-48
-                              const dropdownEstimatedHeight = 200;
-                              const margin = 8;
-
-                              // Calculate left: prefer right-aligned to button, but clamp within viewport
-                              let left = rect.right - dropdownWidth;
-                              if (left < margin) {
-                                left = margin;
-                              }
-                              if (left + dropdownWidth > window.innerWidth - margin) {
-                                left = window.innerWidth - dropdownWidth - margin;
-                              }
-
-                              // Calculate top: prefer below button, flip above if it overflows viewport bottom
-                              let top = rect.bottom;
-                              if (top + dropdownEstimatedHeight > window.innerHeight - margin) {
-                                top = rect.top - dropdownEstimatedHeight;
-                                if (top < margin) top = margin; // last resort: pin to top
-                              }
-
                               setActiveDropdown(item.id);
-                              setDropdownPosition({ top, left });
+                              setAnchorRect(rect);
+                              setDropdownStyles({ position: 'fixed', visibility: 'hidden' });
                             }
                           }}
                           className="p-1.5 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
@@ -298,14 +307,11 @@ export function DataTable<T extends { id: string | number }>({
                           <MoreVertical className="w-5 h-5" />
                         </button>
 
-                        {activeDropdown === item.id && dropdownPosition && createPortal(
+                        {activeDropdown === item.id && anchorRect && createPortal(
                           <div
-                            className="fixed z-[9999] w-48 origin-top-right rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 focus:outline-none"
-                            style={{
-                              top: dropdownPosition.top,
-                              left: dropdownPosition.left,
-                              marginTop: '8px'
-                            }}
+                            ref={dropdownRef}
+                            className="z-[9999] w-48 origin-top-right rounded-xl bg-white dark:bg-zinc-900 shadow-2xl border border-zinc-200 dark:border-zinc-800 focus:outline-none"
+                            style={dropdownStyles}
                           >
                             <div className="p-1.5 space-y-0.5" onClick={(e) => e.stopPropagation()}>
                               {(onView || (autoModal && autoViewModal && (renderDetails || renderForm))) && (
@@ -313,7 +319,7 @@ export function DataTable<T extends { id: string | number }>({
                                   onClick={() => {
                                     handleView(item);
                                     setActiveDropdown(null);
-                                    setDropdownPosition(null);
+                                    setAnchorRect(null);
                                   }}
                                   className="flex items-center w-full gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-indigo-600 rounded-lg transition-colors"
                                 >
@@ -333,7 +339,7 @@ export function DataTable<T extends { id: string | number }>({
                                   onClick={() => {
                                     handleEdit(item);
                                     setActiveDropdown(null);
-                                    setDropdownPosition(null);
+                                    setAnchorRect(null);
                                   }}
                                   className="flex items-center w-full gap-3 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-indigo-600 rounded-lg transition-colors"
                                 >
