@@ -315,15 +315,15 @@ export default function App() {
   const [publicResultData, setPublicResultData] = useState<any>(null);
   const [isPublicLoading, setIsPublicLoading] = useState(false);
 
+  const params = useMemo(() => new URLSearchParams(window.location.search), [window.location.search]);
+  const view = params.get('view');
+  const pubToken = params.get('token');
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || "null");
     
     // Check for public result viewing link
-    const params = new URLSearchParams(window.location.search);
-    const view = params.get('view');
-    const pubToken = params.get('token');
-
     if (view === 'Result' && pubToken) {
       const loadPublicResult = async () => {
         setIsPublicLoading(true);
@@ -382,7 +382,7 @@ export default function App() {
       setShowPartnerLogin(false);
       loadData(user.role);
     }
-  }, []);
+  }, [view, pubToken]);
 
   // System State
   const [studentList, setStudentList] = useState<Student[]>([]);
