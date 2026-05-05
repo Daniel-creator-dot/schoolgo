@@ -77,7 +77,7 @@ import { API_BASE_URL } from '../../constants';
 import { useLanguage } from '../../lib/LanguageContext';
 import { downloadStudentTemplate, parseStudentExcel } from '../../lib/excel';
 import { Download, FileUp } from 'lucide-react';
-import { fetchCalendarEvents, createCalendarEvent, deleteCalendarEvent, syncPublicHolidays, sendBulkSMS, fetchSMSSettings } from '../../lib/api';
+import { fetchCalendarEvents, createCalendarEvent, deleteCalendarEvent, syncPublicHolidays, sendBulkSMS } from '../../lib/api';
 
 const SectionEditor: React.FC<{ section: ReportCardSection, onUpdate: (s: ReportCardSection) => void, onRemove: () => void }> = ({ section, onUpdate, onRemove }) => {
   return (
@@ -7916,20 +7916,7 @@ export const ExamModules = {
     const [showBroadcaster, setShowBroadcaster] = useState(false);
     const [isBroadcasting, setIsBroadcasting] = useState(false);
     const [broadcastProgress, setBroadcastProgress] = useState(0);
-    const [smsSettings, setSMSSettings] = useState<any>(null);
     const [promotionRecords, setPromotionRecords] = useState<any[]>([]);
-
-    useEffect(() => {
-      const loadSMS = async () => {
-        try {
-          const settings = await fetchSMSSettings();
-          setSMSSettings(settings);
-        } catch (err) {
-          console.error("Failed to load SMS settings", err);
-        }
-      };
-      if (showBroadcaster) loadSMS();
-    }, [showBroadcaster]);
 
     useEffect(() => {
       const loadPromotionRecords = async () => {
@@ -8338,7 +8325,7 @@ export const ExamModules = {
                 <div className="flex items-center gap-4">
                   <div className="p-3 sm:p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl sm:rounded-2xl border border-indigo-100 dark:border-indigo-800/50">
                     <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">SMS Balance</p>
-                    <p className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white">{smsSettings?.balance || 0} Units</p>
+                    <p className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white">{organization?.sms_balance || 0} Units</p>
                   </div>
                 </div>
               </div>
@@ -8452,8 +8439,8 @@ export const ExamModules = {
                             return;
                           }
 
-                          if ((smsSettings?.balance || 0) < studentsWithContact.length) {
-                            (window as any).showToast?.(`Insufficient SMS credits (${smsSettings?.balance || 0}) to broadcast to ${studentsWithContact.length} students.`, "error");
+                          if ((organization?.sms_balance || 0) < studentsWithContact.length) {
+                            (window as any).showToast?.(`Insufficient SMS credits (${organization?.sms_balance || 0}) to broadcast to ${studentsWithContact.length} students.`, "error");
                             return;
                           }
 
