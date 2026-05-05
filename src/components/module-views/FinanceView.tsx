@@ -3980,116 +3980,166 @@ export const FinanceModules = {
     const balanceDue = totalBilled - totalPaid - totalScholarships;
 
     return (
-      <div className="bg-zinc-50 dark:bg-zinc-900/20 p-4 md:p-8 min-h-screen">
-        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          {/* Header */}
-          <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-12 shadow-2xl border border-zinc-200 dark:border-zinc-800 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-3xl rounded-full -mr-20 -mt-20" />
-            <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 sm:gap-8">
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 w-full sm:w-auto">
-                <div className="w-20 h-20 rounded-3xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200 dark:shadow-none overflow-hidden border-4 border-white dark:border-zinc-800 shrink-0">
-                  {organization?.logo ? (
-                    <img src={organization.logo} className="w-full h-full object-contain p-2" />
-                  ) : (
-                    <School className="w-10 h-10" />
-                  )}
-                </div>
-                <div className="text-center sm:text-left">
-                  <h1 className="text-xl sm:text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{student?.name}</h1>
-                  <p className="text-xs sm:text-sm font-bold text-zinc-500 uppercase tracking-widest">{student?.class_name || 'N/A'}</p>
-                </div>
-              </div>
-              <div className="text-center md:text-right w-full md:w-auto pt-4 md:pt-0 border-t md:border-none border-zinc-100 dark:border-zinc-800">
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">Organization</p>
-                <p className="text-sm font-bold text-indigo-600 uppercase">{organization?.name}</p>
-              </div>
-            </div>
+      <div className="bg-zinc-100 dark:bg-zinc-950 p-2 sm:p-6 md:p-12 min-h-screen font-sans">
+        <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
+          
+          {/* Actions */}
+          <div className="flex justify-end no-print">
+            <button 
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-zinc-50 transition-all shadow-sm active:scale-95"
+            >
+              <Download className="w-4 h-4" />
+              Download Statement
+            </button>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none">
-              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Total Invoiced</p>
-              <p className="text-2xl font-black text-zinc-900 dark:text-white">{currency} {totalBilled.toLocaleString()}</p>
-            </div>
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none">
-              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Total Paid</p>
-              <p className="text-2xl font-black text-emerald-600">{currency} {totalPaid.toLocaleString()}</p>
-            </div>
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none">
-              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Scholarships</p>
-              <p className="text-2xl font-black text-indigo-600">{currency} {totalScholarships.toLocaleString()}</p>
-            </div>
-            <div className={cn(
-              "p-6 rounded-[2rem] border shadow-xl transition-all",
-              balanceDue <= 0 ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/10 dark:border-emerald-800" : "bg-rose-50 border-rose-200 dark:bg-rose-900/10 dark:border-rose-800"
-            )}>
-              <p className={cn("text-[10px] font-black uppercase tracking-widest mb-2", balanceDue <= 0 ? "text-emerald-600" : "text-rose-600")}>Outstanding</p>
-              <p className={cn("text-2xl font-black", balanceDue <= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400")}>
-                {currency} {balanceDue.toLocaleString()}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Invoices */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-indigo-500" />
-                Invoices History
-              </h3>
-              <div className="space-y-3">
-                {invoices.length > 0 ? invoices.map((inv: any) => (
-                  <div key={inv.id} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 hover:border-indigo-200 transition-colors shadow-sm">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-bold text-zinc-900 dark:text-white">{inv.description || 'School Fees'}</h4>
-                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{new Date(inv.created_at).toLocaleDateString()}</p>
-                      </div>
-                      <span className={cn(
-                        "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest",
-                        inv.status === 'Paid' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                      )}>{inv.status}</span>
-                    </div>
-                    <p className="text-lg font-black text-zinc-900 dark:text-white">{currency} {parseFloat(inv.amount).toLocaleString()}</p>
+          <div className="bg-white dark:bg-zinc-900 shadow-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden rounded-[1rem] sm:rounded-[2rem]">
+            {/* Document Header */}
+            <div className="p-8 sm:p-12 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/10">
+              <div className="flex flex-col md:flex-row justify-between gap-8">
+                <div className="space-y-6">
+                  <div className="w-20 h-20 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg overflow-hidden shrink-0">
+                    {organization?.logo ? (
+                      <img src={organization.logo} className="w-full h-full object-contain p-2" />
+                    ) : (
+                      <School className="w-10 h-10" />
+                    )}
                   </div>
-                )) : (
-                  <div className="p-8 text-center text-zinc-400 italic bg-white dark:bg-zinc-900 rounded-3xl border border-dashed border-zinc-200">
-                    No invoices recorded.
+                  <div>
+                    <h1 className="text-2xl font-black text-zinc-900 dark:text-white uppercase tracking-tight leading-none mb-2">{organization?.name}</h1>
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-[0.2em]">{organization?.address || 'Official Financial Record'}</p>
                   </div>
-                )}
+                </div>
+                <div className="md:text-right space-y-4">
+                  <div className="inline-block px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 rounded-lg text-[10px] font-black uppercase tracking-[0.2em]">
+                    Official Fee Statement
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Statement Date</p>
+                    <p className="text-sm font-bold text-zinc-900 dark:text-white">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Payments */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400 flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-emerald-500" />
-                Payments History
-              </h3>
-              <div className="space-y-3">
-                {payments.length > 0 ? payments.map((p: any) => (
-                  <div key={p.id} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 hover:border-emerald-200 transition-colors shadow-sm">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-bold text-zinc-900 dark:text-white">Payment Received</h4>
-                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{new Date(p.date || p.created_at).toLocaleDateString()} • {p.method}</p>
-                      </div>
-                      <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600">
-                        <Check className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <p className="text-lg font-black text-emerald-600">{currency} {parseFloat(p.amount).toLocaleString()}</p>
-                  </div>
-                )) : (
-                  <div className="p-8 text-center text-zinc-400 italic bg-white dark:bg-zinc-900 rounded-3xl border border-dashed border-zinc-200">
-                    No payments recorded.
-                  </div>
-                )}
+            {/* Student Info */}
+            <div className="p-8 sm:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 bg-white dark:bg-zinc-900">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Bill To</p>
+                <h2 className="text-xl font-black text-zinc-900 dark:text-white uppercase">{student?.name}</h2>
+                <p className="text-sm font-bold text-zinc-500 uppercase tracking-widest">{student?.class_name || 'N/A'}</p>
+                <p className="text-xs font-medium text-zinc-400">{student?.id}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1">Status</p>
+                  <p className={cn("text-xs font-black uppercase", balanceDue <= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    {balanceDue <= 0 ? 'Clear' : 'Outstanding'}
+                  </p>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1">Total Paid</p>
+                  <p className="text-xs font-black text-zinc-900 dark:text-white">{currency} {totalPaid.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial Summary Table */}
+            <div className="px-8 sm:p-12 pb-8">
+               <div className="overflow-x-auto">
+                 <table className="w-full text-left border-collapse">
+                   <thead>
+                     <tr className="border-b-2 border-zinc-100 dark:border-zinc-800">
+                       <th className="py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Description</th>
+                       <th className="py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Amount</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+                     <tr className="group">
+                       <td className="py-6 font-bold text-zinc-700 dark:text-zinc-300">Total Invoiced Fees</td>
+                       <td className="py-6 text-right font-black text-zinc-900 dark:text-white">{currency} {totalBilled.toLocaleString()}</td>
+                     </tr>
+                     <tr className="group">
+                       <td className="py-6 font-bold text-zinc-700 dark:text-zinc-300">Total Scholarships / Discounts</td>
+                       <td className="py-6 text-right font-black text-indigo-600">({currency} {totalScholarships.toLocaleString()})</td>
+                     </tr>
+                     <tr className="group">
+                       <td className="py-6 font-bold text-zinc-700 dark:text-zinc-300">Total Payments Made</td>
+                       <td className="py-6 text-right font-black text-emerald-600">({currency} {totalPaid.toLocaleString()})</td>
+                     </tr>
+                   </tbody>
+                   <tfoot>
+                     <tr className={cn(
+                       "border-t-4",
+                       balanceDue <= 0 ? "border-emerald-500 bg-emerald-50/30 dark:bg-emerald-900/10" : "border-rose-500 bg-rose-50/30 dark:bg-rose-900/10"
+                     )}>
+                       <td className="py-6 px-4 text-sm font-black uppercase tracking-widest">Balance Due</td>
+                       <td className={cn(
+                         "py-6 px-4 text-right text-2xl font-black",
+                         balanceDue <= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-700 dark:text-rose-400"
+                       )}>
+                         {currency} {balanceDue.toLocaleString()}
+                       </td>
+                     </tr>
+                   </tfoot>
+                 </table>
+               </div>
+            </div>
+
+            {/* Detailed History */}
+            <div className="p-8 sm:p-12 border-t border-zinc-100 dark:border-zinc-800 space-y-12">
+               <div className="space-y-6">
+                 <h3 className="text-xs font-black uppercase tracking-[0.3em] text-zinc-400">Transaction History</h3>
+                 <div className="space-y-4">
+                    {[...invoices.map(i => ({...i, type: 'invoice'})), ...payments.map(p => ({...p, type: 'payment'}))]
+                      .sort((a, b) => new Date(b.date || b.created_at).getTime() - new Date(a.date || a.created_at).getTime())
+                      .map((item, idx) => (
+                        <div key={idx} className="flex justify-between items-center py-4 border-b border-zinc-50 dark:border-zinc-800/50">
+                          <div className="space-y-1">
+                            <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                              {item.type === 'invoice' ? (item.description || 'Fee Invoice') : 'Payment Received'}
+                            </p>
+                            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+                              {new Date(item.date || item.created_at).toLocaleDateString()} • {item.type === 'invoice' ? 'Debit' : `Credit (${item.method})`}
+                            </p>
+                          </div>
+                          <p className={cn(
+                            "text-sm font-black",
+                            item.type === 'invoice' ? "text-zinc-900 dark:text-white" : "text-emerald-600"
+                          )}>
+                            {item.type === 'invoice' ? '' : '-'}{currency} {parseFloat(item.amount).toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                 </div>
+               </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-8 sm:p-12 bg-zinc-50 dark:bg-zinc-800/20 text-center">
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Thank you for your partnership with {organization?.name}</p>
+              <div className="flex justify-center gap-8">
+                <div className="text-center">
+                  <div className="w-24 h-px bg-zinc-200 dark:border-zinc-700 mb-2 mx-auto" />
+                  <p className="text-[9px] font-black text-zinc-400 uppercase">Accounts Dept</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-24 h-px bg-zinc-200 dark:border-zinc-700 mb-2 mx-auto" />
+                  <p className="text-[9px] font-black text-zinc-400 uppercase">School Stamp</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .min-h-screen { min-height: auto !important; padding: 0 !important; }
+            .shadow-xl { shadow: none !important; border: none !important; }
+          }
+        `}} />
       </div>
     );
   }
