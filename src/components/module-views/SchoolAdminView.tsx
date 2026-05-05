@@ -302,16 +302,15 @@ export const ReportCardPreview = ({ template, organization, student, onClose }: 
     accent: accentColor
   };
 
-  return (
-    <Modal isOpen={true} onClose={onClose} title={`Preview: ${template.name}`} maxWidth="max-w-[1000px]" maxHeight="max-h-[90vh]">
-      <div className="bg-zinc-50 dark:bg-zinc-800/20 p-4 md:p-8 min-h-screen overflow-x-hidden">
-        <div
-          className="bg-white dark:bg-zinc-900 mx-auto shadow-2xl space-y-8 print:p-0 print:shadow-none w-full max-w-[210mm] min-h-[297mm] p-[10mm] md:p-[20mm] relative"
-          style={{ fontFamily: themeStyles.fontFamily }}
-        >
+  const content = (
+    <div className="bg-zinc-50 dark:bg-zinc-800/20 p-2 md:p-8 min-h-screen">
+      <div
+        className="bg-white dark:bg-zinc-900 mx-auto shadow-2xl space-y-8 print:p-0 print:shadow-none w-full max-w-[210mm] min-h-[297mm] p-6 md:p-[20mm] relative rounded-[2rem] md:rounded-none"
+        style={{ fontFamily: themeStyles.fontFamily }}
+      >
           {/* Header */}
           <div className={cn(
-            "flex justify-between items-start pb-6",
+            "flex flex-col sm:flex-row justify-between items-start gap-6 pb-6",
             titleStyle === 'bold' ? "border-b-8" : "border-b-4"
           )} style={{ borderColor: themeStyles.primary }}>
             <div className="space-y-2">
@@ -327,10 +326,10 @@ export const ReportCardPreview = ({ template, organization, student, onClose }: 
                 </div>
               )}
               <h1 className={cn(
-                "tracking-tighter uppercase",
-                titleStyle === 'classic' ? "text-3xl font-black italic" :
-                  titleStyle === 'modern' ? "text-4xl font-light tracking-[0.2em]" :
-                    "text-5xl font-black"
+                "tracking-tighter uppercase leading-none",
+                titleStyle === 'classic' ? "text-2xl md:text-3xl font-black italic" :
+                  titleStyle === 'modern' ? "text-3xl md:text-4xl font-light tracking-[0.2em]" :
+                    "text-3xl md:text-5xl font-black"
               )} style={{ color: themeStyles.primary }}>
                 Academic Progress Report
               </h1>
@@ -385,8 +384,8 @@ export const ReportCardPreview = ({ template, organization, student, onClose }: 
                 )}
 
                 {section.type === 'AcademicResults' && (
-                  <div className="overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800">
-                    <table className="w-full text-left text-xs">
+                  <div className="overflow-x-auto rounded-2xl border border-zinc-200 dark:border-zinc-800">
+                    <table className="w-full text-left text-[10px] sm:text-xs min-w-[500px] sm:min-w-full">
                       <thead className="bg-zinc-50 dark:bg-zinc-800/50">
                         <tr>
                           <th className="px-4 py-2 font-black uppercase tracking-wider">Subject</th>
@@ -596,7 +595,7 @@ export const ReportCardPreview = ({ template, organization, student, onClose }: 
           )}
 
           {/* Footer */}
-          <div className="pt-12 flex justify-between items-end border-t border-zinc-100 dark:border-zinc-800 mt-12">
+          <div className="pt-12 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-8 border-t border-zinc-100 dark:border-zinc-800 mt-12">
             <div className="space-y-2">
               <div className="h-16 flex flex-col items-start justify-end w-48 border-b-2 border-zinc-400 pb-2">
                 {organization?.signature && (
@@ -612,8 +611,18 @@ export const ReportCardPreview = ({ template, organization, student, onClose }: 
           </div>
         </div>
       </div>
-    </Modal>
-  );
+    );
+
+    // If student is provided from props (likely the public view), don't wrap in Modal
+    if (student) {
+      return content;
+    }
+
+    return (
+      <Modal isOpen={true} onClose={onClose} title={`Preview: ${template.name}`} maxWidth="max-w-[1000px]" maxHeight="max-h-[90vh]">
+        {content}
+      </Modal>
+    );
 };
 
 const GradingLevelList = ({ initialLevels = [], onChange }: { initialLevels?: any[], onChange: (levels: any[]) => void }) => {
