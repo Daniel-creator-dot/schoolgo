@@ -25,12 +25,25 @@ export class SMSService {
 
 
     /**
+     * Cleans and formats phone numbers to international format (233XXXXXXXXX).
+     * Specifically handles Ghanaian numbers starting with 0.
+     */
+    private static formatPhoneNumber(phone: string): string {
+        let cleaned = phone.replace(/\D/g, '');
+        if (cleaned.startsWith('0') && (cleaned.length === 10 || cleaned.length === 9)) {
+            cleaned = '233' + cleaned.substring(1);
+        }
+        return cleaned;
+    }
+
+    /**
      * Sends an SMS and deducts credits from the organization's balance.
      * @param org_id The ID of the school organization sending the SMS
      * @param to The recipient phone number
      * @param message The message content
      */
     public static async sendSMS(org_id: string, to: string, message: string): Promise<{ success: boolean; message: string }> {
+        const formattedTo = this.formatPhoneNumber(to);
         const client = await pool.connect();
         try {
             await client.query('BEGIN');
@@ -62,14 +75,14 @@ export class SMSService {
             const senderId = orgResult.rows[0].sms_sender_id || config.sender_id || '';
             
             let finalUrl = config.custom_url
-                .replace(/{to}/g, encodeURIComponent(to))
+                .replace(/{to}/g, encodeURIComponent(formattedTo))
                 .replace(/{message}/g, encodeURIComponent(message))
                 .replace(/{api_key}/g, encodeURIComponent(config.api_key || ''))
                 .replace(/{sender_id}/g, encodeURIComponent(senderId));
 
 
             console.log(`[SMS] Dispatching to: ${finalUrl.substring(0, 120)}...`);
-            console.log(`[SMS] Recipient: ${to} | Sender ID: ${senderId}`);
+            console.log(`[SMS] Recipient: ${formattedTo} | Sender ID: ${senderId}`);
 
             const response = await fetch(finalUrl);
             const responseText = await response.text();
@@ -97,7 +110,7 @@ export class SMSService {
             await client.query(
                 `INSERT INTO sms_transactions (org_id, type, amount, status, details)
          VALUES ($1, 'DEDUCTION', 1, 'SUCCESS', $2)`,
-                [org_id, `SMS sent to ${to}. Gateway: ${responseText.substring(0, 200)}. Balance: ${updateResult.rows[0].sms_balance}`]
+                [org_id, `SMS sent to ${formattedTo}. Gateway: ${responseText.substring(0, 200)}. Balance: ${updateResult.rows[0].sms_balance}`]
             );
 
             await client.query('COMMIT');
@@ -111,7 +124,7 @@ export class SMSService {
                 await pool.query(
                     `INSERT INTO sms_transactions (org_id, type, amount, status, details)
            VALUES ($1, 'DEDUCTION', 0, 'FAILED', $2)`,
-                    [org_id, `Failed to send SMS to ${to}: ${err.message}`]
+                    [org_id, `Failed to send SMS to ${formattedTo}: ${err.message}`]
                 );
             } catch (logErr) {
                 // Ignore logging errors if DB is unreachable
