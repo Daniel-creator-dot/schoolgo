@@ -64,6 +64,13 @@ export const createExam = async (req: AuthRequest, res: Response) => {
       await client.query('BEGIN');
       const createdExams = [];
 
+      // Fetch organization settings to default term and academic year if not provided
+      const orgRes = await client.query('SELECT academic_year, current_term FROM organizations WHERE id = $1', [orgId]);
+      const orgSettings = orgRes.rows[0];
+      
+      const finalTerm = req.body.term || orgSettings?.current_term;
+      const finalYear = req.body.academic_year || orgSettings?.academic_year;
+
       for (const cid of finalClassIds) {
         // Resolve the specific subject_id for this class to ensure the correct teacher is linked
         // If a subject with the same name exists for this specific class, we use its ID.
@@ -75,8 +82,8 @@ export const createExam = async (req: AuthRequest, res: Response) => {
         const resolvedSubjectId = subjectLookup.rows.length > 0 ? subjectLookup.rows[0].id : (subject_id || null);
 
         const result = await client.query(
-          'INSERT INTO exams (org_id, subject_id, class_id, subject, date, time, room, type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-          [orgId, resolvedSubjectId, cid || null, subject || null, date, time, room, type]
+          'INSERT INTO exams (org_id, subject_id, class_id, subject, date, time, room, type, term, academic_year) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+          [orgId, resolvedSubjectId, cid || null, subject || null, date, time, room, type, finalTerm, finalYear]
         );
         createdExams.push(result.rows[0]);
       }
@@ -97,15 +104,15 @@ export const createExam = async (req: AuthRequest, res: Response) => {
 
 export const updateExam = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const { subject_id, class_id, class_ids, subject, date, time, room, type } = req.body;
+  const { subject_id, class_id, class_ids, subject, date, time, room, type, term, academic_year } = req.body;
   
   try {
     const orgId = req.user.org_id;
     const finalClassId = class_id || (Array.isArray(class_ids) && class_ids.length > 0 ? class_ids[0] : null);
 
     const result = await pool.query(
-      'UPDATE exams SET subject_id = $1, class_id = $2, subject = $3, date = $4, time = $5, room = $6, type = $7 WHERE id = $8 AND org_id = $9 RETURNING *',
-      [subject_id || null, finalClassId, subject || null, date, time, room, type, id, orgId]
+      'UPDATE exams SET subject_id = $1, class_id = $2, subject = $3, date = $4, time = $5, room = $6, type = $7, term = $8, academic_year = $9 WHERE id = $10 AND org_id = $11 RETURNING *',
+      [subject_id || null, finalClassId, subject || null, date, time, room, type, term || null, academic_year || null, id, orgId]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Exam not found' });
     res.json(result.rows[0]);

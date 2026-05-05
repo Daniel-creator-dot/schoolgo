@@ -6812,7 +6812,7 @@ export const AcademicModules = {
 
 };
 
-const ExamScheduleForm = ({ item, subjects, classes }: any) => {
+const ExamScheduleForm = ({ item, subjects, classes, organization }: any) => {
   const [selectedSubjectId, setSelectedSubjectId] = useState(item?.subject_id || "");
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>(
     item?.class_id
@@ -6855,6 +6855,8 @@ const ExamScheduleForm = ({ item, subjects, classes }: any) => {
   return (
     <div className="space-y-4">
       <input type="hidden" name="subject" value={selectedSubject?.name || ''} />
+      <input type="hidden" name="term" value={item?.term || (organization as any)?.current_term || ''} />
+      <input type="hidden" name="academic_year" value={item?.academic_year || (organization as any)?.academic_year || ''} />
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -7772,7 +7774,7 @@ export const ExamModules = {
               { header: 'Room', accessor: 'room' },
               { header: 'Type', accessor: 'type' },
             ]}
-            renderForm={(item) => <ExamScheduleForm item={item} subjects={subjects} classes={classes} />}
+            renderForm={(item) => <ExamScheduleForm item={item} subjects={subjects} classes={classes} organization={organization} />}
           />
         ) : renderTimetable()}
 
@@ -7886,7 +7888,7 @@ export const ExamModules = {
             }
           >
             <form id="add-exam-form" onSubmit={(e) => e.preventDefault()}>
-              <ExamScheduleForm subjects={subjects} classes={classes} />
+              <ExamScheduleForm subjects={subjects} classes={classes} organization={organization} />
             </form>
           </Modal>
         )}
