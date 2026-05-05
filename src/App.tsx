@@ -331,9 +331,13 @@ export default function App() {
           const res = await fetch(`${API_BASE_URL}/public/report-card/${pubToken}`);
           if (res.ok) {
             const data = await res.json();
-            setPublicResultData(data);
-            setShowLanding(false);
-            setShowLogin(false);
+            if (data && data.student) {
+              setPublicResultData(data);
+              setShowLanding(false);
+              setShowLogin(false);
+            } else {
+              console.error("Invalid result data:", data);
+            }
           }
         } catch (err) {
           console.error("Failed to load public results:", err);
@@ -352,9 +356,13 @@ export default function App() {
           const res = await fetch(`${API_BASE_URL}/public/fee-history/${pubToken}`);
           if (res.ok) {
             const data = await res.json();
-            setPublicResultData({ ...data, isFeeHistory: true });
-            setShowLanding(false);
-            setShowLogin(false);
+            if (data && data.student) {
+              setPublicResultData({ ...data, isFeeHistory: true });
+              setShowLanding(false);
+              setShowLogin(false);
+            } else {
+              console.error("Invalid fee history data:", data);
+            }
           }
         } catch (err) {
           console.error("Failed to load public fee history:", err);
@@ -3767,8 +3775,12 @@ export default function App() {
         <div className="w-16 h-16 bg-indigo-600 rounded-3xl flex items-center justify-center animate-pulse mb-6">
           <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
         </div>
-        <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">Retrieving Official Result...</h2>
-        <p className="text-zinc-500 font-medium text-center">Please wait while we secure your ward's performance data.</p>
+        <h2 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight mb-2">
+          {view === 'FeeHistory' ? 'Retrieving Fee History...' : 'Retrieving Official Record...'}
+        </h2>
+        <p className="text-zinc-500 font-medium text-center">
+          {view === 'FeeHistory' ? 'Please wait while we secure your ward\'s financial data.' : 'Please wait while we secure your ward\'s data.'}
+        </p>
       </div>
     );
   }
@@ -3796,8 +3808,22 @@ export default function App() {
             </button>
           </div>
           <div className="flex-1 overflow-auto">
-            <FinanceModules.FeeHistoryPreview data={publicResultData} />
+            {FinanceModules.FeeHistoryPreview ? (
+              <FinanceModules.FeeHistoryPreview data={publicResultData} />
+            )}
           </div>
+        </div>
+      );
+    }
+    
+    // Ensure data exists before results mapping
+    if (!publicResultData || !publicResultData.results) {
+      return (
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-8">
+           <div className="p-12 text-center text-zinc-500 bg-white dark:bg-zinc-900 rounded-[2rem] shadow-xl">
+              <p className="font-bold">Invalid record data detected.</p>
+              <button onClick={() => setPublicResultData(null)} className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold">Back to Home</button>
+           </div>
         </div>
       );
     }

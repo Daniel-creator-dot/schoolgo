@@ -3956,8 +3956,23 @@ export const FinanceModules = {
     );
   },
   FeeHistoryPreview: ({ data }: { data: any }) => {
-    const { student, organization, invoices = [], payments = [], scholarships = [] } = data;
+    const { student, organization, invoices = [], payments = [], scholarships = [] } = data || {};
     const { t, currency } = useLanguage();
+
+    if (!student || !organization) {
+      return (
+        <div className="flex flex-col items-center justify-center p-12 min-h-screen bg-zinc-50 dark:bg-zinc-950">
+          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-xl border border-zinc-200 dark:border-zinc-800 text-center max-w-md">
+            <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-2xl flex items-center justify-center text-rose-600 mx-auto mb-4">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Record Incomplete</h2>
+            <p className="text-zinc-500 text-sm mb-6">We could not retrieve the complete student or school profile for this link.</p>
+            <button onClick={() => window.location.href = '/'} className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200">Return to Portal</button>
+          </div>
+        </div>
+      );
+    }
 
     const totalBilled = invoices.reduce((sum: number, inv: any) => sum + parseFloat(inv.amount || 0), 0);
     const totalPaid = payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount || 0), 0);
