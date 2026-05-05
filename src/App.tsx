@@ -9,7 +9,7 @@ import {
   BorrowRecord,
 } from "./types";
 import { Toast, ToastType, ConfirmationModal, Modal } from "./components/UI";
-import { Calendar, ShieldCheck, X } from "lucide-react";
+import { Calendar, ShieldCheck, X, AlertCircle } from "lucide-react";
 import {
   SuperAdminDashboard,
   SchoolAdminDashboard,
