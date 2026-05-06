@@ -1569,10 +1569,10 @@ export const HRModules = {
 
       return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <div className="flex items-center justify-between p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm">
-            <div className="flex items-center gap-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm gap-6">
+            <div className="flex items-center gap-4 md:gap-6">
               <div className="relative group">
-                <div className="w-24 h-24 rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-inner font-black text-3xl">
+                <div className="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-inner font-black text-xl md:text-3xl">
                   {item.profile_image ? (
                     <img
                       src={item.profile_image}
@@ -1584,24 +1584,24 @@ export const HRModules = {
                   )}
                 </div>
                 {item.status === "Active" && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900 shadow-sm" />
+                  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 md:w-4 md:h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900 shadow-sm" />
                 )}
               </div>
-              <div className="space-y-1.5">
-                <h3 className="text-3xl font-black text-zinc-900 dark:text-white flex items-center gap-3">
+              <div className="space-y-1 md:space-y-1.5">
+                <h3 className="text-xl md:text-3xl font-black text-zinc-900 dark:text-white flex items-center gap-2 md:gap-3">
                   {item.name}
                   {item.status === "Active" && (
-                    <ShieldCheck className="w-6 h-6 text-indigo-600" />
+                    <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
                   )}
                 </h3>
-                <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1.5 text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800/50">
-                    <Briefcase className="w-3.5 h-3.5" />
+                <div className="flex flex-wrap items-center gap-2 md:gap-4">
+                  <span className="flex items-center gap-1.5 text-[10px] md:text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg border border-indigo-100 dark:border-indigo-800/50">
+                    <Briefcase className="w-3 h-3 md:w-3.5 md:h-3.5" />
                     {item.role}
                   </span>
                   <span
                     className={cn(
-                      "px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border",
+                      "px-2 py-1 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-wider border",
                       item.status === "Active"
                         ? "bg-emerald-50 text-emerald-600 border-emerald-100"
                         : "bg-red-50 text-red-600 border-red-100",
@@ -1612,54 +1612,54 @@ export const HRModules = {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {forceOnEdit && (
                 <button
                   onClick={() => forceOnEdit(item)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-indigo-600 text-white rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   Edit Profile
                 </button>
               )}
               {onExitStaff && item.status === "Active" && (
                 <button
                   onClick={() => setExitingStaff(item)}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-rose-600/20"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-rose-600 text-white rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-rose-600/20"
                 >
-                  <UserMinus className="w-3.5 h-3.5" />
+                  <UserMinus className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   Exit Staff
                 </button>
               )}
+              {isStaff && (
+                <button
+                  onClick={() => setShowSalary(!showSalary)}
+                  className="flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-zinc-900/10 dark:shadow-white/10 md:ml-2"
+                >
+                  {showSalary ? (
+                    <EyeOff className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                  ) : (
+                    <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                  )}
+                  {showSalary ? "Lock View" : "Unlock Sensitive Data"}
+                </button>
+              )}
             </div>
-            {isStaff && (
-              <button
-                onClick={() => setShowSalary(!showSalary)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-zinc-900/10 dark:shadow-white/10 ml-2"
-              >
-                {showSalary ? (
-                  <EyeOff className="w-3.5 h-3.5" />
-                ) : (
-                  <Eye className="w-3.5 h-3.5" />
-                )}
-                {showSalary ? "Lock View" : "Unlock Sensitive Data"}
-              </button>
-            )}
           </div>
 
-          <div className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-2xl w-fit">
+          <div className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-2xl w-full md:w-fit overflow-x-auto custom-scrollbar no-scrollbar">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                  "flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
                   activeTab === tab.id
                     ? "bg-white dark:bg-zinc-900 text-indigo-600 shadow-sm"
                     : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
                 )}
               >
-                <tab.icon className="w-4 h-4" />
+                <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 {tab.label}
               </button>
             ))}
@@ -1668,18 +1668,18 @@ export const HRModules = {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               {activeTab === "overview" && (
-                <div className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8">
+                <div className="p-4 md:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8">
                   <section className="space-y-6">
                     <h4 className="flex items-center gap-3 text-xs font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-100 dark:border-zinc-800 pb-4">
                       <Mail className="w-4 h-4" />
                       {t("contact_information")}
                     </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                           Email Address
                         </label>
-                        <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                        <p className="text-sm font-bold text-zinc-900 dark:text-white break-all">
                           {item.email}
                         </p>
                       </div>
@@ -1699,7 +1699,7 @@ export const HRModules = {
                       <CalendarDays className="w-4 h-4" />
                       {t("personal_details")}
                     </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                           Date of Birth
@@ -1719,8 +1719,8 @@ export const HRModules = {
               )}
 
               {activeTab === "job" && (
-                <div className="p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8">
-                  <section className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div className="p-4 md:p-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8">
+                  <section className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                         {t("department")}
@@ -2034,7 +2034,7 @@ export const HRModules = {
               <User className="w-4 h-4 text-indigo-600" />
               <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('personal_information')}</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('full_name')}</label>
                 <input
@@ -2043,7 +2043,7 @@ export const HRModules = {
                   defaultValue={item?.name}
                   disabled={isViewOnly}
                   required
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 />
               </div>
               <div className="space-y-1.5">
@@ -2054,7 +2054,7 @@ export const HRModules = {
                   defaultValue={item?.email}
                   disabled={isViewOnly}
                   required
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 />
               </div>
               <div className="space-y-1.5">
@@ -2064,7 +2064,7 @@ export const HRModules = {
                   name="phone"
                   defaultValue={item?.phone}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 />
               </div>
               <div className="space-y-1.5">
@@ -2074,7 +2074,7 @@ export const HRModules = {
                   name="date_of_birth"
                   defaultValue={formatDateForInput(item?.date_of_birth)}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 />
               </div>
             </div>
@@ -2086,14 +2086,14 @@ export const HRModules = {
               <Briefcase className="w-4 h-4 text-indigo-600" />
               <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('employment_details')}</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('department')}</label>
                 <select
                   name="department_id"
                   defaultValue={item?.department_id || ""}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
                   <option value="">Select Department...</option>
                   {departments.map((d: any) => (
@@ -2107,7 +2107,7 @@ export const HRModules = {
                   name="reports_to"
                   defaultValue={item?.reports_to || ""}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
                   <option value="">Select Supervisor...</option>
                   {data.filter((s: any) => s.id !== item?.id).map((s: any) => (
@@ -2123,13 +2123,14 @@ export const HRModules = {
                   onChange={(e) => setCurrentRole(e.target.value)}
                   disabled={isViewOnly}
                   required
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
                   <option value="SCHOOL_ADMIN">SCHOOL_ADMIN</option>
                   <option value="STAFF">STAFF</option>
                   <option value="HOD">HOD</option>
                   <option value="FINANCE">FINANCE</option>
                   <option value="LIBRARIAN">LIBRARIAN</option>
+                  <option value="BUS_DRIVER">BUS DRIVER</option>
                   <option value="NON_STAFF">NON_STAFF</option>
                   <option value="HOSTEL">HOSTEL</option>
                   <option value="STUDENT_CLUBS">STUDENT_CLUBS</option>
@@ -2141,8 +2142,8 @@ export const HRModules = {
             </div>
             <div className="space-y-3 pt-2">
               <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('additional_roles')}</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700">
-                {['SCHOOL_ADMIN', 'STAFF', 'HOD', 'FINANCE', 'LIBRARIAN', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE']
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-3 md:p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200 dark:border-zinc-700">
+                {['SCHOOL_ADMIN', 'STAFF', 'HOD', 'FINANCE', 'LIBRARIAN', 'BUS_DRIVER', 'NON_STAFF', 'HOSTEL', 'STUDENT_CLUBS', 'ASSETS_EQUIPMENT', 'HEALTH', 'DISCIPLINE']
                   .filter(roleOption => roleOption !== currentRole)
                   .map(roleOption => (
                     <label key={roleOption} className="flex items-center gap-3 cursor-pointer group">
@@ -2155,7 +2156,7 @@ export const HRModules = {
                         className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-indigo-600 focus:ring-indigo-500 bg-white dark:bg-zinc-900 transition-all cursor-pointer disabled:opacity-50"
                       />
                       <span className={cn(
-                        "text-[10px] font-black uppercase tracking-tighter transition-colors",
+                        "text-[9px] md:text-[10px] font-black uppercase tracking-tighter transition-colors",
                         isViewOnly ? "text-zinc-500" : "text-zinc-600 dark:text-zinc-400 group-hover:text-indigo-600"
                       )}>
                         {roleOption.replace('_', ' ')}
@@ -2172,7 +2173,7 @@ export const HRModules = {
               <Wallet className="w-4 h-4 text-indigo-600" />
               <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('financial_info')}</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('basic_salary')} ({currency})</label>
                 <input
@@ -2180,7 +2181,7 @@ export const HRModules = {
                   name="salary"
                   defaultValue={item?.salary || 0}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-indigo-600 outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div className="space-y-1.5">
@@ -2190,7 +2191,7 @@ export const HRModules = {
                   name="allowances"
                   defaultValue={item?.allowances || 0}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div className="space-y-1.5">
@@ -2200,7 +2201,7 @@ export const HRModules = {
                   name="deductions"
                   defaultValue={item?.deductions || 0}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-red-600 outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm font-bold text-red-600 outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
@@ -2212,7 +2213,7 @@ export const HRModules = {
               <Calendar className="w-4 h-4 text-indigo-600" />
               <h4 className="text-xs font-black text-zinc-900 dark:text-white uppercase tracking-widest">{t('hr_leave_settings')}</h4>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">{t('annual_leave_limit')}</label>
                 <input
@@ -2220,7 +2221,7 @@ export const HRModules = {
                   name="annual_leave_limit"
                   defaultValue={item?.annual_leave_limit || 20}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div className="space-y-1.5">
@@ -2229,7 +2230,7 @@ export const HRModules = {
                   name="leave_limit_unit"
                   defaultValue={item?.leave_limit_unit || "Days"}
                   disabled={isViewOnly}
-                  className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full px-4 py-2.5 md:py-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
                   <option value="Days">Days</option>
                   <option value="Weeks">Weeks</option>
