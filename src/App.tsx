@@ -3809,7 +3809,7 @@ export default function App() {
               </div>
             </div>
             <button 
-              onClick={() => setPublicResultData(null)}
+              onClick={() => { setPublicResultData(null); setShowLanding(true); }}
               className="p-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl text-zinc-500 transition-all hover:scale-105 active:scale-95"
               title="Close View"
             >
@@ -3831,7 +3831,7 @@ export default function App() {
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-8">
            <div className="p-12 text-center text-zinc-500 bg-white dark:bg-zinc-900 rounded-[2rem] shadow-xl">
               <p className="font-bold">Invalid record data detected.</p>
-              <button onClick={() => setPublicResultData(null)} className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold">Back to Home</button>
+              <button onClick={() => { setPublicResultData(null); setShowLanding(true); }} className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold">Back to Home</button>
            </div>
         </div>
       );
@@ -3857,7 +3857,7 @@ export default function App() {
       <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-5xl bg-white dark:bg-zinc-900 rounded-[3rem] shadow-2xl shadow-indigo-200/50 dark:shadow-none overflow-hidden relative">
           <button 
-            onClick={() => setPublicResultData(null)}
+            onClick={() => { setPublicResultData(null); setShowLanding(true); }}
             className="absolute top-8 right-8 z-50 p-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-2xl text-zinc-500 transition-colors"
           >
             <Calendar className="w-5 h-5" />
@@ -3866,7 +3866,7 @@ export default function App() {
             template={template} 
             organization={organization} 
             student={formattedStudent} 
-            onClose={() => setPublicResultData(null)} 
+            onClose={() => { setPublicResultData(null); setShowLanding(true); }} 
           />
         </div>
       </div>
