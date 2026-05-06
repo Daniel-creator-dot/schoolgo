@@ -24,6 +24,7 @@ import {
   Star,
   Check,
   CheckCircle,
+  CheckCircle2,
   User,
   UserPlus,
   ChevronRight,
@@ -778,6 +779,43 @@ export function SchoolAdminDashboard({ stats, invoices = [], payments = [], stud
           />
         </div>
       )}
+
+      <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-600/10 flex items-center justify-center">
+            <Truck className="w-6 h-6 text-indigo-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white">Transport SMS Alerts</h3>
+            <p className="text-sm text-zinc-500">Automated parent notifications on student drop-off.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className={cn(
+            "text-xs font-bold uppercase tracking-widest",
+            organization?.transport_sms_enabled ? "text-emerald-600" : "text-zinc-400"
+          )}>
+            {organization?.transport_sms_enabled ? 'Enabled' : 'Disabled'}
+          </span>
+          <button
+            onClick={() => onUpdateOrganization?.({
+              ...organization,
+              transport_sms_enabled: !organization?.transport_sms_enabled
+            })}
+            className={cn(
+              "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none",
+              organization?.transport_sms_enabled ? "bg-emerald-600" : "bg-zinc-300 dark:bg-zinc-700"
+            )}
+          >
+            <span
+              className={cn(
+                "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                organization?.transport_sms_enabled ? "translate-x-6" : "translate-x-1"
+              )}
+            />
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] shadow-sm">
@@ -2145,8 +2183,32 @@ export function FinanceDashboard({
 }
 
 
-export function BusDriverDashboard({ routes = [] }: { routes?: any[] }) {
+export function BusDriverDashboard({ routes = [], onDropOff }: { routes?: any[], onDropOff?: (studentId: string) => Promise<void> }) {
   const { t } = useLanguage();
+  const [selectedRoute, setSelectedRoute] = useState<any>(null);
+  const [routeStudents, setRouteStudents] = useState<any[]>([]);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+  const [droppingId, setDroppingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedRoute) {
+      loadStudents(selectedRoute.id);
+    }
+  }, [selectedRoute]);
+
+  const loadStudents = async (id: string) => {
+    setIsLoadingStudents(true);
+    try {
+      const { fetchRouteStudents } = await import('../lib/api');
+      const data = await fetchRouteStudents(id);
+      setRouteStudents(data);
+    } catch (err) {
+      console.error("Failed to load route students:", err);
+    } finally {
+      setIsLoadingStudents(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -2155,25 +2217,39 @@ export function BusDriverDashboard({ routes = [] }: { routes?: any[] }) {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title={t('total_routes')} value={routes.length.toString()} change="0" trend="up" icon={Users} color="bg-blue-600" />
-        <StatCard title={t('next_stop')} value="—" change="0km" trend="up" icon={MapPin} color="bg-amber-600" />
-        <StatCard title={t('fuel_level')} value="—" change="0%" trend="down" icon={Zap} color="bg-emerald-600" />
-        <StatCard title={t('schedule')} value="On Time" change="0" trend="up" icon={Clock} color="bg-indigo-600" />
+        <StatCard title={t('total_routes')} value={routes.length.toString()} change="Active" trend="up" icon={Truck} color="bg-indigo-600" />
+        <StatCard title={t('total_students')} value={routeStudents.length.toString()} change={selectedRoute ? "Current Route" : "All Routes"} trend="up" icon={Users} color="bg-blue-600" />
+        <StatCard title={t('schedule')} value="On Time" change="Live" trend="up" icon={Clock} color="bg-emerald-600" />
+        <StatCard title="Bus Alerts" value="0" change="System" trend="up" icon={Bell} color="bg-amber-600" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">{t('assigned_routes')}</h3>
-          <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1 p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-sm">
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">Your Routes</h3>
+          <div className="space-y-3">
             {routes.length > 0 ? routes.map((route, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="w-3 h-3 rounded-full bg-zinc-300"></div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-zinc-900 dark:text-white">{route.route_name}</p>
-                  <p className="text-xs text-zinc-500">{route.vehicle_no}</p>
+              <button
+                key={i}
+                onClick={() => setSelectedRoute(route)}
+                className={cn(
+                  "w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left",
+                  selectedRoute?.id === route.id
+                    ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-500/50"
+                    : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-zinc-300"
+                )}
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center",
+                  selectedRoute?.id === route.id ? "bg-indigo-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
+                )}>
+                  <Truck className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-medium text-zinc-400">Active</span>
-              </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-tight">{route.route_name}</p>
+                  <p className="text-xs text-zinc-500 font-medium">{route.vehicle_no}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-300" />
+              </button>
             )) : (
               <div className="py-8 text-center text-zinc-400 italic text-sm">
                 No routes assigned.
@@ -2181,13 +2257,76 @@ export function BusDriverDashboard({ routes = [] }: { routes?: any[] }) {
             )}
           </div>
         </div>
-        <div className="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-sm">
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-6">Bus Notifications</h3>
-          <div className="space-y-4">
-            <div className="flex flex-col items-center justify-center py-8 text-zinc-400 italic text-sm">
-              No new notifications.
+
+        <div className="lg:col-span-2 p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-sm">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-white">Route Manifest</h3>
+              <p className="text-sm text-zinc-500">
+                {selectedRoute ? `Currently viewing ${selectedRoute.route_name}` : 'Select a route to view students'}
+              </p>
             </div>
           </div>
+
+          {isLoadingStudents ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-zinc-500 font-bold uppercase tracking-widest">Loading Manifest...</p>
+            </div>
+          ) : !selectedRoute ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-800 rounded-3xl flex items-center justify-center mb-4">
+                <MapPin className="w-8 h-8 text-zinc-300" />
+              </div>
+              <p className="text-zinc-500 font-medium italic">Please select a route from the sidebar.</p>
+            </div>
+          ) : routeStudents.length === 0 ? (
+            <div className="text-center py-20 text-zinc-400 italic">No students assigned to this route.</div>
+          ) : (
+            <div className="space-y-4">
+              {routeStudents.map((student) => (
+                <div key={student.id} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 group hover:border-indigo-500/30 transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white dark:bg-zinc-900 rounded-xl flex items-center justify-center font-black text-indigo-600 border border-zinc-100 dark:border-zinc-800 shadow-sm">
+                      {student.name?.[0]}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-zinc-900 dark:text-white uppercase tracking-tight">{student.name}</h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
+                          {student.pickup_location || 'Standard Stop'}
+                        </span>
+                        {student.transport_status === 'dropped' && (
+                          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase">
+                            <CheckCircle2 className="w-3 h-3" /> Dropped
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    disabled={droppingId === student.id || student.transport_status === 'dropped'}
+                    onClick={async () => {
+                      setDroppingId(student.id);
+                      await onDropOff?.(student.id);
+                      await loadStudents(selectedRoute.id);
+                      setDroppingId(null);
+                    }}
+                    className={cn(
+                      "px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all",
+                      student.transport_status === 'dropped'
+                        ? "bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-default"
+                        : "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:scale-[1.02] active:scale-[0.98]"
+                    )}
+                  >
+                    {droppingId === student.id ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
+                    ) : student.transport_status === 'dropped' ? 'Arrived' : 'Mark Dropped'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -757,6 +757,11 @@ export const rejectTransportRequest = async (studentId: string) => {
   return response.data;
 };
 
+export const markStudentDroppedOff = async (studentId: string) => {
+  const response = await api.post('/ops/transport/drop-off', { student_id: studentId });
+  return response.data;
+};
+
 // Hostels
 export const fetchHostels = async () => {
   const response = await api.get('/ops/hostels');

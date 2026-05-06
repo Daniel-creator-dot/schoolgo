@@ -1869,7 +1869,22 @@ export default function App() {
               />
             );
           case "BUS_DRIVER":
-            return <BusDriverDashboard routes={transportRoutes} />;
+            return (
+              <BusDriverDashboard 
+                routes={transportRoutes} 
+                onDropOff={async (studentId) => {
+                  try {
+                    const { markStudentDroppedOff } = await import("./lib/api");
+                    await markStudentDroppedOff(studentId);
+                    showToast("Student marked as dropped off. SMS sent if enabled.", "success");
+                    loadData();
+                  } catch (err) {
+                    console.error("Failed to mark drop off:", err);
+                    showToast("Failed to mark drop off", "error");
+                  }
+                }}
+              />
+            );
           case "LIBRARIAN":
             return <LibrarianDashboard books={books} bookLoans={bookLoans} />;
           case "NON_STAFF":
